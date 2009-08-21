@@ -304,17 +304,26 @@ class SGERunner(object):
             raise OSError("Could not parse qsub output %s" % out)
 
     @classmethod
-    def check_completed(cls, runjob_id):
-        """Return True only if SGE reports that the given job has finished."""
-        cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
-        p = subprocess.Popen([cmd, '-j', runjob_id], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, env=cls._env)
-        out = p.stdout.read()
-        err = p.stderr.read()
-        ret = p.wait()
-        if ret != 0:
-            raise OSError("qstat failed with code %d and stderr %s" \
-                          % (ret, err))
+    def check_completed(cls, runjob_id, catch_exceptions=True):
+        """Return True if SGE reports that the given job has finished, False
+           if it is still running, or None if the status cannot be determined.
+           If `catch_exceptions` is True and a problem occurs when talking to
+           SGE, None is returned; otherwise, the exception is propagated."""
+        try:
+            cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
+            p = subprocess.Popen([cmd, '-j', runjob_id], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, env=cls._env)
+            out = p.stdout.read()
+            err = p.stderr.read()
+            ret = p.wait()
+            if ret != 0:
+                raise OSError("qstat failed with code %d and stderr %s" \
+                              % (ret, err))
+        except Exception:
+            if catch_exceptions:
+                return None
+            else:
+                raise
         # todo: raise an exception if job is in Eqw state, dr, etc.
         return out.startswith("Following jobs do not exist:")
 

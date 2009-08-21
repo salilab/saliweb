@@ -52,7 +52,11 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         self.assertEqual(SGERunner.check_completed('12345'), False)
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qstat', '', retval=1)
-        self.assertRaises(OSError, SGERunner.check_completed, '12345')
+        self.assertRaises(OSError, SGERunner.check_completed, '12345',
+                          catch_exceptions=False)
+        shutil.rmtree(tmpdir)
+        tmpdir = _make_fake_sge_cmd('qstat', '', retval=1)
+        self.assertEqual(SGERunner.check_completed('12345'), None)
         shutil.rmtree(tmpdir)
 
 
