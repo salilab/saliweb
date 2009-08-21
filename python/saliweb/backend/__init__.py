@@ -205,8 +205,8 @@ class SGERunner(object):
 
     _env = {'SGE_CELL': 'qb3',
             'SGE_ROOT': '/ccpr1/sge6',
-            'SGE_QMASTER_PORT': 536,
-            'SGE_EXECD_PORT': 537}
+            'SGE_QMASTER_PORT': '536',
+            'SGE_EXECD_PORT': '537'}
     _arch = 'lx24-amd64'
 
     def __init__(self, script, interpreter='/bin/sh'):
@@ -269,7 +269,7 @@ class SGERunner(object):
     def check_completed(cls, runjob_id):
         """Return True only if SGE reports that the given job has finished."""
         cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
-        p = subprocess.Popen([cmd, '-j', jobid], stdout=subprocess.PIPE,
+        p = subprocess.Popen([cmd, '-j', runjob_id], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, env=cls._env)
         out = stdout.read()
         err = stderr.read()
