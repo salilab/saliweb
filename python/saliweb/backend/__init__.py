@@ -68,13 +68,20 @@ class Database(object):
         pass
 
     def get_all_jobs_in_state(self, state, name=None, after_time=None):
+        """Get all the jobs in the given job state, as a generator.
+           If `name` is specified, only jobs which match the given name are
+           returned.
+           If `after_time` is specified, only jobs where the time (given in
+           the database column of the same name) is greater than the current
+           system time are returned.
+        """
         # Query relevant MySQL state table
         # - if after_time is given, add 'WHERE after_time < timenow' to query
         # - if name is given, add 'WHERE name = name' to query
         # Convert each row into a Python dict
         # Create new Job object, passing the jobdict
         # yield new object
-        pass
+
     def _update_job(self, jobdict, oldstate=None):
         # if state changed (oldstate not None and oldstate != jobdict.state):
         #     remove from old state table
@@ -85,34 +92,49 @@ class Database(object):
 
 
 class WebService(object):
+    """Top-level class used by all web services. Pass in a :class:`Config`
+       (or subclass) object for the `config` argument, and a :class:`Database`
+       (or subclass) object for the `db` argument.
+    """
+
     def __init__(self, config, db):
-        pass
+        self.config = config
+        self.db = db
 
     def get_job_by_name(self, state, name):
-        # call db.get_all_jobs_in_state(state, name), return first hit
-        pass
+        """Get the job with the given name in the given job state. Returns
+           a :class:`Job` object, or None if the job is not found."""
+        jobs = list(self.db.get_all_jobs_in_state(state, name=name))
+        if len(jobs) == 1:
+            return jobs[0]
 
     def do_all_processing(self):
-        # call each of the process_* methods below
-        pass
+        """Convenience method that calls each of the process_* methods"""
+        self.process_incoming_jobs()
+        self.process_completed_jobs()
+        self.process_old_jobs()
 
     def process_incoming_jobs(self):
-        # call db.move_incoming_to_jobs()
+        """Check for any incoming jobs, and run each one."""
         # for each job in db.get_all_jobs_in_state(INCOMING) call job._try_run()
-        pass
 
     def process_completed_jobs(self):
+        """Check for any jobs that have just completed, and process them."""
         # for each job in db.get_all_jobs_in_state(RUNNING) call job._try_complete()
-        pass
 
     def process_old_jobs(self):
+        """Check for any old job results and archive or delete them."""
         # Use a state file to ensure this is run only once per day
         # for each job in db.get_all_jobs_in_state(COMPLETED, 'archive_time') call job._try_archive()
         # for each job in db.get_all_jobs_in_state(ARCHIVED, 'expire_time') call job._try_expire()
-        pass
 
 
 class Job(object):
+    """Class that encapsulates a single job in the system. Jobs are not
+       created by the user directly, but by querying a :class:`WebService`
+       object.
+    """
+
     # If exceptions occur in any method other than _fail(), call _fail()
     def __init__(self, db, jobdict):
         # Sanity check; make sure jobdict is OK (if not, call _fail)
@@ -130,7 +152,7 @@ class Job(object):
     def _try_complete(self):
         # assert that state == RUNNING
         # check for 'done' file in directory, if not present:
-        #    if check_completed(runjob_id) is True, call _fail (SGE crash)
+        #    if check_batch_completed(runjob_id) is True, call _fail (SGE crash)
         #    otherwise, just return: job isn't done yet
         # set jobdict.postprocess_time = time now
         # set state to POSTPROCESSING
@@ -150,10 +172,11 @@ class Job(object):
         # call self.expire()
         pass
     def set_state(self, state):
+        """Change the job state to `state`."""
         # change job state (transitions enforced by JobState class)
         # move job to different directory if necessary
         # call db._update_job(oldstate)
-        pass
+
     def _get_state(self):
         # get job state (jobdict.state) as string
         pass
@@ -165,27 +188,42 @@ class Job(object):
         pass
 
     def run(self):
-        # to be implemented by the user
-        # e.g. generate script, pass to SGERunner
-        pass
-    def check_completed(self, runjob_id):
-        # do nothing by default
-        # can be overridden by the user to call SGERunner.check_completed()
-        pass
+        """Run the job, e.g. on an SGE cluster.
+           Must be implemented by the user for each web service.
+           For example, this could generate a simple script and pass it to
+           an :class:`SGERunner` instance.
+           If the job is run by something like :meth:`SGERunner.run`, the
+           return value from that method should be returned here (it can be
+           later used by :meth:`check_batch_completed`).
+        """
+
+    def check_batch_completed(self, runjob_id):
+        """Query the batch system to see if the job has completed. Does
+           nothing by default, but can be overridden by the user, for example
+           to return the result of :meth:`SGERunner.check_completed`. The
+           method should return True, False or None (if it is not possible to
+           query the batch system).
+           Note that the batch system reporting the job is complete does not
+           necessarily mean the job actually completed successfully."""
+
     def archive(self):
-        # do nothing by default
-        # can be overridden by user to gzip files, etc.
-        pass
+        """Do any necessary processing when an old completed job reaches its
+           archive time. Does nothing by default, but can be overridden by
+           the user to compress files, etc."""
+
     def expire(self):
-        # delete job directory
-        # can be overridden by user to mail admin, etc.
-        pass
+        """Do any necessary processing when an old completed job reaches its
+           archive time. Does nothing by default, but can be overridden by
+           the user to mail the admin, etc."""
+
     def preprocess(self):
-        # can be overridden by user
-        pass
+        """Do any necessary preprocessing before the job is actually run.
+           Does nothing by default."""
+
     def postprocess(self):
-        # can be overridden by user
-        pass
+        """Do any necessary postprocessing when the job completes successfully.
+           Does nothing by default."""
+
 
 class SGERunner(object):
     """Run a set of commands on the QB3 SGE cluster.
