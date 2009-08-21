@@ -253,8 +253,8 @@ class SGERunner(object):
         cmd = '%s/bin/%s/qsub' % (cls._env['SGE_ROOT'], cls._arch)
         p = subprocess.Popen([cmd, script], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, cwd=rundir, env=cls._env)
-        out = stdout.read()
-        err = stderr.read()
+        out = p.stdout.read()
+        err = p.stderr.read()
         ret = p.wait()
         if ret != 0:
             raise OSError("qsub failed with code %d and stderr %s" % (ret, err))
@@ -271,8 +271,8 @@ class SGERunner(object):
         cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
         p = subprocess.Popen([cmd, '-j', runjob_id], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, env=cls._env)
-        out = stdout.read()
-        err = stderr.read()
+        out = p.stdout.read()
+        err = p.stderr.read()
         ret = p.wait()
         if ret != 0:
             raise OSError("qstat failed with code %d and stderr %s" \
