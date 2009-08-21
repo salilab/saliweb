@@ -1,4 +1,42 @@
-from state import JobState
+class InvalidStateError(Exception):
+    """Exception raised for invalid job states"""
+    pass
+
+class JobState(object):
+    """Simple state machine for jobs"""
+    __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
+                      'POSTPROCESSING', 'COMPLETED', 'FAILED',
+                      'EXPIRED', 'ARCHIVED']
+    __valid_transitions = [['INCOMING', 'PREPROCESSING'],
+                           ['PREPROCESSING', 'RUNNING'],
+                           ['RUNNING', 'POSTPROCESSING'],
+                           ['POSTPROCESSING', 'COMPLETED'],
+                           ['COMPLETED', 'ARCHIVED'],
+                           ['ARCHIVED', 'EXPIRED'],
+                           ['FAILED', 'INCOMING']]
+    def __init__(self, state):
+        if state in self.__valid_states:
+            self.__state = state
+        else:
+            raise InvalidStateError("%s is not in %s" \
+                                    % (state, str(self.__valid_states)))
+    def __str__(self):
+        return "<JobState %s>" % self.get()
+    def get(self):
+        """Get current state, as a string."""
+        return self.__state
+    @staticmethod
+    def get_valid_states():
+        return JobState.__valid_states[:]
+    def transition(self, newstate):
+        """Change state to `newstate`. Raises an InvalidStateError if the
+           new state is not valid."""
+        tran = [self.__state, newstate]
+        if newstate == 'FAILED' or tran in self.__valid_transitions:
+            self.__state = newstate
+        else:
+            raise InvalidStateError("Cannot transition from %s to %s" \
+                                    % (self.__state, newstate))
 
 class Config(object):
     """This class holds configuration information such as directory

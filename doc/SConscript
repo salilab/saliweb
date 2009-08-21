@@ -1,0 +1,10 @@
+import os.path
+
+Import('env')
+
+sphinx = env.Sphinx(".build/html/index.html",
+                    (Glob('*.rst'), Glob('#/python/saliweb/backend/*.py')))
+
+docdir = env['docdir']
+env.SphinxInstall(os.path.join(docdir, 'index.html'), sphinx)
+env.Alias('docinstall', docdir)
