@@ -1,5 +1,10 @@
 import subprocess
 import re
+import sys
+
+# Version check; we need 2.4 for subprocess, decorators
+if sys.version_info[0:2] < [2,4]:
+    raise ImportError("This module requires Python 2.4 or later")
 
 class InvalidStateError(Exception):
     """Exception raised for invalid job states"""
