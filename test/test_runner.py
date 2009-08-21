@@ -1,6 +1,6 @@
 import unittest
 from StringIO import StringIO
-from saliweb.backend import SGERunner
+from saliweb.backend import SGERunner, SaliSGERunner
 import os
 import shutil
 import tempfile
@@ -24,11 +24,12 @@ class RunnerTest(unittest.TestCase):
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
-        r = SGERunner('echo foo', interpreter='/bin/csh')
-        r.set_sge_options('-l diva1=1G')
-        sio = StringIO()
-        r._write_sge_script(sio)
-        expected = """#!/bin/csh
+        for runner in (SGERunner, SaliSGERunner):
+            r = runner('echo foo', interpreter='/bin/csh')
+            r.set_sge_options('-l diva1=1G')
+            sio = StringIO()
+            r._write_sge_script(sio)
+            expected = """#!/bin/csh
 #$ -S /bin/csh
 #$ -cwd
 #$ -l diva1=1G
@@ -37,7 +38,7 @@ echo "STARTED" > ${_SALI_JOB_DIR}/job-state
 echo foo
 echo "DONE" > ${_SALI_JOB_DIR}/job-state
 """
-        self.assertEqual(sio.getvalue(), expected)
+            self.assertEqual(sio.getvalue(), expected)
 
     def test_check_completed(self):
         """Check SGERunner.check_completed()"""
