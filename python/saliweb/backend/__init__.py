@@ -1,6 +1,7 @@
 import subprocess
 import re
 import sys
+import datetime
 
 # Version check; we need 2.4 for subprocess, decorators
 if sys.version_info[0:2] < [2,4]:
@@ -49,6 +50,9 @@ class JobState(object):
 class Config(object):
     """This class holds configuration information such as directory
        locations, etc."""
+    # config.archive_time and config.expire_time are datetime.timedelta objects
+    # e.g. datetime.timedelta(days=30)
+
     def __init__(self, fname):
         """Read configuration data from a file."""
         pass
@@ -138,39 +142,57 @@ class Job(object):
     # If exceptions occur in any method other than _fail(), call _fail()
     def __init__(self, db, jobdict):
         # Sanity check; make sure jobdict is OK (if not, call _fail)
-        pass
+        self._db = db
+        self._jobdict = jobdict
+
     def _try_run(self):
-        # set state to PREPROCESSING
-        # set jobdict.preprocess_time = time now
-        # call self.preprocess()
-        # set state to RUNNING
-        # set jobdict.run_time = time now
-        # call self.run()
-        # set runjob_id to return value
-        # call db._update_job if runjob_id not None
-        pass
+        """Take an incoming job and try to start running it."""
+        try:
+            self.set_state('PREPROCESSING')
+            self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
+            self.preprocess()
+            self.set_state('RUNNING')
+            self._jobdict['run_time'] = datetime.datetime.utcnow()
+            jobid = self.run()
+            self._jobdict['runjob_id'] = jobid
+            if jobid is not None:
+                self._db._update_job(self._jobdict)
+        except Exception, detail:
+            self._fail(detail)
+
     def _try_complete(self):
-        # assert that state == RUNNING
-        # check for 'done' file in directory, if not present:
-        #    if check_batch_completed(runjob_id) is True, call _fail (SGE crash)
-        #    otherwise, just return: job isn't done yet
-        # set jobdict.postprocess_time = time now
-        # set state to POSTPROCESSING
-        # call self.postprocess()
-        # set jobdict.end_time = time now
-        # set jobdict.archive_time = end_time + configured time to archive
-        # set jobdict.expire_time = end_time + configured time to expire
-        # set state to COMPLETED
-        # email user if requested
-        pass
+        """Take a running job, see if it completed, and if so, process it."""
+        try:
+            # assert that state == RUNNING
+            # check for 'done' file in directory, if not present:
+            #    if check_batch_completed(runjob_id) is True, call _fail (SGE crash)
+            #    otherwise, just return: job isn't done yet
+            self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
+            self.set_state('POSTPROCESSING')
+            self.postprocess()
+            endtime = datetime.datetime.utcnow()
+            self._jobdict['end_time'] = endtime
+            self._jobdict['archive_time'] = endtime + self._config.archive_time
+            self._jobdict['expire_time'] = endtime + self._config.expire_time
+            self.set_state('COMPLETED')
+            # email user if requested
+        except Exception, detail:
+            self._fail(detail)
+
     def _try_archive(self):
-        # set state to ARCHIVED
-        # call self.archive()
-        pass
+        try:
+            self.set_state('ARCHIVED')
+            self.archive()
+        except Exception, detail:
+            self._fail(detail)
+
     def _try_expire(self):
-        # set state to EXPIRED
-        # call self.expire()
-        pass
+        try:
+            self.set_state('EXPIRED')
+            self.expire()
+        except Exception, detail:
+            self._fail(detail)
+
     def set_state(self, state):
         """Change the job state to `state`."""
         # change job state (transitions enforced by JobState class)
@@ -180,12 +202,12 @@ class Job(object):
     def _get_state(self):
         # get job state (jobdict.state) as string
         pass
+
     def _fail(self, reason):
         # Users do not call directly - raise exception instead
-        # set state to FAILED
+        self.set_state('FAILED')
         # set jobdict.failure to reason (e.g. a Python exception w/traceback)
         # if an exception occurs here, email the admin (catastrophic error)
-        pass
 
     def run(self):
         """Run the job, e.g. on an SGE cluster.
