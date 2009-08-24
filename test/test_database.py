@@ -1,21 +1,33 @@
 import unittest
 import sqlite3
+import time
 from saliweb.backend import Database, Job, MySQLField
+
+def utc_timestamp():
+    # sqlite doesn't have a datetime type, so we use float
+    # instead (seconds-since-epoch) for testing
+    return time.time()
 
 class MemoryDatabase(Database):
     """Subclass that uses an in-memory SQLite3 database rather than MySQL"""
     def _connect(self, config):
         self._placeholder = '?'
         self.conn = sqlite3.connect(':memory:')
+        # sqlite has no date/time functions, unlike MySQL, so add basic ones
+        self.conn.create_function('UTC_TIMESTAMP', 0, utc_timestamp)
 
 def make_test_jobs(sql):
     c = sql.cursor()
-    c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time) VALUES(?,?,?)",
-              ('job1', 'SGE-job-1', 'now'))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time) VALUES(?,?,?)",
-              ('job2', 'SGE-job-2', 'now'))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time) VALUES(?,?,?)",
-              ('job3', 'SGE-job-3', 'now'))
+    timenow = time.time()
+    c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time,expire_time) " \
+              + "VALUES(?,?,?,?)",
+              ('job1', 'SGE-job-1', timenow, timenow + 1000.))
+    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
+              + "VALUES(?,?,?,?)",
+              ('job2', 'SGE-job-2', timenow, timenow + 1000.))
+    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
+              + "VALUES(?,?,?,?)",
+              ('job3', 'SGE-job-3', timenow, timenow - 1000.))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):
@@ -75,6 +87,13 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         jobs = list(db.get_all_jobs_in_state('INCOMING', name='job2'))
         self.assertEqual(len(jobs), 0)
+        jobs = list(db.get_all_jobs_in_state('INCOMING',
+                                             after_time='expire_time'))
+        self.assertEqual(len(jobs), 0)
+        jobs = list(db.get_all_jobs_in_state('RUNNING',
+                                             after_time='expire_time'))
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]._jobdict['name'], 'job3')
 
     def test_change_job_state(self):
         """Check Database._change_job_state()"""

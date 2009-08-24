@@ -155,8 +155,7 @@ class Database(object):
             wheres.append('name=' + self._placeholder)
             params.append(name)
         if after_time is not None:
-            wheres.append(self._placeholder + ' < UTC_TIMESTAMP()')
-            params.append(after_time)
+            wheres.append(after_time + ' < UTC_TIMESTAMP()')
         if wheres:
             query += ' WHERE ' + ', '.join(wheres)
 
