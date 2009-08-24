@@ -88,6 +88,7 @@ class Database(object):
        `jobcls` should be a subclass of :class:`Job`, which will be used to
        instantiate new job objects.
     """
+
     def __init__(self, jobcls):
         self._jobcls = jobcls
         self._fields = []
@@ -115,6 +116,8 @@ class Database(object):
     def _connect(self, config):
         """Set up the connection to the database. Usually called from the
            :class:`WebService` object."""
+        import MySQLdb
+        self._placeholder = '%s'
         self.conn = MySQLdb.connect(user=config['dbuser'],
                                     db=config['db'],
                                     passwd=config['dbpasswd'])
@@ -123,16 +126,16 @@ class Database(object):
         """Delete all tables in the database used to hold job state."""
         c = self.conn.cursor()
         for state in JobState.get_valid_states():
-            c.execute('drop table if exists %s' % state)
-        c.commit()
+            c.execute('DROP TABLE IF EXISTS %s' % state)
+        self.conn.commit()
 
     def create_tables(self):
         """Create all tables in the database to hold job state."""
         c = self.conn.cursor()
         schema = ', '.join(x.get_schema() for x in self._fields)
         for state in JobState.get_valid_states():
-            c.execute('create table %s (%s)' % (state, schema))
-        c.commit()
+            c.execute('CREATE TABLE %s (%s)' % (state, schema))
+        self.conn.commit()
 
     def get_all_jobs_in_state(self, state, name=None, after_time=None):
         """Get all the jobs in the given job state, as a generator of
@@ -144,43 +147,50 @@ class Database(object):
            the database column of the same name) is greater than the current
            system time are returned.
         """
-        query = 'SELECT * FROM ' + state
+        fields = [x.name for x in self._fields]
+        query = 'SELECT ' + ', '.join(fields) + ' FROM ' + state
         wheres = []
         params = []
         if name is not None:
-            wheres.append('name=%%s')
+            wheres.append('name=' + self._placeholder)
             params.append(name)
         if after_time is not None:
-            wheres.append('%%s < UTC_TIMESTAMP()')
+            wheres.append(self._placeholder + ' < UTC_TIMESTAMP()')
             params.append(after_time)
         if wheres:
             query += ' WHERE ' + ', '.join(wheres)
 
-        c = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        # Use regular cursor rather than MySQLdb.cursors.DictCursor, so we stay
+        # reasonably database-independent
+        c = self.conn.cursor()
         c.execute(query, params)
         for row in c:
-            yield self._jobcls(self, row, JobState(state))
+            jobdict = dict(zip(fields, row))
+            yield self._jobcls(self, jobdict, JobState(state))
 
     def _update_job(self, jobdict, state):
         """Update a job in the job state table."""
         c = self.conn.cursor()
         query = 'UPDATE ' + state + ' SET ' \
-                + ', '.join("%s=%%s" % x for x in jobdict.keys()) \
-                + ' WHERE name=%s'
+                + ', '.join(x + '=' + self._placeholder \
+                            for x in jobdict.keys()) \
+                + ' WHERE name=' + self._placeholder
         c.execute(query, jobdict.values() + [jobdict['name']])
-        c.commit()
+        self.conn.commit()
 
     def _change_job_state(self, jobdict, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
-           updating the job (effectively calling :meth:`_update_job`)."""
+           updating the job (as if :meth:`_update_job` were called)."""
         # Remove from the old state table, and add to the new state table
         c = self.conn.cursor()
-        c.execute('REMOVE FROM ' + oldstate + ' WHERE name=%s',
-                  (jobdict['name'],))
-        query = 'INSERT INTO ' + state + ' SET ' \
-                + ', '.join("%s=%%s" % x for x in jobdict.keys())
+        c.execute('DELETE FROM ' + oldstate \
+                  + ' WHERE name=' + self._placeholder, (jobdict['name'],))
+        query = 'INSERT INTO ' + newstate + ' (' \
+                + ', '.join(jobdict.keys()) + ') VALUES(' \
+                + ', '.join([self._placeholder] * len(jobdict.keys())) + \
+                ')'
         c.execute(query, jobdict.values())
-        c.commit()
+        self.conn.commit()
 
 
 class WebService(object):
