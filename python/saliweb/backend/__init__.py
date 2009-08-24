@@ -339,7 +339,7 @@ class Job(object):
         oldstate = self._get_state()
         self.__state.transition(state)
         # todo: move job to different directory if necessary
-        self.db._change_job_state(self._jobdict, oldstate, state)
+        self._db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):
         """Get the job state as a string."""
