@@ -19,6 +19,16 @@ def make_test_jobs(sql):
               + "VALUES(?,?,?,?)",
               ('job3', 'SGE-job-3', utcnow,
                utcnow - datetime.timedelta(days=1)))
+    c.execute("INSERT INTO COMPLETED(name,runjob_id,submit_time, " \
+              + "archive_time,expire_time) VALUES(?,?,?,?,?)",
+              ('ready-for-archive', None, utcnow,
+               utcnow - datetime.timedelta(days=1),
+               utcnow + datetime.timedelta(days=1)))
+    c.execute("INSERT INTO ARCHIVED(name,runjob_id,submit_time, " \
+              + "archive_time,expire_time) VALUES(?,?,?,?,?)",
+              ('ready-for-expire', None, utcnow,
+               utcnow + datetime.timedelta(days=1),
+               utcnow - datetime.timedelta(days=1)))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):
