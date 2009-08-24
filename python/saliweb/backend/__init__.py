@@ -3,16 +3,20 @@ import re
 import sys
 import datetime
 
-# Version check; we need 2.4 for subprocess, decorators
+# Version check; we need 2.4 for subprocess, decorators, generator expressions
 if sys.version_info[0:2] < [2,4]:
     raise ImportError("This module requires Python 2.4 or later")
 
 class InvalidStateError(Exception):
-    """Exception raised for invalid job states"""
+    """Exception raised for invalid job states."""
+    pass
+
+class BatchSystemError(Exception):
+    "Exception raised if the batch system (such as SGE) failed to run a job."
     pass
 
 class JobState(object):
-    """Simple state machine for jobs"""
+    """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
                       'POSTPROCESSING', 'COMPLETED', 'FAILED',
                       'EXPIRED', 'ARCHIVED']
@@ -31,21 +35,26 @@ class JobState(object):
                                     % (state, str(self.__valid_states)))
     def __str__(self):
         return "<JobState %s>" % self.get()
+
     def get(self):
         """Get current state, as a string."""
         return self.__state
-    @staticmethod
-    def get_valid_states():
-        return JobState.__valid_states[:]
+
+    @classmethod
+    def get_valid_states(cls):
+        """Get all valid job states, as a list of strings."""
+        return cls.__valid_states[:]
+
     def transition(self, newstate):
-        """Change state to `newstate`. Raises an InvalidStateError if the
-           new state is not valid."""
+        """Change state to `newstate`. Raises an :exc:`InvalidStateError` if
+           the new state is not valid."""
         tran = [self.__state, newstate]
         if newstate == 'FAILED' or tran in self.__valid_transitions:
             self.__state = newstate
         else:
             raise InvalidStateError("Cannot transition from %s to %s" \
                                     % (self.__state, newstate))
+
 
 class Config(object):
     """This class holds configuration information such as directory
@@ -55,44 +64,123 @@ class Config(object):
 
     def __init__(self, fname):
         """Read configuration data from a file."""
+        # todo: implement this method
         pass
+
+
+class MySQLField(object):
+    """Description of a single field in a MySQL database. Each field must have
+       a unique `name` (e.g. 'user') and a given `sqltype`
+       (e.g. 'VARCHAR(15) PRIMARY KEY NOT NULL')."""
+    def __init__(self, name, sqltype):
+        self.name = name
+        self.sqltype = sqltype
+
+    def get_schema(self):
+        """Get the SQL schema needed to create a table containing this field."""
+        return self.name + " " + self.sqltype
+
 
 class Database(object):
     """Management of the job database.
        Can be subclassed to add extra columns to the tables for
        service-specific metadata, or to use a different database engine.
-       `jobcls` should be a subclass of Job, which will be used to instantiate
-       new job objects.
+       `jobcls` should be a subclass of :class:`Job`, which will be used to
+       instantiate new job objects.
     """
     def __init__(self, jobcls):
         self._jobcls = jobcls
+        self._fields = []
+        # Add fields used by all web services
+        self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
+        self.add_field(MySQLField('user', 'VARCHAR(40)'))
+        self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
+        self.add_field(MySQLField('directory', 'VARCHAR(400)'))
+        self.add_field(MySQLField('submit_time', 'DATETIME NOT NULL'))
+        self.add_field(MySQLField('preprocess_time', 'DATETIME'))
+        self.add_field(MySQLField('run_time', 'DATETIME'))
+        self.add_field(MySQLField('postprocess_time', 'DATETIME'))
+        self.add_field(MySQLField('end_time', 'DATETIME'))
+        self.add_field(MySQLField('archive_time', 'DATETIME'))
+        self.add_field(MySQLField('expire_time', 'DATETIME'))
+        self.add_field(MySQLField('runjob_id', 'VARCHAR(50)'))
+        self.add_field(MySQLField('failure', 'VARCHAR(400)'))
+
+    def add_field(self, field):
+        """Add a new field (typically a :class:`MySQLField` object) to each
+           table in the database. Usually called in the constructor or
+           immediately after creating the :class:`Database` object."""
+        self._fields.append(field)
+
+    def _connect(self, config):
+        """Set up the connection to the database. Usually called from the
+           :class:`WebService` object."""
+        self.conn = MySQLdb.connect(user=config['dbuser'],
+                                    db=config['db'],
+                                    passwd=config['dbpasswd'])
+
+    def delete_tables(self):
+        """Delete all tables in the database used to hold job state."""
+        c = self.conn.cursor()
+        for state in JobState.get_valid_states():
+            c.execute('drop table if exists %s' % state)
+        c.commit()
 
     def create_tables(self):
         """Create all tables in the database to hold job state."""
-        pass
+        c = self.conn.cursor()
+        schema = ', '.join(x.get_schema() for x in self._fields)
+        for state in JobState.get_valid_states():
+            c.execute('create table %s (%s)' % (state, schema))
+        c.commit()
 
     def get_all_jobs_in_state(self, state, name=None, after_time=None):
-        """Get all the jobs in the given job state, as a generator.
+        """Get all the jobs in the given job state, as a generator of
+           :class:`Job` objects (or a subclass, as given by the `jobcls`
+           argument to the :class:`Database` constructor).
            If `name` is specified, only jobs which match the given name are
            returned.
            If `after_time` is specified, only jobs where the time (given in
            the database column of the same name) is greater than the current
            system time are returned.
         """
-        # Query relevant MySQL state table
-        # - if after_time is given, add 'WHERE after_time < timenow' to query
-        # - if name is given, add 'WHERE name = name' to query
-        # Convert each row into a Python dict
-        # Create new Job object, passing the jobdict
-        # yield new object
+        query = 'SELECT * FROM ' + state
+        wheres = []
+        params = []
+        if name is not None:
+            wheres.append('name=%%s')
+            params.append(name)
+        if after_time is not None:
+            wheres.append('%%s < UTC_TIMESTAMP()')
+            params.append(after_time)
+        if wheres:
+            query += ' WHERE ' + ', '.join(wheres)
 
-    def _update_job(self, jobdict, oldstate=None):
-        # if state changed (oldstate not None and oldstate != jobdict.state):
-        #     remove from old state table
-        #     add to new state table
-        # else:
-        #     update job in the job state table
-        pass
+        c = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        c.execute(query, params)
+        for row in c:
+            yield self._jobcls(self, row, JobState(state))
+
+    def _update_job(self, jobdict, state):
+        """Update a job in the job state table."""
+        c = self.conn.cursor()
+        query = 'UPDATE ' + state + ' SET ' \
+                + ', '.join("%s=%%s" % x for x in jobdict.keys()) \
+                + ' WHERE name=%s'
+        c.execute(query, jobdict.values() + [jobdict['name']])
+        c.commit()
+
+    def _change_job_state(self, jobdict, oldstate, newstate):
+        """Change the job state in the database. This has the side effect of
+           updating the job (effectively calling :meth:`_update_job`)."""
+        # Remove from the old state table, and add to the new state table
+        c = self.conn.cursor()
+        c.execute('REMOVE FROM ' + oldstate + ' WHERE name=%s',
+                  (jobdict['name'],))
+        query = 'INSERT INTO ' + state + ' SET ' \
+                + ', '.join("%s=%%s" % x for x in jobdict.keys())
+        c.execute(query, jobdict.values())
+        c.commit()
 
 
 class WebService(object):
@@ -100,10 +188,10 @@ class WebService(object):
        (or subclass) object for the `config` argument, and a :class:`Database`
        (or subclass) object for the `db` argument.
     """
-
     def __init__(self, config, db):
         self.config = config
         self.db = db
+        self.db._connect(config)
 
     def get_job_by_name(self, state, name):
         """Get the job with the given name in the given job state. Returns
@@ -120,17 +208,23 @@ class WebService(object):
 
     def process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
-        # for each job in db.get_all_jobs_in_state(INCOMING) call job._try_run()
+        for job in self.db.get_all_jobs_in_state('INCOMING'):
+            job._try_run()
 
     def process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
-        # for each job in db.get_all_jobs_in_state(RUNNING) call job._try_complete()
+        for job in self.db.get_all_jobs_in_state('RUNNING'):
+            job._try_complete()
 
     def process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
-        # Use a state file to ensure this is run only once per day
-        # for each job in db.get_all_jobs_in_state(COMPLETED, 'archive_time') call job._try_archive()
-        # for each job in db.get_all_jobs_in_state(ARCHIVED, 'expire_time') call job._try_expire()
+        # todo: Use a state file to ensure this is run only once per day?
+        for job in self.db.get_all_jobs_in_state('COMPLETED',
+                                                 after_time='archive_time'):
+            job._try_archive()
+        for job in self.db.get_all_jobs_in_state('ARCHIVED',
+                                                 after_time='expire_time'):
+            job._try_expire()
 
 
 class Job(object):
@@ -139,75 +233,131 @@ class Job(object):
        object.
     """
 
-    # If exceptions occur in any method other than _fail(), call _fail()
-    def __init__(self, db, jobdict):
-        # Sanity check; make sure jobdict is OK (if not, call _fail)
+    # Note: make sure that all code paths are wrapped with try/except, so that
+    # if an exception occurs, it is caught and _fail() is called. Note that some
+    # exceptions (e.g. qstat failure) should perhaps be ignored, as they may be
+    # transient and do not directly affect the job.
+    def __init__(self, db, jobdict, state):
+        # todo: Sanity check; make sure jobdict is OK (if not, call _fail)
         self._db = db
         self._jobdict = jobdict
+        self.__state = state
 
     def _try_run(self):
         """Take an incoming job and try to start running it."""
         try:
-            self.set_state('PREPROCESSING')
             self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
+            self._set_state('PREPROCESSING')
             self.preprocess()
-            self.set_state('RUNNING')
             self._jobdict['run_time'] = datetime.datetime.utcnow()
+            self._set_state('RUNNING')
             jobid = self.run()
-            self._jobdict['runjob_id'] = jobid
-            if jobid is not None:
-                self._db._update_job(self._jobdict)
+            if jobid != self._jobdict['runjob_id']:
+                self._jobdict['runjob_id'] = jobid
+                self._db._update_job(self._jobdict, self._get_state())
         except Exception, detail:
             self._fail(detail)
+
+    def _job_state_file_done(self):
+        """Return True only if the job-state file indicates the job finished."""
+        try:
+            f = open(os.path.join(self._jobdict['directory'], 'job-state'))
+            return f.read().rstrip('\r\n') == 'DONE'
+        except IOError:
+            return False   # if the file does not exist, job is still running
+
+    def _has_completed(self):
+        """Return True only if the job has just finished running."""
+        state_file_done = self._job_state_file_done()
+        if state_file_done:
+            return True
+        else:
+            batch_done = self.check_batch_completed(self._jobdict['runjob_id'])
+            if batch_done:
+                raise BatchSystemError(
+                     ("Batch system claims job %s is complete, but " + \
+                      "job-state file in job directory (%s) claims it " + \
+                      "is not. This usually means the batch system job " + \
+                      "failed - e.g. a node went down.") \
+                     % (self._jobdict['runjob_id'], self._jobdict['directory']))
+            return False
 
     def _try_complete(self):
         """Take a running job, see if it completed, and if so, process it."""
         try:
-            # assert that state == RUNNING
-            # check for 'done' file in directory, if not present:
-            #    if check_batch_completed(runjob_id) is True, call _fail (SGE crash)
-            #    otherwise, just return: job isn't done yet
+            self._assert_state('RUNNING')
+            if not self._has_completed():
+                return
             self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
-            self.set_state('POSTPROCESSING')
+            self._set_state('POSTPROCESSING')
             self.postprocess()
             endtime = datetime.datetime.utcnow()
             self._jobdict['end_time'] = endtime
-            self._jobdict['archive_time'] = endtime + self._config.archive_time
-            self._jobdict['expire_time'] = endtime + self._config.expire_time
-            self.set_state('COMPLETED')
-            # email user if requested
+            self._jobdict['archive_time'] = endtime \
+                                            + self._config['archive_time']
+            self._jobdict['expire_time'] = endtime \
+                                           + self._config['expire_time']
+            self._set_state('COMPLETED')
+            # todo: email user if requested
         except Exception, detail:
             self._fail(detail)
 
     def _try_archive(self):
         try:
-            self.set_state('ARCHIVED')
+            self._set_state('ARCHIVED')
             self.archive()
         except Exception, detail:
             self._fail(detail)
 
     def _try_expire(self):
         try:
-            self.set_state('EXPIRED')
+            self._set_state('EXPIRED')
             self.expire()
         except Exception, detail:
             self._fail(detail)
 
-    def set_state(self, state):
+    def _set_state(self, state):
         """Change the job state to `state`."""
-        # change job state (transitions enforced by JobState class)
-        # move job to different directory if necessary
-        # call db._update_job(oldstate)
+        try:
+            self.__internal_set_state(state)
+        except Exception, detail:
+            self._fail(detail)
+
+    def __internal_set_state(self, state):
+        """Set job state. Does not catch any exceptions. Should only be called
+           from :meth:`_fail`, which handles the exceptions itself. For all
+           other uses, call :meth:`_set_state` instead."""
+        oldstate = self._get_state()
+        self.__state.transition(state)
+        # todo: move job to different directory if necessary
+        self.db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):
-        # get job state (jobdict.state) as string
-        pass
+        """Get the job state as a string."""
+        return self.__state.get()
 
     def _fail(self, reason):
-        # Users do not call directly - raise exception instead
-        self.set_state('FAILED')
-        # set jobdict.failure to reason (e.g. a Python exception w/traceback)
-        # if an exception occurs here, email the admin (catastrophic error)
+        """Mark a job as FAILED. Generally, it should not be necessary to call
+           this method directly - instead, simply raise an exception.
+           `reason` can be either a simple string or an exception object."""
+        try:
+            if isinstance(reason, Exception):
+                reason = "Python exception " + str(reason)
+            self._jobdict['failure'] = reason
+            self.__internal_set_state('FAILED')
+        except Exception, detail:
+            # todo: if an exception occurs here, a catastrophic error occurred.
+            # Email the admin?
+            raise
+
+    def _assert_state(self, state):
+        """Make sure that the current job state (as a string) matches
+           `state`. If not, an :exc:`InvalidStateError` is raised."""
+        current_state = self.__state.get()
+        if state != current_state:
+            raise InvalidStateError(("Expected job to be in %s state, " + \
+                                     "but it is actually in %s state") \
+                                    % (state, current_state))
 
     def run(self):
         """Run the job, e.g. on an SGE cluster.
@@ -223,8 +373,8 @@ class Job(object):
         """Query the batch system to see if the job has completed. Does
            nothing by default, but can be overridden by the user, for example
            to return the result of :meth:`SGERunner.check_completed`. The
-           method should return True, False or None (if it is not possible to
-           query the batch system).
+           method should return True, False or None (the last if it is not
+           possible to query the batch system).
            Note that the batch system reporting the job is complete does not
            necessarily mean the job actually completed successfully."""
 
@@ -250,14 +400,16 @@ class Job(object):
 class SGERunner(object):
     """Run a set of commands on the QB3 SGE cluster.
 
-       To use, pass a string `script` containing a set of shell commands to run,
+       To use, pass a string `script` containing a set of commands to run,
        and use `interpreter` to specify the shell (e.g. `/bin/sh`, `/bin/csh`)
        or other interpreter (e.g. `/usr/bin/python`) that will run them.
        These commands will be automatically modified to update a job state
        file at job start and end, if your interpreter is `/bin/sh`, `/bin/csh`,
        `/bin/bash` or `/bin/tcsh`. If you want to use a different interpreter
-       you will need to manually add code to your script to update the job
-       state file.
+       you will need to manually add code to your script to update a file
+       called job-state in the working directory, to contain just the simple
+       text "STARTED" (without the quotes) when the job starts and just
+       "DONE" when it completes.
 
        Once done, you can optionally call :meth:`set_sge_options` to set SGE
        options, then call :meth:`run` to submit the job.
