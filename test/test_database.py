@@ -1,12 +1,18 @@
 import unittest
 import sqlite3
+import datetime
 import time
+import calendar
 from saliweb.backend import Database, Job, MySQLField
 
+# sqlite doesn't have a datetime type, so we use float
+# instead (UTC seconds-since-epoch) for testing
+def adapt_datetime(ts):
+    return calendar.timegm(ts.timetuple())
+sqlite3.register_adapter(datetime.datetime, adapt_datetime)
+
 def utc_timestamp():
-    # sqlite doesn't have a datetime type, so we use float
-    # instead (seconds-since-epoch) for testing
-    return time.time()
+    return adapt_datetime(datetime.datetime.utcnow())
 
 class MemoryDatabase(Database):
     """Subclass that uses an in-memory SQLite3 database rather than MySQL"""
@@ -18,16 +24,19 @@ class MemoryDatabase(Database):
 
 def make_test_jobs(sql):
     c = sql.cursor()
-    timenow = time.time()
+    utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time,expire_time) " \
               + "VALUES(?,?,?,?)",
-              ('job1', 'SGE-job-1', timenow, timenow + 1000.))
+              ('job1', 'SGE-job-1', utcnow,
+               utcnow + datetime.timedelta(days=1)))
     c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
               + "VALUES(?,?,?,?)",
-              ('job2', 'SGE-job-2', timenow, timenow + 1000.))
+              ('job2', 'SGE-job-2', utcnow,
+               utcnow + datetime.timedelta(days=1)))
     c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
               + "VALUES(?,?,?,?)",
-              ('job3', 'SGE-job-3', timenow, timenow - 1000.))
+              ('job3', 'SGE-job-3', utcnow,
+               utcnow - datetime.timedelta(days=1)))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):
