@@ -405,6 +405,9 @@ class Job(object):
         """Do any necessary postprocessing when the job completes successfully.
            Does nothing by default."""
 
+    name = property(lambda x: x._jobdict['name'],
+                    doc="Unique job name (read-only)")
+
 
 class SGERunner(object):
     """Run a set of commands on the QB3 SGE cluster.
