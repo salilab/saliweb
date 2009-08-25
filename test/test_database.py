@@ -7,28 +7,28 @@ from memory_database import MemoryDatabase
 def make_test_jobs(sql):
     c = sql.cursor()
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time,expire_time) " \
-              + "VALUES(?,?,?,?)",
+    c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?)",
               ('job1', 'SGE-job-1', utcnow,
-               utcnow + datetime.timedelta(days=1)))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
-              + "VALUES(?,?,?,?)",
+               utcnow + datetime.timedelta(days=1), '/'))
+    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?)",
               ('job2', 'SGE-job-2', utcnow,
-               utcnow + datetime.timedelta(days=1)))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time,expire_time) " \
-              + "VALUES(?,?,?,?)",
+               utcnow + datetime.timedelta(days=1), '/'))
+    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?)",
               ('job3', 'SGE-job-3', utcnow,
-               utcnow - datetime.timedelta(days=1)))
+               utcnow - datetime.timedelta(days=1), '/'))
     c.execute("INSERT INTO COMPLETED(name,runjob_id,submit_time, " \
-              + "archive_time,expire_time) VALUES(?,?,?,?,?)",
+              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?)",
               ('ready-for-archive', None, utcnow,
                utcnow - datetime.timedelta(days=1),
-               utcnow + datetime.timedelta(days=1)))
+               utcnow + datetime.timedelta(days=1), '/'))
     c.execute("INSERT INTO ARCHIVED(name,runjob_id,submit_time, " \
-              + "archive_time,expire_time) VALUES(?,?,?,?,?)",
+              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?)",
               ('ready-for-expire', None, utcnow,
                utcnow + datetime.timedelta(days=1),
-               utcnow - datetime.timedelta(days=1)))
+               utcnow - datetime.timedelta(days=1), '/'))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):

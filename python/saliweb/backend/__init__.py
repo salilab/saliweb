@@ -136,7 +136,7 @@ class Database(object):
         self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
-        self.add_field(MySQLField('directory', 'VARCHAR(400)'))
+        self.add_field(MySQLField('directory', 'VARCHAR(400) NOT NULL'))
         self.add_field(MySQLField('submit_time', 'DATETIME NOT NULL'))
         self.add_field(MySQLField('preprocess_time', 'DATETIME'))
         self.add_field(MySQLField('run_time', 'DATETIME'))
@@ -158,6 +158,7 @@ class Database(object):
            :class:`WebService` object."""
         import MySQLdb
         self._placeholder = '%s'
+        self.config = config
         self.conn = MySQLdb.connect(user=config.database['user'],
                                     db=config.database['db'],
                                     passwd=config.database['passwd'])
@@ -343,9 +344,9 @@ class Job(object):
             endtime = datetime.datetime.utcnow()
             self._jobdict['end_time'] = endtime
             self._jobdict['archive_time'] = endtime \
-                                            + self._config.oldjobs['archive']
+                                            + self._db.config.oldjobs['archive']
             self._jobdict['expire_time'] = endtime \
-                                           + self._config.oldjobs['expire']
+                                           + self._db.config.oldjobs['expire']
             self._set_state('COMPLETED')
             # todo: email user if requested
         except Exception, detail:
@@ -379,7 +380,7 @@ class Job(object):
         oldstate = self._get_state()
         self.__state.transition(state)
         # move job to different directory if necessary
-        directory = os.path.join(self._config.directories[state], self.name)
+        directory = os.path.join(self._db.config.directories[state], self.name)
         directory = os.path.normpath(directory)
         if directory != self._jobdict['directory']:
             shutil.move(self._jobdict['directory'], directory)
@@ -397,12 +398,13 @@ class Job(object):
            `reason` can be either a simple string or an exception object."""
         try:
             if isinstance(reason, Exception):
-                reason = "Python exception " + str(reason)
+                reason = "Python exception: " + str(reason)
             self._jobdict['failure'] = reason
             self.__internal_set_state('FAILED')
         except Exception, detail:
             # todo: if an exception occurs here, a catastrophic error occurred.
             # Email the admin?
+            print >> sys.stderr, "Unrecoverable error"
             raise
 
     def _assert_state(self, state):
@@ -453,6 +455,8 @@ class Job(object):
 
     name = property(lambda x: x._jobdict['name'],
                     doc="Unique job name (read-only)")
+    directory = property(lambda x: x._jobdict['directory'],
+                         doc="Current job working directory (read-only)")
 
 
 class SGERunner(object):

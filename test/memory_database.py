@@ -16,6 +16,7 @@ class MemoryDatabase(saliweb.backend.Database):
     """Subclass that uses an in-memory SQLite3 database rather than MySQL"""
     def _connect(self, config):
         self._placeholder = '?'
+        self.config = config
         self.conn = sqlite3.connect(':memory:')
         # sqlite has no date/time functions, unlike MySQL, so add basic ones
         self.conn.create_function('UTC_TIMESTAMP', 0, utc_timestamp)
