@@ -67,24 +67,43 @@ class Config(object):
         config = ConfigParser.SafeConfigParser()
         config.readfp(fh)
         # Populate database info
-        self.dbuser = config.get('database', 'user')
-        self.db = config.get('database', 'db')
-        self.dbpasswd = config.get('database', 'passwd')
+        self.database = {}
+        for key in ('user', 'db', 'passwd'):
+            self.database[key] = config.get('database', key)
         # Populate directories
-        self.incoming = config.get('directories', 'incoming')
-        self.preprocessing = config.get('directories', 'preprocessing')
+        self.directories = {}
+        others = JobState.get_valid_states()
+        # INCOMING and PREPROCESSING directories must be specified
+        for key in ('INCOMING', 'PREPROCESSING'):
+            others.remove(key)
+            self.directories[key] = config.get('directories', key)
+        # Other directories are optional: default to PREPROCESSING
+        for key in others:
+            if config.has_option('directories', key):
+                self.directories[key] = config.get('directories', key)
+            else:
+                self.directories[key] = self.directories['PREPROCESSING']
         # Populate old job expiry times
-        self.archive_time = self._get_time_delta(config, 'oldjobs', 'archive')
-        self.expire_time = config.get('oldjobs', 'expire')
+        self.oldjobs = {}
+        for key in ('archive', 'expire'):
+            self.oldjobs[key] = self._get_time_delta(config, 'oldjobs', key)
 
     def _get_time_delta(self, config, section, option):
         raw = config.get(section, option)
-        if raw.endswith('d'):
-            return datetime.timedelta(days=int(raw[:-1]))
-        elif raw.endswith('s'):
-            return datetime.timedelta(seconds=int(raw[:-1]))
-        elif raw.endswith('m'):
-            return datetime.timedelta(days=int(raw[:-1]) * 30)
+        try:
+            if raw.endswith('h'):
+                return datetime.timedelta(seconds=int(raw[:-1]) * 60 * 60)
+            elif raw.endswith('d'):
+                return datetime.timedelta(days=int(raw[:-1]))
+            elif raw.endswith('m'):
+                return datetime.timedelta(days=int(raw[:-1]) * 30)
+            elif raw.endswith('y'):
+                return datetime.timedelta(days=int(raw[:-1]) * 365)
+        except ValueError:
+            pass
+        raise ValueError("Time deltas must be integers followed by h, " + \
+                         "d, m or y (for hours, days, months, or years), " + \
+                         "e.g. 24h, 30d, 3m, 1y; got " + raw)
 
 
 class MySQLField(object):
@@ -137,9 +156,9 @@ class Database(object):
            :class:`WebService` object."""
         import MySQLdb
         self._placeholder = '%s'
-        self.conn = MySQLdb.connect(user=config['dbuser'],
-                                    db=config['db'],
-                                    passwd=config['dbpasswd'])
+        self.conn = MySQLdb.connect(user=config.database['user'],
+                                    db=config.database['db'],
+                                    passwd=config.database['passwd'])
 
     def delete_tables(self):
         """Delete all tables in the database used to hold job state."""
@@ -322,9 +341,9 @@ class Job(object):
             endtime = datetime.datetime.utcnow()
             self._jobdict['end_time'] = endtime
             self._jobdict['archive_time'] = endtime \
-                                            + self._config['archive_time']
+                                            + self._config.oldjobs['archive']
             self._jobdict['expire_time'] = endtime \
-                                           + self._config['expire_time']
+                                           + self._config.oldjobs['expire']
             self._set_state('COMPLETED')
             # todo: email user if requested
         except Exception, detail:
