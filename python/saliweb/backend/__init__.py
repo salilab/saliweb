@@ -490,13 +490,13 @@ class SGERunner(object):
         """
         self._opts = opts
 
-    def run(self, rundir):
-        """Generate an SGE script in `rundir` and run it. Return the
-           SGE job ID."""
-        fh = open(os.path.join(rundir, 'sge-script.sh'), 'w')
+    def run(self):
+        """Generate an SGE script in the current directory nd run it.
+           Return the SGE job ID."""
+        fh = open('sge-script.sh', 'w')
         self._write_sge_script(fh)
         fh.close()
-        return self._qsub(rundir, 'sge-script.sh')
+        return self._qsub('sge-script.sh')
 
     def _write_sge_script(self, fh):
         print >> fh, "#!" + self._interpreter
@@ -518,11 +518,11 @@ class SGERunner(object):
             print >> fh, 'echo "DONE" > ${_SALI_JOB_DIR}/job-state'
 
     @classmethod
-    def _qsub(cls, rundir, script):
+    def _qsub(cls, script):
         """Submit a job script to the cluster."""
         cmd = '%s/bin/%s/qsub' % (cls._env['SGE_ROOT'], cls._arch)
         p = subprocess.Popen([cmd, script], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, cwd=rundir, env=cls._env)
+                             stderr=subprocess.PIPE, env=cls._env)
         out = p.stdout.read()
         err = p.stderr.read()
         ret = p.wait()

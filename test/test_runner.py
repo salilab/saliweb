@@ -64,20 +64,20 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         """Check SGERunner._qsub()"""
         tmpdir = _make_fake_sge_cmd('qsub',
                    "echo 'Your job 2995598 (\"test.sh\") has been submitted'")
-        self.assertEqual(SGERunner._qsub('/tmp', 'test.sh'), '2995598')
+        self.assertEqual(SGERunner._qsub('test.sh'), '2995598')
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qsub',
                    "echo 'Your job-array 2995599.1-2:1 (\"test.sh\") has " + \
                    "been submitted'")
-        self.assertEqual(SGERunner._qsub('/tmp', 'test.sh'), '2995599')
+        self.assertEqual(SGERunner._qsub('test.sh'), '2995599')
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qsub', 'echo garbage')
-        self.assertRaises(OSError, SGERunner._qsub, '/tmp', 'test.sh')
+        self.assertRaises(OSError, SGERunner._qsub, 'test.sh')
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qsub',
                    "echo 'Your job 2995598 (\"test.sh\") has been submitted'",
                    retval=1)
-        self.assertRaises(OSError, SGERunner._qsub, '/tmp', 'test.sh')
+        self.assertRaises(OSError, SGERunner._qsub, 'test.sh')
         shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
