@@ -1,7 +1,9 @@
 import subprocess
 import re
 import sys
+import os.path
 import datetime
+import shutil
 import ConfigParser
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -376,7 +378,12 @@ class Job(object):
            other uses, call :meth:`_set_state` instead."""
         oldstate = self._get_state()
         self.__state.transition(state)
-        # todo: move job to different directory if necessary
+        # move job to different directory if necessary
+        directory = os.path.join(self._config.directories[state], self.name)
+        directory = os.path.normpath(directory)
+        if directory != self._jobdict['directory']:
+            shutil.move(self._jobdict['directory'], directory)
+            self._jobdict['directory'] = directory
         self._db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):
