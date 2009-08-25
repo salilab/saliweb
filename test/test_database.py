@@ -7,26 +7,26 @@ from memory_database import MemoryDatabase
 def make_test_jobs(sql):
     c = sql.cursor()
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO INCOMING(name,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?)",
-              ('job1', 'SGE-job-1', utcnow,
+    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              ('job1', 'INCOMING', 'SGE-job-1', utcnow,
                utcnow + datetime.timedelta(days=1), '/'))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?)",
-              ('job2', 'SGE-job-2', utcnow,
+    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              ('job2', 'RUNNING', 'SGE-job-2', utcnow,
                utcnow + datetime.timedelta(days=1), '/'))
-    c.execute("INSERT INTO RUNNING(name,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?)",
-              ('job3', 'SGE-job-3', utcnow,
+    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              ('job3', 'RUNNING', 'SGE-job-3', utcnow,
                utcnow - datetime.timedelta(days=1), '/'))
-    c.execute("INSERT INTO COMPLETED(name,runjob_id,submit_time, " \
-              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?)",
-              ('ready-for-archive', None, utcnow,
+    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?,?)",
+              ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
                utcnow + datetime.timedelta(days=1), '/'))
-    c.execute("INSERT INTO ARCHIVED(name,runjob_id,submit_time, " \
-              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?)",
-              ('ready-for-expire', None, utcnow,
+    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?,?)",
+              ('ready-for-expire', 'ARCHIVED', None, utcnow,
                utcnow + datetime.timedelta(days=1),
                utcnow - datetime.timedelta(days=1), '/'))
     sql.commit()
@@ -37,7 +37,7 @@ class DatabaseTest(unittest.TestCase):
     def test_init(self):
         """Check Database init"""
         db = MemoryDatabase(Job)
-        self.assertEqual(len(db._fields), 13)
+        self.assertEqual(len(db._fields), 14)
         self.assertEqual(db._fields[0].name, 'name')
 
     def test_add_field(self):
@@ -54,7 +54,7 @@ class DatabaseTest(unittest.TestCase):
         db._connect(None)
         db.create_tables()
         c = db.conn.cursor()
-        c.execute('DROP TABLE INCOMING')
+        c.execute('DROP TABLE jobs')
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE GARBAGE')
         db.conn.commit()
@@ -64,13 +64,13 @@ class DatabaseTest(unittest.TestCase):
         db = MemoryDatabase(Job)
         db._connect(None)
         c = db.conn.cursor()
-        c.execute('CREATE TABLE INCOMING (test TEXT)')
+        c.execute('CREATE TABLE jobs (test TEXT)')
         db.conn.commit()
         # Should work regardless of whether tables exist
         db.delete_tables()
-        # It should have deleted the INCOMING table
+        # It should have deleted the jobs table
         self.assertRaises(sqlite3.OperationalError, c.execute,
-                          'DROP TABLE INCOMING')
+                          'DROP TABLE jobs')
 
     def test_get_jobs(self):
         """Check Database.get_all_jobs_in_state()"""

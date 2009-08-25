@@ -60,8 +60,8 @@ def add_incoming_job(db, name):
     jobdir = os.path.join(db.config.directories['INCOMING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO INCOMING(name,submit_time,directory) VALUES(?,?,?)",
-              (name, utcnow, jobdir))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory) " \
+              + "VALUES(?,?,?,?)", (name, 'INCOMING', utcnow, jobdir))
     db.conn.commit()
     return jobdir
 
@@ -70,8 +70,9 @@ def add_running_job(db, name, completed):
     jobdir = os.path.join(db.config.directories['RUNNING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO RUNNING(name,submit_time,runjob_id,directory) " \
-              + "VALUES(?,?,?,?)", (name, utcnow, 'SGE-'+name, jobdir))
+    c.execute("INSERT INTO jobs(name,state,submit_time,runjob_id,directory) " \
+              + "VALUES(?,?,?,?,?)",
+              (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir))
     db.conn.commit()
     f = open(os.path.join(jobdir, 'job-state'), 'w')
     if completed:
@@ -85,9 +86,9 @@ def add_completed_job(db, name, archive_time):
     jobdir = os.path.join(db.config.directories['COMPLETED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO COMPLETED(name,submit_time,directory, " \
-              + "archive_time) VALUES(?,?,?,?)",
-              (name, utcnow, jobdir, utcnow + archive_time))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
+              + "archive_time) VALUES(?,?,?,?,?)",
+              (name, 'COMPLETED', utcnow, jobdir, utcnow + archive_time))
     db.conn.commit()
     return jobdir
 
@@ -96,9 +97,9 @@ def add_archived_job(db, name, expire_time):
     jobdir = os.path.join(db.config.directories['ARCHIVED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO ARCHIVED(name,submit_time,directory, " \
-              + "expire_time) VALUES(?,?,?,?)",
-              (name, utcnow, jobdir, utcnow + expire_time))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
+              + "expire_time) VALUES(?,?,?,?,?)",
+              (name, 'ARCHIVED', utcnow, jobdir, utcnow + expire_time))
     db.conn.commit()
     return jobdir
 

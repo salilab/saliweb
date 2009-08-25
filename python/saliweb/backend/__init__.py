@@ -128,15 +128,19 @@ class Database(object):
        `jobcls` should be a subclass of :class:`Job`, which will be used to
        instantiate new job objects.
     """
+    _jobtable = 'jobs'
 
     def __init__(self, jobcls):
         self._jobcls = jobcls
         self._fields = []
         # Add fields used by all web services
+        states = ", ".join("'%s'" % x for x in JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
         self.add_field(MySQLField('directory', 'VARCHAR(400) NOT NULL'))
+        self.add_field(MySQLField('state',
+                              "ENUM(%s) NOT NULL DEFAULT 'INCOMING'" % states))
         self.add_field(MySQLField('submit_time', 'DATETIME NOT NULL'))
         self.add_field(MySQLField('preprocess_time', 'DATETIME'))
         self.add_field(MySQLField('run_time', 'DATETIME'))
@@ -166,16 +170,14 @@ class Database(object):
     def delete_tables(self):
         """Delete all tables in the database used to hold job state."""
         c = self.conn.cursor()
-        for state in JobState.get_valid_states():
-            c.execute('DROP TABLE IF EXISTS %s' % state)
+        c.execute('DROP TABLE IF EXISTS ' + self._jobtable)
         self.conn.commit()
 
     def create_tables(self):
         """Create all tables in the database to hold job state."""
         c = self.conn.cursor()
         schema = ', '.join(x.get_schema() for x in self._fields)
-        for state in JobState.get_valid_states():
-            c.execute('CREATE TABLE %s (%s)' % (state, schema))
+        c.execute('CREATE TABLE %s (%s)' % (self._jobtable, schema))
         self.conn.commit()
 
     def get_all_jobs_in_state(self, state, name=None, after_time=None):
@@ -189,16 +191,16 @@ class Database(object):
            system time are returned.
         """
         fields = [x.name for x in self._fields]
-        query = 'SELECT ' + ', '.join(fields) + ' FROM ' + state
-        wheres = []
-        params = []
+        query = 'SELECT ' + ', '.join(fields) + ' FROM ' + self._jobtable
+        wheres = ['state=' + self._placeholder]
+        params = [state]
         if name is not None:
             wheres.append('name=' + self._placeholder)
             params.append(name)
         if after_time is not None:
             wheres.append(after_time + ' < UTC_TIMESTAMP()')
         if wheres:
-            query += ' WHERE ' + ', '.join(wheres)
+            query += ' WHERE ' + ' AND '.join(wheres)
 
         # Use regular cursor rather than MySQLdb.cursors.DictCursor, so we stay
         # reasonably database-independent
@@ -206,12 +208,13 @@ class Database(object):
         c.execute(query, params)
         for row in c:
             jobdict = dict(zip(fields, row))
+            del jobdict['state']
             yield self._jobcls(self, jobdict, JobState(state))
 
     def _update_job(self, jobdict, state):
         """Update a job in the job state table."""
         c = self.conn.cursor()
-        query = 'UPDATE ' + state + ' SET ' \
+        query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
                             for x in jobdict.keys()) \
                 + ' WHERE name=' + self._placeholder
@@ -221,15 +224,12 @@ class Database(object):
     def _change_job_state(self, jobdict, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
            updating the job (as if :meth:`_update_job` were called)."""
-        # Remove from the old state table, and add to the new state table
         c = self.conn.cursor()
-        c.execute('DELETE FROM ' + oldstate \
-                  + ' WHERE name=' + self._placeholder, (jobdict['name'],))
-        query = 'INSERT INTO ' + newstate + ' (' \
-                + ', '.join(jobdict.keys()) + ') VALUES(' \
-                + ', '.join([self._placeholder] * len(jobdict.keys())) + \
-                ')'
-        c.execute(query, jobdict.values())
+        query = 'UPDATE ' + self._jobtable + ' SET ' \
+                + ', '.join(x + '=' + self._placeholder \
+                            for x in jobdict.keys() + ['state']) \
+                + ' WHERE name=' + self._placeholder
+        c.execute(query, jobdict.values() + [newstate, jobdict['name']])
         self.conn.commit()
 
 
