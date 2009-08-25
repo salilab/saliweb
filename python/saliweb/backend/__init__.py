@@ -384,6 +384,7 @@ class Job(object):
         if directory != self._jobdict['directory']:
             shutil.move(self._jobdict['directory'], directory)
             self._jobdict['directory'] = directory
+        os.chdir(directory)
         self._db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):
