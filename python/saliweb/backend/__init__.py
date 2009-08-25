@@ -301,7 +301,7 @@ class Job(object):
         try:
             self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
             self._set_state('PREPROCESSING')
-            # Delete job-state file if present from a previous run
+            # Delete job-state file, if present from a previous run
             try:
                 os.unlink(self._get_job_state_file())
             except OSError:

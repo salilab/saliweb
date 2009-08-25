@@ -39,6 +39,16 @@ class MyJob(Job):
         f = open('job-output', 'w')
         f.close()
         return 'MyJob ID'
+    def archive(self):
+        if self.name == 'fail-archive':
+            raise ValueError('Failure in archival')
+        f = open('archive', 'w')
+        f.close()
+    def expire(self):
+        if self.name == 'fail-expire':
+            raise ValueError('Failure in expiry')
+        f = open('expire', 'w')
+        f.close()
     def check_batch_completed(self, jobid):
         if self.name == 'fail-batch-complete':
             return True
@@ -68,6 +78,28 @@ def add_running_job(db, name, completed):
         print >> f, "DONE"
     else:
         print >> f, "STARTED"
+    return jobdir
+
+def add_completed_job(db, name, archive_time):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['COMPLETED'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO COMPLETED(name,submit_time,directory, " \
+              + "archive_time) VALUES(?,?,?,?)",
+              (name, utcnow, jobdir, utcnow + archive_time))
+    db.conn.commit()
+    return jobdir
+
+def add_archived_job(db, name, expire_time):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['ARCHIVED'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO ARCHIVED(name,submit_time,directory, " \
+              + "expire_time) VALUES(?,?,?,?)",
+              (name, utcnow, jobdir, utcnow + expire_time))
+    db.conn.commit()
     return jobdir
 
 def setup_webservice():
@@ -230,6 +262,70 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job._jobdict['failure'],
                          'Python exception: Failure in batch completion')
         os.unlink(os.path.join(failjobdir, 'job-state'))
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_ok_archive(self):
+        """Check successful archival of completed jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_completed_job(db, 'job1', datetime.timedelta(days=-1))
+        web.process_old_jobs()
+
+        # Job should now have moved from COMPLETED to ARCHIVED
+        job = web.get_job_by_name('ARCHIVED', 'job1')
+        arcjobdir = os.path.join(conf.directories['ARCHIVED'], 'job1')
+        self.assertEqual(job.directory, arcjobdir)
+        # archive method in MyJob should have triggered
+        os.unlink(os.path.join(arcjobdir, 'archive'))
+        os.rmdir(arcjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_archive_failure(self):
+        """Make sure that archival failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_completed_job(db, 'fail-archive',
+                                     datetime.timedelta(days=-1))
+        web.process_old_jobs()
+
+        # Job should now have moved from COMPLETED to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-archive')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-archive')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in archival')
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_ok_expire(self):
+        """Check successful expiry of archived jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_archived_job(db, 'job1', datetime.timedelta(days=-1))
+        web.process_old_jobs()
+
+        # Job should now have moved from ARCHIVED to EXPIRED
+        job = web.get_job_by_name('EXPIRED', 'job1')
+        expjobdir = os.path.join(conf.directories['EXPIRED'], 'job1')
+        self.assertEqual(job.directory, expjobdir)
+        # expire method in MyJob should have triggered
+        os.unlink(os.path.join(expjobdir, 'expire'))
+        os.rmdir(expjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_expire_failure(self):
+        """Make sure that expiry failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_archived_job(db, 'fail-expire',
+                                    datetime.timedelta(days=-1))
+        web.process_old_jobs()
+
+        # Job should now have moved from ARCHIVED to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-expire')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-expire')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in expiry')
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
