@@ -293,11 +293,19 @@ class Job(object):
         self._jobdict = jobdict
         self.__state = state
 
+    def _get_job_state_file(self):
+        return os.path.join(self.directory, 'job-state')
+
     def _try_run(self):
         """Take an incoming job and try to start running it."""
         try:
             self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
             self._set_state('PREPROCESSING')
+            # Delete job-state file if present from a previous run
+            try:
+                os.unlink(self._get_job_state_file())
+            except OSError:
+                pass
             self.preprocess()
             self._jobdict['run_time'] = datetime.datetime.utcnow()
             self._set_state('RUNNING')
@@ -311,7 +319,7 @@ class Job(object):
     def _job_state_file_done(self):
         """Return True only if the job-state file indicates the job finished."""
         try:
-            f = open(os.path.join(self._jobdict['directory'], 'job-state'))
+            f = open(self._get_job_state_file())
             return f.read().rstrip('\r\n') == 'DONE'
         except IOError:
             return False   # if the file does not exist, job is still running
@@ -338,6 +346,8 @@ class Job(object):
             self._assert_state('RUNNING')
             if not self._has_completed():
                 return
+            # Delete job-state file; no longer needed
+            os.unlink(self._get_job_state_file())
             self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
             self._set_state('POSTPROCESSING')
             self.postprocess()

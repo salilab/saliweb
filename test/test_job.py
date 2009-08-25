@@ -24,11 +24,26 @@ expire: 90d
 
 class MyJob(Job):
     def preprocess(self):
+        if self.name == 'fail-preprocess':
+            raise ValueError('Failure in preprocessing')
         f = open('preproc', 'w')
         f.close()
+    def postprocess(self):
+        if self.name == 'fail-postprocess':
+            raise ValueError('Failure in postprocessing')
+        f = open('postproc', 'w')
+        f.close()
     def run(self):
+        if self.name == 'fail-run':
+            raise ValueError('Failure in running')
         f = open('job-output', 'w')
         f.close()
+        return 'MyJob ID'
+    def check_batch_completed(self, jobid):
+        if self.name == 'fail-batch-complete':
+            return True
+        elif self.name == 'fail-batch-exception':
+            raise ValueError('Failure in batch completion')
 
 def add_incoming_job(db, name):
     c = db.conn.cursor()
@@ -38,6 +53,21 @@ def add_incoming_job(db, name):
     c.execute("INSERT INTO INCOMING(name,submit_time,directory) VALUES(?,?,?)",
               (name, utcnow, jobdir))
     db.conn.commit()
+    return jobdir
+
+def add_running_job(db, name, completed):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['RUNNING'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO RUNNING(name,submit_time,runjob_id,directory) " \
+              + "VALUES(?,?,?,?)", (name, utcnow, 'SGE-'+name, jobdir))
+    db.conn.commit()
+    f = open(os.path.join(jobdir, 'job-state'), 'w')
+    if completed:
+        print >> f, "DONE"
+    else:
+        print >> f, "STARTED"
     return jobdir
 
 def setup_webservice():
@@ -74,10 +104,133 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'job1')
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
+        # New fields should have been populated in the database
+        self.assertEqual(job._jobdict['runjob_id'], 'MyJob ID')
+        self.assertNotEqual(job._jobdict['preprocess_time'], None)
+        self.assertNotEqual(job._jobdict['run_time'], None)
         # Both preprocess and run methods in MyJob should have triggered
         os.unlink(os.path.join(runjobdir, 'preproc'))
         os.unlink(os.path.join(runjobdir, 'job-output'))
         os.rmdir(runjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_preprocess_failure(self):
+        """Make sure that preprocess failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'fail-preprocess')
+        web.process_incoming_jobs()
+
+        # Job should now have moved from INCOMING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-preprocess')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in preprocessing')
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_run_failure(self):
+        """Make sure that run failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'fail-run')
+        web.process_incoming_jobs()
+
+        # Job should now have moved from INCOMING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-run')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in running')
+        # Just the preprocess method in MyJob should have triggered
+        os.unlink(os.path.join(failjobdir, 'preproc'))
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_ok_complete(self):
+        """Check normal job completion"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'job1', completed=True)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to COMPLETED
+        job = web.get_job_by_name('COMPLETED', 'job1')
+        compjobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
+        self.assertEqual(job.directory, compjobdir)
+        # New fields should have been populated in the database
+        self.assertNotEqual(job._jobdict['postprocess_time'], None)
+        self.assertNotEqual(job._jobdict['end_time'], None)
+        self.assertNotEqual(job._jobdict['archive_time'], None)
+        self.assertNotEqual(job._jobdict['expire_time'], None)
+        # postprocess method in MyJob should have triggered
+        os.unlink(os.path.join(compjobdir, 'postproc'))
+        os.rmdir(compjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_still_running(self):
+        """Check that jobs that are still running are not processed"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'job1', completed=False)
+        web.process_completed_jobs()
+
+        # Job should still be in RUNNING state
+        job = web.get_job_by_name('RUNNING', 'job1')
+        runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
+        self.assertEqual(job.directory, runjobdir)
+        os.unlink(os.path.join(runjobdir, 'job-state'))
+        os.rmdir(runjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_postprocess_failure(self):
+        """Make sure that postprocess failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'fail-postprocess', completed=True)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-postprocess')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-postprocess')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in postprocessing')
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_batch_failure(self):
+        """Make sure that batch system failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'fail-batch-complete', completed=False)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-batch-complete')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-batch-complete')
+        self.assertEqual(job.directory, failjobdir)
+        self.assert_(job._jobdict['failure'].startswith( \
+                      'Python exception: Batch system claims job ' \
+                      + 'SGE-fail-batch-complete is complete'))
+        os.unlink(os.path.join(failjobdir, 'job-state'))
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_batch_exception(self):
+        """Make sure that exceptions in check_batch_completed are handled"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'fail-batch-exception', completed=False)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-batch-exception')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-batch-exception')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in batch completion')
+        os.unlink(os.path.join(failjobdir, 'job-state'))
+        os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
 if __name__ == '__main__':
