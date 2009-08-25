@@ -2,6 +2,7 @@ import subprocess
 import re
 import sys
 import datetime
+import ConfigParser
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
 if sys.version_info[0:2] < [2,4]:
@@ -58,14 +59,32 @@ class JobState(object):
 
 class Config(object):
     """This class holds configuration information such as directory
-       locations, etc."""
-    # config.archive_time and config.expire_time are datetime.timedelta objects
-    # e.g. datetime.timedelta(days=30)
+       locations, etc. `fh` is either a filename or a file handle from which
+       the configuration is read."""
+    def __init__(self, fh):
+        if not hasattr(fh, 'read'):
+            fh = open(fh)
+        config = ConfigParser.SafeConfigParser()
+        config.readfp(fh)
+        # Populate database info
+        self.dbuser = config.get('database', 'user')
+        self.db = config.get('database', 'db')
+        self.dbpasswd = config.get('database', 'passwd')
+        # Populate directories
+        self.incoming = config.get('directories', 'incoming')
+        self.preprocessing = config.get('directories', 'preprocessing')
+        # Populate old job expiry times
+        self.archive_time = self._get_time_delta(config, 'oldjobs', 'archive')
+        self.expire_time = config.get('oldjobs', 'expire')
 
-    def __init__(self, fname):
-        """Read configuration data from a file."""
-        # todo: implement this method
-        pass
+    def _get_time_delta(self, config, section, option):
+        raw = config.get(section, option)
+        if raw.endswith('d'):
+            return datetime.timedelta(days=int(raw[:-1]))
+        elif raw.endswith('s'):
+            return datetime.timedelta(seconds=int(raw[:-1]))
+        elif raw.endswith('m'):
+            return datetime.timedelta(days=int(raw[:-1]) * 30)
 
 
 class MySQLField(object):

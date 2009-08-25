@@ -2,6 +2,22 @@ import unittest
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Config, Job
+from StringIO import StringIO
+
+basic_config = """
+[database]
+user: dbuser
+db: testdb
+passwd: dbtest
+
+[directories]
+incoming: /
+preprocessing: /
+
+[oldjobs]
+archive: 30d
+expire: 90d
+"""
 
 job_log = []
 class LoggingJob(Job):
@@ -17,7 +33,7 @@ class WebServiceTest(unittest.TestCase):
 
     def _setup_webservice(self):
         db = MemoryDatabase(LoggingJob)
-        conf = Config(None)
+        conf = Config(StringIO(basic_config))
         web = WebService(conf, db)
         db.create_tables()
         make_test_jobs(db.conn)
@@ -26,8 +42,8 @@ class WebServiceTest(unittest.TestCase):
     def test_init(self):
         """Check WebService init"""
         db = MemoryDatabase(Job)
-        c = Config(None)
-        ws = WebService(c, db)
+        conf = Config(StringIO(basic_config))
+        ws = WebService(conf, db)
 
     def test_get_job_by_name(self):
         """Check WebService.get_job_by_name()"""
