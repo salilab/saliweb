@@ -92,16 +92,16 @@ class Config(object):
         raw = config.get(section, option)
         try:
             if raw.endswith('h'):
-                return datetime.timedelta(seconds=int(raw[:-1]) * 60 * 60)
+                return datetime.timedelta(seconds=float(raw[:-1]) * 60 * 60)
             elif raw.endswith('d'):
-                return datetime.timedelta(days=int(raw[:-1]))
+                return datetime.timedelta(days=float(raw[:-1]))
             elif raw.endswith('m'):
-                return datetime.timedelta(days=int(raw[:-1]) * 30)
+                return datetime.timedelta(days=float(raw[:-1]) * 30)
             elif raw.endswith('y'):
-                return datetime.timedelta(days=int(raw[:-1]) * 365)
+                return datetime.timedelta(days=float(raw[:-1]) * 365)
         except ValueError:
             pass
-        raise ValueError("Time deltas must be integers followed by h, " + \
+        raise ValueError("Time deltas must be numbers followed by h, " + \
                          "d, m or y (for hours, days, months, or years), " + \
                          "e.g. 24h, 30d, 3m, 1y; got " + raw)
 
