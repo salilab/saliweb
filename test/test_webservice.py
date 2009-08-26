@@ -1,7 +1,9 @@
 import unittest
+import os
+import datetime
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
-from saliweb.backend import WebService, Config, Job
+from saliweb.backend import WebService, Config, Job, StateFileError
 from StringIO import StringIO
 
 basic_config = """
@@ -24,10 +26,15 @@ archive: 30d
 expire: 90d
 """
 
+class TestFatalError(Exception): pass
+
 job_log = []
 class LoggingJob(Job):
     """Test Job subclass that logs which methods are called"""
-    def _try_run(self): job_log.append((self.name, 'run'))
+    def _try_run(self):
+        if self.name == 'fatal-error-run':
+            raise TestFatalError("fatal error in run")
+        job_log.append((self.name, 'run'))
     def _try_complete(self): job_log.append((self.name, 'complete'))
     def _try_archive(self): job_log.append((self.name, 'archive'))
     def _try_expire(self): job_log.append((self.name, 'expire'))
@@ -49,6 +56,8 @@ class WebServiceTest(unittest.TestCase):
         db = MemoryDatabase(Job)
         conf = Config(StringIO(basic_config))
         ws = WebService(conf, db)
+        # Only a single WebService can run concurrently
+        self.assertRaises(StateFileError, WebService, conf, db)
 
     def test_get_job_by_name(self):
         """Check WebService.get_job_by_name()"""
@@ -65,6 +74,23 @@ class WebServiceTest(unittest.TestCase):
         db, conf, web = self._setup_webservice()
         web.process_incoming_jobs()
         self.assertEqual(job_log, [('job1', 'run')])
+
+    def test_fatal_error(self):
+        """Check WebService handling of fatal job errors"""
+        db, conf, web = self._setup_webservice()
+        c = db.conn.cursor()
+        c.execute("INSERT INTO jobs(name,state,submit_time, " \
+                  + "directory) VALUES(?,?,?,?)",
+                 ('fatal-error-run', 'INCOMING', datetime.datetime.utcnow(),
+                  '/'))
+        db.conn.commit()
+        # Error is not handled by Job, so should be propagated by WebService
+        self.assertRaises(TestFatalError, web.process_incoming_jobs)
+        # WebService should also leave a state file to prevent further
+        # processes from running
+        x = open('state_file').read().rstrip('\r\n')
+        os.unlink('state_file')
+        self.assertEqual(x, 'FAILED: fatal error in run')
 
     def test_process_completed(self):
         """Check WebService.process_completed_jobs()"""

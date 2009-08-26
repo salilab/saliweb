@@ -18,6 +18,10 @@ class BatchSystemError(Exception):
     "Exception raised if the batch system (such as SGE) failed to run a job."
     pass
 
+class StateFileError(Exception):
+    "Exception raised if a previous run is still running or crashed."""
+    pass
+
 class JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
@@ -250,8 +254,49 @@ class WebService(object):
     """
     def __init__(self, config, db):
         self.config = config
+        self.__delete_state_file_on_exit = False
+        self._check_state_file(config.state_file)
         self.db = db
         self.db._connect(config)
+
+    def __del__(self):
+        if self.__delete_state_file_on_exit:
+            os.unlink(self.config.state_file)
+
+    def _check_state_file(self, state_file):
+        """Make sure that a previous run is not still running or encountered
+           an unrecoverable error."""
+        try:
+            old_state = open(state_file).read().rstrip('\r\n')
+            if old_state.startswith('FAILED: '):
+                raise StateFileError("A previous run failed with an "
+                        "unrecoverable error. Since this can leave the system "
+                        "in an inconsistent state, no further runs will start "
+                        "until the problem has been manually resolved. When "
+                        "you have done this, delete the state file "
+                        "(%s) to reenable runs." % state_file)
+            old_pid = int(old_state)
+            try:
+                os.kill(old_pid, 0)
+                raise StateFileError("A previous run (pid %d) " % old_pid + \
+                        "still appears to be running. If this is not the "
+                        "case, please manually remove the state "
+                        "file (%s)." % state_file)
+            except OSError:
+                pass
+        except IOError:
+            pass
+        f = open(state_file, 'w')
+        print >> f, os.getpid()
+        self.__delete_state_file_on_exit = True
+
+    def _handle_fatal_error(self, detail):
+        f = open(self.config.state_file, 'w')
+        print >> f, "FAILED: " + str(detail)
+        f.close()
+        self.__delete_state_file_on_exit = False
+        # todo: email admin
+        raise
 
     def get_job_by_name(self, state, name):
         """Get the job with the given name in the given job state. Returns
@@ -268,23 +313,31 @@ class WebService(object):
 
     def process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
-        for job in self.db.get_all_jobs_in_state('INCOMING'):
-            job._try_run()
+        try:
+            for job in self.db.get_all_jobs_in_state('INCOMING'):
+                job._try_run()
+        except Exception, detail:
+            self._handle_fatal_error(detail)
 
     def process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
-        for job in self.db.get_all_jobs_in_state('RUNNING'):
-            job._try_complete()
+        try:
+            for job in self.db.get_all_jobs_in_state('RUNNING'):
+                job._try_complete()
+        except Exception, detail:
+            self._handle_fatal_error(detail)
 
     def process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
-        # todo: Use a state file to ensure this is run only once per day?
-        for job in self.db.get_all_jobs_in_state('COMPLETED',
-                                                 after_time='archive_time'):
-            job._try_archive()
-        for job in self.db.get_all_jobs_in_state('ARCHIVED',
-                                                 after_time='expire_time'):
-            job._try_expire()
+        try:
+            for job in self.db.get_all_jobs_in_state('COMPLETED',
+                                                     after_time='archive_time'):
+                job._try_archive()
+            for job in self.db.get_all_jobs_in_state('ARCHIVED',
+                                                     after_time='expire_time'):
+                job._try_expire()
+        except Exception, detail:
+            self._handle_fatal_error(detail)
 
 
 class Job(object):
@@ -306,6 +359,16 @@ class Job(object):
     def _get_job_state_file(self):
         return os.path.join(self.directory, 'job-state')
 
+    def _run_in_job_directory(self, meth, *args, **keys):
+        """Run a method with the working directory set to the job directory.
+           Restore the cwd after the method completes."""
+        cwd = os.getcwd()
+        try:
+            os.chdir(self.directory)
+            return meth(*args, **keys)
+        finally:
+            os.chdir(cwd)
+
     def _try_run(self):
         """Take an incoming job and try to start running it."""
         try:
@@ -316,12 +379,12 @@ class Job(object):
                 os.unlink(self._get_job_state_file())
             except OSError:
                 pass
-            if self.preprocess() is False:
+            if self._run_in_job_directory(self.preprocess) is False:
                 self._mark_job_completed()
             else:
                 self._jobdict['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
-                jobid = self.run()
+                jobid = self._run_in_job_directory(self.run)
                 if jobid != self._jobdict['runjob_id']:
                     self._jobdict['runjob_id'] = jobid
                     self._db._update_job(self._jobdict, self._get_state())
@@ -342,7 +405,8 @@ class Job(object):
         if state_file_done:
             return True
         else:
-            batch_done = self.check_batch_completed(self._jobdict['runjob_id'])
+            batch_done = self._run_in_job_directory(
+                         self.check_batch_completed, self._jobdict['runjob_id'])
             if batch_done:
                 raise BatchSystemError(
                      ("Batch system claims job %s is complete, but " + \
@@ -362,7 +426,7 @@ class Job(object):
             os.unlink(self._get_job_state_file())
             self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
             self._set_state('POSTPROCESSING')
-            self.postprocess()
+            self._run_in_job_directory(self.postprocess)
             self._mark_job_completed()
         except Exception, detail:
             self._fail(detail)
@@ -375,19 +439,19 @@ class Job(object):
         self._jobdict['expire_time'] = endtime \
                                        + self._db.config.oldjobs['expire']
         self._set_state('COMPLETED')
-        self.complete()
+        self._run_in_job_directory(self.complete)
 
     def _try_archive(self):
         try:
             self._set_state('ARCHIVED')
-            self.archive()
+            self._run_in_job_directory(self.archive)
         except Exception, detail:
             self._fail(detail)
 
     def _try_expire(self):
         try:
             self._set_state('EXPIRED')
-            self.expire()
+            self._run_in_job_directory(self.expire)
         except Exception, detail:
             self._fail(detail)
 
@@ -410,7 +474,6 @@ class Job(object):
         if directory != self._jobdict['directory']:
             shutil.move(self._jobdict['directory'], directory)
             self._jobdict['directory'] = directory
-        os.chdir(directory)
         self._db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):
@@ -420,17 +483,14 @@ class Job(object):
     def _fail(self, reason):
         """Mark a job as FAILED. Generally, it should not be necessary to call
            this method directly - instead, simply raise an exception.
-           `reason` can be either a simple string or an exception object."""
-        try:
-            if isinstance(reason, Exception):
-                reason = "Python exception: " + str(reason)
-            self._jobdict['failure'] = reason
-            self.__internal_set_state('FAILED')
-        except Exception, detail:
-            # todo: if an exception occurs here, a catastrophic error occurred.
-            # Email the admin?
-            print >> sys.stderr, "Unrecoverable error"
-            raise
+           `reason` can be either a simple string or an exception object.
+           If an exception in turn occurs in this method, it is considered an
+           unrecoverable error (and is usually handled by :class:`WebService`.
+        """
+        if isinstance(reason, Exception):
+            reason = "Python exception: " + str(reason)
+        self._jobdict['failure'] = reason
+        self.__internal_set_state('FAILED')
 
     def _assert_state(self, state):
         """Make sure that the current job state (as a string) matches
@@ -471,7 +531,6 @@ class Job(object):
            but it can be overridden to disable this or to add extra processing.
         """
         # todo: email user if requested
-        pass
 
     def archive(self):
         """Do any necessary processing when an old completed job reaches its

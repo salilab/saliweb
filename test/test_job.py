@@ -62,10 +62,12 @@ class MyJob(Job):
         f = open('expire', 'w')
         f.close()
     def check_batch_completed(self, jobid):
+        if self.name == 'fail-batch-exception':
+            raise ValueError('Failure in batch completion')
+        f = open('batch_complete', 'w')
+        f.close()
         if self.name == 'fail-batch-complete':
             return True
-        elif self.name == 'fail-batch-exception':
-            raise ValueError('Failure in batch completion')
 
 def add_incoming_job(db, name):
     c = db.conn.cursor()
@@ -256,6 +258,8 @@ class JobTest(unittest.TestCase):
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
         os.unlink(os.path.join(runjobdir, 'job-state'))
+        # Should have checked for batch completion
+        os.unlink(os.path.join(runjobdir, 'batch_complete'))
         os.rmdir(runjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -308,6 +312,8 @@ class JobTest(unittest.TestCase):
                       'Python exception: Batch system claims job ' \
                       + 'SGE-fail-batch-complete is complete'))
         os.unlink(os.path.join(failjobdir, 'job-state'))
+        # Should have checked for batch completion
+        os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
