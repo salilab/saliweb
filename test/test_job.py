@@ -7,6 +7,11 @@ from saliweb.backend import WebService, Config, Job, InvalidStateError
 from StringIO import StringIO
 
 basic_config = """
+[general]
+admin_email: test@salilab.org
+service_name: test_service
+state_file: state_file
+
 [database]
 user: dbuser
 db: testdb

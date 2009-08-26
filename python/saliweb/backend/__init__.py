@@ -72,6 +72,9 @@ class Config(object):
         self._populate_database(config)
         self._populate_directories(config)
         self._populate_oldjobs(config)
+        self.admin_email = config.get('general', 'admin_email')
+        self.service_name = config.get('general', 'service_name')
+        self.state_file = config.get('general', 'state_file')
 
     def _populate_database(self, config):
         self.database = {}

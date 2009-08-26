@@ -3,6 +3,11 @@ from saliweb.backend import Config
 from StringIO import StringIO
 
 basic_config = """
+[general]
+admin_email: test@salilab.org
+service_name: test_service
+state_file: state_file
+
 [database]
 user: dbuser
 db: testdb
@@ -28,6 +33,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.directories['PREPROCESSING'], '/preproc')
         self.assertEqual(conf.directories['FAILED'], '/preproc')
         self.assertEqual(conf.oldjobs['expire'].days, 90)
+        self.assertEqual(conf.admin_email, 'test@salilab.org')
 
     def test_time_deltas(self):
         """Check parsing of time deltas in config files"""
