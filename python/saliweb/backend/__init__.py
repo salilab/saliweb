@@ -69,11 +69,16 @@ class Config(object):
             fh = open(fh)
         config = ConfigParser.SafeConfigParser()
         config.readfp(fh)
-        # Populate database info
+        self._populate_database(config)
+        self._populate_directories(config)
+        self._populate_oldjobs(config)
+
+    def _populate_database(self, config):
         self.database = {}
         for key in ('user', 'db', 'passwd'):
             self.database[key] = config.get('database', key)
-        # Populate directories
+
+    def _populate_directories(self, config):
         self.directories = {}
         others = JobState.get_valid_states()
         # INCOMING and PREPROCESSING directories must be specified
@@ -86,7 +91,8 @@ class Config(object):
                 self.directories[key] = config.get('directories', key)
             else:
                 self.directories[key] = self.directories['PREPROCESSING']
-        # Populate old job expiry times
+
+    def _populate_oldjobs(self, config):
         self.oldjobs = {}
         for key in ('archive', 'expire'):
             self.oldjobs[key] = self._get_time_delta(config, 'oldjobs', key)
