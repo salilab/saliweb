@@ -25,6 +25,7 @@ class JobState(object):
                       'EXPIRED', 'ARCHIVED']
     __valid_transitions = [['INCOMING', 'PREPROCESSING'],
                            ['PREPROCESSING', 'RUNNING'],
+                           ['PREPROCESSING', 'COMPLETED'],
                            ['RUNNING', 'POSTPROCESSING'],
                            ['POSTPROCESSING', 'COMPLETED'],
                            ['COMPLETED', 'ARCHIVED'],
@@ -306,13 +307,15 @@ class Job(object):
                 os.unlink(self._get_job_state_file())
             except OSError:
                 pass
-            self.preprocess()
-            self._jobdict['run_time'] = datetime.datetime.utcnow()
-            self._set_state('RUNNING')
-            jobid = self.run()
-            if jobid != self._jobdict['runjob_id']:
-                self._jobdict['runjob_id'] = jobid
-                self._db._update_job(self._jobdict, self._get_state())
+            if self.preprocess() is False:
+                self._mark_job_completed()
+            else:
+                self._jobdict['run_time'] = datetime.datetime.utcnow()
+                self._set_state('RUNNING')
+                jobid = self.run()
+                if jobid != self._jobdict['runjob_id']:
+                    self._jobdict['runjob_id'] = jobid
+                    self._db._update_job(self._jobdict, self._get_state())
         except Exception, detail:
             self._fail(detail)
 
@@ -351,16 +354,19 @@ class Job(object):
             self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
             self._set_state('POSTPROCESSING')
             self.postprocess()
-            endtime = datetime.datetime.utcnow()
-            self._jobdict['end_time'] = endtime
-            self._jobdict['archive_time'] = endtime \
-                                            + self._db.config.oldjobs['archive']
-            self._jobdict['expire_time'] = endtime \
-                                           + self._db.config.oldjobs['expire']
-            self._set_state('COMPLETED')
-            # todo: email user if requested
+            self._mark_job_completed()
         except Exception, detail:
             self._fail(detail)
+
+    def _mark_job_completed(self):
+        endtime = datetime.datetime.utcnow()
+        self._jobdict['end_time'] = endtime
+        self._jobdict['archive_time'] = endtime \
+                                        + self._db.config.oldjobs['archive']
+        self._jobdict['expire_time'] = endtime \
+                                       + self._db.config.oldjobs['expire']
+        self._set_state('COMPLETED')
+        self.complete()
 
     def _try_archive(self):
         try:
@@ -450,6 +456,14 @@ class Job(object):
            Note that the batch system reporting the job is complete does not
            necessarily mean the job actually completed successfully."""
 
+    def complete(self):
+        """This method is called after a job completes. By default, it emails
+           the user (if requested) to let them know job results are available,
+           but it can be overridden to disable this or to add extra processing.
+        """
+        # todo: email user if requested
+        pass
+
     def archive(self):
         """Do any necessary processing when an old completed job reaches its
            archive time. Does nothing by default, but can be overridden by
@@ -462,7 +476,9 @@ class Job(object):
 
     def preprocess(self):
         """Do any necessary preprocessing before the job is actually run.
-           Does nothing by default."""
+           Does nothing by default. If this method returns False, further
+           running of the job is skipped and it moves directly to the
+           COMPLETED state."""
 
     def postprocess(self):
         """Do any necessary postprocessing when the job completes successfully.

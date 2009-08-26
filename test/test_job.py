@@ -28,10 +28,17 @@ class MyJob(Job):
             raise ValueError('Failure in preprocessing')
         f = open('preproc', 'w')
         f.close()
+        if self.name == 'complete-preprocess':
+            return False
     def postprocess(self):
         if self.name == 'fail-postprocess':
             raise ValueError('Failure in postprocessing')
         f = open('postproc', 'w')
+        f.close()
+    def complete(self):
+        if self.name == 'fail-complete':
+            raise ValueError('Failure in completion')
+        f = open('complete', 'w')
         f.close()
     def run(self):
         if self.name == 'fail-run':
@@ -173,6 +180,27 @@ class JobTest(unittest.TestCase):
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
+    def test_preprocess_complete(self):
+        """Job.preprocess() should be able to skip a job run"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'complete-preprocess')
+        web.process_incoming_jobs()
+
+        # Job should now have moved directly from INCOMING to COMPLETED
+        job = web.get_job_by_name('COMPLETED', 'complete-preprocess')
+        compjobdir = os.path.join(conf.directories['COMPLETED'],
+                                  'complete-preprocess')
+        self.assertEqual(job.directory, compjobdir)
+        # Just the preprocess and complete methods in MyJob should have
+        # triggered; no info from run should be present
+        os.unlink(os.path.join(compjobdir, 'preproc'))
+        os.unlink(os.path.join(compjobdir, 'complete'))
+        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['run_time'], None)
+        self.assertEqual(job._jobdict['postprocess_time'], None)
+        os.rmdir(compjobdir)
+        cleanup_webservice(conf, tmpdir)
+
     def test_run_failure(self):
         """Make sure that run failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
@@ -206,8 +234,9 @@ class JobTest(unittest.TestCase):
         self.assertNotEqual(job._jobdict['end_time'], None)
         self.assertNotEqual(job._jobdict['archive_time'], None)
         self.assertNotEqual(job._jobdict['expire_time'], None)
-        # postprocess method in MyJob should have triggered
+        # postprocess and complete methods in MyJob should have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
+        os.unlink(os.path.join(compjobdir, 'complete'))
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -238,6 +267,24 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         self.assertEqual(job._jobdict['failure'],
                          'Python exception: Failure in postprocessing')
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_complete_failure(self):
+        """Make sure that complete failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'fail-complete', completed=True)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-complete')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-complete')
+        self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._jobdict['failure'],
+                         'Python exception: Failure in completion')
+        # postprocess method in MyJob should have triggered
+        os.unlink(os.path.join(failjobdir, 'postproc'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
