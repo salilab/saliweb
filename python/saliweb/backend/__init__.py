@@ -426,6 +426,11 @@ class Job(object):
                                      "but it is actually in %s state") \
                                     % (state, current_state))
 
+    def resubmit(self):
+        """Make a FAILED job eligible for running again."""
+        self._assert_state('FAILED')
+        self._set_state('INCOMING')
+
     def run(self):
         """Run the job, e.g. on an SGE cluster.
            Must be implemented by the user for each web service.

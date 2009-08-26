@@ -3,7 +3,7 @@ import datetime
 import os
 import tempfile
 from memory_database import MemoryDatabase
-from saliweb.backend import WebService, Config, Job
+from saliweb.backend import WebService, Config, Job, InvalidStateError
 from StringIO import StringIO
 
 basic_config = """
@@ -100,6 +100,16 @@ def add_archived_job(db, name, expire_time):
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
               + "expire_time) VALUES(?,?,?,?,?)",
               (name, 'ARCHIVED', utcnow, jobdir, utcnow + expire_time))
+    db.conn.commit()
+    return jobdir
+
+def add_failed_job(db, name):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['FAILED'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory) " \
+              + "VALUES(?,?,?,?)", (name, 'FAILED', utcnow, jobdir))
     db.conn.commit()
     return jobdir
 
@@ -328,6 +338,22 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job._jobdict['failure'],
                          'Python exception: Failure in expiry')
         os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_ok_resubmit(self):
+        """Check successful resubmission of failed jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_failed_job(db, 'job1')
+        job = web.get_job_by_name('FAILED', 'job1')
+        job.resubmit()
+
+        # Job should now have moved from FAILED to INCOMING
+        job = web.get_job_by_name('INCOMING', 'job1')
+        # Can only resubmit FAILED jobs
+        self.assertRaises(InvalidStateError, job.resubmit)
+        injobdir = os.path.join(conf.directories['INCOMING'], 'job1')
+        self.assertEqual(job.directory, injobdir)
+        os.rmdir(injobdir)
         cleanup_webservice(conf, tmpdir)
 
 if __name__ == '__main__':
