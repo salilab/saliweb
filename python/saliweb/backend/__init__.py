@@ -284,7 +284,6 @@ class WebService(object):
     def __init__(self, config, db):
         self.config = config
         self.__delete_state_file_on_exit = False
-        self._check_state_file(config.state_file)
         self.db = db
         self.db._connect(config)
 
@@ -295,6 +294,8 @@ class WebService(object):
     def _check_state_file(self, state_file):
         """Make sure that a previous run is not still running or encountered
            an unrecoverable error."""
+        if self.__delete_state_file_on_exit: # state file checked already
+            return
         try:
             old_state = open(state_file).read().rstrip('\r\n')
             if old_state.startswith('FAILED: '):
@@ -357,6 +358,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
+        self._check_state_file(self.config.state_file)
         try:
             for job in self.db.get_all_jobs_in_state('INCOMING'):
                 job._try_run()
@@ -365,6 +367,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
+        self._check_state_file(self.config.state_file)
         try:
             for job in self.db.get_all_jobs_in_state('RUNNING'):
                 job._try_complete()
@@ -373,6 +376,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
+        self._check_state_file(self.config.state_file)
         try:
             for job in self.db.get_all_jobs_in_state('COMPLETED',
                                                      after_time='archive_time'):

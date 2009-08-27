@@ -58,8 +58,8 @@ class WebServiceTest(unittest.TestCase):
         db = MemoryDatabase(Job)
         conf = Config(StringIO(basic_config))
         ws = WebService(conf, db)
-        # Only a single WebService can run concurrently
-        self.assertRaises(StateFileError, WebService, conf, db)
+        # OK to make multiple WebService instances
+        ws2 = WebService(conf, db)
 
     def test_get_job_by_name(self):
         """Check WebService.get_job_by_name()"""
@@ -76,6 +76,9 @@ class WebServiceTest(unittest.TestCase):
         db, conf, web = self._setup_webservice()
         web.process_incoming_jobs()
         self.assertEqual(job_log, [('job1', 'run')])
+        # Only a single WebService can process jobs concurrently
+        ws2 = WebService(conf, db)
+        self.assertRaises(StateFileError, ws2.process_incoming_jobs)
 
     def test_fatal_error(self):
         """Check WebService handling of fatal job errors"""
