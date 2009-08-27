@@ -478,6 +478,7 @@ class Job(object):
                                        + self._db.config.oldjobs['expire']
         self._set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
+        self.send_job_completed_email()
 
     def _try_archive(self):
         try:
@@ -576,10 +577,14 @@ class Job(object):
                                        subject, body)
 
     def complete(self):
-        """This method is called after a job completes. By default, it emails
-           the user (if requested) to let them know job results are available,
-           but it can be overridden to disable this or to add extra processing.
+        """This method is called after a job completes. Does nothing by default,
+           but can be overridden by the user.
         """
+
+    def send_job_completed_email(self):
+        """Email the user (if requested) to let them know job results are
+           available. Can be overridden to disable this behavior or to change
+           the content of the email."""
         subject = 'Sali lab %s service: Job %s complete' \
                   % (self.service_name, self.name)
         body = 'Your job %s has finished.' % self.name

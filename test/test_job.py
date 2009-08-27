@@ -1,6 +1,7 @@
 import unittest
 import datetime
 import os
+import re
 import tempfile
 from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Job, InvalidStateError
@@ -9,7 +10,7 @@ from StringIO import StringIO
 
 basic_config = """
 [general]
-admin_email: test@salilab.org
+admin_email: testadmin@salilab.org
 service_name: test_service
 state_file: state_file
 
@@ -85,9 +86,10 @@ def add_running_job(db, name, completed):
     jobdir = os.path.join(db.config.directories['RUNNING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,runjob_id,directory) " \
-              + "VALUES(?,?,?,?,?)",
-              (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir))
+    c.execute("INSERT INTO jobs(name,state,submit_time,runjob_id,directory, " \
+              + "contact_email) VALUES(?,?,?,?,?,?)",
+              (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir,
+              'testuser@salilab.org'))
     db.conn.commit()
     f = open(os.path.join(jobdir, 'job-state'), 'w')
     if completed:
@@ -187,6 +189,12 @@ class JobTest(unittest.TestCase):
                          'Python exception: Failure in preprocessing')
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        # Make sure that the admin got a failed job email
+        mail = conf.get_mail_output()
+        self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
+                               + '.*Failure in preprocessing', mail,
+                               flags=re.DOTALL),
+                     'Unexpected mail output: ' + mail)
 
     def test_preprocess_complete(self):
         """Job.preprocess() should be able to skip a job run"""
@@ -247,6 +255,12 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(compjobdir, 'complete'))
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
+        # User should have been notified by email
+        mail = conf.get_mail_output()
+        self.assert_(re.search('Subject: .*From: testadmin.*To: testuser' \
+                               + '.*Your job job1 has finished', mail,
+                               flags=re.DOTALL),
+                     'Unexpected mail output: ' + mail)
 
     def test_still_running(self):
         """Check that jobs that are still running are not processed"""
