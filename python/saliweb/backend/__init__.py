@@ -24,7 +24,7 @@ class StateFileError(Exception):
     "Exception raised if a previous run is still running or crashed."""
     pass
 
-class JobState(object):
+class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
                       'POSTPROCESSING', 'COMPLETED', 'FAILED',
@@ -44,7 +44,7 @@ class JobState(object):
             raise InvalidStateError("%s is not in %s" \
                                     % (state, str(self.__valid_states)))
     def __str__(self):
-        return "<JobState %s>" % self.get()
+        return "<_JobState %s>" % self.get()
 
     def get(self):
         """Get current state, as a string."""
@@ -115,7 +115,7 @@ class Config(object):
 
     def _populate_directories(self, config):
         self.directories = {}
-        others = JobState.get_valid_states()
+        others = _JobState.get_valid_states()
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
             others.remove(key)
@@ -176,7 +176,7 @@ class Database(object):
         self._jobcls = jobcls
         self._fields = []
         # Add fields used by all web services
-        states = ", ".join("'%s'" % x for x in JobState.get_valid_states())
+        states = ", ".join("'%s'" % x for x in _JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
@@ -210,20 +210,20 @@ class Database(object):
                                     db=config.database['db'],
                                     passwd=config.database['passwd'])
 
-    def delete_tables(self):
+    def _delete_tables(self):
         """Delete all tables in the database used to hold job state."""
         c = self.conn.cursor()
         c.execute('DROP TABLE IF EXISTS ' + self._jobtable)
         self.conn.commit()
 
-    def create_tables(self):
+    def _create_tables(self):
         """Create all tables in the database to hold job state."""
         c = self.conn.cursor()
         schema = ', '.join(x.get_schema() for x in self._fields)
         c.execute('CREATE TABLE %s (%s)' % (self._jobtable, schema))
         self.conn.commit()
 
-    def get_all_jobs_in_state(self, state, name=None, after_time=None):
+    def _get_all_jobs_in_state(self, state, name=None, after_time=None):
         """Get all the jobs in the given job state, as a generator of
            :class:`Job` objects (or a subclass, as given by the `jobcls`
            argument to the :class:`Database` constructor).
@@ -252,7 +252,7 @@ class Database(object):
         for row in c:
             jobdict = dict(zip(fields, row))
             del jobdict['state']
-            yield self._jobcls(self, jobdict, JobState(state))
+            yield self._jobcls(self, jobdict, _JobState(state))
 
     def _update_job(self, jobdict, state):
         """Update a job in the job state table."""
@@ -346,9 +346,17 @@ have done this, delete the state file (%s) to reenable runs.
     def get_job_by_name(self, state, name):
         """Get the job with the given name in the given job state. Returns
            a :class:`Job` object, or None if the job is not found."""
-        jobs = list(self.db.get_all_jobs_in_state(state, name=name))
+        jobs = list(self.db._get_all_jobs_in_state(state, name=name))
         if len(jobs) == 1:
             return jobs[0]
+
+    def delete_database_tables(self):
+        """Delete all tables in the database used to hold job state."""
+        self.db._delete_tables()
+
+    def create_database_tables(self):
+        """Create all tables in the database used to hold job state."""
+        self.db._create_tables()
 
     def do_all_processing(self):
         """Convenience method that calls each of the process_* methods"""
@@ -360,7 +368,7 @@ have done this, delete the state file (%s) to reenable runs.
         """Check for any incoming jobs, and run each one."""
         self._check_state_file(self.config.state_file)
         try:
-            for job in self.db.get_all_jobs_in_state('INCOMING'):
+            for job in self.db._get_all_jobs_in_state('INCOMING'):
                 job._try_run()
         except Exception, detail:
             self._handle_fatal_error(detail)
@@ -369,7 +377,7 @@ have done this, delete the state file (%s) to reenable runs.
         """Check for any jobs that have just completed, and process them."""
         self._check_state_file(self.config.state_file)
         try:
-            for job in self.db.get_all_jobs_in_state('RUNNING'):
+            for job in self.db._get_all_jobs_in_state('RUNNING'):
                 job._try_complete()
         except Exception, detail:
             self._handle_fatal_error(detail)
@@ -378,11 +386,11 @@ have done this, delete the state file (%s) to reenable runs.
         """Check for any old job results and archive or delete them."""
         self._check_state_file(self.config.state_file)
         try:
-            for job in self.db.get_all_jobs_in_state('COMPLETED',
+            for job in self.db._get_all_jobs_in_state('COMPLETED',
                                                      after_time='archive_time'):
                 job._try_archive()
-            for job in self.db.get_all_jobs_in_state('ARCHIVED',
-                                                     after_time='expire_time'):
+            for job in self.db._get_all_jobs_in_state('ARCHIVED',
+                                                      after_time='expire_time'):
                 job._try_expire()
         except Exception, detail:
             self._handle_fatal_error(detail)

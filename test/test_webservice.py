@@ -49,7 +49,7 @@ class WebServiceTest(unittest.TestCase):
         db = MemoryDatabase(LoggingJob)
         conf = Config(StringIO(basic_config))
         web = WebService(conf, db)
-        db.create_tables()
+        web.create_database_tables()
         make_test_jobs(db.conn)
         return db, conf, web
 

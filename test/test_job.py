@@ -146,7 +146,7 @@ def setup_webservice():
     conf = Config(StringIO(basic_config \
                            % (incoming, preprocessing, failed)))
     web = WebService(conf, db)
-    db.create_tables()
+    db._create_tables()
     return db, conf, web, tmpdir
 
 def cleanup_webservice(conf, tmpdir):
