@@ -733,7 +733,7 @@ class SGERunner(object):
             out = p.stdout.read()
             err = p.stderr.read()
             ret = p.wait()
-            if ret != 0:
+            if ret > 1:
                 raise OSError("qstat failed with code %d and stderr %s" \
                               % (ret, err))
         except Exception:
@@ -742,7 +742,7 @@ class SGERunner(object):
             else:
                 raise
         # todo: raise an exception if job is in Eqw state, dr, etc.
-        return out.startswith("Following jobs do not exist:")
+        return err.startswith("Following jobs do not exist:")
 
 
 class SaliSGERunner(SGERunner):
