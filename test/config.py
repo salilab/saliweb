@@ -23,3 +23,6 @@ open('%s', 'w').write(sys.stdin.read())
 
     def get_mail_output(self):
         return open(self.__mailoutput).read()
+
+    def _read_db_auth(self, end):
+        self.database['user'] = self.database['passwd'] = 'test'

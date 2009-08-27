@@ -73,10 +73,14 @@ class Config(object):
     _mailer = '/usr/sbin/sendmail'
 
     def __init__(self, fh):
-        if not hasattr(fh, 'read'):
-            fh = open(fh)
         config = ConfigParser.SafeConfigParser()
-        config.readfp(fh)
+        if not hasattr(fh, 'read'):
+            self._config_dir = os.path.dirname(os.path.abspath(fh))
+            config.readfp(open(fh), fh)
+            fh = open(fh)
+        else:
+            self._config_dir = None
+            config.readfp(fh)
         self._populate_database(config)
         self._populate_directories(config)
         self._populate_oldjobs(config)
@@ -110,8 +114,20 @@ class Config(object):
 
     def _populate_database(self, config):
         self.database = {}
-        for key in ('user', 'db', 'passwd'):
-            self.database[key] = config.get('database', key)
+        self.database['db'] = config.get('database', 'db')
+        for key in ('backend_config', 'frontend_config'):
+            fname = config.get('database', key)
+            if not os.path.isabs(fname) and self._config_dir:
+                fname = os.path.abspath(os.path.join(self._config_dir, fname))
+            self.database[key] = fname
+
+    def _read_db_auth(self, end='back'):
+        filename = self.database[end + 'end_config']
+        config = ConfigParser.SafeConfigParser()
+        config.readfp(open(filename), filename)
+        config_dir = os.path.dirname(self._filename)
+        for key in ('user', 'passwd'):
+            self.database[key] = config.get(end + 'end_db', key)
 
     def _populate_directories(self, config):
         self.directories = {}
@@ -283,6 +299,7 @@ class WebService(object):
     """
     def __init__(self, config, db):
         self.config = config
+        self.config._read_db_auth('back')
         self.__delete_state_file_on_exit = False
         self.db = db
         self.db._connect(config)

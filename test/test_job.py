@@ -15,9 +15,9 @@ service_name: test_service
 state_file: state_file
 
 [database]
-user: dbuser
 db: testdb
-passwd: dbtest
+frontend_config: frontend.conf
+backend_config: backend.conf
 
 [directories]
 incoming: %s

@@ -9,9 +9,9 @@ service_name: test_service
 state_file: state_file
 
 [database]
-user: dbuser
 db: testdb
-passwd: dbtest
+frontend_config: frontend.conf
+backend_config: backend.conf
 
 [directories]
 incoming: /in
@@ -28,7 +28,7 @@ class ConfigTest(unittest.TestCase):
     def test_init(self):
         """Check Config init"""
         conf = Config(StringIO(basic_config % '90d'))
-        self.assertEqual(conf.database['user'], 'dbuser')
+        self.assertEqual(conf.database['frontend_config'], 'frontend.conf')
         self.assertEqual(conf.directories['INCOMING'], '/in')
         self.assertEqual(conf.directories['PREPROCESSING'], '/preproc')
         self.assertEqual(conf.directories['FAILED'], '/preproc')
