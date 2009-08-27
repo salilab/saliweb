@@ -82,9 +82,9 @@ class WebServiceTest(unittest.TestCase):
         db, conf, web = self._setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time, " \
-                  + "directory) VALUES(?,?,?,?)",
+                  + "directory,url) VALUES(?,?,?,?,?)",
                  ('fatal-error-run', 'INCOMING', datetime.datetime.utcnow(),
-                  '/'))
+                  '/', 'http://testurl'))
         db.conn.commit()
         # Error is not handled by Job, so should be propagated by WebService
         self.assertRaises(TestFatalError, web.process_incoming_jobs)

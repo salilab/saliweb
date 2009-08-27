@@ -76,8 +76,9 @@ def add_incoming_job(db, name):
     jobdir = os.path.join(db.config.directories['INCOMING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory) " \
-              + "VALUES(?,?,?,?)", (name, 'INCOMING', utcnow, jobdir))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+              + "VALUES(?,?,?,?,?)", (name, 'INCOMING', utcnow, jobdir,
+                                      'http://testurl'))
     db.conn.commit()
     return jobdir
 
@@ -87,9 +88,9 @@ def add_running_job(db, name, completed):
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,runjob_id,directory, " \
-              + "contact_email) VALUES(?,?,?,?,?,?)",
+              + "contact_email,url) VALUES(?,?,?,?,?,?,?)",
               (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir,
-              'testuser@salilab.org'))
+              'testuser@salilab.org', 'http://testurl'))
     db.conn.commit()
     f = open(os.path.join(jobdir, 'job-state'), 'w')
     if completed:
@@ -104,8 +105,9 @@ def add_completed_job(db, name, archive_time):
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
-              + "archive_time) VALUES(?,?,?,?,?)",
-              (name, 'COMPLETED', utcnow, jobdir, utcnow + archive_time))
+              + "archive_time,url) VALUES(?,?,?,?,?,?)",
+              (name, 'COMPLETED', utcnow, jobdir, utcnow + archive_time,
+               'http://testurl'))
     db.conn.commit()
     return jobdir
 
@@ -115,8 +117,9 @@ def add_archived_job(db, name, expire_time):
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
-              + "expire_time) VALUES(?,?,?,?,?)",
-              (name, 'ARCHIVED', utcnow, jobdir, utcnow + expire_time))
+              + "expire_time,url) VALUES(?,?,?,?,?,?)",
+              (name, 'ARCHIVED', utcnow, jobdir, utcnow + expire_time,
+               'http://testurl'))
     db.conn.commit()
     return jobdir
 
@@ -125,8 +128,9 @@ def add_failed_job(db, name):
     jobdir = os.path.join(db.config.directories['FAILED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory) " \
-              + "VALUES(?,?,?,?)", (name, 'FAILED', utcnow, jobdir))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+              + "VALUES(?,?,?,?,?)", (name, 'FAILED', utcnow, jobdir,
+                                      'http://testurl'))
     db.conn.commit()
     return jobdir
 
@@ -258,8 +262,8 @@ class JobTest(unittest.TestCase):
         # User should have been notified by email
         mail = conf.get_mail_output()
         self.assert_(re.search('Subject: .*From: testadmin.*To: testuser' \
-                               + '.*Your job job1 has finished', mail,
-                               flags=re.DOTALL),
+                               + '.*Your job job1 has finished.*http://testurl',
+                               mail, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
 
     def test_still_running(self):

@@ -180,6 +180,7 @@ class Database(object):
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
         self.add_field(MySQLField('directory', 'VARCHAR(400) NOT NULL'))
+        self.add_field(MySQLField('url', 'TEXT NOT NULL'))
         self.add_field(MySQLField('state',
                               "ENUM(%s) NOT NULL DEFAULT 'INCOMING'" % states))
         self.add_field(MySQLField('submit_time', 'DATETIME NOT NULL'))
@@ -587,7 +588,8 @@ class Job(object):
            the content of the email."""
         subject = 'Sali lab %s service: Job %s complete' \
                   % (self.service_name, self.name)
-        body = 'Your job %s has finished.' % self.name
+        body = 'Your job %s has finished.\n\n' % self.name + \
+               'Results can be found at %s\n' % self.url
         self.send_user_email(subject, body)
 
     def archive(self):
@@ -612,6 +614,8 @@ class Job(object):
 
     name = property(lambda x: x._jobdict['name'],
                     doc="Unique job name (read-only)")
+    url = property(lambda x: x._jobdict['url'],
+                   doc="URL containing job results (read-only)")
     service_name = property(lambda x: x._db.config.service_name,
                             doc="Web service name (read-only)")
     directory = property(lambda x: x._jobdict['directory'],

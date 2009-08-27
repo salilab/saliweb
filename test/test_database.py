@@ -8,27 +8,29 @@ def make_test_jobs(sql):
     c = sql.cursor()
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job1', 'INCOMING', 'SGE-job-1', utcnow,
-               utcnow + datetime.timedelta(days=1), '/'))
+               utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job2', 'RUNNING', 'SGE-job-2', utcnow,
-               utcnow + datetime.timedelta(days=1), '/'))
+               utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
-              + "expire_time,directory) VALUES(?,?,?,?,?,?)",
+              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job3', 'RUNNING', 'SGE-job-3', utcnow,
-               utcnow - datetime.timedelta(days=1), '/'))
+               utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
-              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?,?)",
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
-               utcnow + datetime.timedelta(days=1), '/'))
+               utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
-              + "archive_time,expire_time,directory) VALUES(?,?,?,?,?,?,?)",
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-expire', 'ARCHIVED', None, utcnow,
                utcnow + datetime.timedelta(days=1),
-               utcnow - datetime.timedelta(days=1), '/'))
+               utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):
@@ -37,7 +39,7 @@ class DatabaseTest(unittest.TestCase):
     def test_init(self):
         """Check Database init"""
         db = MemoryDatabase(Job)
-        self.assertEqual(len(db._fields), 14)
+        self.assertEqual(len(db._fields), 15)
         self.assertEqual(db._fields[0].name, 'name')
 
     def test_add_field(self):
