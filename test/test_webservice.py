@@ -95,7 +95,9 @@ class WebServiceTest(unittest.TestCase):
         self.assertEqual(x, 'FAILED: fatal error in run')
         mail = conf.get_mail_output()
         self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
-                               + '.*fatal error in run', mail, flags=re.DOTALL),
+                               + '.*Traceback.*process_incoming_jobs.*' \
+                               + 'TestFatalError: fatal error in run',
+                               mail, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
 
     def test_process_completed(self):

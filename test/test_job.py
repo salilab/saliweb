@@ -158,6 +158,11 @@ def cleanup_webservice(conf, tmpdir):
 class JobTest(unittest.TestCase):
     """Check Job class"""
 
+    def assert_fail_msg(self, failre, job):
+        self.assert_(re.search(failre, job._jobdict['failure'],
+                               flags=re.DOTALL),
+                     'Unexpected failure message: ' + job._jobdict['failure'])
+
     def test_ok_startup(self):
         """Check successful startup of incoming jobs"""
         db, conf, web, tmpdir = setup_webservice()
@@ -189,8 +194,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
         self.assertEqual(job.directory, failjobdir)
         self.assertEqual(job._jobdict['runjob_id'], None)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in preprocessing')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in preprocessing', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
         # Make sure that the admin got a failed job email
@@ -232,8 +237,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
         self.assertEqual(job.directory, failjobdir)
         self.assertEqual(job._jobdict['runjob_id'], None)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in running')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in running', job)
         # Just the preprocess method in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'preproc'))
         os.rmdir(failjobdir)
@@ -293,8 +298,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-postprocess')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in postprocessing')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in postprocessing', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -309,8 +314,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-complete')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in completion')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in completion', job)
         # postprocess method in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'postproc'))
         os.rmdir(failjobdir)
@@ -327,9 +332,10 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-batch-complete')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_(job._jobdict['failure'].startswith( \
-                      'Python exception: Batch system claims job ' \
-                      + 'SGE-fail-batch-complete is complete'))
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'BatchSystemError: Batch system claims job ' \
+                             + 'SGE-fail-batch-complete is complete, ' \
+                             + 'but job-state file in job directory', job)
         os.unlink(os.path.join(failjobdir, 'job-state'))
         # Should have checked for batch completion
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
@@ -347,8 +353,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-batch-exception')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in batch completion')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in batch completion', job)
         os.unlink(os.path.join(failjobdir, 'job-state'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
@@ -380,8 +386,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-archive')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in archival')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in archival', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -412,8 +418,8 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-expire')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['failure'],
-                         'Python exception: Failure in expiry')
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in expiry', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 

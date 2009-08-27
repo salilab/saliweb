@@ -5,6 +5,7 @@ import os.path
 import datetime
 import shutil
 import ConfigParser
+import traceback
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -179,7 +180,7 @@ class Database(object):
         self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
-        self.add_field(MySQLField('directory', 'VARCHAR(400) NOT NULL'))
+        self.add_field(MySQLField('directory', 'TEXT NOT NULL'))
         self.add_field(MySQLField('url', 'TEXT NOT NULL'))
         self.add_field(MySQLField('state',
                               "ENUM(%s) NOT NULL DEFAULT 'INCOMING'" % states))
@@ -191,7 +192,7 @@ class Database(object):
         self.add_field(MySQLField('archive_time', 'DATETIME'))
         self.add_field(MySQLField('expire_time', 'DATETIME'))
         self.add_field(MySQLField('runjob_id', 'VARCHAR(50)'))
-        self.add_field(MySQLField('failure', 'VARCHAR(400)'))
+        self.add_field(MySQLField('failure', 'TEXT'))
 
     def add_field(self, field):
         """Add a new field (typically a :class:`MySQLField` object) to each
@@ -325,15 +326,19 @@ class WebService(object):
         self.__delete_state_file_on_exit = False
         subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
                   % self.config.service_name
+        err = traceback.format_exc()
+        if err is None:
+            err = 'Error: ' + str(detail)
         body = """
 The %s service encounted an unrecoverable error and
-has been shut down. The exact error encountered was:
+has been shut down.
+
 %s
 
 Since this can leave the system in an inconsistent state, no further
 runs will start until the problem has been manually resolved. When you
 have done this, delete the state file (%s) to reenable runs.
-""" % (self.config.service_name, str(detail), self.config.state_file)
+""" % (self.config.service_name, err, self.config.state_file)
         self.config.send_admin_email(subject, body)
         raise
 
@@ -523,18 +528,19 @@ class Job(object):
     def _fail(self, reason):
         """Mark a job as FAILED. Generally, it should not be necessary to call
            this method directly - instead, simply raise an exception.
-           `reason` can be either a simple string or an exception object.
+           `reason` should be an exception object.
            If an exception in turn occurs in this method, it is considered an
            unrecoverable error (and is usually handled by :class:`WebService`.
         """
-        if isinstance(reason, Exception):
-            reason = "Python exception: " + str(reason)
+        err = traceback.format_exc()
+        if err is None:
+            err = str(reason)
+        reason = "Python exception:\n" + err
         self._jobdict['failure'] = reason
         self.__internal_set_state('FAILED')
         subject = 'Sali lab %s service: Job %s FAILED' \
                   % (self.service_name, self.name)
-        body = 'Job %s failed with the following error:\n' % self.name + \
-               str(reason)
+        body = 'Job %s failed with the following error:\n' % self.name + reason
         self._db.config.send_admin_email(subject, body)
 
     def _assert_state(self, state):
