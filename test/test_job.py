@@ -3,7 +3,8 @@ import datetime
 import os
 import tempfile
 from memory_database import MemoryDatabase
-from saliweb.backend import WebService, Config, Job, InvalidStateError
+from saliweb.backend import WebService, Job, InvalidStateError
+from config import Config
 from StringIO import StringIO
 
 basic_config = """

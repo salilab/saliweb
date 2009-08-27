@@ -5,6 +5,7 @@ import os.path
 import datetime
 import shutil
 import ConfigParser
+from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
 if sys.version_info[0:2] < [2,4]:
@@ -68,6 +69,8 @@ class Config(object):
     """This class holds configuration information such as directory
        locations, etc. `fh` is either a filename or a file handle from which
        the configuration is read."""
+    _mailer = '/usr/sbin/sendmail'
+
     def __init__(self, fh):
         if not hasattr(fh, 'read'):
             fh = open(fh)
@@ -79,6 +82,30 @@ class Config(object):
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
         self.state_file = config.get('general', 'state_file')
+
+    def send_admin_email(self, subject, body):
+        """Send an email to the admin for this web service, with the given
+           `subject` and `body`."""
+        self.send_email(to=self.admin_email, subject=subject, body=body)
+
+    def send_email(self, to, subject, body):
+        """Send an email to the given user or list of users (`to`), with
+           the given `subject` and `body`."""
+        if not isinstance(to, (list, tuple)):
+            to = [to]
+        elif not isinstance(to, list):
+            to = list(to)
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = self.admin_email
+        msg['To'] = ", ".join(to)
+
+        # Send email via sendmail binary
+        p = subprocess.Popen([self._mailer, '-oi'] + to,
+                             stdin=subprocess.PIPE)
+        p.stdin.write(msg.as_string())
+        p.stdin.close()
+        p.wait()  # ignore return code for now
 
     def _populate_database(self, config):
         self.database = {}
@@ -295,7 +322,18 @@ class WebService(object):
         print >> f, "FAILED: " + str(detail)
         f.close()
         self.__delete_state_file_on_exit = False
-        # todo: email admin
+        subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
+                  % self.config.service_name
+        body = """
+The %s service encounted an unrecoverable error and
+has been shut down. The exact error encountered was:
+%s
+
+Since this can leave the system in an inconsistent state, no further
+runs will start until the problem has been manually resolved. When you
+have done this, delete the state file (%s) to reenable runs.
+""" % (self.config.service_name, str(detail), self.config.state_file)
+        self.config.send_admin_email(subject, body)
         raise
 
     def get_job_by_name(self, state, name):
@@ -491,6 +529,11 @@ class Job(object):
             reason = "Python exception: " + str(reason)
         self._jobdict['failure'] = reason
         self.__internal_set_state('FAILED')
+        subject = 'Sali lab %s service: Job %s FAILED' \
+                  % (self.service_name, self.name)
+        body = 'Job %s failed with the following error:\n' % self.name + \
+               str(reason)
+        self._db.config.send_admin_email(subject, body)
 
     def _assert_state(self, state):
         """Make sure that the current job state (as a string) matches
@@ -525,12 +568,22 @@ class Job(object):
            Note that the batch system reporting the job is complete does not
            necessarily mean the job actually completed successfully."""
 
+    def send_user_email(self, subject, body):
+        """Email the owner of the job, if requested, with the given `subject`
+           and `body`."""
+        if self._jobdict['contact_email']:
+            self._db.config.send_email(self._jobdict['contact_email'],
+                                       subject, body)
+
     def complete(self):
         """This method is called after a job completes. By default, it emails
            the user (if requested) to let them know job results are available,
            but it can be overridden to disable this or to add extra processing.
         """
-        # todo: email user if requested
+        subject = 'Sali lab %s service: Job %s complete' \
+                  % (self.service_name, self.name)
+        body = 'Your job %s has finished.' % self.name
+        self.send_user_email(subject, body)
 
     def archive(self):
         """Do any necessary processing when an old completed job reaches its
@@ -554,6 +607,8 @@ class Job(object):
 
     name = property(lambda x: x._jobdict['name'],
                     doc="Unique job name (read-only)")
+    service_name = property(lambda x: x._db.config.service_name,
+                            doc="Web service name (read-only)")
     directory = property(lambda x: x._jobdict['directory'],
                          doc="Current job working directory (read-only)")
 

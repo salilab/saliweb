@@ -1,14 +1,16 @@
 import unittest
 import os
+import re
 import datetime
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
-from saliweb.backend import WebService, Config, Job, StateFileError
+from config import Config
+from saliweb.backend import WebService, Job, StateFileError
 from StringIO import StringIO
 
 basic_config = """
 [general]
-admin_email: test@salilab.org
+admin_email: testadmin@salilab.org
 service_name: test_service
 state_file: state_file
 
@@ -91,6 +93,10 @@ class WebServiceTest(unittest.TestCase):
         x = open('state_file').read().rstrip('\r\n')
         os.unlink('state_file')
         self.assertEqual(x, 'FAILED: fatal error in run')
+        mail = conf.get_mail_output()
+        self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
+                               + '.*fatal error in run', mail, flags=re.DOTALL),
+                     'Unexpected mail output: ' + mail)
 
     def test_process_completed(self):
         """Check WebService.process_completed_jobs()"""
