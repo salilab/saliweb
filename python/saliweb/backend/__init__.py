@@ -125,7 +125,6 @@ class Config(object):
         filename = self.database[end + 'end_config']
         config = ConfigParser.SafeConfigParser()
         config.readfp(open(filename), filename)
-        config_dir = os.path.dirname(self._filename)
         for key in ('user', 'passwd'):
             self.database[key] = config.get(end + 'end_db', key)
 
