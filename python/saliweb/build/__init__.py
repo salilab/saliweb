@@ -35,6 +35,7 @@ def Environment(configfile, service_name=None):
     _install_directories(env)
     env.AddMethod(_InstallBinaries, 'InstallBinaries')
     env.AddMethod(_InstallPython, 'InstallPython')
+    env.Default(env['instdir'])
     return env
 
 def _setup_install_directories(env):
