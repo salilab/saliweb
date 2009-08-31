@@ -8,6 +8,7 @@ todo:
 - check backend and frontend DB config is readable only by us and is not in SVN
 - Method to get latest svnversion
 - automatic setup of database schema and users
+- make sure that incoming directory is on a local disk, running etc. on netapp
 """
 
 try:
