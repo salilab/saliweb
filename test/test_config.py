@@ -14,6 +14,7 @@ frontend_config: frontend.conf
 backend_config: backend.conf
 
 [directories]
+install: /
 incoming: /in
 preprocessing: /preproc
 
