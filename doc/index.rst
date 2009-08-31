@@ -8,6 +8,7 @@ Contents
    :maxdepth: 2
 
    backend
+   build
 
 
 Indices and tables
