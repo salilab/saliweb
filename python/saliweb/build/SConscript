@@ -5,9 +5,6 @@ Import('env')
 python_files = [ '__init__.py' ]
 
 # Install .py files:
-instdir = os.path.join(env['pythondir'], 'saliweb')
+instdir = os.path.join(env['pythondir'], 'saliweb', 'build')
 pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
-
-SConscript('backend/SConscript')
-SConscript('build/SConscript')

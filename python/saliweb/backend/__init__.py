@@ -130,6 +130,7 @@ class Config(object):
 
     def _populate_directories(self, config):
         self.directories = {}
+        self.directories['install'] = config.get('directories', 'install')
         others = _JobState.get_valid_states()
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
