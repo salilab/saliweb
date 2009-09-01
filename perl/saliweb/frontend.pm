@@ -7,8 +7,6 @@ use File::Spec;
 use DBI;
 
 sub read_ini_file {
-  # Read an ini file that contains variable assignments (either key=value or
-  # key: value) within named sections (e.g. [section])
   my ($filename) = @_;
   open(FILE, $filename) or die "Cannot open $filename: $!";
   my $contents;
@@ -29,8 +27,6 @@ sub read_ini_file {
 }
 
 sub read_config {
-  # Read in the web service configuration file, including the frontend
-  # database username and password
   my ($filename) = @_;
   my $contents = read_ini_file($filename);
   my ($vol, $dirs, $file) = File::Spec->splitpath($filename);
@@ -43,8 +39,6 @@ sub read_config {
 }
 
 sub connect_to_database {
-  # Connect to the MySQL database, using the information contained
-  # in the configuration.
   my ($config) = @_;
   my $dbh = DBI->connect("DBI:mysql:" . $config->{database}->{db},
                          $config->{database}->{user},

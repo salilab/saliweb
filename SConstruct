@@ -15,6 +15,7 @@ Export('env')
 
 # Subdirectories to build:
 test = SConscript('test/SConscript')
+SConscript('perl/saliweb/SConscript')
 SConscript('python/saliweb/SConscript')
 SConscript('doc/SConscript')
 

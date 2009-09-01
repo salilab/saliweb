@@ -53,6 +53,9 @@ def add_common_variables(vars, package):
     vars.Add(PathVariable('pythondir', 'Python module installation directory',
                           '${prefix}/lib/python%d.%d/site-packages' \
                           % sys.version_info[0:2], PathVariable.PathAccept))
+    vars.Add(PathVariable('perldir', 'Perl module installation directory',
+                          '${prefix}/lib/perl5/site_perl',
+                          PathVariable.PathAccept))
     vars.Add(PathVariable('docdir', 'Documentation installation directory',
                           '${prefix}/share/doc/%s' % package,
                           PathVariable.PathAccept))
