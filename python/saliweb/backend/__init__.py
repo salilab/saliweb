@@ -196,6 +196,7 @@ class Database(object):
         states = ", ".join("'%s'" % x for x in _JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(40) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
+        self.add_field(MySQLField('passwd', 'CHAR(10)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
         self.add_field(MySQLField('directory', 'TEXT NOT NULL'))
         self.add_field(MySQLField('url', 'TEXT NOT NULL'))
