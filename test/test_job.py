@@ -8,6 +8,8 @@ from saliweb.backend import WebService, Job, InvalidStateError
 from config import Config
 from StringIO import StringIO
 
+Job._state_file_wait_time = 0.01
+
 basic_config = """
 [general]
 admin_email: testadmin@salilab.org

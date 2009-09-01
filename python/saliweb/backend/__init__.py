@@ -4,6 +4,7 @@ import sys
 import os.path
 import datetime
 import shutil
+import time
 import ConfigParser
 import traceback
 from email.MIMEText import MIMEText
@@ -419,6 +420,8 @@ class Job(object):
        object.
     """
 
+    _state_file_wait_time = 5.0
+
     # Note: make sure that all code paths are wrapped with try/except, so that
     # if an exception occurs, it is caught and _fail() is called. Note that some
     # exceptions (e.g. qstat failure) should perhaps be ignored, as they may be
@@ -482,10 +485,13 @@ class Job(object):
                          self.check_batch_completed, self._jobdict['runjob_id'])
             if batch_done:
                 # Check state file again, since the batch job may have just
-                # finished, after the first check above
-                state_file_done = self._job_state_file_done()
-                if state_file_done:
-                    return True
+                # finished, after the first check above; we may have to wait
+                # a little while for NFS caching, etc.
+                for tries in range(5):
+                    state_file_done = self._job_state_file_done()
+                    if state_file_done:
+                        return True
+                    time.sleep(self._state_file_wait_time)
                 raise BatchSystemError(
                      ("Batch system claims job %s is complete, but " + \
                       "job-state file in job directory (%s) claims it " + \
