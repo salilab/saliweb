@@ -481,6 +481,11 @@ class Job(object):
             batch_done = self._run_in_job_directory(
                          self.check_batch_completed, self._jobdict['runjob_id'])
             if batch_done:
+                # Check state file again, since the batch job may have just
+                # finished, after the first check above
+                state_file_done = self._job_state_file_done()
+                if state_file_done:
+                    return True
                 raise BatchSystemError(
                      ("Batch system claims job %s is complete, but " + \
                       "job-state file in job directory (%s) claims it " + \

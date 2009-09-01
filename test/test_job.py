@@ -67,6 +67,12 @@ class MyJob(Job):
     def check_batch_completed(self, jobid):
         if self.name == 'fail-batch-exception':
             raise ValueError('Failure in batch completion')
+        elif self.name == 'batch-complete-race':
+            # Simulate job completing just after the first check of the
+            # state file
+            f = open('job-state', 'w')
+            print >> f, "DONE"
+            return True
         f = open('batch_complete', 'w')
         f.close()
         if self.name == 'fail-batch-complete':
@@ -439,6 +445,15 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, injobdir)
         os.rmdir(injobdir)
         cleanup_webservice(conf, tmpdir)
+
+    def test_has_completed(self):
+        """Check Job._has_completed method"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'batch-complete-race', completed=False)
+        job = web.get_job_by_name('RUNNING', 'batch-complete-race')
+        # In r62 and earlier, a race condition could cause a failure here if
+        # the SGE job finished just after the state file check is done
+        self.assertEqual(job._has_completed(), True)
 
 if __name__ == '__main__':
     unittest.main()
