@@ -17,11 +17,13 @@ except ImportError, detail:
     MySQLdb = detail
 import sys
 import os.path
+import pwd
 import saliweb.backend
 import SCons.Script
 from SCons.Script import File, Mkdir, Chmod, Value
 
-webuser = 'apache'
+frontend_user = 'apache'
+backend_user = pwd.getpwuid(os.getuid()).pw_name
 
 def Environment(configfile, service_name=None):
     env = SCons.Script.Environment()
@@ -36,6 +38,8 @@ def Environment(configfile, service_name=None):
     _install_directories(env)
     env.AddMethod(_InstallBinaries, 'InstallBinaries')
     env.AddMethod(_InstallPython, 'InstallPython')
+    env.AddMethod(_InstallHTML, 'InstallHTML')
+    env.AddMethod(_InstallCGI, 'InstallCGI')
     env.Default(env['instdir'])
     return env
 
@@ -45,6 +49,8 @@ def _setup_install_directories(env):
     env['bindir'] = os.path.join(env['instdir'], 'bin')
     env['confdir'] = os.path.join(env['instdir'], 'conf')
     env['pythondir'] = os.path.join(env['instdir'], 'python')
+    env['htmldir'] = os.path.join(env['instdir'], 'html')
+    env['cgidir'] = os.path.join(env['instdir'], 'cgi')
 
 def _check(env):
     if isinstance(MySQLdb, Exception):
@@ -97,15 +103,23 @@ def _install_config(env):
     env.Command(os.path.join(env['confdir'], os.path.basename(frontend)),
                 frontend,
                 ["install -m 0400 $SOURCE $TARGET",
-                 "setfacl -m u:%s:r $TARGET" % webuser])
+                 "setfacl -m u:%s:r $TARGET" % frontend_user])
 
 def _install_directories(env):
     config = env['config']
     dirs = config.directories.keys()
     dirs.remove('install')
+    dirs.remove('INCOMING')
     for key in dirs:
         env.Command(config.directories[key], None,
                     Mkdir(config.directories[key]))
+    # Set permissions for incoming directory: both backend and frontend can
+    # write to this directory and any newly-created subdirectories (-d)
+    env.Command(config.directories['INCOMING'], None,
+                [Mkdir(config.directories['INCOMING']),
+                 "setfacl -d -m u:%s:rwx $TARGET" % frontend_user,
+                 "setfacl -d -m u:%s:rwx $TARGET" % backend_user,
+                 "setfacl -m u:%s:rwx $TARGET" % frontend_user])
 
 def _make_script(env, target, source):
     name = os.path.basename(str(target[0]))
@@ -144,6 +158,18 @@ def _InstallBinaries(env, binaries=None):
 
 def _InstallPython(env, files, subdir=None):
     dir = os.path.join(env['pythondir'], env['service_name'])
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    env.Install(dir, files)
+
+def _InstallHTML(env, files, subdir=None):
+    dir = env['htmldir']
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    env.Install(dir, files)
+
+def _InstallCGI(env, files, subdir=None):
+    dir = env['cgidir']
     if subdir:
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
