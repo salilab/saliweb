@@ -193,7 +193,7 @@ class Database(object):
         self._fields = []
         # Add fields used by all web services
         states = ", ".join("'%s'" % x for x in _JobState.get_valid_states())
-        self.add_field(MySQLField('name', 'VARCHAR(15) PRIMARY KEY NOT NULL'))
+        self.add_field(MySQLField('name', 'VARCHAR(40) PRIMARY KEY NOT NULL'))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
         self.add_field(MySQLField('directory', 'TEXT NOT NULL'))
