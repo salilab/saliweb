@@ -168,8 +168,20 @@ def _InstallHTML(env, files, subdir=None):
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
 
+def _subst_install(env, target, source):
+    fin = open(source[0].path, 'r')
+    fout = open(target[0].path, 'w')
+    configfile = env['instconfigfile']
+    for line in fin:
+        line = line.replace('@CONFIGFILE@', "'" + configfile + "'")
+        fout.write(line)
+    fin.close()
+    fout.close()
+    env.Execute(Chmod(target, 0755))
+
 def _InstallCGI(env, files, subdir=None):
     dir = env['cgidir']
     if subdir:
         dir = os.path.join(dir, subdir)
-    env.Install(dir, files)
+    for f in files:
+        env.Command(os.path.join(dir, f), f, _subst_install)
