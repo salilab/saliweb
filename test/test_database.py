@@ -42,7 +42,7 @@ class DatabaseTest(unittest.TestCase):
     def test_init(self):
         """Check Database init"""
         db = MemoryDatabase(Job)
-        self.assertEqual(len(db._fields), 15)
+        self.assertEqual(len(db._fields), 16)
         self.assertEqual(db._fields[0].name, 'name')
 
     def test_add_field(self):
