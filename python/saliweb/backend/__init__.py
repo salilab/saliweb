@@ -705,7 +705,7 @@ class SGERunner(object):
         self._opts = opts
 
     def run(self):
-        """Generate an SGE script in the current directory nd run it.
+        """Generate an SGE script in the current directory and run it.
            Return the SGE job ID."""
         fh = open('sge-script.sh', 'w')
         self._write_sge_script(fh)
