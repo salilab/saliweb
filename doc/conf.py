@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Sali lab web service framework'
+project = u'Sali lab web framework'
 copyright = u'2009, Sali Lab'
 
 # The version info for the project you're documenting, acts as replacement for

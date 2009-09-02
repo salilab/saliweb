@@ -7,9 +7,14 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   backend
-   build
+   introduction
 
+Reference:
+
+.. toctree::
+   :maxdepth: 1
+
+   modules/index
 
 Indices and tables
 ==================
