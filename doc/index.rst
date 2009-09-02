@@ -1,5 +1,5 @@
-Sali Lab web service framework
-==============================
+Sali Lab web framework
+======================
 
 Contents
 ========
@@ -8,6 +8,7 @@ Contents
    :maxdepth: 2
 
    introduction
+   backend
 
 Reference:
 
