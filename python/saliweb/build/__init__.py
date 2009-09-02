@@ -25,8 +25,28 @@ from SCons.Script import File, Mkdir, Chmod, Value
 frontend_user = 'apache'
 backend_user = pwd.getpwuid(os.getuid()).pw_name
 
-def Environment(configfile, service_name=None):
-    env = SCons.Script.Environment()
+def _add_build_variable(vars, configs):
+    if not isinstance(configs, (list, tuple)):
+        configs = [configs]
+    buildmap = {}
+    default = None
+    for c in configs:
+        opt = os.path.basename(c)
+        if opt.endswith('.conf'):
+            opt = opt[:-5]
+        if not default:
+            default = opt
+        buildmap[opt] = c
+    vars.Add(SCons.Script.EnumVariable('build',
+               "Select which web service configuration to build (e.g. to "
+               "set up either a test version or the live version of the web "
+               "service)""", default=default, allowed_values=buildmap.keys()))
+    return buildmap
+
+def Environment(variables, configfiles, service_name=None):
+    buildmap = _add_build_variable(variables, configfiles)
+    env = SCons.Script.Environment(variables=variables)
+    configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
     env['config'] = config = saliweb.backend.Config(configfile)
     if service_name is None:
@@ -135,7 +155,7 @@ def _make_script(env, target, source):
 
 def _make_web_service(env, target, source):
     f = open(target[0].path, 'w')
-    config = str(source[0])
+    config = source[0].get_contents()
     modname = source[1].get_contents()
     pydir = source[2].get_contents()
     print >> f, "config = '%s'" % config
@@ -153,7 +173,7 @@ def _InstallBinaries(env, binaries=None):
         env.Command(os.path.join(env['bindir'], bin + '.py'), None,
                     _make_script)
     env.Command(os.path.join(env['bindir'], 'webservice.py'),
-                [env['instconfigfile'], Value(env['service_name']),
+                [Value(env['instconfigfile']), Value(env['service_name']),
                  Value(env['pythondir'])], _make_web_service)
 
 def _InstallPython(env, files, subdir=None):
