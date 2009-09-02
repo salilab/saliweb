@@ -10,25 +10,25 @@ from memory_database import MemoryDatabase
 def make_test_jobs(sql):
     c = sql.cursor()
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job1', 'INCOMING', 'SGE-job-1', utcnow,
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job2', 'RUNNING', 'SGE-job-2', utcnow,
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job3', 'RUNNING', 'SGE-job-3', utcnow,
                utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
               + "archive_time,expire_time,directory,url) " \
               + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runjob_id,submit_time, " \
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
               + "archive_time,expire_time,directory,url) " \
               + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-expire', 'ARCHIVED', None, utcnow,
@@ -86,7 +86,7 @@ class DatabaseTest(unittest.TestCase):
         jobs = list(db._get_all_jobs_in_state('INCOMING'))
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]._jobdict['name'], 'job1')
-        self.assertEqual(jobs[0]._jobdict['runjob_id'], 'SGE-job-1')
+        self.assertEqual(jobs[0]._jobdict['batch_id'], 'SGE-job-1')
         jobs = list(db._get_all_jobs_in_state('RUNNING'))
         self.assertEqual(len(jobs), 2)
         jobs = list(db._get_all_jobs_in_state('INCOMING', name='job1'))
@@ -109,13 +109,13 @@ class DatabaseTest(unittest.TestCase):
         make_test_jobs(db.conn)
         job = list(db._get_all_jobs_in_state('INCOMING'))[0]
         # side effect: should update _jobdict
-        job._jobdict['runjob_id'] = 'new-SGE-ID'
+        job._jobdict['batch_id'] = 'new-SGE-ID'
         db._change_job_state(job._jobdict, 'INCOMING', 'PREPROCESSING')
         jobs = list(db._get_all_jobs_in_state('INCOMING'))
         self.assertEqual(len(jobs), 0)
         jobs = list(db._get_all_jobs_in_state('PREPROCESSING'))
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]._jobdict['runjob_id'], 'new-SGE-ID')
+        self.assertEqual(jobs[0]._jobdict['batch_id'], 'new-SGE-ID')
 
     def test_update_job(self):
         """Check Database._update_job()"""
@@ -124,12 +124,12 @@ class DatabaseTest(unittest.TestCase):
         db._create_tables()
         make_test_jobs(db.conn)
         job = list(db._get_all_jobs_in_state('INCOMING'))[0]
-        job._jobdict['runjob_id'] = 'new-SGE-ID'
+        job._jobdict['batch_id'] = 'new-SGE-ID'
         db._update_job(job._jobdict, 'INCOMING')
         # Get a fresh copy of the job from the database
         newjob = list(db._get_all_jobs_in_state('INCOMING'))[0]
         self.assert_(job is not newjob)
-        self.assertEqual(newjob._jobdict['runjob_id'], 'new-SGE-ID')
+        self.assertEqual(newjob._jobdict['batch_id'], 'new-SGE-ID')
 
 if __name__ == '__main__':
     unittest.main()

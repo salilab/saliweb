@@ -96,7 +96,7 @@ def add_running_job(db, name, completed):
     jobdir = os.path.join(db.config.directories['RUNNING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,runjob_id,directory, " \
+    c.execute("INSERT INTO jobs(name,state,submit_time,batch_id,directory, " \
               + "contact_email,url) VALUES(?,?,?,?,?,?,?)",
               (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir,
               'testuser@salilab.org', 'http://testurl'))
@@ -183,7 +183,7 @@ class JobTest(unittest.TestCase):
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
         # New fields should have been populated in the database
-        self.assertEqual(job._jobdict['runjob_id'], 'MyJob ID')
+        self.assertEqual(job._jobdict['batch_id'], 'MyJob ID')
         self.assertNotEqual(job._jobdict['preprocess_time'], None)
         self.assertNotEqual(job._jobdict['run_time'], None)
         # Both preprocess and run methods in MyJob should have triggered
@@ -202,7 +202,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-preprocess')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['batch_id'], None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in preprocessing', job)
         os.rmdir(failjobdir)
@@ -229,7 +229,7 @@ class JobTest(unittest.TestCase):
         # triggered; no info from run should be present
         os.unlink(os.path.join(compjobdir, 'preproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
-        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['batch_id'], None)
         self.assertEqual(job._jobdict['run_time'], None)
         self.assertEqual(job._jobdict['postprocess_time'], None)
         os.rmdir(compjobdir)
@@ -245,7 +245,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-run')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['runjob_id'], None)
+        self.assertEqual(job._jobdict['batch_id'], None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in running', job)
         # Just the preprocess method in MyJob should have triggered

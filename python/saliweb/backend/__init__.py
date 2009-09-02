@@ -209,7 +209,7 @@ class Database(object):
         self.add_field(MySQLField('end_time', 'DATETIME'))
         self.add_field(MySQLField('archive_time', 'DATETIME'))
         self.add_field(MySQLField('expire_time', 'DATETIME'))
-        self.add_field(MySQLField('runjob_id', 'VARCHAR(50)'))
+        self.add_field(MySQLField('batch_id', 'VARCHAR(50)'))
         self.add_field(MySQLField('failure', 'TEXT'))
 
     def add_field(self, field):
@@ -462,8 +462,8 @@ class Job(object):
                 self._jobdict['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 jobid = self._run_in_job_directory(self.run)
-                if jobid != self._jobdict['runjob_id']:
-                    self._jobdict['runjob_id'] = jobid
+                if jobid != self._jobdict['batch_id']:
+                    self._jobdict['batch_id'] = jobid
                     self._db._update_job(self._jobdict, self._get_state())
         except Exception, detail:
             self._fail(detail)
@@ -483,7 +483,7 @@ class Job(object):
             return True
         else:
             batch_done = self._run_in_job_directory(
-                         self.check_batch_completed, self._jobdict['runjob_id'])
+                         self.check_batch_completed, self._jobdict['batch_id'])
             if batch_done:
                 # Check state file again, since the batch job may have just
                 # finished, after the first check above; we may have to wait
@@ -498,7 +498,7 @@ class Job(object):
                       "job-state file in job directory (%s) claims it " + \
                       "is not. This usually means the batch system job " + \
                       "failed - e.g. a node went down.") \
-                     % (self._jobdict['runjob_id'], self._jobdict['directory']))
+                     % (self._jobdict['batch_id'], self._jobdict['directory']))
             return False
 
     def _try_complete(self):
@@ -608,7 +608,7 @@ class Job(object):
            later used by :meth:`check_batch_completed`).
         """
 
-    def check_batch_completed(self, runjob_id):
+    def check_batch_completed(self, batch_id):
         """Query the batch system to see if the job has completed. Does
            nothing by default, but can be overridden by the user, for example
            to return the result of :meth:`SGERunner.check_completed`. The
@@ -750,14 +750,14 @@ class SGERunner(object):
             raise OSError("Could not parse qsub output %s" % out)
 
     @classmethod
-    def check_completed(cls, runjob_id, catch_exceptions=True):
+    def check_completed(cls, batch_id, catch_exceptions=True):
         """Return True if SGE reports that the given job has finished, False
            if it is still running, or None if the status cannot be determined.
            If `catch_exceptions` is True and a problem occurs when talking to
            SGE, None is returned; otherwise, the exception is propagated."""
         try:
             cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
-            p = subprocess.Popen([cmd, '-j', runjob_id], stdout=subprocess.PIPE,
+            p = subprocess.Popen([cmd, '-j', batch_id], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, env=cls._env)
             out = p.stdout.read()
             err = p.stderr.read()
