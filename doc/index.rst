@@ -9,6 +9,7 @@ Contents
 
    introduction
    backend
+   configfile
 
 Reference:
 
