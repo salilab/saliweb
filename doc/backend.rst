@@ -13,7 +13,6 @@ post-processing.
 
 The backend is implemented by the :mod:`saliweb.backend` Python module.
 
-
 Classes
 =======
 
@@ -81,3 +80,84 @@ It provides simple methods to process pending jobs (e.g.
 :meth:`WebService.process_completed_jobs`, which looks at all jobs currently
 running on the cluster and, for each one that has completed, processes the
 job and collects the results). It is rarely necessary to subclass.
+
+
+Job states
+==========
+
+A single job in the system is represented by a row in the database table
+and a single directory that contains the job inputs and/or outputs. Each job
+can be in one of a set of distinct states, described below. In normal operation
+a job will move from the first state in the list below to the last.
+
+* The **INCOMING** state is for jobs that have just been submitted to the
+  system by the frontend, but not yet picked up by the frontend.
+
+* Jobs move into the **PREPROCESSING** state when they are picked up by the
+  frontend. At this point the :meth:`Job.preprocess` method is called, which
+  can be overridden to do any necessary preprocessing. Note that this method
+  runs on the server machine ('modbase') and serially (for only a single job
+  at a time), so it should not run any calculations that take more than a few
+  seconds.
+
+* Next, jobs usually move to the **RUNNING** state. At this point the
+  :meth:`Job.run` method is called, which typically will submit an SGE
+  job to do the bulk of the processing.
+
+* When the SGE job finishes, the job moves to the **POSTPROCESSING** state and
+  the :meth:`Job.postprocess` method is called. Like preprocessing, this runs
+  serially on the server machine and so should not be computationally
+  expensive.
+
+* Next the job moves to the **COMPLETED** state and the :meth:`Job.complete`
+  method is called. If the user provided an email address to the frontend,
+  they are emailed at this point to let them know job results are now
+  available.
+
+* After a defined period of time, the job moves to the **ARCHIVED** state
+  and the :meth:`Job.archive` method is called. At this point the job results
+  are still present on disk, but are no longer accessible to the end user and
+  may be moved to long-term storage.
+
+* After another defined period of time, the job moves to the **EXPIRED** state,
+  the job directory is deleted, and the :meth:`Job.expire` method is called.
+  At this point, only the job metadata in the database remains.
+
+If a problem is encountered at any point (such as a Python exception) the job
+is moved to the **FAILED** state. At this point the server admin is emailed
+and is expected to fix the problem (usually a bug in the web service, or a
+system problem such as a broken or full hard disk).
+
+Note also the :meth:`Job.preprocess` method can, if desired, signal to the
+framework that running a full SGE job is unnecessary. In this case, the
+**RUNNING** and **POSTPROCESSING** steps are skipped and the job moves
+directly from **PREPROCESSING** to **COMPLETED**.
+
+Each job state (with the exception of **EXPIRED**) can be given a directory
+in the service's configuration file. Job data are automatically moved between
+directories when the state changes. For example, the **INCOMING** directory
+generally needs to reside on a local disk, and have special permissions so that
+the frontend can create files within it. The **RUNNING** directory usually
+needs to be accessible by the cluster, so it needs to be on the NetApp disk.
+The **ARCHIVED** directory may live on long-term storage, such as a park disk.
+
+
+Examples
+========
+
+The example below demonstrates a simple :class:`Job` subclass that, given a
+set of PDB files from the frontend, runs an SGE job on the cluster that
+extracts all of the HETATM records from each PDB. This is done by
+overriding the :meth:`Job.run` method to pass a set of shell script commands
+to an :class:`SGERunner` instance. The :meth:`SGERunner.run` method is then
+called to actually run the job on the cluster, and the return value (the SGE
+job ID) is returned from the :meth:`Job.run` method. This allows the backend
+to keep track of this ID, so that it can be used later in the
+:meth:`Job.check_batch_completed` method to see if the SGE job finished.
+
+The subclass also overrides the :meth:`Job.archive` method, so that when the
+job results are moved from short-term to long-term storage, all of the PDB
+files are compressed with gzip to save space.
+
+.. literalinclude:: ../examples/simplejob.py
+   :language: python

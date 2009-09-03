@@ -4,6 +4,7 @@ Import('env')
 
 sphinx = env.Sphinx(".build/html/index.html",
                     (Glob('*.rst'), Glob('modules/*.rst'),
+                     Glob('#/examples/*.py'),
                      Glob('#/python/saliweb/*/*.py')))
 
 docdir = env['docdir']
