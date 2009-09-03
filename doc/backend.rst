@@ -37,6 +37,8 @@ that can be used to do extra processing before the job starts
 (:meth:`Job.archive`), for example. Each method is run in the directory
 containing all of the job's data (i.e. any files uploaded by the end user
 when the job was submitted, plus any output files after the job has run).
+(The exception is :meth:`Job.expire`, which is called after the job directory
+has been deleted.)
 If any of these methods raises an exception, it is caught by the backend;
 the job is put into a failed state and the server admin is notified. Thus,
 exceptions should be used only to indicate a technical error in the web

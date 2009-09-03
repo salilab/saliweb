@@ -29,6 +29,11 @@ class ConfigError(Exception):
     """Exception raised if a configuration file is inconsistent."""
     pass
 
+class SanityError(Exception):
+    """Exception raised if a new job fails the sanity check, e.g. if the
+       frontend added invalid or inconsistent information to the database."""
+    pass
+
 class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
@@ -137,11 +142,13 @@ class Config(object):
         self.directories = {}
         self.directories['install'] = config.get('directories', 'install')
         others = _JobState.get_valid_states()
+        others.remove('EXPIRED')
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
             others.remove(key)
             self.directories[key] = config.get('directories', key)
-        # Other directories are optional: default to PREPROCESSING
+        # Other directories (except EXPIRED) are optional:
+        # default to PREPROCESSING
         for key in others:
             if config.has_option('directories', key):
                 self.directories[key] = config.get('directories', key)
@@ -212,7 +219,7 @@ class Database(object):
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('passwd', 'CHAR(10)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
-        self.add_field(MySQLField('directory', 'TEXT NOT NULL'))
+        self.add_field(MySQLField('directory', 'TEXT'))
         self.add_field(MySQLField('url', 'TEXT NOT NULL'))
         self.add_field(MySQLField('state',
                               "ENUM(%s) NOT NULL DEFAULT 'INCOMING'" % states))
@@ -355,15 +362,15 @@ class WebService(object):
         self.__delete_state_file_on_exit = True
 
     def _handle_fatal_error(self, detail):
+        err = traceback.format_exc()
+        if err is None:
+            err = 'Error: ' + str(detail)
         f = open(self.config.state_file, 'w')
-        print >> f, "FAILED: " + str(detail)
+        print >> f, "FAILED: " + err
         f.close()
         self.__delete_state_file_on_exit = False
         subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
                   % self.config.service_name
-        err = traceback.format_exc()
-        if err is None:
-            err = 'Error: ' + str(detail)
         body = """
 The %s service encounted an unrecoverable error and
 has been shut down.
@@ -461,9 +468,27 @@ class Job(object):
         finally:
             os.chdir(cwd)
 
+    def _frontend_sanity_check(self):
+        """Make sure that the frontend set up the job correctly."""
+        # SQL schema should not allow this, but check anyway just to be sure:
+        if self.name is None:
+            raise SanityError("Frontend did not set the job name")
+        if self.directory is None:
+            raise SanityError("Frontend did not set the directory field in the "
+                              "database for job %s" % self.name)
+        if not os.path.isdir(self.directory):
+            # Set directory to None otherwise _fail() will itself fail, since it
+            # won't be able to move the (invalid) directory
+            dir = self.directory
+            self._jobdict['directory'] = None
+            self._db._update_job(self._jobdict, self._get_state())
+            raise SanityError("Job %s: directory %s is not a directory" \
+                              % (self.name, dir))
+
     def _try_run(self):
         """Take an incoming job and try to start running it."""
         try:
+            self._frontend_sanity_check()
             self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
             self._set_state('PREPROCESSING')
             # Delete job-state file, if present from a previous run
@@ -556,7 +581,7 @@ class Job(object):
     def _try_expire(self):
         try:
             self._set_state('EXPIRED')
-            self._run_in_job_directory(self.expire)
+            self.expire()
         except Exception, detail:
             self._fail(detail)
 
@@ -573,12 +598,17 @@ class Job(object):
            other uses, call :meth:`_set_state` instead."""
         oldstate = self._get_state()
         self.__state.transition(state)
-        # move job to different directory if necessary
-        directory = os.path.join(self._db.config.directories[state], self.name)
-        directory = os.path.normpath(directory)
-        if directory != self._jobdict['directory']:
-            shutil.move(self._jobdict['directory'], directory)
-            self._jobdict['directory'] = directory
+        if state == 'EXPIRED':
+            shutil.rmtree(self._jobdict['directory'])
+            self._jobdict['directory'] = None
+        elif self._jobdict['directory'] is not None:
+            # move job to different directory if necessary
+            directory = os.path.join(self._db.config.directories[state],
+                                     self.name)
+            directory = os.path.normpath(directory)
+            if directory != self._jobdict['directory']:
+                shutil.move(self._jobdict['directory'], directory)
+                self._jobdict['directory'] = directory
         self._db._change_job_state(self._jobdict, oldstate, state)
 
     def _get_state(self):

@@ -96,7 +96,9 @@ class WebServiceTest(unittest.TestCase):
         # processes from running
         x = open('state_file').read().rstrip('\r\n')
         os.unlink('state_file')
-        self.assertEqual(x, 'FAILED: fatal error in run')
+        self.assert_(re.search('FAILED: Traceback.*fatal error in run',
+                               x, flags=re.DOTALL),
+                     'Unexpected failure message: ' + x)
         mail = conf.get_mail_output()
         self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
                                + '.*Traceback.*process_incoming_jobs.*' \

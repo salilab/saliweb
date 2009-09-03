@@ -201,6 +201,29 @@ class JobTest(unittest.TestCase):
         os.rmdir(runjobdir)
         cleanup_webservice(conf, tmpdir)
 
+    def test_sanity_check(self):
+        """Make sure that sanity checks catch invalid incoming jobs"""
+        utcnow = datetime.datetime.utcnow()
+        db, conf, web, tmpdir = setup_webservice()
+        c = db.conn.cursor()
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+                  + "VALUES(?,?,?,?,?)", ('job1', 'INCOMING', utcnow, None,
+                                          'http://testurl'))
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+                  + "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
+                                          '/not/exist', 'http://testurl'))
+        db.conn.commit()
+        web.process_incoming_jobs()
+        job = web.get_job_by_name('FAILED', 'job1')
+        self.assertEqual(job.directory, None)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'SanityError: .*did not set the directory', job)
+        job = web.get_job_by_name('FAILED', 'job2')
+        self.assertEqual(job.directory, None)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'SanityError: .*is not a directory', job)
+        cleanup_webservice(conf, tmpdir)
+
     def test_preprocess_failure(self):
         """Make sure that preprocess failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
@@ -449,11 +472,9 @@ class JobTest(unittest.TestCase):
 
         # Job should now have moved from ARCHIVED to EXPIRED
         job = web.get_job_by_name('EXPIRED', 'job1')
-        expjobdir = os.path.join(conf.directories['EXPIRED'], 'job1')
-        self.assertEqual(job.directory, expjobdir)
+        self.assertEqual(job.directory, None)
         # expire method in MyJob should have triggered
-        os.unlink(os.path.join(expjobdir, 'expire'))
-        os.rmdir(expjobdir)
+        os.unlink('expire')
         cleanup_webservice(conf, tmpdir)
 
     def test_never_expire(self):
@@ -478,12 +499,10 @@ class JobTest(unittest.TestCase):
 
         # Job should now have moved from ARCHIVED to FAILED
         job = web.get_job_by_name('FAILED', 'fail-expire')
-        failjobdir = os.path.join(conf.directories['FAILED'],
-                                  'fail-expire')
-        self.assertEqual(job.directory, failjobdir)
+        # Job directory should be None since EXPIRED state was visited
+        self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in expiry', job)
-        os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
     def test_ok_resubmit(self):
