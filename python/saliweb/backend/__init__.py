@@ -25,6 +25,10 @@ class StateFileError(Exception):
     "Exception raised if a previous run is still running or crashed."""
     pass
 
+class ConfigError(Exception):
+    """Exception raised if a configuration file is inconsistent."""
+    pass
+
 class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
@@ -148,6 +152,14 @@ class Config(object):
         self.oldjobs = {}
         for key in ('archive', 'expire'):
             self.oldjobs[key] = self._get_time_delta(config, 'oldjobs', key)
+        archive = self.oldjobs['archive']
+        expire = self.oldjobs['expire']
+        # archive time must not be greater than expire (None counts as infinity)
+        if expire is not None and (archive is None or archive > expire):
+            raise ConfigError("archive time (%s) cannot be greater than "
+                              "expire time (%s)" \
+                              % (config.get('oldjobs', 'archive'),
+                                 config.get('oldjobs', 'expire')))
 
     def _get_time_delta(self, config, section, option):
         raw = config.get(section, option)
