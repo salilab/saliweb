@@ -83,6 +83,7 @@ It provides simple methods to process pending jobs (e.g.
 running on the cluster and, for each one that has completed, processes the
 job and collects the results). It is rarely necessary to subclass.
 
+.. _jobstates:
 
 Job states
 ==========
