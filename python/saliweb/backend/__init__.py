@@ -160,11 +160,13 @@ class Config(object):
                 return datetime.timedelta(days=float(raw[:-1]) * 30)
             elif raw.endswith('y'):
                 return datetime.timedelta(days=float(raw[:-1]) * 365)
+            elif raw.upper() == 'NEVER':
+                return None
         except ValueError:
             pass
-        raise ValueError("Time deltas must be numbers followed by h, " + \
-                         "d, m or y (for hours, days, months, or years), " + \
-                         "e.g. 24h, 30d, 3m, 1y; got " + raw)
+        raise ValueError("Time deltas must be 'NEVER' or numbers followed "
+                         "by h, d, m or y (for hours, days, months, or "
+                         "years), e.g. 24h, 30d, 3m, 1y; got " + raw)
 
 
 class MySQLField(object):
@@ -248,7 +250,7 @@ class Database(object):
            If `name` is specified, only jobs which match the given name are
            returned.
            If `after_time` is specified, only jobs where the time (given in
-           the database column of the same name) is greater than the current
+           the database column of the same name) is less than the current
            system time are returned.
         """
         fields = [x.name for x in self._fields]
@@ -259,6 +261,7 @@ class Database(object):
             wheres.append('name=' + self._placeholder)
             params.append(name)
         if after_time is not None:
+            wheres.append(after_time + ' IS NOT NULL')
             wheres.append(after_time + ' < UTC_TIMESTAMP()')
         if wheres:
             query += ' WHERE ' + ' AND '.join(wheres)
@@ -519,10 +522,14 @@ class Job(object):
     def _mark_job_completed(self):
         endtime = datetime.datetime.utcnow()
         self._jobdict['end_time'] = endtime
-        self._jobdict['archive_time'] = endtime \
-                                        + self._db.config.oldjobs['archive']
-        self._jobdict['expire_time'] = endtime \
-                                       + self._db.config.oldjobs['expire']
+        archive_time = self._db.config.oldjobs['archive']
+        if archive_time is not None:
+            archive_time = endtime + archive_time
+        expire_time = self._db.config.oldjobs['expire']
+        if expire_time is not None:
+            expire_time = endtime + expire_time
+        self._jobdict['archive_time'] = archive_time
+        self._jobdict['expire_time'] = expire_time
         self._set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
         self.send_job_completed_email()

@@ -34,6 +34,11 @@ def make_test_jobs(sql):
               ('ready-for-expire', 'ARCHIVED', None, utcnow,
                utcnow + datetime.timedelta(days=1),
                utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,batch_id,submit_time, " \
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
+              ('never-archive', 'COMPLETED', None, utcnow,
+               None, None, '/', 'http://testurl'))
     sql.commit()
 
 class DatabaseTest(unittest.TestCase):
@@ -100,6 +105,9 @@ class DatabaseTest(unittest.TestCase):
                                               after_time='expire_time'))
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]._jobdict['name'], 'job3')
+        jobs = list(db._get_all_jobs_in_state('COMPLETED',
+                                              after_time='expire_time'))
+        self.assertEqual(len(jobs), 0)
 
     def test_change_job_state(self):
         """Check Database._change_job_state()"""

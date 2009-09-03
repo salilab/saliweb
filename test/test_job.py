@@ -28,8 +28,8 @@ preprocessing: %s
 failed: %s
 
 [oldjobs]
-archive: 30d
-expire: 90d
+archive: %s
+expire: %s
 """
 
 class MyJob(Job):
@@ -113,9 +113,13 @@ def add_completed_job(db, name, archive_time):
     jobdir = os.path.join(db.config.directories['COMPLETED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
+    if archive_time is None:
+        archive = None
+    else:
+        archive = utcnow + archive_time
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
               + "archive_time,url) VALUES(?,?,?,?,?,?)",
-              (name, 'COMPLETED', utcnow, jobdir, utcnow + archive_time,
+              (name, 'COMPLETED', utcnow, jobdir, archive,
                'http://testurl'))
     db.conn.commit()
     return jobdir
@@ -125,9 +129,13 @@ def add_archived_job(db, name, expire_time):
     jobdir = os.path.join(db.config.directories['ARCHIVED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
+    if expire_time is None:
+        expire = None
+    else:
+        expire = utcnow + expire_time
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
               + "expire_time,url) VALUES(?,?,?,?,?,?)",
-              (name, 'ARCHIVED', utcnow, jobdir, utcnow + expire_time,
+              (name, 'ARCHIVED', utcnow, jobdir, expire,
                'http://testurl'))
     db.conn.commit()
     return jobdir
@@ -143,7 +151,7 @@ def add_failed_job(db, name):
     db.conn.commit()
     return jobdir
 
-def setup_webservice():
+def setup_webservice(archive='30d', expire='90d'):
     tmpdir = tempfile.mkdtemp()
     incoming = os.path.join(tmpdir, 'incoming')
     preprocessing = os.path.join(tmpdir, 'preprocessing')
@@ -153,7 +161,8 @@ def setup_webservice():
     os.mkdir(failed)
     db = MemoryDatabase(MyJob)
     conf = Config(StringIO(basic_config \
-                           % (incoming, preprocessing, failed)))
+                           % (incoming, preprocessing, failed, archive,
+                              expire)))
     web = WebService(conf, db)
     db._create_tables()
     return db, conf, web, tmpdir
@@ -280,6 +289,25 @@ class JobTest(unittest.TestCase):
                                mail, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
 
+    def test_complete_no_expire(self):
+        """Check completion of a job that should never expire or be archived"""
+        db, conf, web, tmpdir = setup_webservice(expire='NEVER',
+                                                 archive='NEVER')
+        runjobdir = add_running_job(db, 'job1', completed=True)
+        web.process_completed_jobs()
+
+        # Job should now have moved from RUNNING to COMPLETED
+        job = web.get_job_by_name('COMPLETED', 'job1')
+        jobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
+        self.assertEqual(job.directory, jobdir)
+        # archive/expire times should still be NULL
+        self.assertEqual(job._jobdict['archive_time'], None)
+        self.assertEqual(job._jobdict['expire_time'], None)
+        os.unlink(os.path.join(jobdir, 'postproc'))
+        os.unlink(os.path.join(jobdir, 'complete'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
     def test_still_running(self):
         """Check that jobs that are still running are not processed"""
         db, conf, web, tmpdir = setup_webservice()
@@ -400,6 +428,19 @@ class JobTest(unittest.TestCase):
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
+    def test_never_archive(self):
+        """Check for jobs that never archive"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_completed_job(db, 'job1', None)
+        web.process_old_jobs()
+
+        # Job should still be COMPLETED
+        job = web.get_job_by_name('COMPLETED', 'job1')
+        jobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
+        self.assertEqual(job.directory, jobdir)
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
     def test_ok_expire(self):
         """Check successful expiry of archived jobs"""
         db, conf, web, tmpdir = setup_webservice()
@@ -413,6 +454,19 @@ class JobTest(unittest.TestCase):
         # expire method in MyJob should have triggered
         os.unlink(os.path.join(expjobdir, 'expire'))
         os.rmdir(expjobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_never_expire(self):
+        """Check for jobs that never expire"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_archived_job(db, 'job1', None)
+        web.process_old_jobs()
+
+        # Job should still be ARCHIVED
+        job = web.get_job_by_name('ARCHIVED', 'job1')
+        arcjobdir = os.path.join(conf.directories['ARCHIVED'], 'job1')
+        self.assertEqual(job.directory, arcjobdir)
+        os.rmdir(arcjobdir)
         cleanup_webservice(conf, tmpdir)
 
     def test_expire_failure(self):

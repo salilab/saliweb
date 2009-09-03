@@ -52,6 +52,9 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].seconds, 12*60*60)
         conf = Config(StringIO(basic_config % '1e3d'))
         self.assertEqual(conf.oldjobs['expire'].days, 1000)
+        # Check NEVER
+        conf = Config(StringIO(basic_config % 'never'))
+        self.assertEqual(conf.oldjobs['expire'], None)
         # Other suffixes or non-floats should raise an error
         self.assertRaises(ValueError, Config, StringIO(basic_config % '8s'))
         self.assertRaises(ValueError, Config, StringIO(basic_config % 'foo'))
