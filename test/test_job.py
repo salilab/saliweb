@@ -36,6 +36,10 @@ class MyJob(Job):
     def preprocess(self):
         if self.name == 'fail-preprocess':
             raise ValueError('Failure in preprocessing')
+        if self.name == 'fatal-fail-preprocess':
+            # Ensure that Job._fail() fails while trying to process the error
+            self._jobdict = None
+            raise ValueError('Fatal failure in preprocessing')
         f = open('preproc', 'w')
         f.close()
         if self.name == 'complete-preprocess':
@@ -253,6 +257,31 @@ class JobTest(unittest.TestCase):
         self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
                                + '.*Failure in preprocessing', mail,
                                flags=re.DOTALL),
+                     'Unexpected mail output: ' + mail)
+
+    def test_fatal_failure(self):
+        """Make sure that job failures within _fail() are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'fatal-fail-preprocess')
+        # Fatal error should be propagated
+        self.assertRaises(TypeError, web.process_incoming_jobs)
+        # Job should be stuck in PREPROCESSING
+        jobdir = os.path.join(conf.directories['PREPROCESSING'],
+                              'fatal-fail-preprocess')
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+        # Make sure that state_file and email contain both the fatal error
+        # and the original job error that triggered _fail():
+        expect = 'Traceback.*TypeError: \'NoneType\' object.*' + \
+                 'This error in turn occurred while trying to handle ' + \
+                 'the original error below:.*Traceback.*' + \
+                 'ValueError: Fatal failure in preprocessing'
+        state = open('state_file').read()
+        self.assert_(re.search(expect, state, flags=re.DOTALL),
+                     'Unexpected state file ' + state)
+        os.unlink('state_file')
+        mail = conf.get_mail_output()
+        self.assert_(re.search(expect, state, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
 
     def test_preprocess_complete(self):
