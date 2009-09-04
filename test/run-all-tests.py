@@ -1,6 +1,10 @@
 import unittest, sys, os, re
 
 def regressionTest():
+    try:
+        os.unlink('state_file')
+    except OSError:
+        pass
     path = os.path.abspath(os.path.dirname(sys.argv[0]))
     files = os.listdir(path)
     test = re.compile("^test_.*\.py$", re.IGNORECASE)
