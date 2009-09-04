@@ -272,7 +272,7 @@ class JobTest(unittest.TestCase):
         cleanup_webservice(conf, tmpdir)
         # Make sure that state_file and email contain both the fatal error
         # and the original job error that triggered _fail():
-        expect = 'Traceback.*TypeError: \'NoneType\' object.*' + \
+        expect = 'Traceback.*TypeError: .*object.*' + \
                  'This error in turn occurred while trying to handle ' + \
                  'the original error below:.*Traceback.*' + \
                  'ValueError: Fatal failure in preprocessing'
