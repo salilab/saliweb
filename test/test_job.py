@@ -201,23 +201,32 @@ class JobTest(unittest.TestCase):
         os.rmdir(runjobdir)
         cleanup_webservice(conf, tmpdir)
 
-    def test_sanity_check(self):
-        """Make sure that sanity checks catch invalid incoming jobs"""
+    def test_sanity_check_no_directory(self):
+        """Make sure that sanity checks catch jobs without directories"""
         utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
                   + "VALUES(?,?,?,?,?)", ('job1', 'INCOMING', utcnow, None,
                                           'http://testurl'))
-        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-                  + "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
-                                          '/not/exist', 'http://testurl'))
         db.conn.commit()
         web.process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job1')
         self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'SanityError: .*did not set the directory', job)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_sanity_check_invalid_directory(self):
+        """Make sure that sanity checks catch invalid job directories"""
+        utcnow = datetime.datetime.utcnow()
+        db, conf, web, tmpdir = setup_webservice()
+        c = db.conn.cursor()
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+                  + "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
+                                          '/not/exist', 'http://testurl'))
+        db.conn.commit()
+        web.process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job2')
         self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
