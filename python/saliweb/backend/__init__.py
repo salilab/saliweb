@@ -365,6 +365,9 @@ class WebService(object):
         err = traceback.format_exc()
         if err is None:
             err = 'Error: ' + str(detail)
+        if hasattr(detail, 'original_error'):
+            err += "\n\nThis error in turn occurred while trying to " + \
+                   "handle the original error below:\n" + detail.original_error
         f = open(self.config.state_file, 'w')
         print >> f, "FAILED: " + err
         f.close()
@@ -626,12 +629,18 @@ class Job(object):
         if err is None:
             err = str(reason)
         reason = "Python exception:\n" + err
-        self._jobdict['failure'] = reason
-        self.__internal_set_state('FAILED')
-        subject = 'Sali lab %s service: Job %s FAILED' \
-                  % (self.service_name, self.name)
-        body = 'Job %s failed with the following error:\n' % self.name + reason
-        self._db.config.send_admin_email(subject, body)
+        try:
+            self._jobdict['failure'] = reason
+            self.__internal_set_state('FAILED')
+            subject = 'Sali lab %s service: Job %s FAILED' \
+                      % (self.service_name, self.name)
+            body = 'Job %s failed with the following error:\n' \
+                   % self.name + reason
+            self._db.config.send_admin_email(subject, body)
+        except Exception, detail:
+            # Ensure we can extract the original error
+            detail.original_error = reason
+            raise
 
     def _assert_state(self, state):
         """Make sure that the current job state (as a string) matches
