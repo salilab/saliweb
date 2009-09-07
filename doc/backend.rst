@@ -152,11 +152,9 @@ The example below demonstrates a simple :class:`Job` subclass that, given a
 set of PDB files from the frontend, runs an SGE job on the cluster that
 extracts all of the HETATM records from each PDB. This is done by
 overriding the :meth:`Job.run` method to pass a set of shell script commands
-to an :class:`SGERunner` instance. The :meth:`SGERunner.run` method is then
-called to actually run the job on the cluster, and the return value (the SGE
-job ID) is returned from the :meth:`Job.run` method. This allows the backend
-to keep track of this ID, so that it can be used later in the
-:meth:`Job.check_batch_completed` method to see if the SGE job finished.
+to an :class:`SGERunner` instance; this instance is then returned to the
+backend. The backend will then keep track of the SGE job, and notice when
+it finishes.
 
 The subclass also overrides the :meth:`Job.archive` method, so that when the
 job results are moved from short-term to long-term storage, all of the PDB

@@ -447,6 +447,7 @@ class Job(object):
     """
 
     _state_file_wait_time = 5.0
+    _runners = {}
 
     # Note: make sure that all code paths are wrapped with try/except, so that
     # if an exception occurs, it is caught and _fail() is called. Note that some
@@ -457,6 +458,18 @@ class Job(object):
         self._db = db
         self._jobdict = jobdict
         self.__state = state
+
+    @classmethod
+    def _register_runner_class(cls, runnercls):
+        """Maintain a mapping from names to :class:`Runner` classes. Should
+           normally be called from :meth:`Runner.__init__`."""
+        exist = cls._runners.get(runnercls._runner_name, None)
+        if exist is not None and exist is not runnercls:
+            # Runner name must be unique
+            raise TypeError("Two Runner classes have the same name (%s): "
+                            "%s and %s" % (runnercls._runner_name, exist,
+                                           runnercls))
+        cls._runners[runnercls._runner_name] = runnercls
 
     def _get_job_state_file(self):
         return os.path.join(self.directory, 'job-state')
@@ -504,7 +517,8 @@ class Job(object):
             else:
                 self._jobdict['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
-                jobid = self._run_in_job_directory(self.run)
+                runner = self._run_in_job_directory(self.run)
+                jobid = runner._runner_name + ':' + runner._run()
                 if jobid != self._jobdict['batch_id']:
                     self._jobdict['batch_id'] = jobid
                     self._db._update_job(self._jobdict, self._get_state())
@@ -519,14 +533,21 @@ class Job(object):
         except IOError:
             return False   # if the file does not exist, job is still running
 
+    def _runner_done(self):
+        """Return True if the job's :class:`Runner` indicates the job finished,
+           or None if that cannot be determined."""
+        batch_id = self._jobdict['batch_id']
+        runner_name, jobid = batch_id.split(':')
+        runnercls = self._runners[runner_name]
+        return runnercls._check_completed(jobid)
+
     def _has_completed(self):
         """Return True only if the job has just finished running. This is not
-           the case until the Runner reports the job has finished (if it is
-           able to) and the state file has been updated, since the state file
-           is created when the first task in a multi-task SGE job finishes,
-           so other SGE tasks may still be running."""
-        batch_done = self._run_in_job_directory(
-                         self.check_batch_completed, self._jobdict['batch_id'])
+           the case until the :class:`Runner` reports the job has finished
+           (if it is able to) and the state file has been updated, since the
+           state file is created when the first task in a multi-task SGE job
+           finishes, so other SGE tasks may still be running."""
+        batch_done = self._runner_done()
         state_file_done = self._job_state_file_done()
         if state_file_done and batch_done is not False:
             return True
@@ -662,22 +683,11 @@ class Job(object):
 
     def run(self):
         """Run the job, e.g. on an SGE cluster.
-           Must be implemented by the user for each web service.
+           Must be implemented by the user for each web service; it should
+           create and return a suitable :class:`Runner` instance.
            For example, this could generate a simple script and pass it to
            an :class:`SGERunner` instance.
-           If the job is run by something like :meth:`SGERunner.run`, the
-           return value from that method should be returned here (it can be
-           later used by :meth:`check_batch_completed`).
         """
-
-    def check_batch_completed(self, batch_id):
-        """Query the batch system to see if the job has completed. Does
-           nothing by default, but can be overridden by the user, for example
-           to return the result of :meth:`SGERunner.check_completed`. The
-           method should return True, False or None (the last if it is not
-           possible to query the batch system).
-           Note that the batch system reporting the job is complete does not
-           necessarily mean the job actually completed successfully."""
 
     def send_user_email(self, subject, body):
         """Email the owner of the job, if requested, with the given `subject`
@@ -730,8 +740,16 @@ class Job(object):
     directory = property(lambda x: x._jobdict['directory'],
                          doc="Current job working directory (read-only)")
 
+class Runner(object):
+    """Base class for runners, which handle the actual running of a job,
+       usually on an SGE cluster (see the :class:`SGERunner` and
+       :class:`SaliSGERunner` subclasses). To create a subclass, you must
+       implement both a _run method and a _check_completed class method and
+       set the _runner_name attribute to a unique name for this class."""
+    def __init__(self):
+        Job._register_runner_class(self.__class__)
 
-class SGERunner(object):
+class SGERunner(Runner):
     """Run a set of commands on the QB3 SGE cluster.
 
        To use, pass a string `script` containing a set of commands to run,
@@ -746,9 +764,10 @@ class SGERunner(object):
        "DONE" when it completes.
 
        Once done, you can optionally call :meth:`set_sge_options` to set SGE
-       options, then call :meth:`run` to submit the job.
+       options.
     """
 
+    _runner_name = 'qb3sge'
     _env = {'SGE_CELL': 'qb3',
             'SGE_ROOT': '/ccpr1/sge6',
             'SGE_QMASTER_PORT': '536',
@@ -756,6 +775,7 @@ class SGERunner(object):
     _arch = 'lx24-amd64'
 
     def __init__(self, script, interpreter='/bin/sh'):
+        Runner.__init__(self)
         self._opts = ''
         self._script = script
         self._interpreter = interpreter
@@ -766,7 +786,7 @@ class SGERunner(object):
         """
         self._opts = opts
 
-    def run(self):
+    def _run(self):
         """Generate an SGE script in the current directory and run it.
            Return the SGE job ID."""
         fh = open('sge-script.sh', 'w')
@@ -812,7 +832,7 @@ class SGERunner(object):
             raise OSError("Could not parse qsub output %s" % out)
 
     @classmethod
-    def check_completed(cls, batch_id, catch_exceptions=True):
+    def _check_completed(cls, batch_id, catch_exceptions=True):
         """Return True if SGE reports that the given job has finished, False
            if it is still running, or None if the status cannot be determined.
            If `catch_exceptions` is True and a problem occurs when talking to
@@ -838,5 +858,6 @@ class SGERunner(object):
 
 class SaliSGERunner(SGERunner):
     """Run commands on the Sali SGE cluster instead of the QB3 cluster."""
+    _runner_name = 'salisge'
     _env = {'SGE_CELL': 'sali',
             'SGE_ROOT': '/home/sge61'}

@@ -5,6 +5,10 @@ import os
 import shutil
 import tempfile
 
+class BrokenRunner(SGERunner):
+    # Duplicate runner name, so it shouldn't work
+    _runner_name = 'qb3sge'
+
 def _make_fake_sge_cmd(cmd, script, retval=0):
     tmpdir = tempfile.mkdtemp()
     os.mkdir(os.path.join(tmpdir, 'bin'))
@@ -20,7 +24,12 @@ def _make_fake_sge_cmd(cmd, script, retval=0):
     return tmpdir
 
 class RunnerTest(unittest.TestCase):
-    """Check SGERunner"""
+    """Check Runner classes"""
+
+    def test_duplicate_runner_names(self):
+        """Make sure that duplicate Runner names aren't accepted"""
+        x = SGERunner('x')
+        self.assertRaises(TypeError, BrokenRunner, 'y')
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
@@ -41,22 +50,22 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
             self.assertEqual(sio.getvalue(), expected)
 
     def test_check_completed(self):
-        """Check SGERunner.check_completed()"""
+        """Check SGERunner._check_completed()"""
         tmpdir = _make_fake_sge_cmd('qstat',
                                     "echo Following jobs do not exist: 1>&2\n" \
                                     + "echo 12345 1>&2")
-        self.assertEqual(SGERunner.check_completed('12345'), True)
+        self.assertEqual(SGERunner._check_completed('12345'), True)
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qstat',
                                     'echo "job number:           12345"')
-        self.assertEqual(SGERunner.check_completed('12345'), False)
+        self.assertEqual(SGERunner._check_completed('12345'), False)
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qstat', '', retval=2)
-        self.assertRaises(OSError, SGERunner.check_completed, '12345',
+        self.assertRaises(OSError, SGERunner._check_completed, '12345',
                           catch_exceptions=False)
         shutil.rmtree(tmpdir)
         tmpdir = _make_fake_sge_cmd('qstat', '', retval=2)
-        self.assertEqual(SGERunner.check_completed('12345'), None)
+        self.assertEqual(SGERunner._check_completed('12345'), None)
         shutil.rmtree(tmpdir)
 
 

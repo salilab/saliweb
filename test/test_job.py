@@ -4,11 +4,25 @@ import os
 import re
 import tempfile
 from memory_database import MemoryDatabase
-from saliweb.backend import WebService, Job, InvalidStateError
+from saliweb.backend import WebService, Job, InvalidStateError, Runner
 from config import Config
 from StringIO import StringIO
 
 Job._state_file_wait_time = 0.01
+
+class DoNothingRunner(Runner):
+    _runner_name = 'donothing'
+    def __init__(self, id):
+        Runner.__init__(self)
+        self.id = id
+    def _run(self):
+        return self.id
+    @classmethod
+    def _check_completed(cls, batch_id, catch_exceptions=True):
+        return True
+
+# Make sure that the DoNothingRunner class is registered
+DoNothingRunner('x')
 
 basic_config = """
 [general]
@@ -59,7 +73,7 @@ class MyJob(Job):
             raise ValueError('Failure in running')
         f = open('job-output', 'w')
         f.close()
-        return 'MyJob ID'
+        return DoNothingRunner('MyJob ID')
     def archive(self):
         if self.name == 'fail-archive':
             raise ValueError('Failure in archival')
@@ -70,16 +84,16 @@ class MyJob(Job):
             raise ValueError('Failure in expiry')
         f = open('expire', 'w')
         f.close()
-    def check_batch_completed(self, jobid):
+    def _runner_done(self):
         if self.name == 'fail-batch-exception':
             raise ValueError('Failure in batch completion')
         elif self.name == 'batch-complete-race':
             # Simulate job completing just after the first check of the
             # state file
-            f = open('job-state', 'w')
+            f = open(os.path.join(self.directory, 'job-state'), 'w')
             print >> f, "DONE"
             return True
-        f = open('batch_complete', 'w')
+        f = open(os.path.join(self.directory, 'batch_complete'), 'w')
         f.close()
         if self.name == 'fail-batch-complete':
             return True
@@ -102,7 +116,7 @@ def add_running_job(db, name, completed):
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,batch_id,directory, " \
               + "contact_email,url) VALUES(?,?,?,?,?,?,?)",
-              (name, 'RUNNING', utcnow, 'SGE-'+name, jobdir,
+              (name, 'RUNNING', utcnow, 'donothing:SGE-'+name, jobdir,
               'testuser@salilab.org', 'http://testurl'))
     db.conn.commit()
     f = open(os.path.join(jobdir, 'job-state'), 'w')
@@ -196,7 +210,7 @@ class JobTest(unittest.TestCase):
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
         # New fields should have been populated in the database
-        self.assertEqual(job._jobdict['batch_id'], 'MyJob ID')
+        self.assertEqual(job._jobdict['batch_id'], 'donothing:MyJob ID')
         self.assertNotEqual(job._jobdict['preprocess_time'], None)
         self.assertNotEqual(job._jobdict['run_time'], None)
         # Both preprocess and run methods in MyJob should have triggered
@@ -436,10 +450,10 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-batch-complete')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'BatchSystemError: Batch system claims job ' \
-                             + 'SGE-fail-batch-complete is complete, ' \
-                             + 'but job-state file in job directory', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'BatchSystemError: Batch system claims job '
+                             'donothing:SGE-fail-batch-complete is complete, '
+                             'but job-state file in job directory', job)
         os.unlink(os.path.join(failjobdir, 'job-state'))
         # Should have checked for batch completion
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
@@ -447,7 +461,7 @@ class JobTest(unittest.TestCase):
         cleanup_webservice(conf, tmpdir)
 
     def test_batch_exception(self):
-        """Make sure that exceptions in check_batch_completed are handled"""
+        """Make sure that exceptions in check_completed are handled"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'fail-batch-exception', completed=False)
         web.process_completed_jobs()

@@ -14,10 +14,7 @@ done
 """
         r = self.runnercls(script)
         r.set_sge_options('-l diva1=1G')
-        return r.run()
-
-    def check_batch_completed(self, jobid):
-        return self.runnercls.check_completed(jobid)
+        return r
 
     def archive(self):
         for f in glob.glob('*.pdb'):
