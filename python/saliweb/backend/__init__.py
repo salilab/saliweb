@@ -520,29 +520,33 @@ class Job(object):
             return False   # if the file does not exist, job is still running
 
     def _has_completed(self):
-        """Return True only if the job has just finished running."""
-        state_file_done = self._job_state_file_done()
-        if state_file_done:
-            return True
-        else:
-            batch_done = self._run_in_job_directory(
+        """Return True only if the job has just finished running. This is not
+           the case until the Runner reports the job has finished (if it is
+           able to) and the state file has been updated, since the state file
+           is created when the first task in a multi-task SGE job finishes,
+           so other SGE tasks may still be running."""
+        batch_done = self._run_in_job_directory(
                          self.check_batch_completed, self._jobdict['batch_id'])
-            if batch_done:
-                # Check state file again, since the batch job may have just
-                # finished, after the first check above; we may have to wait
-                # a little while for NFS caching, etc.
-                for tries in range(5):
-                    state_file_done = self._job_state_file_done()
-                    if state_file_done:
-                        return True
-                    time.sleep(self._state_file_wait_time)
-                raise BatchSystemError(
-                     ("Batch system claims job %s is complete, but " + \
-                      "job-state file in job directory (%s) claims it " + \
-                      "is not. This usually means the batch system job " + \
-                      "failed - e.g. a node went down.") \
-                     % (self._jobdict['batch_id'], self._jobdict['directory']))
-            return False
+        state_file_done = self._job_state_file_done()
+        if state_file_done and batch_done is not False:
+            return True
+        elif batch_done and not state_file_done:
+            # This usually means the batch job failed; check state file again,
+            # since the batch job may have just finished, after the first
+            # check above; we may have to wait a little while for
+            # NFS caching, etc.
+            for tries in range(5):
+                state_file_done = self._job_state_file_done()
+                if state_file_done:
+                    return True
+                time.sleep(self._state_file_wait_time)
+            raise BatchSystemError(
+                 ("Batch system claims job %s is complete, but " + \
+                  "job-state file in job directory (%s) claims it " + \
+                  "is not. This usually means the batch system job " + \
+                  "failed - e.g. a node went down.") \
+                 % (self._jobdict['batch_id'], self._jobdict['directory']))
+        return False
 
     def _try_complete(self):
         """Take a running job, see if it completed, and if so, process it."""

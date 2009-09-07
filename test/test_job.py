@@ -341,6 +341,8 @@ class JobTest(unittest.TestCase):
         # postprocess and complete methods in MyJob should have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
+        # Should have checked for batch completion
+        os.unlink(os.path.join(compjobdir, 'batch_complete'))
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
         # User should have been notified by email
@@ -366,6 +368,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job._jobdict['expire_time'], None)
         os.unlink(os.path.join(jobdir, 'postproc'))
         os.unlink(os.path.join(jobdir, 'complete'))
+        os.unlink(os.path.join(jobdir, 'batch_complete'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -398,6 +401,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in postprocessing', job)
+        os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -416,6 +420,8 @@ class JobTest(unittest.TestCase):
                              + 'ValueError: Failure in completion', job)
         # postprocess method in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'postproc'))
+        # should have checked for batch completion
+        os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
