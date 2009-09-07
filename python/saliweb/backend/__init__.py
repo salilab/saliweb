@@ -17,8 +17,8 @@ class InvalidStateError(Exception):
     """Exception raised for invalid job states."""
     pass
 
-class BatchSystemError(Exception):
-    "Exception raised if the batch system (such as SGE) failed to run a job."
+class RunnerError(Exception):
+    """Exception raised if the runner (such as SGE) failed to run a job."""
     pass
 
 class StateFileError(Exception):
@@ -230,7 +230,7 @@ class Database(object):
         self.add_field(MySQLField('end_time', 'DATETIME'))
         self.add_field(MySQLField('archive_time', 'DATETIME'))
         self.add_field(MySQLField('expire_time', 'DATETIME'))
-        self.add_field(MySQLField('batch_id', 'VARCHAR(50)'))
+        self.add_field(MySQLField('runner_id', 'VARCHAR(50)'))
         self.add_field(MySQLField('failure', 'TEXT'))
 
     def add_field(self, field):
@@ -518,9 +518,9 @@ class Job(object):
                 self._jobdict['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
-                jobid = runner._runner_name + ':' + runner._run()
-                if jobid != self._jobdict['batch_id']:
-                    self._jobdict['batch_id'] = jobid
+                runner_id = runner._runner_name + ':' + runner._run()
+                if runner_id != self._jobdict['runner_id']:
+                    self._jobdict['runner_id'] = runner_id
                     self._db._update_job(self._jobdict, self._get_state())
         except Exception, detail:
             self._fail(detail)
@@ -536,8 +536,8 @@ class Job(object):
     def _runner_done(self):
         """Return True if the job's :class:`Runner` indicates the job finished,
            or None if that cannot be determined."""
-        batch_id = self._jobdict['batch_id']
-        runner_name, jobid = batch_id.split(':')
+        runner_id = self._jobdict['runner_id']
+        runner_name, jobid = runner_id.split(':')
         runnercls = self._runners[runner_name]
         return runnercls._check_completed(jobid)
 
@@ -561,12 +561,12 @@ class Job(object):
                 if state_file_done:
                     return True
                 time.sleep(self._state_file_wait_time)
-            raise BatchSystemError(
-                 ("Batch system claims job %s is complete, but " + \
-                  "job-state file in job directory (%s) claims it " + \
-                  "is not. This usually means the batch system job " + \
-                  "failed - e.g. a node went down.") \
-                 % (self._jobdict['batch_id'], self._jobdict['directory']))
+            raise RunnerError(
+                 "Runner claims job %s is complete, but "
+                 "job-state file in job directory (%s) claims it "
+                 "is not. This usually means the underlying batch system "
+                 "(e.g. SGE) job failed - e.g. a node went down." \
+                 % (self._jobdict['runner_id'], self._jobdict['directory']))
         return False
 
     def _try_complete(self):
@@ -832,14 +832,14 @@ class SGERunner(Runner):
             raise OSError("Could not parse qsub output %s" % out)
 
     @classmethod
-    def _check_completed(cls, batch_id, catch_exceptions=True):
+    def _check_completed(cls, jobid, catch_exceptions=True):
         """Return True if SGE reports that the given job has finished, False
            if it is still running, or None if the status cannot be determined.
            If `catch_exceptions` is True and a problem occurs when talking to
            SGE, None is returned; otherwise, the exception is propagated."""
         try:
             cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
-            p = subprocess.Popen([cmd, '-j', batch_id], stdout=subprocess.PIPE,
+            p = subprocess.Popen([cmd, '-j', jobid], stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, env=cls._env)
             out = p.stdout.read()
             err = p.stderr.read()
