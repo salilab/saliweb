@@ -858,6 +858,7 @@ class SGERunner(Runner):
         self._opts = ''
         self._script = script
         self._interpreter = interpreter
+        self._directory = os.getcwd()
 
     def set_sge_options(self, opts):
         """Set the SGE options to use, as a string,
@@ -866,12 +867,13 @@ class SGERunner(Runner):
         self._opts = opts
 
     def _run(self):
-        """Generate an SGE script in the current directory and run it.
+        """Generate an SGE script in the job directory and run it.
            Return the SGE job ID."""
-        fh = open('sge-script.sh', 'w')
+        script = os.path.join(self._directory, 'sge-script.sh')
+        fh = open(script, 'w')
         self._write_sge_script(fh)
         fh.close()
-        return self._qsub('sge-script.sh')
+        return self._qsub(script, self._directory)
 
     def _write_sge_script(self, fh):
         print >> fh, "#!" + self._interpreter
@@ -893,11 +895,12 @@ class SGERunner(Runner):
             print >> fh, 'echo "DONE" > ${_SALI_JOB_DIR}/job-state'
 
     @classmethod
-    def _qsub(cls, script):
+    def _qsub(cls, script, directory=None):
         """Submit a job script to the cluster."""
         cmd = '%s/bin/%s/qsub' % (cls._env['SGE_ROOT'], cls._arch)
         p = subprocess.Popen([cmd, script], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, env=cls._env)
+                             stderr=subprocess.PIPE, env=cls._env,
+                             cwd=directory)
         out = p.stdout.read()
         err = p.stderr.read()
         ret = p.wait()
