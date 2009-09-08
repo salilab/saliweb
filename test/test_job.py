@@ -5,6 +5,7 @@ import re
 import tempfile
 from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Job, InvalidStateError, Runner
+from saliweb.backend import MySQLField
 from config import Config
 from StringIO import StringIO
 
@@ -54,6 +55,7 @@ class MyJob(Job):
             # Ensure that Job._fail() fails while trying to process the error
             self._metadata = None
             raise ValueError('Fatal failure in preprocessing')
+        self._metadata['testfield'] = 'preprocess'
         f = open('preproc', 'w')
         f.close()
         if self.name == 'complete-preprocess':
@@ -61,27 +63,32 @@ class MyJob(Job):
     def postprocess(self):
         if self.name == 'fail-postprocess':
             raise ValueError('Failure in postprocessing')
+        self._metadata['testfield'] = 'postprocess'
         f = open('postproc', 'w')
         f.close()
     def complete(self):
         if self.name == 'fail-complete':
             raise ValueError('Failure in completion')
+        self._metadata['testfield'] = 'complete'
         f = open('complete', 'w')
         f.close()
     def run(self):
         if self.name == 'fail-run':
             raise ValueError('Failure in running')
+        self._metadata['testfield'] = 'run'
         f = open('job-output', 'w')
         f.close()
         return DoNothingRunner('MyJob ID')
     def archive(self):
         if self.name == 'fail-archive':
             raise ValueError('Failure in archival')
+        self._metadata['testfield'] = 'archive'
         f = open('archive', 'w')
         f.close()
     def expire(self):
         if self.name == 'fail-expire':
             raise ValueError('Failure in expiry')
+        self._metadata['testfield'] = 'expire'
         f = open('expire', 'w')
         f.close()
     def _runner_done(self):
@@ -178,6 +185,7 @@ def setup_webservice(archive='30d', expire='90d'):
     os.mkdir(preprocessing)
     os.mkdir(failed)
     db = MemoryDatabase(MyJob)
+    db.add_field(MySQLField('testfield', 'TEXT'))
     conf = Config(StringIO(basic_config \
                            % (incoming, preprocessing, failed, archive,
                               expire)))
@@ -210,6 +218,7 @@ class JobTest(unittest.TestCase):
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
         # New fields should have been populated in the database
+        self.assertEqual(job._metadata['testfield'], 'run')
         self.assertEqual(job._metadata['runner_id'], 'donothing:MyJob ID')
         self.assertNotEqual(job._metadata['preprocess_time'], None)
         self.assertNotEqual(job._metadata['run_time'], None)
@@ -313,6 +322,7 @@ class JobTest(unittest.TestCase):
         # triggered; no info from run should be present
         os.unlink(os.path.join(compjobdir, 'preproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
+        self.assertEqual(job._metadata['testfield'], 'complete')
         self.assertEqual(job._metadata['runner_id'], None)
         self.assertEqual(job._metadata['run_time'], None)
         self.assertEqual(job._metadata['postprocess_time'], None)
@@ -329,6 +339,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-run')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
         self.assertEqual(job.directory, failjobdir)
+        self.assertEqual(job._metadata['testfield'], 'preprocess')
         self.assertEqual(job._metadata['runner_id'], None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in running', job)
@@ -348,6 +359,7 @@ class JobTest(unittest.TestCase):
         compjobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
         self.assertEqual(job.directory, compjobdir)
         # New fields should have been populated in the database
+        self.assertEqual(job._metadata['testfield'], 'complete')
         self.assertNotEqual(job._metadata['postprocess_time'], None)
         self.assertNotEqual(job._metadata['end_time'], None)
         self.assertNotEqual(job._metadata['archive_time'], None)
@@ -487,6 +499,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('ARCHIVED', 'job1')
         arcjobdir = os.path.join(conf.directories['ARCHIVED'], 'job1')
         self.assertEqual(job.directory, arcjobdir)
+        self.assertEqual(job._metadata['testfield'], 'archive')
         # archive method in MyJob should have triggered
         os.unlink(os.path.join(arcjobdir, 'archive'))
         os.rmdir(arcjobdir)
@@ -531,6 +544,7 @@ class JobTest(unittest.TestCase):
         # Job should now have moved from ARCHIVED to EXPIRED
         job = web.get_job_by_name('EXPIRED', 'job1')
         self.assertEqual(job.directory, None)
+        self.assertEqual(job._metadata['testfield'], 'expire')
         # expire method in MyJob should have triggered
         os.unlink('expire')
         cleanup_webservice(conf, tmpdir)
