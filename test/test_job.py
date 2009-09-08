@@ -203,7 +203,7 @@ class JobTest(unittest.TestCase):
         """Check successful startup of incoming jobs"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_incoming_job(db, 'job1')
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
 
         # Job should now have moved from INCOMING to RUNNING
         job = web.get_job_by_name('RUNNING', 'job1')
@@ -228,7 +228,7 @@ class JobTest(unittest.TestCase):
                   + "VALUES(?,?,?,?,?)", ('job1', 'INCOMING', utcnow, None,
                                           'http://testurl'))
         db.conn.commit()
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job1')
         self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
@@ -244,7 +244,7 @@ class JobTest(unittest.TestCase):
                   + "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
                                           '/not/exist', 'http://testurl'))
         db.conn.commit()
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job2')
         self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
@@ -255,7 +255,7 @@ class JobTest(unittest.TestCase):
         """Make sure that preprocess failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_incoming_job(db, 'fail-preprocess')
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
 
         # Job should now have moved from INCOMING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-preprocess')
@@ -278,7 +278,7 @@ class JobTest(unittest.TestCase):
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_incoming_job(db, 'fatal-fail-preprocess')
         # Fatal error should be propagated
-        self.assertRaises(TypeError, web.process_incoming_jobs)
+        self.assertRaises(TypeError, web._process_incoming_jobs)
         # Job should be stuck in PREPROCESSING
         jobdir = os.path.join(conf.directories['PREPROCESSING'],
                               'fatal-fail-preprocess')
@@ -302,7 +302,7 @@ class JobTest(unittest.TestCase):
         """Job.preprocess() should be able to skip a job run"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_incoming_job(db, 'complete-preprocess')
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
 
         # Job should now have moved directly from INCOMING to COMPLETED
         job = web.get_job_by_name('COMPLETED', 'complete-preprocess')
@@ -323,7 +323,7 @@ class JobTest(unittest.TestCase):
         """Make sure that run failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_incoming_job(db, 'fail-run')
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
 
         # Job should now have moved from INCOMING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-run')
@@ -341,7 +341,7 @@ class JobTest(unittest.TestCase):
         """Check normal job completion"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'job1', completed=True)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to COMPLETED
         job = web.get_job_by_name('COMPLETED', 'job1')
@@ -371,7 +371,7 @@ class JobTest(unittest.TestCase):
         db, conf, web, tmpdir = setup_webservice(expire='NEVER',
                                                  archive='NEVER')
         runjobdir = add_running_job(db, 'job1', completed=True)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to COMPLETED
         job = web.get_job_by_name('COMPLETED', 'job1')
@@ -390,7 +390,7 @@ class JobTest(unittest.TestCase):
         """Check that jobs that are still running are not processed"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'job1', completed=False)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should still be in RUNNING state
         job = web.get_job_by_name('RUNNING', 'job1')
@@ -406,7 +406,7 @@ class JobTest(unittest.TestCase):
         """Make sure that postprocess failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'fail-postprocess', completed=True)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-postprocess')
@@ -423,7 +423,7 @@ class JobTest(unittest.TestCase):
         """Make sure that complete failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'fail-complete', completed=True)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-complete')
@@ -443,7 +443,7 @@ class JobTest(unittest.TestCase):
         """Make sure that batch system failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'fail-batch-complete', completed=False)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-batch-complete')
@@ -464,7 +464,7 @@ class JobTest(unittest.TestCase):
         """Make sure that exceptions in check_completed are handled"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'fail-batch-exception', completed=False)
-        web.process_completed_jobs()
+        web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-batch-exception')
@@ -481,7 +481,7 @@ class JobTest(unittest.TestCase):
         """Check successful archival of completed jobs"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_completed_job(db, 'job1', datetime.timedelta(days=-1))
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should now have moved from COMPLETED to ARCHIVED
         job = web.get_job_by_name('ARCHIVED', 'job1')
@@ -497,7 +497,7 @@ class JobTest(unittest.TestCase):
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_completed_job(db, 'fail-archive',
                                      datetime.timedelta(days=-1))
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should now have moved from COMPLETED to FAILED
         job = web.get_job_by_name('FAILED', 'fail-archive')
@@ -513,7 +513,7 @@ class JobTest(unittest.TestCase):
         """Check for jobs that never archive"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_completed_job(db, 'job1', None)
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should still be COMPLETED
         job = web.get_job_by_name('COMPLETED', 'job1')
@@ -526,7 +526,7 @@ class JobTest(unittest.TestCase):
         """Check successful expiry of archived jobs"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_archived_job(db, 'job1', datetime.timedelta(days=-1))
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should now have moved from ARCHIVED to EXPIRED
         job = web.get_job_by_name('EXPIRED', 'job1')
@@ -539,7 +539,7 @@ class JobTest(unittest.TestCase):
         """Check for jobs that never expire"""
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_archived_job(db, 'job1', None)
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should still be ARCHIVED
         job = web.get_job_by_name('ARCHIVED', 'job1')
@@ -553,7 +553,7 @@ class JobTest(unittest.TestCase):
         db, conf, web, tmpdir = setup_webservice()
         injobdir = add_archived_job(db, 'fail-expire',
                                     datetime.timedelta(days=-1))
-        web.process_old_jobs()
+        web._process_old_jobs()
 
         # Job should now have moved from ARCHIVED to FAILED
         job = web.get_job_by_name('FAILED', 'fail-expire')

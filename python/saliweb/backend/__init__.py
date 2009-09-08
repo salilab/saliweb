@@ -403,12 +403,12 @@ have done this, delete the state file (%s) to reenable runs.
         self.db._create_tables()
 
     def do_all_processing(self):
-        """Convenience method that calls each of the process_* methods"""
-        self.process_incoming_jobs()
-        self.process_completed_jobs()
-        self.process_old_jobs()
+        """Process incoming jobs, completed jobs, and old jobs."""
+        self._process_incoming_jobs()
+        self._process_completed_jobs()
+        self._process_old_jobs()
 
-    def process_incoming_jobs(self):
+    def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
         self._check_state_file(self.config.state_file)
         try:
@@ -417,7 +417,7 @@ have done this, delete the state file (%s) to reenable runs.
         except Exception, detail:
             self._handle_fatal_error(detail)
 
-    def process_completed_jobs(self):
+    def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
         self._check_state_file(self.config.state_file)
         try:
@@ -426,7 +426,7 @@ have done this, delete the state file (%s) to reenable runs.
         except Exception, detail:
             self._handle_fatal_error(detail)
 
-    def process_old_jobs(self):
+    def _process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
         self._check_state_file(self.config.state_file)
         try:

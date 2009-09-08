@@ -71,15 +71,15 @@ class WebServiceTest(unittest.TestCase):
         self.assertEqual(job, None)
 
     def test_process_incoming(self):
-        """Check WebService.process_incoming_jobs()"""
+        """Check WebService._process_incoming_jobs()"""
         global job_log
         job_log = []
         db, conf, web = self._setup_webservice()
-        web.process_incoming_jobs()
+        web._process_incoming_jobs()
         self.assertEqual(job_log, [('job1', 'run')])
         # Only a single WebService can process jobs concurrently
         ws2 = WebService(conf, db)
-        self.assertRaises(StateFileError, ws2.process_incoming_jobs)
+        self.assertRaises(StateFileError, ws2._process_incoming_jobs)
 
     def test_fatal_error(self):
         """Check WebService handling of fatal job errors"""
@@ -91,7 +91,7 @@ class WebServiceTest(unittest.TestCase):
                   '/', 'http://testurl'))
         db.conn.commit()
         # Error is not handled by Job, so should be propagated by WebService
-        self.assertRaises(TestFatalError, web.process_incoming_jobs)
+        self.assertRaises(TestFatalError, web._process_incoming_jobs)
         # WebService should also leave a state file to prevent further
         # processes from running
         x = open('state_file').read().rstrip('\r\n')
@@ -107,19 +107,19 @@ class WebServiceTest(unittest.TestCase):
                      'Unexpected mail output: ' + mail)
 
     def test_process_completed(self):
-        """Check WebService.process_completed_jobs()"""
+        """Check WebService._process_completed_jobs()"""
         global job_log
         job_log = []
         db, conf, web = self._setup_webservice()
-        web.process_completed_jobs()
+        web._process_completed_jobs()
         self.assertEqual(job_log, [('job2', 'complete'), ('job3', 'complete')])
 
     def test_process_old(self):
-        """Check WebService.process_old_jobs()"""
+        """Check WebService._process_old_jobs()"""
         global job_log
         job_log = []
         db, conf, web = self._setup_webservice()
-        web.process_old_jobs()
+        web._process_old_jobs()
         self.assertEqual(job_log, [(u'ready-for-archive', 'archive'),
                                    (u'ready-for-expire', 'expire')])
 
