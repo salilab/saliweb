@@ -7,6 +7,8 @@ import shutil
 import time
 import ConfigParser
 import traceback
+import select
+import socket
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -97,6 +99,8 @@ class Config(object):
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
         self.state_file = config.get('general', 'state_file')
+        self.socket = config.get('general', 'socket')
+        self.check_minutes = config.getint('general', 'check_minutes')
 
     def send_admin_email(self, subject, body):
         """Send an email to the admin for this web service, with the given
@@ -316,6 +320,29 @@ class Database(object):
         self.conn.commit()
 
 
+class _PeriodicAction(object):
+    """Run **meth** no more often than every **interval** seconds"""
+    def __init__(self, interval, meth):
+        self.interval = interval
+        self.meth = meth
+        self.last_time = 0.0
+
+    def get_time_to_next(self, timenow):
+        "Return the time in seconds until the method should be called again."
+        return max(0.0, self.last_time + self.interval - timenow)
+
+    def try_action(self, timenow):
+        """Call the method only if the interval has been exceeded."""
+        if time.time() > self.last_time + self.interval:
+            self.meth()
+            self.reset()
+
+    def reset(self):
+        """Reset the timer so the method will not be called for at least
+           another **interval** seconds from now."""
+        self.last_time = time.time()
+
+
 class WebService(object):
     """Top-level class used by all web services. Pass in a :class:`Config`
        (or subclass) object for the `config` argument, and a :class:`Database`
@@ -403,10 +430,62 @@ have done this, delete the state file (%s) to reenable runs.
         self.db._create_tables()
 
     def do_all_processing(self):
-        """Process incoming jobs, completed jobs, and old jobs."""
-        self._process_incoming_jobs()
-        self._process_completed_jobs()
-        self._process_old_jobs()
+        """Process incoming jobs, completed jobs, and old jobs. This method
+           will run forever, looping over the available jobs, until the
+           web service is killed."""
+        s = self._make_socket()
+        try:
+            self._do_periodic_actions(s)
+        finally:
+            self._close_socket(s)
+
+    def _make_socket(self):
+        """Create the socket used by the frontend to talk to us."""
+        sockfile = self.config.socket
+        try:
+            os.unlink(sockfile)
+        except OSError:
+            pass
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.bind(sockfile)
+        s.listen(5)
+        return s
+
+    def _close_socket(self, sock):
+        sockfile = self.config.socket
+        sock.close()
+        os.unlink(sockfile)
+
+    def _get_oldjob_interval(self):
+        """Get the time in seconds between checks for expired or archived
+           jobs."""
+        oldjob_interval = min(self.config.oldjobs['archive'],
+                              self.config.oldjobs['expire']) / 10
+        return oldjob_interval.seconds + oldjob_interval.days * 24 * 60 * 60
+
+    def _do_periodic_actions(self, sock):
+        """Do periodic actions necessary to process jobs. Incoming jobs are
+           processed whenever the frontend asks us to (or, failing that,
+           every check_minutes); completed jobs are checked for every
+           check_minutes; and archived and expired jobs are also
+           checked periodically."""
+        oldjob_interval = self._get_oldjob_interval()
+        incoming_action = _PeriodicAction(self.config.check_minutes * 60,
+                                          self._process_incoming_jobs)
+        actions = [_PeriodicAction(self.config.check_minutes * 60,
+                                   self._process_completed_jobs),
+                   _PeriodicAction(oldjob_interval,
+                                   self._process_old_jobs), incoming_action]
+        while True:
+            timenow = time.time()
+            timeout = min(x.get_time_to_next(timenow) for x in actions)
+            rlist, wlist, xlist = select.select([sock], [], [], timeout)
+            if len(rlist) == 1:
+                conn, addr = sock.accept()
+                self._process_incoming_jobs()
+                incoming_action.reset()
+            for x in actions:
+                x.try_action(timenow)
 
     def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""

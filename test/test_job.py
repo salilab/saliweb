@@ -29,6 +29,8 @@ basic_config = """
 admin_email: testadmin@salilab.org
 service_name: test_service
 state_file: state_file
+socket: test.socket
+check_minutes: 10
 
 [database]
 db: testdb

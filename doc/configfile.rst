@@ -33,6 +33,10 @@ state_file
     failure and must be manually removed by the admin before the backend will
     run again.
 
+socket
+    The full path to a socket file that is used for the frontend to send
+    messages to the backend.
+
 service_name
     The name of the service. This is used in emails to the owners of jobs and
     the server admin, and by the build system.
