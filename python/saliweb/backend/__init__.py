@@ -449,6 +449,14 @@ have done this, delete the state file (%s) to reenable runs.
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.bind(sockfile)
         s.listen(5)
+        # Make it writeable by the web server
+        p = subprocess.Popen(['setfacl', '-m', 'u:apache:rwx', sockfile],
+                             stderr=subprocess.PIPE)
+        err = p.stderr.read()
+        ret = p.wait()
+        if ret != 0:
+            raise OSError("setfacl failed with code %d and stderr %s" \
+                          % (ret, err))
         return s
 
     def _close_socket(self, sock):
