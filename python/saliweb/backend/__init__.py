@@ -78,6 +78,34 @@ class _JobState(object):
                                     % (self.__state, newstate))
 
 
+class _JobMetadata(object):
+    """A dictionary-like class that holds job metadata (a database row).
+       Objects also keep track of whether metadata needs to be pushed back to
+       the database to keep things synchronized.
+       Keys cannot be removed or added."""
+    def __init__(self, keys, values):
+        self.__dict = dict(zip(keys, values))
+        del self.__dict['state']
+        self.mark_synced()
+    def needs_sync(self):
+        return self.__needs_sync
+    def mark_synced(self):
+        self.__needs_sync = False
+    def __getitem__(self, key):
+        return self.__dict[key]
+    def __setitem__(self, key, value):
+        old = self.__dict[key]
+        if old != value:
+            self.__needs_sync = True
+            self.__dict[key] = value
+    def keys(self):
+        return self.__dict.keys()
+    def values(self):
+        return self.__dict.values()
+    def get(self, k, d=None):
+        return self.__dict.get(k, d)
+
+
 class Config(object):
     """This class holds configuration information such as directory
        locations, etc. `fh` is either a filename or a file handle from which
@@ -294,8 +322,7 @@ class Database(object):
         c = self.conn.cursor()
         c.execute(query, params)
         for row in c:
-            jobdict = dict(zip(fields, row))
-            del jobdict['state']
+            jobdict = _JobMetadata(fields, row)
             yield self._jobcls(self, jobdict, _JobState(state))
 
     def _update_job(self, jobdict, state):
@@ -307,6 +334,7 @@ class Database(object):
                 + ' WHERE name=' + self._placeholder
         c.execute(query, jobdict.values() + [jobdict['name']])
         self.conn.commit()
+        jobdict.mark_synced()
 
     def _change_job_state(self, jobdict, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
@@ -318,6 +346,7 @@ class Database(object):
                 + ' WHERE name=' + self._placeholder
         c.execute(query, jobdict.values() + [newstate, jobdict['name']])
         self.conn.commit()
+        jobdict.mark_synced()
 
 
 class _PeriodicAction(object):
@@ -587,7 +616,7 @@ class Job(object):
             # won't be able to move the (invalid) directory
             dir = self.directory
             self._jobdict['directory'] = None
-            self._db._update_job(self._jobdict, self._get_state())
+            self._sync_metadata()
             raise SanityError("Job %s: directory %s is not a directory" \
                               % (self.name, dir))
 
@@ -603,15 +632,15 @@ class Job(object):
             except OSError:
                 pass
             if self._run_in_job_directory(self.preprocess) is False:
+                self._sync_metadata()
                 self._mark_job_completed()
             else:
                 self._jobdict['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 runner_id = runner._runner_name + ':' + runner._run()
-                if runner_id != self._jobdict['runner_id']:
-                    self._jobdict['runner_id'] = runner_id
-                    self._db._update_job(self._jobdict, self._get_state())
+                self._jobdict['runner_id'] = runner_id
+                self._sync_metadata()
         except Exception, detail:
             self._fail(detail)
 
@@ -687,12 +716,14 @@ class Job(object):
         self._jobdict['expire_time'] = expire_time
         self._set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
+        self._sync_metadata()
         self.send_job_completed_email()
 
     def _try_archive(self):
         try:
             self._set_state('ARCHIVED')
             self._run_in_job_directory(self.archive)
+            self._sync_metadata()
         except Exception, detail:
             self._fail(detail)
 
@@ -700,8 +731,14 @@ class Job(object):
         try:
             self._set_state('EXPIRED')
             self.expire()
+            self._sync_metadata()
         except Exception, detail:
             self._fail(detail)
+
+    def _sync_metadata(self):
+        """If the job metadata has changed, sync the database with it."""
+        if self._jobdict.needs_sync():
+            self._db._update_job(self._jobdict, self._get_state())
 
     def _set_state(self, state):
         """Change the job state to `state`."""
