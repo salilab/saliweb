@@ -37,6 +37,15 @@ socket
     The full path to a socket file that is used for the frontend to send
     messages to the backend.
 
+check_minutes
+    The backend checks periodically to see if the batch system (e.g. SGE)
+    reports that any running jobs have finished, and to see if any jobs have
+    been submitted by the frontend. This is the time, in minutes, to wait
+    between these queries. A longer time reduces the load on the cluster
+    servers but increases the apparent time a job takes to run. Archived and
+    expired jobs are also checked for periodically, but this interval is
+    fixed at 10% of the shorter of the archive and expiry times.
+
 service_name
     The name of the service. This is used in emails to the owners of jobs and
     the server admin, and by the build system.
