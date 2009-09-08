@@ -433,6 +433,8 @@ have done this, delete the state file (%s) to reenable runs.
         """Process incoming jobs, completed jobs, and old jobs. This method
            will run forever, looping over the available jobs, until the
            web service is killed."""
+        # Check state file before overwriting the socket
+        self._check_state_file(self.config.state_file)
         s = self._make_socket()
         try:
             self._do_periodic_actions(s)
@@ -768,6 +770,14 @@ class Job(object):
         """Make a FAILED job eligible for running again."""
         self._assert_state('FAILED')
         self._set_state('INCOMING')
+        # Wake up the web service and let it know a new incoming job is present
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(self._db.config.socket)
+            s.send("INCOMING %s" % self.name)
+            s.close()
+        except socket.error:
+            pass
 
     def run(self):
         """Run the job, e.g. on an SGE cluster.
