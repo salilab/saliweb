@@ -52,7 +52,7 @@ class MyJob(Job):
             raise ValueError('Failure in preprocessing')
         if self.name == 'fatal-fail-preprocess':
             # Ensure that Job._fail() fails while trying to process the error
-            self._jobdict = None
+            self._metadata = None
             raise ValueError('Fatal failure in preprocessing')
         f = open('preproc', 'w')
         f.close()
@@ -195,9 +195,9 @@ class JobTest(unittest.TestCase):
     """Check Job class"""
 
     def assert_fail_msg(self, failre, job):
-        self.assert_(re.search(failre, job._jobdict['failure'],
+        self.assert_(re.search(failre, job._metadata['failure'],
                                flags=re.DOTALL),
-                     'Unexpected failure message: ' + job._jobdict['failure'])
+                     'Unexpected failure message: ' + job._metadata['failure'])
 
     def test_ok_startup(self):
         """Check successful startup of incoming jobs"""
@@ -210,9 +210,9 @@ class JobTest(unittest.TestCase):
         runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
         self.assertEqual(job.directory, runjobdir)
         # New fields should have been populated in the database
-        self.assertEqual(job._jobdict['runner_id'], 'donothing:MyJob ID')
-        self.assertNotEqual(job._jobdict['preprocess_time'], None)
-        self.assertNotEqual(job._jobdict['run_time'], None)
+        self.assertEqual(job._metadata['runner_id'], 'donothing:MyJob ID')
+        self.assertNotEqual(job._metadata['preprocess_time'], None)
+        self.assertNotEqual(job._metadata['run_time'], None)
         # Both preprocess and run methods in MyJob should have triggered
         os.unlink(os.path.join(runjobdir, 'preproc'))
         os.unlink(os.path.join(runjobdir, 'job-output'))
@@ -261,7 +261,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-preprocess')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['runner_id'], None)
+        self.assertEqual(job._metadata['runner_id'], None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in preprocessing', job)
         os.rmdir(failjobdir)
@@ -313,9 +313,9 @@ class JobTest(unittest.TestCase):
         # triggered; no info from run should be present
         os.unlink(os.path.join(compjobdir, 'preproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
-        self.assertEqual(job._jobdict['runner_id'], None)
-        self.assertEqual(job._jobdict['run_time'], None)
-        self.assertEqual(job._jobdict['postprocess_time'], None)
+        self.assertEqual(job._metadata['runner_id'], None)
+        self.assertEqual(job._metadata['run_time'], None)
+        self.assertEqual(job._metadata['postprocess_time'], None)
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -329,7 +329,7 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-run')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._jobdict['runner_id'], None)
+        self.assertEqual(job._metadata['runner_id'], None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in running', job)
         # Just the preprocess method in MyJob should have triggered
@@ -348,10 +348,10 @@ class JobTest(unittest.TestCase):
         compjobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
         self.assertEqual(job.directory, compjobdir)
         # New fields should have been populated in the database
-        self.assertNotEqual(job._jobdict['postprocess_time'], None)
-        self.assertNotEqual(job._jobdict['end_time'], None)
-        self.assertNotEqual(job._jobdict['archive_time'], None)
-        self.assertNotEqual(job._jobdict['expire_time'], None)
+        self.assertNotEqual(job._metadata['postprocess_time'], None)
+        self.assertNotEqual(job._metadata['end_time'], None)
+        self.assertNotEqual(job._metadata['archive_time'], None)
+        self.assertNotEqual(job._metadata['expire_time'], None)
         # postprocess and complete methods in MyJob should have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
@@ -378,8 +378,8 @@ class JobTest(unittest.TestCase):
         jobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
         self.assertEqual(job.directory, jobdir)
         # archive/expire times should still be NULL
-        self.assertEqual(job._jobdict['archive_time'], None)
-        self.assertEqual(job._jobdict['expire_time'], None)
+        self.assertEqual(job._metadata['archive_time'], None)
+        self.assertEqual(job._metadata['expire_time'], None)
         os.unlink(os.path.join(jobdir, 'postproc'))
         os.unlink(os.path.join(jobdir, 'complete'))
         os.unlink(os.path.join(jobdir, 'batch_complete'))

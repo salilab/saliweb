@@ -90,8 +90,8 @@ class DatabaseTest(unittest.TestCase):
         make_test_jobs(db.conn)
         jobs = list(db._get_all_jobs_in_state('INCOMING'))
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]._jobdict['name'], 'job1')
-        self.assertEqual(jobs[0]._jobdict['runner_id'], 'SGE-job-1')
+        self.assertEqual(jobs[0]._metadata['name'], 'job1')
+        self.assertEqual(jobs[0]._metadata['runner_id'], 'SGE-job-1')
         jobs = list(db._get_all_jobs_in_state('RUNNING'))
         self.assertEqual(len(jobs), 2)
         jobs = list(db._get_all_jobs_in_state('INCOMING', name='job1'))
@@ -104,7 +104,7 @@ class DatabaseTest(unittest.TestCase):
         jobs = list(db._get_all_jobs_in_state('RUNNING',
                                               after_time='expire_time'))
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]._jobdict['name'], 'job3')
+        self.assertEqual(jobs[0]._metadata['name'], 'job3')
         jobs = list(db._get_all_jobs_in_state('COMPLETED',
                                               after_time='expire_time'))
         self.assertEqual(len(jobs), 0)
@@ -116,14 +116,14 @@ class DatabaseTest(unittest.TestCase):
         db._create_tables()
         make_test_jobs(db.conn)
         job = list(db._get_all_jobs_in_state('INCOMING'))[0]
-        # side effect: should update _jobdict
-        job._jobdict['runner_id'] = 'new-SGE-ID'
-        db._change_job_state(job._jobdict, 'INCOMING', 'PREPROCESSING')
+        # side effect: should update _metadata
+        job._metadata['runner_id'] = 'new-SGE-ID'
+        db._change_job_state(job._metadata, 'INCOMING', 'PREPROCESSING')
         jobs = list(db._get_all_jobs_in_state('INCOMING'))
         self.assertEqual(len(jobs), 0)
         jobs = list(db._get_all_jobs_in_state('PREPROCESSING'))
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]._jobdict['runner_id'], 'new-SGE-ID')
+        self.assertEqual(jobs[0]._metadata['runner_id'], 'new-SGE-ID')
 
     def test_update_job(self):
         """Check Database._update_job()"""
@@ -132,12 +132,12 @@ class DatabaseTest(unittest.TestCase):
         db._create_tables()
         make_test_jobs(db.conn)
         job = list(db._get_all_jobs_in_state('INCOMING'))[0]
-        job._jobdict['runner_id'] = 'new-SGE-ID'
-        db._update_job(job._jobdict, 'INCOMING')
+        job._metadata['runner_id'] = 'new-SGE-ID'
+        db._update_job(job._metadata, 'INCOMING')
         # Get a fresh copy of the job from the database
         newjob = list(db._get_all_jobs_in_state('INCOMING'))[0]
         self.assert_(job is not newjob)
-        self.assertEqual(newjob._jobdict['runner_id'], 'new-SGE-ID')
+        self.assertEqual(newjob._metadata['runner_id'], 'new-SGE-ID')
 
 if __name__ == '__main__':
     unittest.main()

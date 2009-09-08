@@ -322,31 +322,31 @@ class Database(object):
         c = self.conn.cursor()
         c.execute(query, params)
         for row in c:
-            jobdict = _JobMetadata(fields, row)
-            yield self._jobcls(self, jobdict, _JobState(state))
+            metadata = _JobMetadata(fields, row)
+            yield self._jobcls(self, metadata, _JobState(state))
 
-    def _update_job(self, jobdict, state):
+    def _update_job(self, metadata, state):
         """Update a job in the job state table."""
         c = self.conn.cursor()
         query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
-                            for x in jobdict.keys()) \
+                            for x in metadata.keys()) \
                 + ' WHERE name=' + self._placeholder
-        c.execute(query, jobdict.values() + [jobdict['name']])
+        c.execute(query, metadata.values() + [metadata['name']])
         self.conn.commit()
-        jobdict.mark_synced()
+        metadata.mark_synced()
 
-    def _change_job_state(self, jobdict, oldstate, newstate):
+    def _change_job_state(self, metadata, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
            updating the job (as if :meth:`_update_job` were called)."""
         c = self.conn.cursor()
         query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
-                            for x in jobdict.keys() + ['state']) \
+                            for x in metadata.keys() + ['state']) \
                 + ' WHERE name=' + self._placeholder
-        c.execute(query, jobdict.values() + [newstate, jobdict['name']])
+        c.execute(query, metadata.values() + [newstate, metadata['name']])
         self.conn.commit()
-        jobdict.mark_synced()
+        metadata.mark_synced()
 
 
 class _PeriodicAction(object):
@@ -571,10 +571,10 @@ class Job(object):
     # if an exception occurs, it is caught and _fail() is called. Note that some
     # exceptions (e.g. qstat failure) should perhaps be ignored, as they may be
     # transient and do not directly affect the job.
-    def __init__(self, db, jobdict, state):
-        # todo: Sanity check; make sure jobdict is OK (if not, call _fail)
+    def __init__(self, db, metadata, state):
+        # todo: Sanity check; make sure metadata is OK (if not, call _fail)
         self._db = db
-        self._jobdict = jobdict
+        self._metadata = metadata
         self.__state = state
 
     @classmethod
@@ -615,7 +615,7 @@ class Job(object):
             # Set directory to None otherwise _fail() will itself fail, since it
             # won't be able to move the (invalid) directory
             dir = self.directory
-            self._jobdict['directory'] = None
+            self._metadata['directory'] = None
             self._sync_metadata()
             raise SanityError("Job %s: directory %s is not a directory" \
                               % (self.name, dir))
@@ -624,7 +624,7 @@ class Job(object):
         """Take an incoming job and try to start running it."""
         try:
             self._frontend_sanity_check()
-            self._jobdict['preprocess_time'] = datetime.datetime.utcnow()
+            self._metadata['preprocess_time'] = datetime.datetime.utcnow()
             self._set_state('PREPROCESSING')
             # Delete job-state file, if present from a previous run
             try:
@@ -635,11 +635,11 @@ class Job(object):
                 self._sync_metadata()
                 self._mark_job_completed()
             else:
-                self._jobdict['run_time'] = datetime.datetime.utcnow()
+                self._metadata['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 runner_id = runner._runner_name + ':' + runner._run()
-                self._jobdict['runner_id'] = runner_id
+                self._metadata['runner_id'] = runner_id
                 self._sync_metadata()
         except Exception, detail:
             self._fail(detail)
@@ -655,7 +655,7 @@ class Job(object):
     def _runner_done(self):
         """Return True if the job's :class:`Runner` indicates the job finished,
            or None if that cannot be determined."""
-        runner_id = self._jobdict['runner_id']
+        runner_id = self._metadata['runner_id']
         runner_name, jobid = runner_id.split(':')
         runnercls = self._runners[runner_name]
         return runnercls._check_completed(jobid)
@@ -685,7 +685,7 @@ class Job(object):
                  "job-state file in job directory (%s) claims it "
                  "is not. This usually means the underlying batch system "
                  "(e.g. SGE) job failed - e.g. a node went down." \
-                 % (self._jobdict['runner_id'], self._jobdict['directory']))
+                 % (self._metadata['runner_id'], self._metadata['directory']))
         return False
 
     def _try_complete(self):
@@ -696,7 +696,7 @@ class Job(object):
                 return
             # Delete job-state file; no longer needed
             os.unlink(self._get_job_state_file())
-            self._jobdict['postprocess_time'] = datetime.datetime.utcnow()
+            self._metadata['postprocess_time'] = datetime.datetime.utcnow()
             self._set_state('POSTPROCESSING')
             self._run_in_job_directory(self.postprocess)
             self._mark_job_completed()
@@ -705,15 +705,15 @@ class Job(object):
 
     def _mark_job_completed(self):
         endtime = datetime.datetime.utcnow()
-        self._jobdict['end_time'] = endtime
+        self._metadata['end_time'] = endtime
         archive_time = self._db.config.oldjobs['archive']
         if archive_time is not None:
             archive_time = endtime + archive_time
         expire_time = self._db.config.oldjobs['expire']
         if expire_time is not None:
             expire_time = endtime + expire_time
-        self._jobdict['archive_time'] = archive_time
-        self._jobdict['expire_time'] = expire_time
+        self._metadata['archive_time'] = archive_time
+        self._metadata['expire_time'] = expire_time
         self._set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
         self._sync_metadata()
@@ -737,8 +737,8 @@ class Job(object):
 
     def _sync_metadata(self):
         """If the job metadata has changed, sync the database with it."""
-        if self._jobdict.needs_sync():
-            self._db._update_job(self._jobdict, self._get_state())
+        if self._metadata.needs_sync():
+            self._db._update_job(self._metadata, self._get_state())
 
     def _set_state(self, state):
         """Change the job state to `state`."""
@@ -754,17 +754,17 @@ class Job(object):
         oldstate = self._get_state()
         self.__state.transition(state)
         if state == 'EXPIRED':
-            shutil.rmtree(self._jobdict['directory'])
-            self._jobdict['directory'] = None
-        elif self._jobdict['directory'] is not None:
+            shutil.rmtree(self._metadata['directory'])
+            self._metadata['directory'] = None
+        elif self._metadata['directory'] is not None:
             # move job to different directory if necessary
             directory = os.path.join(self._db.config.directories[state],
                                      self.name)
             directory = os.path.normpath(directory)
-            if directory != self._jobdict['directory']:
-                shutil.move(self._jobdict['directory'], directory)
-                self._jobdict['directory'] = directory
-        self._db._change_job_state(self._jobdict, oldstate, state)
+            if directory != self._metadata['directory']:
+                shutil.move(self._metadata['directory'], directory)
+                self._metadata['directory'] = directory
+        self._db._change_job_state(self._metadata, oldstate, state)
 
     def _get_state(self):
         """Get the job state as a string."""
@@ -782,7 +782,7 @@ class Job(object):
             err = str(reason)
         reason = "Python exception:\n" + err
         try:
-            self._jobdict['failure'] = reason
+            self._metadata['failure'] = reason
             self.__internal_set_state('FAILED')
             subject = 'Sali lab %s service: Job %s FAILED' \
                       % (self.service_name, self.name)
@@ -827,8 +827,8 @@ class Job(object):
     def send_user_email(self, subject, body):
         """Email the owner of the job, if requested, with the given `subject`
            and `body`."""
-        if self._jobdict['contact_email']:
-            self._db.config.send_email(self._jobdict['contact_email'],
+        if self._metadata['contact_email']:
+            self._db.config.send_email(self._metadata['contact_email'],
                                        subject, body)
 
     def complete(self):
@@ -866,13 +866,13 @@ class Job(object):
         """Do any necessary postprocessing when the job completes successfully.
            Does nothing by default."""
 
-    name = property(lambda x: x._jobdict['name'],
+    name = property(lambda x: x._metadata['name'],
                     doc="Unique job name (read-only)")
-    url = property(lambda x: x._jobdict['url'],
+    url = property(lambda x: x._metadata['url'],
                    doc="URL containing job results (read-only)")
     service_name = property(lambda x: x._db.config.service_name,
                             doc="Web service name (read-only)")
-    directory = property(lambda x: x._jobdict['directory'],
+    directory = property(lambda x: x._metadata['directory'],
                          doc="Current job working directory (read-only)")
 
 class Runner(object):
