@@ -148,6 +148,9 @@ The **ARCHIVED** directory may live on long-term storage, such as a park disk.
 Examples
 ========
 
+Simple job
+----------
+
 The example below demonstrates a simple :class:`Job` subclass that, given a
 set of PDB files from the frontend, runs an SGE job on the cluster that
 extracts all of the HETATM records from each PDB. This is done by
@@ -161,4 +164,27 @@ job results are moved from short-term to long-term storage, all of the PDB
 files are compressed with gzip to save space.
 
 .. literalinclude:: ../examples/simplejob.py
+   :language: python
+
+
+Custom database class
+---------------------
+
+The :class:`Database` class can be customized by adding additional fields to
+the database table. This is useful if you need to pass small amounts of job
+metadata between the frontend and backend, or between different stages of the
+job, and the metadata are useful to keep after the job has finished.
+
+.. note:: In many cases, it makes more sense to store job data as files in the
+          job directory itself. For example, it is probably easier to store
+          a PDB file as a real file rather than trying to insert the
+          contents into the database table!
+
+This example adds a new integer field *number_of_pdbs* to the database. The
+field can then be accessed (read or write) from within the :class:`Job` object
+by referencing *self._metadata['number_of_pdbs']*. The *_metadata* attribute
+stores all of the job metadata in a Python dictionary-like object; it is
+essentially a dump of the database row corresponding to the job.
+
+.. literalinclude:: ../examples/customdb.py
    :language: python
