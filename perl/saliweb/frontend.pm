@@ -1,9 +1,11 @@
 package saliweb::frontend;
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(read_config connect_to_database make_job);
+@EXPORT = qw(read_config connect_to_database make_job submit_job
+             generate_random_passwd);
 
 use File::Spec;
+use IO::Socket;
 use DBI;
 
 sub read_ini_file {
@@ -88,6 +90,33 @@ sub make_job {
     }
   }
   die "Could not determine a unique job name";
+}
+
+sub submit_job {
+  my ($config, $dbh, $jobname, $passwd, $email, $jobdir, $url) = @_;
+
+  # Insert row into database table
+  my $query = "insert into jobs (name,passwd,contact_email,directory,url," .
+              "submit_time) VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())";
+  my $in = $dbh->prepare($query) or die "Cannot prepare query ". $dbh->errstr;
+  $in->execute($jobname, $passwd, $email, $jobdir, $url)
+        or die "Cannot execute query " . $dbh->errstr;
+
+  # Use socket to inform backend of new incoming job
+  my $s = IO::Socket::UNIX->new(Peer=>$config->{general}->{'socket'},
+                                Type=>SOCK_STREAM);
+  if (defined($s)) {
+    print $s "INCOMING $jobname";
+    $s->close();
+  }
+}
+
+sub generate_random_passwd {
+  # Generate a random alphanumeric password of the given length
+  my ($len) = @_;
+  my @validchars = ('a'..'z', 'A'..'Z', 0..9);
+  my $randstr = join '', map $validchars[rand @validchars], 1..$len;
+  return $randstr;
 }
 
 1;
