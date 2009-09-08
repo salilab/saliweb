@@ -539,9 +539,10 @@ class Job(object):
         self.__state = state
 
     @classmethod
-    def _register_runner_class(cls, runnercls):
-        """Maintain a mapping from names to :class:`Runner` classes. Should
-           normally be called from :meth:`Runner.__init__`."""
+    def register_runner_class(cls, runnercls):
+        """Maintain a mapping from names to :class:`Runner` classes. If you
+           define a :class:`Runner` subclass, you must call this method,
+           passing that subclass."""
         exist = cls._runners.get(runnercls._runner_name, None)
         if exist is not None and exist is not runnercls:
             # Runner name must be unique
@@ -823,10 +824,9 @@ class Runner(object):
     """Base class for runners, which handle the actual running of a job,
        usually on an SGE cluster (see the :class:`SGERunner` and
        :class:`SaliSGERunner` subclasses). To create a subclass, you must
-       implement both a _run method and a _check_completed class method and
-       set the _runner_name attribute to a unique name for this class."""
-    def __init__(self):
-        Job._register_runner_class(self.__class__)
+       implement both a _run method and a _check_completed class method,
+       set the _runner_name attribute to a unique name for this class,
+       and call :meth:`Job.register_runner_class` passing this class."""
 
 class SGERunner(Runner):
     """Run a set of commands on the QB3 SGE cluster.
@@ -936,6 +936,7 @@ class SGERunner(Runner):
                 raise
         # todo: raise an exception if job is in Eqw state, dr, etc.
         return err.startswith("Following jobs do not exist:")
+Job.register_runner_class(SGERunner)
 
 
 class SaliSGERunner(SGERunner):
@@ -943,3 +944,4 @@ class SaliSGERunner(SGERunner):
     _runner_name = 'salisge'
     _env = {'SGE_CELL': 'sali',
             'SGE_ROOT': '/home/sge61'}
+Job.register_runner_class(SaliSGERunner)

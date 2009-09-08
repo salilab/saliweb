@@ -1,6 +1,6 @@
 import unittest
 from StringIO import StringIO
-from saliweb.backend import SGERunner, SaliSGERunner
+from saliweb.backend import SGERunner, SaliSGERunner, Job
 import os
 import shutil
 import tempfile
@@ -28,8 +28,7 @@ class RunnerTest(unittest.TestCase):
 
     def test_duplicate_runner_names(self):
         """Make sure that duplicate Runner names aren't accepted"""
-        x = SGERunner('x')
-        self.assertRaises(TypeError, BrokenRunner, 'y')
+        self.assertRaises(TypeError, Job.register_runner_class, BrokenRunner)
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""

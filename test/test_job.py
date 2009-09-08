@@ -20,9 +20,7 @@ class DoNothingRunner(Runner):
     @classmethod
     def _check_completed(cls, jobid, catch_exceptions=True):
         return True
-
-# Make sure that the DoNothingRunner class is registered
-DoNothingRunner('x')
+Job.register_runner_class(DoNothingRunner)
 
 basic_config = """
 [general]
