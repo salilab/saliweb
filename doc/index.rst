@@ -10,6 +10,7 @@ Contents
    introduction
    backend
    configfile
+   complete
 
 Reference:
 
