@@ -46,6 +46,7 @@ class _JobState(object):
                            ['PREPROCESSING', 'COMPLETED'],
                            ['RUNNING', 'POSTPROCESSING'],
                            ['POSTPROCESSING', 'COMPLETED'],
+                           ['POSTPROCESSING', 'RUNNING'],
                            ['COMPLETED', 'ARCHIVED'],
                            ['ARCHIVED', 'EXPIRED'],
                            ['FAILED', 'INCOMING']]
@@ -620,6 +621,12 @@ class Job(object):
             raise SanityError("Job %s: directory %s is not a directory" \
                               % (self.name, dir))
 
+    def _start_runner(self, runner):
+        """Start up a job using a :class:`Runner` and store the ID."""
+        runner_id = runner._runner_name + ':' + runner._run()
+        self._metadata['runner_id'] = runner_id
+        self._sync_metadata()
+
     def _try_run(self):
         """Take an incoming job and try to start running it."""
         try:
@@ -640,9 +647,7 @@ class Job(object):
                 self._metadata['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
-                runner_id = runner._runner_name + ':' + runner._run()
-                self._metadata['runner_id'] = runner_id
-                self._sync_metadata()
+                self._start_runner(runner)
         except Exception, detail:
             self._fail(detail)
 
@@ -700,8 +705,15 @@ class Job(object):
             os.unlink(self._get_job_state_file())
             self._metadata['postprocess_time'] = datetime.datetime.utcnow()
             self._set_state('POSTPROCESSING')
+            self.__reschedule_run = False
             self._run_in_job_directory(self.postprocess)
-            self._mark_job_completed()
+            if self.__reschedule_run:
+                self._set_state('RUNNING')
+                runner = self._run_in_job_directory(self.rerun,
+                                                    self.__reschedule_data)
+                self._start_runner(runner)
+            else:
+                self._mark_job_completed()
         except Exception, detail:
             self._fail(detail)
 
@@ -826,6 +838,19 @@ class Job(object):
            an :class:`SGERunner` instance.
         """
 
+    def rerun(self, data):
+        """Run a rescheduled job (if :meth:`postprocess` called
+           :meth:`reschedule_run` to run a new job). `data` is a Python object
+           passed from the :meth:`reschedule_run` method.
+           Like :meth:`run`, this should create and return a suitable
+           :class:`Runner` instance.
+
+           By default, this method simply discards `data` and calls the regular
+           :meth:`run` method. You can redefine this method if you want to do
+           something different for rescheduled runs.
+        """
+        return self.run()
+
     def send_user_email(self, subject, body):
         """Email the owner of the job, if requested, with the given `subject`
            and `body`."""
@@ -867,7 +892,9 @@ class Job(object):
 
     def skip_run(self):
         """Tell the backend to skip the actual running of the job, so that
-           it moves directly from the PREPROCESSING to the COMPLETED state.
+           when preprocessing has completed, it moves directly to the
+           COMPLETED state, skipping RUNNING and POSTPROCESSING.
+
            It is only valid to call this method from the PREPROCESSING state,
            usually from a user-defined :meth:`preprocess` method."""
         self._assert_state('PREPROCESSING')
@@ -875,7 +902,31 @@ class Job(object):
 
     def postprocess(self):
         """Do any necessary postprocessing when the job completes successfully.
-           Does nothing by default."""
+           Does nothing by default. Note that a user-defined postprocess method
+           can call :meth:`reschedule_run` to request that the backend runs
+           a new cluster job if necessary."""
+
+    def reschedule_run(self, data=None):
+        """Tell the backend to schedule another job to be run on the cluster
+           once postprocessing is complete (the job moves from the
+           POSTPROCESSING state back to RUNNING).
+
+           It is only valid to call this method from the POSTPROCESSING state,
+           usually from a user-defined :meth:`postprocess` method.
+
+           The rescheduled job is run by calling the :meth:`rerun` method,
+           which is passed the `data` Python object (if any).
+
+           Note that because the rescheduled job itself will be postprocessed
+           once finished, you must be careful not to create an infinite
+           loop here. This could be done by using a file in the job directory
+           or a custom field in the job database to prevent a job from being
+           rescheduled more than a certain number of times, and/or to pass
+           state to the :meth:`postprocess` method (so that it knows it is
+           postprocessing a rescheduled job rather than the first job)."""
+        self._assert_state('POSTPROCESSING')
+        self.__reschedule_run = True
+        self.__reschedule_data = data
 
     name = property(lambda x: x._metadata['name'],
                     doc="Unique job name (read-only)")

@@ -25,7 +25,8 @@ class StatesTest(unittest.TestCase):
     def test_transition(self):
         """Check _JobState.transition()"""
         valid = [['INCOMING', 'PREPROCESSING'], ['ARCHIVED', 'EXPIRED'],
-                 ['RUNNING', 'FAILED'], ['FAILED', 'INCOMING']]
+                 ['RUNNING', 'FAILED'], ['FAILED', 'INCOMING'],
+                 ['POSTPROCESSING', 'RUNNING']]
         invalid = [['INCOMING', 'RUNNING'], ['INCOMING', 'garbage']]
         for instate, outstate in valid:
             j = _JobState(instate)

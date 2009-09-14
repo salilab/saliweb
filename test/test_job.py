@@ -66,6 +66,8 @@ class MyJob(Job):
         self._metadata['testfield'] = 'postprocess'
         f = open('postproc', 'w')
         f.close()
+        if self.name == 'reschedule':
+            self.reschedule_run('my-reschedule')
     def complete(self):
         if self.name == 'fail-complete':
             raise ValueError('Failure in completion')
@@ -79,6 +81,10 @@ class MyJob(Job):
         f = open('job-output', 'w')
         f.close()
         return DoNothingRunner('MyJob ID')
+    def rerun(self, data):
+        f = open(data, 'w')
+        f.close()
+        return Job.rerun(self, data)
     def archive(self):
         if self.name == 'fail-archive':
             raise ValueError('Failure in archival')
@@ -609,6 +615,41 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'test')
         # skip_run should only work on PREPROCESSING jobs
         self.assertRaises(InvalidStateError, job.skip_run)
+
+    def test_reschedule(self):
+        """Check rescheduling of jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'reschedule', completed=True)
+        web._process_completed_jobs()
+
+        # Job should have been rescheduled, so should have entered the
+        # POSTPROCSSING state but now be RUNNING again
+        job = web.get_job_by_name('RUNNING', 'reschedule')
+        jobdir = os.path.join(conf.directories['RUNNING'], 'reschedule')
+        self.assertEqual(job.directory, jobdir)
+        # postprocess, rerun and run methods in MyJob should have triggered
+        os.unlink(os.path.join(jobdir, 'postproc'))
+        os.unlink(os.path.join(jobdir, 'my-reschedule'))
+        os.unlink(os.path.join(jobdir, 'job-output'))
+        # Should have checked for batch completion
+        os.unlink(os.path.join(jobdir, 'batch_complete'))
+        # Rescheduled jobs should *not* set run_time but should set
+        # postprocess_time
+        self.assertEqual(job._metadata['run_time'], None)
+        self.assertNotEqual(job._metadata['postprocess_time'], None)
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+        # User should *not* been notified by email
+        mail = conf.get_mail_output()
+        self.assertEqual(mail, None)
+
+    def test_reschedule_run(self):
+        """Check Job.reschedule_run method"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'test', completed=False)
+        job = web.get_job_by_name('RUNNING', 'test')
+        # reschedule_run should only work on POSTPROCESSING jobs
+        self.assertRaises(InvalidStateError, job.reschedule_run)
 
 if __name__ == '__main__':
     unittest.main()

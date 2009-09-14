@@ -22,7 +22,10 @@ open('%s', 'w').write(sys.stdin.read())
         shutil.rmtree(self.__tmpdir)
 
     def get_mail_output(self):
-        return open(self.__mailoutput).read()
+        try:
+            return open(self.__mailoutput).read()
+        except IOError:
+            return None
 
     def _read_db_auth(self, end):
         self.database['user'] = self.database['passwd'] = 'test'
