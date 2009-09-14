@@ -126,15 +126,19 @@ a job will move from the first state in the list below to the last.
   the job directory is deleted, and the :meth:`Job.expire` method is called.
   At this point, only the job metadata in the database remains.
 
-If a problem is encountered at any point (such as a Python exception) the job
+If a problem is encountered at any point (usually a Python exception) the job
 is moved to the **FAILED** state. At this point the server admin is emailed
 and is expected to fix the problem (usually a bug in the web service, or a
 system problem such as a broken or full hard disk).
 
 Note also the :meth:`Job.preprocess` method can, if desired, signal to the
-framework that running a full SGE job is unnecessary. In this case, the
-**RUNNING** and **POSTPROCESSING** steps are skipped and the job moves
-directly from **PREPROCESSING** to **COMPLETED**.
+framework that running a full SGE job is unnecessary (by calling the
+:meth:`Job.skip_run` method). In this case, the **RUNNING** and
+**POSTPROCESSING** steps are skipped and the job moves directly from
+**PREPROCESSING** to **COMPLETED**.  Similarly, the :meth:`Job.postprocess`
+method can request that the framework runs a new job (by calling the
+:meth:`Job.reschedule_run` method). In this case, the job moves from
+**POSTPROCESSING** back to **RUNNING**.
 
 Each job state (with the exception of **EXPIRED**) can be given a directory
 in the service's configuration file. Job data are automatically moved between
