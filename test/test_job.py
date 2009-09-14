@@ -59,7 +59,7 @@ class MyJob(Job):
         f = open('preproc', 'w')
         f.close()
         if self.name == 'complete-preprocess':
-            return False
+            self.skip_run()
     def postprocess(self):
         if self.name == 'fail-postprocess':
             raise ValueError('Failure in postprocessing')
@@ -601,6 +601,14 @@ class JobTest(unittest.TestCase):
         # In r62 and earlier, a race condition could cause a failure here if
         # the SGE job finished just after the state file check is done
         self.assertEqual(job._has_completed(), True)
+
+    def test_skip_run(self):
+        """Check Job.skip_run method"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'test', completed=False)
+        job = web.get_job_by_name('RUNNING', 'test')
+        # skip_run should only work on PREPROCESSING jobs
+        self.assertRaises(InvalidStateError, job.skip_run)
 
 if __name__ == '__main__':
     unittest.main()

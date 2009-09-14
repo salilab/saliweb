@@ -631,7 +631,9 @@ class Job(object):
                 os.unlink(self._get_job_state_file())
             except OSError:
                 pass
-            if self._run_in_job_directory(self.preprocess) is False:
+            self.__skip_run = False
+            self._run_in_job_directory(self.preprocess)
+            if self.__skip_run:
                 self._sync_metadata()
                 self._mark_job_completed()
             else:
@@ -858,9 +860,18 @@ class Job(object):
 
     def preprocess(self):
         """Do any necessary preprocessing before the job is actually run.
-           Does nothing by default. If this method returns False, further
-           running of the job is skipped and it moves directly to the
-           COMPLETED state."""
+           Does nothing by default. Note that a user-defined preprocess method
+           can call :meth:`skip_run` to skip running of the job on the cluster,
+           if it is determined in preprocessing that a job run is not
+           necessary."""
+
+    def skip_run(self):
+        """Tell the backend to skip the actual running of the job, so that
+           it moves directly from the PREPROCESSING to the COMPLETED state.
+           It is only valid to call this method from the PREPROCESSING state,
+           usually from a user-defined :meth:`preprocess` method."""
+        self._assert_state('PREPROCESSING')
+        self.__skip_run = True
 
     def postprocess(self):
         """Do any necessary postprocessing when the job completes successfully.
