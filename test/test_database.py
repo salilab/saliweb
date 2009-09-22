@@ -25,6 +25,16 @@ def make_test_jobs(sql):
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "archive_time,expire_time,directory,url) " \
               + "VALUES(?,?,?,?,?,?,?,?)",
+              ('preproc', 'PREPROCESSING', None, utcnow, utcnow, utcnow,
+               '/', 'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
+              ('postproc', 'POSTPROCESSING', None, utcnow, utcnow, utcnow,
+               '/', 'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
@@ -118,10 +128,10 @@ class DatabaseTest(unittest.TestCase):
         job = list(db._get_all_jobs_in_state('INCOMING'))[0]
         # side effect: should update _metadata
         job._metadata['runner_id'] = 'new-SGE-ID'
-        db._change_job_state(job._metadata, 'INCOMING', 'PREPROCESSING')
+        db._change_job_state(job._metadata, 'INCOMING', 'FAILED')
         jobs = list(db._get_all_jobs_in_state('INCOMING'))
         self.assertEqual(len(jobs), 0)
-        jobs = list(db._get_all_jobs_in_state('PREPROCESSING'))
+        jobs = list(db._get_all_jobs_in_state('FAILED'))
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]._metadata['runner_id'], 'new-SGE-ID')
 

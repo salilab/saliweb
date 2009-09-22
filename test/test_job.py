@@ -182,6 +182,28 @@ def add_failed_job(db, name):
     db.conn.commit()
     return jobdir
 
+def add_preprocessing_job(db, name):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['PREPROCESSING'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+              + "VALUES(?,?,?,?,?)", (name, 'PREPROCESSING', utcnow, jobdir,
+                                      'http://testurl'))
+    db.conn.commit()
+    return jobdir
+
+def add_postprocessing_job(db, name):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['POSTPROCESSING'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+              + "VALUES(?,?,?,?,?)", (name, 'POSTPROCESSING', utcnow, jobdir,
+                                      'http://testurl'))
+    db.conn.commit()
+    return jobdir
+
 def setup_webservice(archive='30d', expire='90d'):
     tmpdir = tempfile.mkdtemp()
     incoming = os.path.join(tmpdir, 'incoming')
@@ -264,6 +286,34 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, None)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'SanityError: .*is not a directory', job)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_sanity_check_preproc_state(self):
+        """Make sure that sanity checks catch jobs in PREPROCESSING state"""
+        utcnow = datetime.datetime.utcnow()
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = add_preprocessing_job(db, 'preproc')
+        web._sanity_check()
+        job = web.get_job_by_name('FAILED', 'preproc')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'preproc')
+        self.assertEqual(job.directory, failjobdir)
+        os.rmdir(failjobdir)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'SanityError: .*is in state PREPROCESSING', job)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_sanity_check_postproc_state(self):
+        """Make sure that sanity checks catch jobs in POSTPROCESSING state"""
+        utcnow = datetime.datetime.utcnow()
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = add_postprocessing_job(db, 'postproc')
+        web._sanity_check()
+        job = web.get_job_by_name('FAILED', 'postproc')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'postproc')
+        self.assertEqual(job.directory, failjobdir)
+        os.rmdir(failjobdir)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'SanityError: .*is in state POSTPROCESSING', job)
         cleanup_webservice(conf, tmpdir)
 
     def test_preprocess_failure(self):

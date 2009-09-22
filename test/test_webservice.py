@@ -43,6 +43,7 @@ class LoggingJob(Job):
     def _try_complete(self): job_log.append((self.name, 'complete'))
     def _try_archive(self): job_log.append((self.name, 'archive'))
     def _try_expire(self): job_log.append((self.name, 'expire'))
+    def _sanity_check(self): job_log.append((self.name, 'sanity_check'))
 
 
 class WebServiceTest(unittest.TestCase):
@@ -135,6 +136,16 @@ class WebServiceTest(unittest.TestCase):
 #                                  ('job2', 'complete'), ('job3', 'complete'),
 #                                  (u'ready-for-archive', 'archive'),
 #                                  (u'ready-for-expire', 'expire')])
+
+    def test_sanity_check(self):
+        """Check WebService._sanity_check()"""
+        global job_log
+        job_log = []
+        db, conf, web = self._setup_webservice()
+        web._sanity_check()
+        # sanity check should check PREPROCESSING and POSTPROCESSING jobs
+        self.assertEqual(job_log, [('preproc', 'sanity_check'),
+                                   ('postproc', 'sanity_check')])
 
 if __name__ == '__main__':
     unittest.main()

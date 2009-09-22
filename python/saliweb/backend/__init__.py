@@ -465,11 +465,22 @@ have done this, delete the state file (%s) to reenable runs.
            web service is killed."""
         # Check state file before overwriting the socket
         self._check_state_file(self.config.state_file)
-        s = self._make_socket()
         try:
-            self._do_periodic_actions(s)
-        finally:
-            self._close_socket(s)
+            self._sanity_check()
+            s = self._make_socket()
+            try:
+                self._do_periodic_actions(s)
+            finally:
+                self._close_socket(s)
+        except Exception, detail:
+            self._handle_fatal_error(detail)
+
+    def _sanity_check(self):
+        """Do basic sanity checking of the web service"""
+        for job in self.db._get_all_jobs_in_state('PREPROCESSING'):
+            job._sanity_check()
+        for job in self.db._get_all_jobs_in_state('POSTPROCESSING'):
+            job._sanity_check()
 
     def _make_socket(self):
         """Create the socket used by the frontend to talk to us."""
@@ -648,6 +659,19 @@ class Job(object):
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 self._start_runner(runner)
+        except Exception, detail:
+            self._fail(detail)
+
+    def _sanity_check(self):
+        """Check for obvious problems with any job"""
+        try:
+            state = self._get_state()
+            # These states are transient and so jobs should not be found in the
+            # database in this state
+            if state == 'PREPROCESSING' or state == 'POSTPROCESSING':
+                raise SanityError("Job %s is in state %s; this should not be "
+                                  "possible unless the web service were shut "
+                                  "down uncleanly" % (self.name, state))
         except Exception, detail:
             self._fail(detail)
 
