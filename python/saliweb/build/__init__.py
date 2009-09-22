@@ -21,6 +21,8 @@ import pwd
 import saliweb.backend
 import SCons.Script
 from SCons.Script import File, Mkdir, Chmod, Value
+import subprocess
+import re
 
 frontend_user = 'apache'
 backend_user = pwd.getpwuid(os.getuid()).pw_name
@@ -59,7 +61,9 @@ def Environment(variables, configfiles, service_name=None):
     env.AddMethod(_InstallBinaries, 'InstallBinaries')
     env.AddMethod(_InstallPython, 'InstallPython')
     env.AddMethod(_InstallHTML, 'InstallHTML')
+    env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
+    env.AddMethod(_InstallPerl, 'InstallPerl')
     env.Default(env['instdir'])
     return env
 
@@ -70,7 +74,9 @@ def _setup_install_directories(env):
     env['confdir'] = os.path.join(env['instdir'], 'conf')
     env['pythondir'] = os.path.join(env['instdir'], 'python')
     env['htmldir'] = os.path.join(env['instdir'], 'html')
+    env['txtdir'] = os.path.join(env['instdir'], 'txt')
     env['cgidir'] = os.path.join(env['instdir'], 'cgi')
+    env['perldir'] = os.path.join(env['instdir'], 'lib')
 
 def _check(env):
     if isinstance(MySQLdb, Exception):
@@ -78,6 +84,33 @@ def _check(env):
         print >> sys.stderr, "This module is needed by the backend."
         env.Exit(1)
     _check_mysql(env)
+    _check_crontab(env)
+
+def _check_crontab(env):
+    """Make sure that a crontab is set up to run the service."""
+    binary = os.path.join(env['bindir'], 'process_jobs.py')
+    if not _found_binary_in_crontab(binary):
+        print "To make your web service active, add the following to "
+        print "your crontab (use crontab -e to edit it):"
+        print
+        print "0 * * * * " + binary
+
+def _found_binary_in_crontab(binary):
+    """See if the given binary is run from the user's crontab"""
+    p = subprocess.Popen(['/usr/bin/crontab', '-l'], stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    binre = re.compile('\s*[^#].*' + binary + '$')
+    match = False
+    for line in p.stdout:
+        if binre.match(line):
+            match = True
+    err = p.stderr.read()
+    ret = p.wait()
+    if ret != 0:
+        raise OSError("crontab -l exited with code %d and stderr %s" \
+                      % (ret, err))
+    return match
 
 def _check_mysql(env):
     """Make sure that we can connect to the database as both the frontend and
@@ -188,6 +221,12 @@ def _InstallHTML(env, files, subdir=None):
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
 
+def _InstallTXT(env, files, subdir=None):
+    dir = env['txtdir']
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    env.Install(dir, files)
+
 def _subst_install(env, target, source):
     fin = open(source[0].path, 'r')
     fout = open(target[0].path, 'w')
@@ -201,6 +240,13 @@ def _subst_install(env, target, source):
 
 def _InstallCGI(env, files, subdir=None):
     dir = env['cgidir']
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    for f in files:
+        env.Command(os.path.join(dir, f), f, _subst_install)
+
+def _InstallPerl(env, files, subdir=None):
+    dir = env['perldir']
     if subdir:
         dir = os.path.join(dir, subdir)
     for f in files:
