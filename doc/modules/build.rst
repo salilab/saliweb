@@ -48,3 +48,15 @@ This module provides a simple SCons-based build infrastructure for web services.
       Installs a provided list of CGI scripts in the ``cgi`` directory
       underneath the installation directory. The files can be installed in
       a subdirectory if desired by giving the *subdir* argument.
+
+   .. method:: InstallPerl(files[, subdir])
+
+      Installs a provided list of Perl modules in the ``lib`` directory
+      underneath the installation directory. The files can be installed in
+      a subdirectory if desired by giving the *subdir* argument.
+
+   .. method:: InstallTXT(files[, subdir])
+
+      Installs a provided list of text files in the ``txt`` directory
+      underneath the installation directory. The files can be installed in
+      a subdirectory if desired by giving the *subdir* argument.
