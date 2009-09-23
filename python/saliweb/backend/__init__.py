@@ -389,31 +389,42 @@ class WebService(object):
         if self.__delete_state_file_on_exit:
             os.unlink(self.config.state_file)
 
-    def _check_state_file(self, state_file):
+    def get_running_pid(self):
+        """Return the process ID of a currently running web service, by querying
+           the state file. If no service is running, return None; if the last
+           run of the service failed with an unrecoverable error, raise a
+           StateFileError."""
+        state_file = self.config.state_file
+        try:
+            old_state = open(state_file).read().rstrip('\r\n')
+        except IOError:
+            return
+        if old_state.startswith('FAILED: '):
+            raise StateFileError("A previous run failed with an "
+                    "unrecoverable error. Since this can leave the system "
+                    "in an inconsistent state, no further runs will start "
+                    "until the problem has been manually resolved. When "
+                    "you have done this, delete the state file "
+                    "(%s) to reenable runs." % state_file)
+        old_pid = int(old_state)
+        try:
+            os.kill(old_pid, 0)
+            return old_pid
+        except OSError:
+            return
+
+    def _check_state_file(self):
         """Make sure that a previous run is not still running or encountered
            an unrecoverable error."""
         if self.__delete_state_file_on_exit: # state file checked already
             return
-        try:
-            old_state = open(state_file).read().rstrip('\r\n')
-            if old_state.startswith('FAILED: '):
-                raise StateFileError("A previous run failed with an "
-                        "unrecoverable error. Since this can leave the system "
-                        "in an inconsistent state, no further runs will start "
-                        "until the problem has been manually resolved. When "
-                        "you have done this, delete the state file "
-                        "(%s) to reenable runs." % state_file)
-            old_pid = int(old_state)
-            try:
-                os.kill(old_pid, 0)
-                raise StateFileError("A previous run (pid %d) " % old_pid + \
-                        "still appears to be running. If this is not the "
-                        "case, please manually remove the state "
-                        "file (%s)." % state_file)
-            except OSError:
-                pass
-        except IOError:
-            pass
+        state_file = self.config.state_file
+        old_pid = self.get_running_pid()
+        if old_pid is not None:
+            raise StateFileError("A previous run (pid %d) " % old_pid + \
+                    "still appears to be running. If this is not the "
+                    "case, please manually remove the state "
+                    "file (%s)." % state_file)
         f = open(state_file, 'w')
         print >> f, os.getpid()
         self.__delete_state_file_on_exit = True
@@ -464,7 +475,7 @@ have done this, delete the state file (%s) to reenable runs.
            will run forever, looping over the available jobs, until the
            web service is killed."""
         # Check state file before overwriting the socket
-        self._check_state_file(self.config.state_file)
+        self._check_state_file()
         try:
             self._sanity_check()
             s = self._make_socket()
@@ -540,7 +551,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
-        self._check_state_file(self.config.state_file)
+        self._check_state_file()
         try:
             for job in self.db._get_all_jobs_in_state('INCOMING'):
                 job._try_run()
@@ -549,7 +560,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
-        self._check_state_file(self.config.state_file)
+        self._check_state_file()
         try:
             for job in self.db._get_all_jobs_in_state('RUNNING'):
                 job._try_complete()
@@ -558,7 +569,7 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
-        self._check_state_file(self.config.state_file)
+        self._check_state_file()
         try:
             for job in self.db._get_all_jobs_in_state('COMPLETED',
                                                      after_time='archive_time'):
