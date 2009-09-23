@@ -8,6 +8,7 @@ import time
 import ConfigParser
 import traceback
 import select
+import signal
 import socket
 from email.MIMEText import MIMEText
 
@@ -35,6 +36,14 @@ class SanityError(Exception):
     """Exception raised if a new job fails the sanity check, e.g. if the
        frontend added invalid or inconsistent information to the database."""
     pass
+
+class _SigTermError(Exception):
+    """Exception raised if the daemon is killed by SIGTERM."""
+    pass
+
+def _sigterm_handler(signum, frame):
+    """Catch SIGTERM and convert it to a SigTermError exception."""
+    raise _SigTermError()
 
 def _make_daemon():
     """Make the current process into a daemon, by forking twice and detaching
@@ -516,7 +525,10 @@ have done this, delete the state file (%s) to reenable runs.
                 # Need to update state file with the child PID
                 self._write_state_file()
             try:
-                self._do_periodic_actions(s)
+                try:
+                    self._do_periodic_actions(s)
+                except _SigTermError:
+                    pass # Expected, so just swallow it
             finally:
                 self._close_socket(s)
         except Exception, detail:
@@ -575,9 +587,14 @@ have done this, delete the state file (%s) to reenable runs.
                    _PeriodicAction(oldjob_interval,
                                    self._process_old_jobs), incoming_action]
         while True:
+            # During the select, SIGTERM should cleanly terminate the daemon
+            # (clean up state file and socket); at other times, ignore the
+            # signal, hopefully so the system stays in a consistent state
+            signal.signal(signal.SIGTERM, _sigterm_handler)
             timenow = time.time()
             timeout = min(x.get_time_to_next(timenow) for x in actions)
             rlist, wlist, xlist = select.select([sock], [], [], timeout)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if len(rlist) == 1:
                 conn, addr = sock.accept()
                 self._process_incoming_jobs()
