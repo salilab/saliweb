@@ -36,6 +36,32 @@ class SanityError(Exception):
        frontend added invalid or inconsistent information to the database."""
     pass
 
+def _make_daemon():
+    """Make the current process into a daemon, by forking twice and detaching
+       from the controlling terminal. On the parent, this function does not
+       return."""
+    pid = os.fork()
+    if pid != 0:
+        os._exit(0)
+    # First child; detach from the controlling terminal
+    os.setsid()
+    pid = os.fork()
+    if pid != 0:
+        os._exit(0)
+    # Second child; make sure we don't live on a mounted filesystem,
+    # and redirect standard file descriptors to /dev/null:
+    os.chdir('/')
+    for fd in range(0, 3):
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+    # This call to open is guaranteed to return the lowest file descriptor,
+    # which will be 0 (stdin), since it was closed above.
+    os.open('/dev/null', os.O_RDWR)
+    os.dup2(0, 1)
+    os.dup2(0, 2)
+
 class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
@@ -425,7 +451,11 @@ class WebService(object):
                     "still appears to be running. If this is not the "
                     "case, please manually remove the state "
                     "file (%s)." % state_file)
-        f = open(state_file, 'w')
+        self._write_state_file()
+
+    def _write_state_file(self):
+        """Write the current PID into the state file"""
+        f = open(self.config.state_file, 'w')
         print >> f, os.getpid()
         self.__delete_state_file_on_exit = True
 
@@ -470,15 +500,21 @@ have done this, delete the state file (%s) to reenable runs.
         """Create all tables in the database used to hold job state."""
         self.db._create_tables()
 
-    def do_all_processing(self):
+    def do_all_processing(self, daemonize=False):
         """Process incoming jobs, completed jobs, and old jobs. This method
            will run forever, looping over the available jobs, until the
-           web service is killed."""
+           web service is killed. If `daemonize` is True, this loop will be
+           run as a daemon (subprocess), so that the main program can
+           continue."""
         # Check state file before overwriting the socket
         self._check_state_file()
         try:
             self._sanity_check()
             s = self._make_socket()
+            if daemonize:
+                _make_daemon()
+                # Need to update state file with the child PID
+                self._write_state_file()
             try:
                 self._do_periodic_actions(s)
             finally:
