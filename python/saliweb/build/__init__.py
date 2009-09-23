@@ -88,19 +88,19 @@ def _check(env):
 
 def _check_crontab(env):
     """Make sure that a crontab is set up to run the service."""
-    binary = os.path.join(env['bindir'], 'process_jobs.py')
+    binary = os.path.join(env['bindir'], 'service.py')
     if not _found_binary_in_crontab(binary):
         print "To make your web service active, add the following to "
         print "your crontab (use crontab -e to edit it):"
         print
-        print "0 * * * * " + binary
+        print "0 * * * * " + binary + " condstart > /dev/null"
 
 def _found_binary_in_crontab(binary):
     """See if the given binary is run from the user's crontab"""
     p = subprocess.Popen(['/usr/bin/crontab', '-l'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
 
-    binre = re.compile('\s*[^#].*' + binary + '$')
+    binre = re.compile('\s*[^#].*' + binary + ' condstart$')
     match = False
     for line in p.stdout:
         if binre.match(line):
@@ -201,7 +201,7 @@ def _make_web_service(env, target, source):
 def _InstallBinaries(env, binaries=None):
     if binaries is None:
         # todo: this list should be auto-generated from backend
-        binaries = ['resubmit', 'process_jobs']
+        binaries = ['resubmit', 'service']
     for bin in binaries:
         env.Command(os.path.join(env['bindir'], bin + '.py'), None,
                     _make_script)
