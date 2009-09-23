@@ -100,7 +100,7 @@ def _found_binary_in_crontab(binary):
     p = subprocess.Popen(['/usr/bin/crontab', '-l'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
 
-    binre = re.compile('\s*[^#].*' + binary + ' condstart$')
+    binre = re.compile('\s*[^#].*' + binary + ' condstart > /dev/null$')
     match = False
     for line in p.stdout:
         if binre.match(line):
