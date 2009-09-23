@@ -428,7 +428,7 @@ class WebService(object):
         """Return the process ID of a currently running web service, by querying
            the state file. If no service is running, return None; if the last
            run of the service failed with an unrecoverable error, raise a
-           StateFileError."""
+           :exc:`StateFileError`."""
         state_file = self.config.state_file
         try:
             old_state = open(state_file).read().rstrip('\r\n')
