@@ -18,6 +18,7 @@ Reference:
    :maxdepth: 1
 
    modules/index
+   installation
 
 Indices and tables
 ==================
