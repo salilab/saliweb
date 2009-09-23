@@ -85,6 +85,7 @@ def _check(env):
         env.Exit(1)
     _check_mysql(env)
     _check_crontab(env)
+    _check_service(env)
 
 def _check_crontab(env):
     """Make sure that a crontab is set up to run the service."""
@@ -94,6 +95,22 @@ def _check_crontab(env):
         print "your crontab (use crontab -e to edit it):"
         print
         print "0 * * * * " + binary + " condstart > /dev/null"
+
+def _check_service(env):
+    config = env['config']
+    db = saliweb.backend.Database(saliweb.backend.Job)
+    ws = saliweb.backend.WebService(config, db)
+    try:
+        pid = ws.get_running_pid()
+        if pid is not None:
+            binary = os.path.join(env['bindir'], 'service.py')
+            print "Backend daemon is currently running. Run"
+            print "%s restart" % binary
+            print "to restart it to pick up any changes."
+    except saliweb.backend.StateFileError, detail:
+        print "Backend daemon will not start due to a previous failure. "
+        print "You will need to fix this manually before it will run again."
+        print "Refer to %s for more information" % config.state_file
 
 def _found_binary_in_crontab(binary):
     """See if the given binary is run from the user's crontab"""
