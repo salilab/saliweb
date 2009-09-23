@@ -10,7 +10,7 @@ Contents
    introduction
    backend
    configfile
-   complete
+   deploy
 
 Reference:
 
