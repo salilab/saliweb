@@ -64,6 +64,10 @@ def condstart(web):
     except saliweb.backend.StateFileError, detail:
         print "not started: " + str(detail)
 
+def restart(web):
+    stop(web)
+    start(web)
+
 def main(webservice):
     state = get_options()
     web = webservice.get_web_service(webservice.config)
