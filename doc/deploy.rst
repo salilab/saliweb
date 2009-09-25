@@ -1,5 +1,12 @@
+.. currentmodule:: saliweb.backend
+
 Deploying the web service
 *************************
+
+To actually deploy the web service, you should package your Python classes that
+implement the backend, then use the build system to install these classes in
+the correct location, together with the web pages, CGI scripts and other files
+that constitute the frontend.
 
 Python package
 ==============
@@ -11,16 +18,29 @@ optionally implement :class:`Database` or :class:`Config` subclasses. It should
 also provide a function `get_web_service` which, given the name of a
 configuration file, will instantiate a :class:`WebService` object and return it.
 This function will be used by utility scripts set up by the build system to
-run and maintain the web service. An example is shown below.
+run and maintain the web service. An example, building on previous ones,
+is shown below.
 
 .. literalinclude:: ../examples/package.py
    :language: python
 
-Directory structure
-===================
-
 Using the build system
 ======================
+
+The build system is a set of extensions to SCons that simplifies the
+setup and installation of a web service. To use, create a directory in which
+to develop your web service, and create a file *SConstruct* in that directory
+similar to the following:
+
+.. literalinclude:: ../examples/SConstruct.simple
+   :language: python
+
+This example will set up the web service using either the configuration file
+*live.conf* or the file *test.conf* in the *conf* subdirectory. Each
+configuration file can specify a different install location, MySQL database,
+etc. (only one configuration file is required). To install, run `scons live`
+or `scons test` from the command line (or just `scons` to install the first
+one, *live.conf*).
 
 Command-line admin tools
 ========================
