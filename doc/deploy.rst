@@ -35,12 +35,30 @@ similar to the following:
 .. literalinclude:: ../examples/SConstruct.simple
    :language: python
 
-This example will set up the web service using either the configuration file
-*live.conf* or the file *test.conf* in the *conf* subdirectory. Each
+This script creates an :class:`~saliweb.build.Environment` object which will set
+up the web service using either the configuration file *live.conf* or the file
+*test.conf* in the *conf* subdirectory. Each
 configuration file can specify a different install location, MySQL database,
-etc. (only one configuration file is required). To install, run `scons live`
-or `scons test` from the command line (or just `scons` to install the first
-one, *live.conf*).
+etc. (only one configuration file is required).
+
+The :class:`~saliweb.build.Environment` class derives from the standard SCons
+Environment class, but adds additional methods which simplify the setup of
+the web service. For example, the
+:meth:`~saliweb.build.Environment.InstallBinaries` method installs a set of
+command-line admin tools in the web service's directory (see below).
+*SConscript* files in subdirectories can use similar methods (such as
+:meth:`~saliweb.build.Environment.InstallHTML` or
+:meth:`~saliweb.build.Environment.InstallPython`) to set up the rest of the
+necessary files for the web service.
+
+To actually install the web service, run `scons build=live`
+or `scons build=test` from the command line on the `modbase` machine, as the web
+service backend user, to install using either of the two
+configuration files listed in the example above. (If you simply run
+`scons` with no arguments, it will use the first one, *live.conf*.) Before
+actually installing any files, this will check to make sure things are set
+up for the web service to work properly - for example, that the necessary
+MySQL users and databases are present.
 
 Command-line admin tools
 ========================
@@ -76,6 +94,6 @@ A complete web service
 ======================
 
 A complete web service is built up using the frontend, backend, and build
-system. A simple example of such a complete webservice is ModLoop,
+system. A simple example of such a complete web service is ModLoop,
 which can be found at
 https://svn.salilab.org/modloop/branches/new-framework/

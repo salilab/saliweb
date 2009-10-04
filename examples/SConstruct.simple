@@ -1,8 +1,8 @@
 import saliweb.build
 
-vars = Variables('config.py')
-env = saliweb.build.Environment(vars, ['conf/live.conf', 'conf/test.conf'])
-Help(vars.GenerateHelpText(env))
+v = Variables('config.py')
+env = saliweb.build.Environment(v, ['conf/live.conf', 'conf/test.conf'])
+Help(v.GenerateHelpText(env))
 
 env.InstallBinaries()
 
