@@ -1,0 +1,10 @@
+import os
+
+Import('env')
+
+web_files = [ 'help.css', 'server.css' ]
+
+# Install web files:
+instdir = os.path.join(env['webdir'], 'css')
+webinst = env.Install(instdir, web_files)
+env.Alias('install', webinst)

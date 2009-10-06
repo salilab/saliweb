@@ -59,6 +59,8 @@ def add_common_variables(vars, package):
     vars.Add(PathVariable('docdir', 'Documentation installation directory',
                           '${prefix}/share/doc/%s' % package,
                           PathVariable.PathAccept))
+    vars.Add(PathVariable('webdir', 'Web data file installation directory',
+                          '/var/www/html/saliweb', PathVariable.PathAccept))
     vars.Add(BoolVariable('wine',
                           'Build using MS Windows tools via Wine emulation',
                           False))

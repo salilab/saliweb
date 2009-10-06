@@ -18,6 +18,7 @@ test = SConscript('test/SConscript')
 SConscript('perl/saliweb/SConscript')
 SConscript('python/saliweb/SConscript')
 SConscript('doc/SConscript')
+SConscript('web/SConscript')
 
 # Run test cases by default:
 env.Default(test)

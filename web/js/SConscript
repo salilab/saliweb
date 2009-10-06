@@ -1,0 +1,10 @@
+import os
+
+Import('env')
+
+web_files = [ 'salilab.js' ]
+
+# Install web files:
+instdir = os.path.join(env['webdir'], 'js')
+webinst = env.Install(instdir, web_files)
+env.Alias('install', webinst)
