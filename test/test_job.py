@@ -349,19 +349,6 @@ class JobTest(unittest.TestCase):
                               'fatal-fail-preprocess')
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
-        # Make sure that state_file and email contain both the fatal error
-        # and the original job error that triggered _fail():
-        expect = 'Traceback.*TypeError: .*object.*' + \
-                 'This error in turn occurred while trying to handle ' + \
-                 'the original error below:.*Traceback.*' + \
-                 'ValueError: Fatal failure in preprocessing'
-        state = open('state_file').read()
-        self.assert_(re.search(expect, state, flags=re.DOTALL),
-                     'Unexpected state file ' + state)
-        os.unlink('state_file')
-        mail = conf.get_mail_output()
-        self.assert_(re.search(expect, state, flags=re.DOTALL),
-                     'Unexpected mail output: ' + mail)
 
     def test_preprocess_complete(self):
         """Job.preprocess() should be able to skip a job run"""

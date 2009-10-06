@@ -78,14 +78,15 @@ class WebServiceTest(unittest.TestCase):
         global job_log
         job_log = []
         db, conf, web = self._setup_webservice()
+        web._check_state_file()
         web._process_incoming_jobs()
         self.assertEqual(job_log, [('job1', 'run')])
         # Only a single WebService can process jobs concurrently
         ws2 = WebService(conf, db)
-        self.assertRaises(StateFileError, ws2._process_incoming_jobs)
+        self.assertRaises(StateFileError, ws2._check_state_file)
 
-    def test_fatal_error(self):
-        """Check WebService handling of fatal job errors"""
+    def test_fatal_error_propagated(self):
+        """Make sure that fatal errors are propagated"""
         db, conf, web = self._setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time, " \
@@ -95,17 +96,26 @@ class WebServiceTest(unittest.TestCase):
         db.conn.commit()
         # Error is not handled by Job, so should be propagated by WebService
         self.assertRaises(TestFatalError, web._process_incoming_jobs)
-        # WebService should also leave a state file to prevent further
+
+    def test_handle_fatal_error(self):
+        """Check WebService handling of fatal job errors"""
+        db, conf, web = self._setup_webservice()
+        try:
+            raise TestFatalError("fatal error to be handled")
+        except TestFatalError, detail:
+            # handler should reraise error
+            self.assertRaises(TestFatalError, web._handle_fatal_error, detail)
+        # WebService should leave a state file to prevent further
         # processes from running
         x = open('state_file').read().rstrip('\r\n')
         os.unlink('state_file')
-        self.assert_(re.search('FAILED: Traceback.*fatal error in run',
+        self.assert_(re.search('FAILED: Traceback.*fatal error to be handled',
                                x, flags=re.DOTALL),
                      'Unexpected failure message: ' + x)
         mail = conf.get_mail_output()
         self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
-                               + '.*Traceback.*process_incoming_jobs.*' \
-                               + 'TestFatalError: fatal error in run',
+                               + '.*Traceback.*test_handle_fatal_error.*' \
+                               + 'TestFatalError: fatal error to be handled',
                                mail, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
 

@@ -604,34 +604,22 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
-        self._check_state_file()
-        try:
-            for job in self.db._get_all_jobs_in_state('INCOMING'):
-                job._try_run()
-        except Exception, detail:
-            self._handle_fatal_error(detail)
+        for job in self.db._get_all_jobs_in_state('INCOMING'):
+            job._try_run()
 
     def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
-        self._check_state_file()
-        try:
-            for job in self.db._get_all_jobs_in_state('RUNNING'):
-                job._try_complete()
-        except Exception, detail:
-            self._handle_fatal_error(detail)
+        for job in self.db._get_all_jobs_in_state('RUNNING'):
+            job._try_complete()
 
     def _process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
-        self._check_state_file()
-        try:
-            for job in self.db._get_all_jobs_in_state('COMPLETED',
-                                                     after_time='archive_time'):
-                job._try_archive()
-            for job in self.db._get_all_jobs_in_state('ARCHIVED',
-                                                      after_time='expire_time'):
-                job._try_expire()
-        except Exception, detail:
-            self._handle_fatal_error(detail)
+        for job in self.db._get_all_jobs_in_state('COMPLETED',
+                                                 after_time='archive_time'):
+            job._try_archive()
+        for job in self.db._get_all_jobs_in_state('ARCHIVED',
+                                                  after_time='expire_time'):
+            job._try_expire()
 
 
 class Job(object):
