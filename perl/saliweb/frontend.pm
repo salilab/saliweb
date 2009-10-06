@@ -1,4 +1,5 @@
 package saliweb::frontend;
+use saliweb::server;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(read_config connect_to_database make_job submit_job
@@ -7,6 +8,130 @@ require Exporter;
 use File::Spec;
 use IO::Socket;
 use DBI;
+use CGI;
+
+sub new {
+    my ($invocant, $config_file, $server_name) = @_;
+    my $class = ref($invocant) || $invocant;
+    my $self = {};
+    bless($self, $class);
+    $self->{'CGI'} = $self->_setup_cgi();
+    $self->{'server_name'} = $server_name;
+    # Read configuration file
+    $self->{'config'} = my $config = read_config($config_file);
+    $self->{'htmlroot'} = $config->{general}->{urltop};
+    $self->{'cgiroot'} = $self->{'htmlroot'} . "/cgi/";
+    $self->{'dbh'} = my $dbh = connect_to_database($config);
+    $self->_setup_user($dbh);
+    return $self;
+}
+
+sub htmlroot {
+    my $self = shift;
+    return $self->{'htmlroot'};
+}
+
+sub cgiroot {
+    my $self = shift;
+    return $self->{'cgiroot'};
+}
+
+sub _setup_cgi {
+    return new CGI;
+}
+
+sub _setup_user {
+    my ($self, $dbh) = @_;
+    my $q = $self->{'CGI'};
+
+    my %cookie = $q->cookie('sali-servers');
+    $self->{'user_name'} = "Anonymous";
+    $self->{'user_info'} = undef;
+    if ($cookie{'user_name'}) {
+        my ($user_name, $hash, $user_info) =
+            &validate_user($dbh, 'servers', 'hash', $cookie{'user_name'},
+                           $cookie{'session'});
+        if (($user_name ne "not validated") && ($user_name ne "")
+            && ($user_name)) {
+            $self->{'user_name'} = $user_name;
+            $self->{'user_info'} = $user_info;
+        }
+    }
+}
+
+sub start_html {
+    my ($self) = @_;
+    my $q = $self->{'CGI'};
+    my $style = "/saliweb/css/server.css";
+    return $q->header .
+           $q->start_html(-title => $self->{'server_name'},
+                          -style => {-src=>$style},
+                          -onload=>"opt.init(document.forms[0])",
+                          -script=>[{-language => 'JavaScript',
+                                     -src=>"/saliweb/js/salilab.js"}]
+                          );
+}
+
+sub end_html {
+    my ($self) = @_;
+    my $q = $self->{'CGI'};
+    return $q->end_html;
+}
+
+sub get_projects {
+    my %projects;
+    return \%projects;
+}
+
+sub get_project_menu {
+    return "";
+}
+
+sub header {
+    my $self = shift;
+    my $q = $self->{'CGI'};
+    my $projects = $self->get_projects();
+    my $project_menu = $self->get_project_menu($q);
+    my $navigation_links = $self->get_navigation_links($q);
+    my $user_name = $self->{'user_name'};
+    unshift @$navigation_links,
+            $q->a({-href=>"/scgi/server.cgi?logout=true"},"Logout");
+    unshift @$navigation_links,
+            $q->a({-href=>"/scgi/server.cgi"},"Current User:$user_name");
+    my $navigation = "<div id=\"navigation_second\">" .
+                     join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
+                     "</div>";
+    return saliweb::server::header($self->{'cgiroot'}, $self->{'server_name'},
+                                   "none", $projects, $project_menu,
+                                   $navigation);
+}
+
+sub footer {
+    return "";
+}
+
+sub get_index_page {
+    return "not implemented";
+}
+
+sub display_index_page {
+    my ($self) = @_;
+    print $self->start_html();
+    print $self->header();
+    print "<div id=\"fullpart\">";
+    print $self->get_index_page();
+    print "</div></div><div style=\"clear:both;\"></div>";
+    print $self->footer();
+    print $self->end_html;
+}
+
+sub help_link {
+    my ($self, $target);
+    my $self = shift;
+    return saliweb::server::help_link($self->{'server_name'}, $target);
+}
+
+# Old non-OO stuff
 
 sub read_ini_file {
   my ($filename) = @_;
