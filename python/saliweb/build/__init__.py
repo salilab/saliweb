@@ -211,11 +211,11 @@ def _make_cgi_script(env, target, source):
     f = open(target[0].path, 'w')
     print >> f, "#!/usr/bin/perl -w"
     print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
-    print >> f, "use %s" % env['service_name']
-    print >> f, "my $m = new %s" % env['service_name']
-    print >> f, "$m->display_%s_page()" % name
+    print >> f, "use %s;" % env['service_name']
+    print >> f, "my $m = new %s;" % env['service_name']
+    print >> f, "$m->display_%s_page();" % name
     f.close()
-    env.Execute(Chmod(target, 0700))
+    env.Execute(Chmod(target, 0755))
 
 def _make_web_service(env, target, source):
     f = open(target[0].path, 'w')
@@ -245,7 +245,7 @@ def _InstallCGIScripts(env, scripts=None):
         # todo: this list should be auto-generated from backend
         scripts = ['help', 'index', 'queue', 'results', 'submit']
     for bin in scripts:
-        env.Command(os.path.join(env['cgidir'], bin + '.py'), None,
+        env.Command(os.path.join(env['cgidir'], bin + '.cgi'), None,
                     _make_cgi_script)
 
 def _InstallPython(env, files, subdir=None):
