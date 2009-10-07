@@ -22,8 +22,8 @@ sub new {
     $self->{'server_name'} = $server_name;
     # Read configuration file
     $self->{'config'} = my $config = read_config($config_file);
-    $self->{'htmlroot'} = $config->{general}->{urltop};
-    $self->{'cgiroot'} = $self->{'htmlroot'} . "/cgi/";
+    $self->{'htmlroot'} = $config->{general}->{urltop} . "/html/";
+    $self->{'cgiroot'} = $config->{general}->{urltop};
     $self->{'dbh'} = my $dbh = connect_to_database($config);
     $self->_setup_user($dbh);
     return $self;
@@ -346,7 +346,7 @@ sub help_link {
     my ($self, $target) = @_;
 
     my $q = $self->{'CGI'};
-    my $url = "help?style=helplink&type=help#$target";
+    my $url = "help.cgi?style=helplink&type=help#$target";
 
     return $q->a({-href=>"$url",-border=>"0",
                   -onClick=>"launchHelp(\'$url\'); return false;"},
@@ -384,7 +384,7 @@ sub make_job {
 sub generate_results_url {
     my ($self, $jobname) = @_;
     my $passwd = &generate_random_passwd(10);
-    $url = $self->cgiroot . "/results?job=$jobname&passwd=$passwd";
+    $url = $self->cgiroot . "/results.cgi?job=$jobname&passwd=$passwd";
     return ($url, $passwd);
 }
 
