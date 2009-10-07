@@ -44,7 +44,7 @@ etc. (only one configuration file is required).
 The :class:`~saliweb.build.Environment` class derives from the standard SCons
 Environment class, but adds additional methods which simplify the setup of
 the web service. For example, the
-:meth:`~saliweb.build.Environment.InstallBinaries` method installs a set of
+:meth:`~saliweb.build.Environment.InstallAdminTools` method installs a set of
 command-line admin tools in the web service's directory (see below).
 *SConscript* files in subdirectories can use similar methods (such as
 :meth:`~saliweb.build.Environment.InstallHTML` or

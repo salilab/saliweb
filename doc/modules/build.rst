@@ -23,13 +23,22 @@ This module provides a simple SCons-based build infrastructure for web services.
    the Python package name is assumed to be match the service_name parameter
    in the configuration file, after it is converted to lower case.
 
-   .. method:: InstallBinaries([binaries])
+   .. method:: InstallAdminTools([tools])
 
-      Installs convenience binaries in the ``bin`` directory underneath the
-      installation directory. *binaries* is a list of names to install that
+      Installs command-line admin tools in the ``bin`` directory underneath the
+      installation directory. *tools* is a list of names to install that
       must be selected from the convenience modules provided by the
       :mod:`saliweb.backend` package, such as `resubmit` or `service`.
-      If *binaries* is not specified, all binaries are installed.
+      If *tools* is not specified, all tools are installed.
+
+   .. method:: InstallCGIScripts([scripts])
+
+      Installs CGI scripts that control the frontend, in the ``cgi``
+      directory underneath the
+      installation directory. *scripts* is a list of names to install that
+      must be selected from the various display_*_page() methods implemented
+      by the :class:`saliweb::frontend` class, such as `index` or `submit`.
+      If *scripts* is not specified, all scripts are installed.
 
    .. method:: InstallPython(files[, subdir])
 
@@ -47,7 +56,9 @@ This module provides a simple SCons-based build infrastructure for web services.
 
       Installs a provided list of CGI scripts in the ``cgi`` directory
       underneath the installation directory. The files can be installed in
-      a subdirectory if desired by giving the *subdir* argument.
+      a subdirectory if desired by giving the *subdir* argument. This is only
+      required if you need to install additional CGI scripts; in most cases,
+      the :meth:`InstallCGIScripts` method installs all the needed scripts.
 
    .. method:: InstallPerl(files[, subdir])
 

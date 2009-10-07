@@ -58,7 +58,8 @@ def Environment(variables, configfiles, service_name=None):
         _check(env)
     _install_config(env)
     _install_directories(env)
-    env.AddMethod(_InstallBinaries, 'InstallBinaries')
+    env.AddMethod(_InstallAdminTools, 'InstallAdminTools')
+    env.AddMethod(_InstallCGIScripts, 'InstallCGIScripts')
     env.AddMethod(_InstallPython, 'InstallPython')
     env.AddMethod(_InstallHTML, 'InstallHTML')
     env.AddMethod(_InstallTXT, 'InstallTXT')
@@ -203,6 +204,19 @@ def _make_script(env, target, source):
     f.close()
     env.Execute(Chmod(target, 0700))
 
+def _make_cgi_script(env, target, source):
+    name = os.path.basename(str(target[0]))
+    if name.endswith('.cgi'):
+        name = name[:-4]
+    f = open(target[0].path, 'w')
+    print >> f, "#!/usr/bin/perl -w"
+    print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
+    print >> f, "use %s" % env['service_name']
+    print >> f, "my $m = new %s" % env['service_name']
+    print >> f, "$m->display_%s_page()" % name
+    f.close()
+    env.Execute(Chmod(target, 0700))
+
 def _make_web_service(env, target, source):
     f = open(target[0].path, 'w')
     config = source[0].get_contents()
@@ -215,16 +229,24 @@ def _make_web_service(env, target, source):
     print >> f, "import %s" % modname
     print >> f, "get_web_service = %s.get_web_service" % modname
 
-def _InstallBinaries(env, binaries=None):
-    if binaries is None:
+def _InstallAdminTools(env, tools=None):
+    if tools is None:
         # todo: this list should be auto-generated from backend
-        binaries = ['resubmit', 'service']
-    for bin in binaries:
+        tools = ['resubmit', 'service']
+    for bin in tools:
         env.Command(os.path.join(env['bindir'], bin + '.py'), None,
                     _make_script)
     env.Command(os.path.join(env['bindir'], 'webservice.py'),
                 [Value(env['instconfigfile']), Value(env['service_name']),
                  Value(env['pythondir'])], _make_web_service)
+
+def _InstallCGIScripts(env, scripts=None):
+    if scripts is None:
+        # todo: this list should be auto-generated from backend
+        scripts = ['help', 'index', 'queue', 'results', 'submit']
+    for bin in scripts:
+        env.Command(os.path.join(env['cgidir'], bin + '.py'), None,
+                    _make_cgi_script)
 
 def _InstallPython(env, files, subdir=None):
     dir = os.path.join(env['pythondir'], env['service_name'])
