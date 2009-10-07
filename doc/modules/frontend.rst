@@ -31,6 +31,10 @@ the web frontend.
       If a user is authenticated against the service, this is their email
       address; otherwise, it is undef.
 
+   .. attribute:: cgi
+
+      A pointer to the CGI.pm object used to display HTML.
+
    .. method:: get_navigation_links()
 
       Return a reference to a list of navigation links, used by
