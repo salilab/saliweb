@@ -154,6 +154,11 @@ sub cgiroot {
     return $self->{'cgiroot'};
 }
 
+sub cgi {
+    my $self = shift;
+    return $self->{CGI};
+}
+
 sub email {
     my $self = shift;
     if (defined($self->{'user_info'})) {
