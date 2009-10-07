@@ -186,12 +186,10 @@ sub get_help_page {
 
 sub get_text_file {
     my ($self, $file) = @_;
-    my $ret = "<div id=fullpart>\n";
     open ("TXT","../txt/$file");
     while ($line=<TXT>) {
         $ret .= $line;
     }
-    $ret .= "</div>";
     $ret .= "<div style=\"clear:both;\"></div>";
     return $ret;
 }
@@ -247,6 +245,7 @@ sub _display_web_page {
     print $content;
     print "</div></div><div style=\"clear:both;\"></div>";
     print $self->footer();
+    print "</div>\n";
     print $self->end_html;
 }
 
@@ -335,7 +334,7 @@ sub help_link {
     return $q->a({-href=>"$url",-border=>"0",
                   -onClick=>"launchHelp(\'$url\'); return false;"},
                  $q->img({-src=>"/img/help.jpg", -border=>0,
-                          -valign=>"bottom"} ));
+                          -valign=>"bottom", -alt=>"help"} ));
 }
 
 sub make_job {
