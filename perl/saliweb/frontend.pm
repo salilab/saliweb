@@ -11,6 +11,8 @@ use IO::Socket;
 use DBI;
 use CGI;
 
+our $web_server = 'modbase.compbio.ucsf.edu';
+
 sub new {
     my ($invocant, $config_file, $server_name) = @_;
     my $class = ref($invocant) || $invocant;
@@ -103,9 +105,11 @@ sub header {
     my $navigation_links = $self->get_navigation_links($q);
     my $user_name = $self->{'user_name'};
     unshift @$navigation_links,
-            $q->a({-href=>"/scgi/server.cgi?logout=true"},"Logout");
+            $q->a({-href=>"https:/$web_server/scgi/server.cgi?logout=true"},
+                  "Logout");
     unshift @$navigation_links,
-            $q->a({-href=>"/scgi/server.cgi"},"Current User:$user_name");
+            $q->a({-href=>"https://$web_server/scgi/server.cgi"},
+                  "Current User:$user_name");
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";
@@ -277,7 +281,7 @@ sub display_help_page {
     my $content = $self->get_help_page($display_type);
     if ($style eq "helplink") {
         print $self->start_html("/saliweb/css/help.css");
-        print $content;
+        _display_content($content);
         print $self->end_html;
     } else {
         $self->_display_web_page($content);
