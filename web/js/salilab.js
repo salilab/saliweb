@@ -237,7 +237,7 @@ function escramble(user,domain){
  var a,b,c,d,e,f,g,h,i
  a='<a href=\"mai'
  b=user
- c='\\">'
+ c='\">'
  a+='lto:'
  b+='\@'
  e='</a>'
