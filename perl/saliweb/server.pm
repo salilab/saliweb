@@ -62,7 +62,7 @@ sub header {
     my $menuentries_ref=shift@_;
     my $current_project=shift@_;
     my $navigation=shift@_;
-    my %menuentries={};
+    my %menuentries;
     if ($menuentries_ref) {
         %menuentries=%$menuentries_ref;
     } 
@@ -178,7 +178,8 @@ sub add_user {
             ." '$ip', '$first_name', '$last_name', '$email', '$institution','$datetime')";
         $dbh->do($insert) or &end_server("noheader","insert username failed, please email the web-master.");
     }
-    my ($user_name,$hash)=&validate_user($dbh,'servers','password',$user_name,$password);
+    my $hash;
+    ($user_name,$hash)=&validate_user($dbh,'servers','password',$user_name,$password);
     return $hash;
 }
 
@@ -258,7 +259,7 @@ sub upload_file {
 sub get_seq_id {
 
         my $inputsequence=shift @_;
-        my ($sequence,$seq_id,$sequence);
+        my ($seq_id,$sequence);
 
         $sequence = &CleanSeq($inputsequence,"modpipe");   # clean up the seq from the form
         $seq_id=&make_seq_id($sequence);
@@ -290,7 +291,7 @@ sub CleanSeq {
 
 }
 
-sub make_seq_id ($sequence) {
+sub make_seq_id {
         my $sequence=shift @_;
         my $md5= new Digest::MD5;
         my ($seq_id);
@@ -298,7 +299,7 @@ sub make_seq_id ($sequence) {
         # --- generate sequence digest
         $md5->reset();
         $md5->add($sequence);
-        my $seq_id= $md5->hexdigest();
+        $seq_id= $md5->hexdigest();
         $seq_id=$seq_id.substr($sequence,0,4).substr($sequence,-4);
         return ($seq_id);
 }
@@ -306,7 +307,7 @@ sub make_seq_id ($sequence) {
 sub format_sequence {
         my $sequence=shift @_;
         my ($i,$seqlength,$print_sequence,$j);
-        my $seqlength=length($sequence);
+        $seqlength=length($sequence);
         $i=int($seqlength/50);
         for ($j=0;$j<=$i;$j++) {
                 $print_sequence =$print_sequence.substr($sequence,$j*50,50)."\n";
@@ -314,7 +315,7 @@ sub format_sequence {
         return ($print_sequence);
 }
 
-sub check_file ($path,$save) {
+sub check_file {
 
         my $path=shift @_;
         my $save=shift @_;
@@ -345,7 +346,7 @@ sub end_server {
         exit;
 }
 
-sub validate_access($dbh,$database,$user_name,$server) {
+sub validate_access {
 
     my $dbh=shift @_;
     my $database=shift @_;
@@ -365,7 +366,7 @@ sub validate_access($dbh,$database,$user_name,$server) {
     }
 }
 
-sub navigation ($dbh,$root,$user_name) {
+sub navigation {
 
     my $dbh=shift @_;
     my $cgiroot=shift @_;
@@ -419,7 +420,7 @@ sub validate_email {
             &end_server("header","$type Error: Please provide valid return email address");
         }
     }
-    if ($email =~ m/^[\w-.]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
+    if ($email =~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
         return ("validated",$key);
     } else {
         if ($essential eq "ignore") {
