@@ -68,9 +68,9 @@ the web frontend.
       submitted to the backend). This is empty by default, and
       must be overridden for each web service. Typically this method will
       perform checks on the input data (calling :meth:`failure` to report any
-      problems), call :meth:`make_job` and :meth:`submit_job` to actually
-      submit the job to the cluster, then point the user to the URL where
-      job results can be obtained.
+      problems), then call :meth:`make_job` and its own
+      :meth:`~IncomingJob.submit` method to actually submit the job to the
+      cluster, then point the user to the URL where job results can be obtained.
       
    .. method:: get_results_page()
 
@@ -110,17 +110,14 @@ the web frontend.
       method to get the correct MIME type for the file. By default, it always
       returns 'text/plain'.
 
-   .. method:: make_job(jobname)
+   .. method:: make_job(jobname, email)
 
-      This takes a user-provided job name, sanitizes it to make sure that is
-      compatible with our databases and does not conflict with an existing
-      job name, creates a directory for the job's input files, and finally
-      returns the sanitized job name and the directory. This is typically used
-      in :meth:`get_submit_page` prior to calling :meth:`submit_job`.
-
-   .. method:: submit_job(jobname)
-
-      This submits a job, previously set up by :meth:`make_job`, to the backend.
+      This creates and returns a new :class:`IncomingJob` object that
+      represents a new job, using a user-provided job name and email address
+      (the latter may be undef). The new job has its own directory into which
+      input files can be placed, and once this is finished,
+      :meth:`IncomingJob.submit` should be called to actually submit the job.
+      This is typically used in :meth:`get_submit_page`.
 
    .. method:: help_link(target)
 
@@ -155,6 +152,33 @@ the web frontend.
       Return the footer of each web page. By default, this is empty, but it
       can be subclassed to display references, contact addresses etc.
 
+
+.. class:: IncomingJob
+
+   This represents a new job that is being submitted to the backend. These
+   objects are created by calling :meth:`saliweb::frontend.make_job`.
+   Each new job has a unique name and a directory into which input files can
+   be placed. Once all input files are in place, :meth:`submit` should be called   to submit the job to the backend.
+
+   .. attribute:: name
+
+      The name of the job. Note that this is not necessarily the same
+      as the name given by the user, since it must be unique, and fit in our
+      database schema. (The user-provided name is thus sanitized if necessary
+      and a unique suffix added.)
+
+   .. attribute:: directory
+
+      The directory on disk for this job. Input files should be placed in this
+      directory prior to calling :meth:`submit`.
+
+   .. attribute:: results_url
+
+      The URL where this job's results will be found when it is complete.
+
+   .. method:: submit()
+
+      Submits the job to the backend to run on the cluster.
 
 
 .. function:: check_required_email(email)
