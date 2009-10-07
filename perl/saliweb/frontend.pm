@@ -1,5 +1,7 @@
 package IncomingJob;
 
+use IO::Socket;
+
 sub new {
     my ($invocant, $frontend, $given_name, $email) = @_;
     my $class = ref($invocant) || $invocant;
@@ -122,7 +124,6 @@ require Exporter;
 @EXPORT = qw(check_optional_email check_required_email);
 
 use File::Spec;
-use IO::Socket;
 use DBI;
 use CGI;
 
