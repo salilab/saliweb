@@ -47,7 +47,7 @@ the web service. For example, the
 :meth:`~saliweb.build.Environment.InstallAdminTools` method installs a set of
 command-line admin tools in the web service's directory (see below).
 *SConscript* files in subdirectories can use similar methods (such as
-:meth:`~saliweb.build.Environment.InstallHTML` or
+:meth:`~saliweb.build.Environment.InstallPerl` or
 :meth:`~saliweb.build.Environment.InstallPython`) to set up the rest of the
 necessary files for the web service.
 

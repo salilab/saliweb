@@ -4,9 +4,9 @@ v = Variables('config.py')
 env = saliweb.build.Environment(v, ['conf/live.conf', 'conf/test.conf'])
 Help(v.GenerateHelpText(env))
 
-env.InstallBinaries()
+env.InstallAdminTools()
+env.InstallCGIScripts()
 
 Export('env')
 SConscript('python/foo/SConscript')
-SConscript('html/SConscript')
-SConscript('cgi/SConscript')
+SConscript('lib/SConscript')
