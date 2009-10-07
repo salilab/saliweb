@@ -68,9 +68,9 @@ sub _setup_user {
 }
 
 sub start_html {
-    my ($self) = @_;
+    my ($self, $style) = @_;
     my $q = $self->{'CGI'};
-    my $style = "/saliweb/css/server.css";
+    $style = $style || "/saliweb/css/server.css";
     return $q->header .
            $q->start_html(-title => $self->{'server_name'},
                           -style => {-src=>$style},
@@ -237,13 +237,18 @@ sub get_queue_key {
             "yourself will not help.)");
 }
 
+sub _display_content {
+    my ($content) = @_;
+    print "<div id=\"fullpart\">";
+    print $content;
+    print "</div></div><div style=\"clear:both;\"></div>";
+}
+
 sub _display_web_page {
     my ($self, $content) = @_;
     print $self->start_html();
     print $self->header();
-    print "<div id=\"fullpart\">";
-    print $content;
-    print "</div></div><div style=\"clear:both;\"></div>";
+    _display_content($content);
     print $self->footer();
     print "</div>\n";
     print $self->end_html;
@@ -268,7 +273,15 @@ sub display_help_page {
     my $self = shift;
     my $q = $self->{'CGI'};
     my $display_type = $q->param('type') || 'help';
-    $self->_display_web_page($self->get_help_page($display_type));
+    my $style = $q->param('style') || '';
+    my $content = $self->get_help_page($display_type);
+    if ($style eq "helplink") {
+        print $self->start_html("/saliweb/css/help.css");
+        print $content;
+        print $self->end_html;
+    } else {
+        $self->_display_web_page($content);
+    }
 }
 
 sub display_results_page {
