@@ -97,6 +97,10 @@ sub get_project_menu {
     return "";
 }
 
+sub get_navigation_links {
+    return [];
+}
+
 sub header {
     my $self = shift;
     my $q = $self->{'CGI'};
@@ -105,7 +109,7 @@ sub header {
     my $navigation_links = $self->get_navigation_links($q);
     my $user_name = $self->{'user_name'};
     unshift @$navigation_links,
-            $q->a({-href=>"https:/$web_server/scgi/server.cgi?logout=true"},
+            $q->a({-href=>"https://$web_server/scgi/server.cgi?logout=true"},
                   "Logout");
     unshift @$navigation_links,
             $q->a({-href=>"https://$web_server/scgi/server.cgi"},
