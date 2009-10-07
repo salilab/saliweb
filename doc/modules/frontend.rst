@@ -72,10 +72,12 @@ the web frontend.
       :meth:`~IncomingJob.submit` method to actually submit the job to the
       cluster, then point the user to the URL where job results can be obtained.
       
-   .. method:: get_results_page()
+   .. method:: get_results_page(job, archive_time)
 
       Return the HTML content of the results page (that shown when the user
-      tries to view job results). This is empty by default, and
+      tries to view job results). It is passed the name of the job and the time
+      at which job results will be removed, and is run in the job's directory.
+      This method is empty by default, and
       must be overridden for each web service. Typically this method will
       display any job failures (e.g. log files), display the job results
       directly, or provide a set of links to allow result files to be
@@ -88,9 +90,10 @@ the web frontend.
       Return the HTML content of the queue page. By default this simply shows
       all jobs in the queue in date order, plus some basic help text.
 
-   .. method:: get_help_page()
+   .. method:: get_help_page(type)
 
-      Return the HTML content of help, contact or news pages. By default this
+      Return the HTML content of help, contact or news pages; the passed *type*
+      parameter will be *help*, *contact*, or *news*. By default this
       simply displays a suitable text file installed as part of the web
       service in the ``txt`` directory, named ``help.txt``, ``contact.txt`` or
       ``news.txt`` respectively.
