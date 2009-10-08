@@ -6,7 +6,6 @@ Frontend:
       API for Chimera integration
   - Add unit tests.
   - Fix CSS to properly validate.
-  - Set up sensible titles for each page.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to get version number of the web service (see Build).
   - Use InternalError, DatabaseError etc. exceptions rather than simple die.

@@ -225,6 +225,7 @@ sub new {
     bless($self, $class);
     $self->{'CGI'} = $self->_setup_cgi();
     $self->{'server_name'} = $server_name;
+    $self->{page_title} = $server_name;
     # Read configuration file
     $self->{'config'} = my $config = read_config($config_file);
     my $urltop = $config->{general}->{urltop};
@@ -289,6 +290,11 @@ sub results_url {
     return "results.cgi";
 }
 
+sub set_page_title {
+    my ($self, $title) = @_;
+    $self->{page_title} = $self->{server_name} . " " . $title;
+}
+
 sub _setup_cgi {
     return new CGI;
 }
@@ -322,7 +328,7 @@ sub start_html {
     my $q = $self->{'CGI'};
     $style = $style || "/saliweb/css/server.css";
     return $q->header .
-           $q->start_html(-title => $self->{'server_name'},
+           $q->start_html(-title => $self->{page_title},
                           -style => {-src=>$style},
                           -onload=>"opt.init(document.forms[0])",
                           -script=>[{-language => 'JavaScript',
@@ -371,7 +377,7 @@ sub header {
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";
-    return saliweb::server::header($self->{'cgiroot'}, $self->{'server_name'},
+    return saliweb::server::header($self->{'cgiroot'}, $self->{page_title},
                                    "none", $projects, $project_menu,
                                    $navigation);
 }
@@ -525,6 +531,7 @@ sub display_index_page {
 sub display_submit_page {
     my $self = shift;
     my $content;
+    $self->set_page_title("Submission");
     try {
         $content = $self->get_submit_page();
     } catch saliweb::frontend::InputValidationError with {
@@ -536,6 +543,7 @@ sub display_submit_page {
 
 sub display_queue_page {
     my $self = shift;
+    $self->set_page_title("Queue");
     $self->_display_web_page($self->get_queue_page());
 }
 
@@ -544,6 +552,7 @@ sub display_help_page {
     my $q = $self->{'CGI'};
     my $display_type = $q->param('type') || 'help';
     my $style = $q->param('style') || '';
+    $self->set_page_title("Help");
     my $content = $self->get_help_page($display_type);
     if ($style eq "helplink") {
         print $self->start_html("/saliweb/css/help.css");
@@ -562,6 +571,7 @@ sub display_results_page {
     my $job = $q->param('job');
     my $passwd = $q->param('passwd');
     my $file = $q->param('file');
+    $self->set_page_title("Results");
 
     if (!defined($job) || !defined($passwd)) {
         $self->_display_web_page(
