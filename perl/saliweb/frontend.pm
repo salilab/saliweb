@@ -347,8 +347,8 @@ sub header {
     my $self = shift;
     my $q = $self->{'CGI'};
     my $projects = $self->get_projects();
-    my $project_menu = $self->get_project_menu($q);
-    my $navigation_links = $self->get_navigation_links($q);
+    my $project_menu = $self->get_project_menu();
+    my $navigation_links = $self->get_navigation_links();
     if ($self->{'user_info'}) {
         my $user_name = $self->{'user_name'};
         unshift @$navigation_links,
