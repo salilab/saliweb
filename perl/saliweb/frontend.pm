@@ -116,11 +116,18 @@ sub try_job_name {
 
 package CompletedJob;
 
+use Time::Local;
+
 sub new {
     my ($invocant, $job_row) = @_;
     my $class = ref($invocant) || $invocant;
     my %hash = %$job_row;
     my $self = \%hash;
+    for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'end',
+                      'archive', 'expire') {
+        my $key = "${timename}_time";
+        $self->{$key} = _to_unix_time($self->{$key});
+    }
     bless($self, $class);
     return $self;
 }
@@ -135,9 +142,64 @@ sub directory {
     return $self->{directory};
 }
 
-sub archive_time {
+sub unix_archive_time {
     my $self = shift;
     return $self->{archive_time};
+}
+
+sub to_archive_time {
+    my $self = shift;
+    return _format_timediff($self->{archive_time});
+}
+
+sub get_results_available_time {
+    my ($self, $q) = @_;
+    if ($self->unix_archive_time) {
+        return $q->p("Job results will be available at this URL for " .
+                     $self->to_archive_time . ".");
+    } else {
+        return "";
+    }
+}
+
+
+sub _format_timediff_unit {
+    my ($timediff, $unit) = @_;
+    my $strrep = sprintf "%d", $timediff;
+    my $suffix = ($timediff eq "1" ? "" : "s");
+    return "$strrep ${unit}${suffix}";
+}
+
+sub _format_timediff {
+    my $timediff = shift;
+    if (!defined($timediff)) {
+        return undef;
+    }
+    $timediff -= time;
+    if ($timediff < 120) {
+        return _format_timediff_unit($timediff, "second");
+    }
+    $timediff /= 60.0;
+    if ($timediff < 120) {
+        return _format_timediff_unit($timediff, "minute");
+    }
+    $timediff /= 60.0;
+    if ($timediff < 48) {
+        return _format_timediff_unit($timediff, "hour");
+    }
+    $timediff /= 24.0;
+    return _format_timediff_unit($timediff, "day");
+}
+
+sub _to_unix_time {
+    my $db_utc_time = shift;
+    if (!defined($db_utc_time)) {
+        return undef;
+    } elsif ($db_utc_time =~ /^(\d+)\-(\d+)\-(\d+) (\d+):(\d+):(\d+)$/) {
+        return timegm($6, $5, $4, $3, $2 - 1, $1);
+    } else {
+        die "Cannot parse time $db_utc_time";
+    }
 }
 
 
@@ -456,6 +518,12 @@ sub display_results_page {
     my $job = $q->param('job');
     my $passwd = $q->param('passwd');
     my $file = $q->param('file');
+
+    if (!defined($job) || !defined($passwd)) {
+        $self->_display_web_page(
+                 $q->p("Missing 'job' and 'passwd' parameters."));
+        return;
+    }
 
     my $query = $dbh->prepare("select * from jobs where name=? and passwd=?")
                 or die "Cannot prepare: " . $dbh->errstr;

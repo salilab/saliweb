@@ -198,6 +198,30 @@ the web frontend.
 
       The directory on disk containing job results.
 
+   .. attribute:: unix_archive_time
+
+      The Unix time (seconds since the epoch, in UTC) at which job results
+      will become unavailable. (Use standard Perl functions such as ``gmtime``
+      and ``strftime`` to make this human-readable, or use
+      :attr:`to_archive_time` or :meth:`get_results_available_time` instead.)
+      If the backend is configured to never archive job results, this will
+      return undef.
+
+   .. attribute:: to_archive_time
+
+      A human-readable string giving the time from now at which job results
+      will become unavailable (e.g. '6 days', '24 hours'). 
+      If the backend is configured to never archive job results, this will
+      return undef. See also :meth:`get_results_available_time`.
+
+   .. method:: get_results_available_time(cgi)
+
+      Given a CGI object, this will return a short paragraph, suitable for
+      adding to a human-readable results page, indicating how long the results
+      will be available for.
+      If the backend is configured to never archive job results, this will
+      simply return an empty string.
+
 
 .. exception:: InputValidationError(message)
 
