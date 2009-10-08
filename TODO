@@ -10,6 +10,7 @@ Frontend:
   - Add method to get version number of the web service (see Build).
   - Catch fatal errors. Email the server admin but rate limit to once per hour
     (use state file in /tmp).
+  - Subclass CGI to throw exceptions; catch and report, with HTTP error code.
   - Make sure that reported archive times are correct and that we are not
     confusing UTC with local time.
   - Take out a mandatory lock on the socket whenever we access it.
