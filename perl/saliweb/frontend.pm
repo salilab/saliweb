@@ -234,21 +234,53 @@ sub new {
     my $class = ref($invocant) || $invocant;
     my $self = {};
     bless($self, $class);
-    $self->{'CGI'} = $self->_setup_cgi();
-    $self->{'server_name'} = $server_name;
-    $self->{page_title} = $server_name;
-    # Read configuration file
-    $self->{'config'} = my $config = read_config($config_file);
-    my $urltop = $config->{general}->{urltop};
-    # Make sure any links we generate are also secure if we are secure
-    if ($self->cgi->https) {
-        $urltop =~ s/^http:/https:/;
-    }
-    $self->{'htmlroot'} = $urltop . "/html/";
-    $self->{'cgiroot'} = $urltop;
-    $self->{'dbh'} = my $dbh = connect_to_database($config);
-    $self->_setup_user($dbh);
+    $self->{server_name} = $server_name;
+    try {
+        $self->{'CGI'} = $self->_setup_cgi();
+        $self->{page_title} = $server_name;
+        # Read configuration file
+        $self->{'config'} = my $config = read_config($config_file);
+        my $urltop = $config->{general}->{urltop};
+        # Make sure any links we generate are also secure if we are secure
+        if ($self->cgi->https) {
+            $urltop =~ s/^http:/https:/;
+        }
+        $self->{'htmlroot'} = $urltop . "/html/";
+        $self->{'cgiroot'} = $urltop;
+        $self->{'dbh'} = my $dbh = connect_to_database($config);
+        $self->_setup_user($dbh);
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
     return $self;
+}
+
+sub _admin_email {
+    my $self = shift;
+    if (defined($self->{config}) && defined($self->{config}->{general})
+        && defined($self->{config}->{general}->{admin_email})) {
+        return $self->{config}->{general}->{admin_email};
+    } else {
+        # If an error occurred before we managed to read the configuration file,
+        # fall back to bothering the sysadmins
+        return "system\@salilab.org";
+    }
+}
+
+sub handle_fatal_error {
+    my ($self, $exc) = @_;
+    my $q = new CGI; # We may not have created $self->cgi yet
+    my $admin_email = $self->_admin_email;
+    print $q->header .
+          $q->start_html(-title => "Server Error") .
+          $q->p("A fatal internal error occurred in this web service. ". 
+                "We have been notified of the problem, and should " .
+                "fix it shortly.") .
+          $q->p("For your reference, the error message reported is below:") .
+          $q->pre($exc) .
+          $q->p("Apologies for the inconvenience.") .
+          $q->end_html;
+    $exc->throw();
 }
 
 sub htmlroot {
@@ -408,17 +440,16 @@ sub check_required_email {
     }
 }
 
-sub failure {
-    my ($self, $msg) = @_;
+sub format_input_validation_error {
+    my ($self, $exc) = @_;
     my $q = $self->{'CGI'};
-    return $q->table(
-               $q->Tr($q->td({-class=>"redtxt", -align=>"left"},
-                      $q->h3("Server Error:"))) .
-               $q->Tr($q->td($q->b("An error occured during your request:"))) .
-               $q->Tr($q->td("<div class=standout>$msg</div>")) .
-               $q->Tr($q->td($q->b("Please click on your browser's \"BACK\" " .
-                                   "button, and correct " .
-                                   "the problem.",$q->br))));
+    my $msg = $exc->text;
+    return $q->h2("Invalid input") .
+           $q->p("&nbsp;") .
+           $q->p($q->b("An error occured during your request:")) .
+           "<div class=\"standout\"><p>$msg</p></div>" .
+           $q->p($q->b("Please click on your browser's \"BACK\" " .
+                       "button, and correct the problem."));
 }
 
 
@@ -539,45 +570,69 @@ sub _display_web_page {
 
 sub display_index_page {
     my $self = shift;
-    $self->_display_web_page($self->get_index_page());
+    try {
+        $self->_display_web_page($self->get_index_page());
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
 }
 
 sub display_submit_page {
     my $self = shift;
-    my $content;
-    $self->set_page_title("Submission");
     try {
-        $content = $self->get_submit_page();
-    } catch saliweb::frontend::InputValidationError with {
-        my $ex = shift;
-        $content = $self->failure($ex->text);
+        my $content;
+        $self->set_page_title("Submission");
+        try {
+            $content = $self->get_submit_page();
+        } catch saliweb::frontend::InputValidationError with {
+            $content = $self->format_input_validation_error(shift);
+        };
+        $self->_display_web_page($content);
+    } catch Error with {
+        $self->handle_fatal_error(shift);
     };
-    $self->_display_web_page($content);
 }
 
 sub display_queue_page {
     my $self = shift;
-    $self->set_page_title("Queue");
-    $self->_display_web_page($self->get_queue_page());
+    try {
+        $self->set_page_title("Queue");
+        $self->_display_web_page($self->get_queue_page());
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
 }
 
 sub display_help_page {
     my $self = shift;
-    my $q = $self->{'CGI'};
-    my $display_type = $q->param('type') || 'help';
-    my $style = $q->param('style') || '';
-    $self->set_page_title("Help");
-    my $content = $self->get_help_page($display_type);
-    if ($style eq "helplink") {
-        print $self->start_html("/saliweb/css/help.css");
-        _display_content($content);
-        print $self->end_html;
-    } else {
-        $self->_display_web_page($content);
-    }
+    try {
+        my $q = $self->{'CGI'};
+        my $display_type = $q->param('type') || 'help';
+        my $style = $q->param('style') || '';
+        $self->set_page_title("Help");
+        my $content = $self->get_help_page($display_type);
+        if ($style eq "helplink") {
+            print $self->start_html("/saliweb/css/help.css");
+            _display_content($content);
+            print $self->end_html;
+        } else {
+            $self->_display_web_page($content);
+        }
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
 }
 
 sub display_results_page {
+    my $self = shift;
+    try {
+        $self->_internal_display_results_page();
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
+}
+ 
+sub _internal_display_results_page {
     my $self = shift;
     my $q = $self->{'CGI'};
     my $dbh = $self->{'dbh'};
