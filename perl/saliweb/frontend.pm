@@ -256,6 +256,34 @@ sub email {
     }
 }
 
+sub index_url {
+    return ".";
+}
+
+sub submit_url {
+    return "submit.cgi";
+}
+
+sub queue_url {
+    return "queue.cgi";
+}
+
+sub help_url {
+    return "help.cgi?type=help";
+}
+
+sub news_url {
+    return "help.cgi?type=news";
+}
+
+sub contact_url {
+    return "help.cgi?type=contact";
+}
+
+sub results_url {
+    return "results.cgi";
+}
+
 sub _setup_cgi {
     return new CGI;
 }

@@ -35,6 +35,16 @@ the web frontend.
 
       A pointer to the CGI.pm object used to display HTML.
 
+   .. attribute:: index_url
+                  submit_url
+                  queue_url
+                  help_url
+                  news_url
+                  contact_url
+                  results_url
+
+      Relative URLs to each web page.
+
    .. method:: get_navigation_links()
 
       Return a reference to a list of navigation links, used by
