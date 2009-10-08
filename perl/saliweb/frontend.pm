@@ -126,6 +126,7 @@ require Exporter;
 use File::Spec;
 use DBI;
 use CGI;
+use Error qw(:try);
 
 our $web_server = 'modbase.compbio.ucsf.edu';
 
@@ -246,14 +247,15 @@ sub header {
 sub check_optional_email {
     my ($email) = @_;
     if ($email) {
-        return check_required_email($email);
+        check_required_email($email);
     }
 }
 
 sub check_required_email {
     my ($email) = @_;
     if ($email !~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
-        return "Please provide a valid return email address";
+        throw saliweb::frontend::InputValidationError(
+                 "Please provide a valid return email address");
     }
 }
 
@@ -390,7 +392,14 @@ sub display_index_page {
 
 sub display_submit_page {
     my $self = shift;
-    $self->_display_web_page($self->get_submit_page());
+    my $content;
+    try {
+        $content = $self->get_submit_page();
+    } catch saliweb::frontend::InputValidationError with {
+        my $ex = shift;
+        $content = $self->failure($ex->text);
+    }
+    $self->_display_web_page($content);
 }
 
 sub display_queue_page {
@@ -524,3 +533,9 @@ sub connect_to_database {
             or die "Cannot connect to database: $!";
   return $dbh;
 }
+
+1;
+
+package saliweb::frontend::InputValidationError;
+use base qw(Error::Simple);
+1;

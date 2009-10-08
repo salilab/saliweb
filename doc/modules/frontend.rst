@@ -71,8 +71,8 @@ the web frontend.
       Return the HTML content of the submit page (that shown when a job is
       submitted to the backend). This is empty by default, and
       must be overridden for each web service. Typically this method will
-      perform checks on the input data (calling :meth:`failure` to report any
-      problems), then call :meth:`make_job` and its own
+      perform checks on the input data (throwing an :exc:`InputValidationError`
+      to report any problems), then call :meth:`make_job` and its own
       :meth:`~IncomingJob.submit` method to actually submit the job to the
       cluster, then point the user to the URL where job results can be obtained.
       
@@ -131,12 +131,6 @@ the web frontend.
       Given an HTML anchor target, this returns an HTML fragment that creates
       a link to the help pages.
 
-   .. method:: failure(message)
-
-      This formats an error message and returns the HTML fragment. It is
-      usually used to report failures with job submission from within
-      :meth:`get_submit_page`.
-
    .. method:: start_html([style])
 
       Return the content of the head section of the web page, containing
@@ -187,14 +181,18 @@ the web frontend.
 
       Submits the job to the backend to run on the cluster.
 
+.. exception:: InputValidationError(message)
+
+   This exception is used to report failures with job submission from within
+   :meth:`get_submit_page` or functions it calls.
 
 .. function:: check_required_email(email)
 
-   Check a provided email address. Return undef if an email is provided and
-   it is a valid address; otherwise, return an error string.
+   Check a provided email address. If the address is empty or is invalid,
+   throw an :exc:`InputValidationError` exception.
 
 .. function:: check_optional_email(email)
 
    Check a provided email address. This is similar to
-   :func:`check_required_email`, except that no error is returned if no
-   email address was provided.
+   :func:`check_required_email`, except that only invalid addresses cause
+   an error; it is OK to provide an empty address.
