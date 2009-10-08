@@ -271,8 +271,10 @@ sub handle_fatal_error {
     my ($self, $exc) = @_;
     my $q = new CGI; # We may not have created $self->cgi yet
     my $admin_email = $self->_admin_email;
-    print $q->header .
-          $q->start_html(-title => "Server Error") .
+    my $status = "500 Internal Server Error";
+    print $q->header(-status=>$status) .
+          $q->start_html(-title => $status) .
+          $q->h1($status) .
           $q->p("A fatal internal error occurred in this web service. ". 
                 "We have been notified of the problem, and should " .
                 "fix it shortly.") .
