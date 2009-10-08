@@ -463,7 +463,7 @@ sub display_results_page {
 
     my $job_row = $query->fetchrow_hashref();
 
-    if ($job_row) {
+    if (!$job_row) {
         $self->_display_web_page(
                  $q->p("Job '$job' does not exist, or wrong password."));
     } elsif ($job_row->{state} ne 'COMPLETED') {
