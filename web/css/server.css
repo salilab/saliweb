@@ -14,6 +14,10 @@ a {
         text-decoration: underline;
 }
 
+.helplink {
+    border-style: none;
+    vertical-align: top;
+}
 
 .standout {
 color:               #880000;

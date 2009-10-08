@@ -576,10 +576,11 @@ sub help_link {
     my $q = $self->{'CGI'};
     my $url = "help.cgi?style=helplink&type=help#$target";
 
-    return $q->a({-href=>"$url",-border=>"0",
+    return $q->a({-href=>"$url",
+                  -class=>"helplink",
                   -onClick=>"launchHelp(\'$url\'); return false;"},
-                 $q->img({-src=>"/saliweb/img/help.jpg", -border=>0,
-                          -valign=>"bottom", -alt=>"help"} ));
+                 $q->img({-src=>"/saliweb/img/help.jpg", -alt=>"help",
+                          -class=>"helplink"} ));
 }
 
 sub make_job {
