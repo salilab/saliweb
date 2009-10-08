@@ -84,7 +84,7 @@ sub _get_job_name_directory {
 sub _generate_results_url {
     my ($frontend, $jobname) = @_;
     my $passwd = &generate_random_passwd(10);
-    $url = $frontend->cgiroot . "/results.cgi?job=$jobname&passwd=$passwd";
+    $url = $frontend->cgiroot . "/results.cgi?job=$jobname&amp;passwd=$passwd";
     return ($url, $passwd);
 }
 
