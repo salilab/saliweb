@@ -12,7 +12,7 @@ Python package
 ==============
 
 Your web service should be designed as a Python package (i.e. the
-'foo' web service should be implemented by the file foo/__init__.py).
+'ModFoo' web service should be implemented by the file ``modfoo/__init__.py``).
 This package should implement a :class:`Job` subclass and may also
 optionally implement :class:`Database` or :class:`Config` subclasses. It should
 also provide a function `get_web_service` which, given the name of a

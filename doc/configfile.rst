@@ -5,7 +5,8 @@
 Configuration file
 ******************
 
-The example file below defines the configuration for a fictional 'foo' service:
+The example file below defines the configuration for a fictional 'ModFoo'
+service:
 
 .. literalinclude:: ../examples/example.conf
 

@@ -8,5 +8,5 @@ env.InstallAdminTools()
 env.InstallCGIScripts()
 
 Export('env')
-SConscript('python/foo/SConscript')
+SConscript('python/modfoo/SConscript')
 SConscript('lib/SConscript')

@@ -21,13 +21,13 @@ Initialization
 ==============
 
 The first step is to create a Perl module that initializes the subclass by
-implementing a custom 'new' method. For a web service 'foo' this should be
-done in the Perl module foo.pm. This is fairly standard boilerplate:
+implementing a custom 'new' method. For a web service 'ModFoo' this should be
+done in the Perl module ``modfoo.pm``. This is fairly standard boilerplate:
 
 .. literalinclude:: ../examples/frontend-new.pm
    :language: perl
 
-The 'new' method sets the name of the service ('Foo Service' in this case)
+The 'new' method sets the name of the service ('ModFoo' in this case)
 and the name of the configuration file (@CONFIGFILE@ is filled in automatically
 by the build system).
 
