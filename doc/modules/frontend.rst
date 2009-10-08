@@ -76,10 +76,11 @@ the web frontend.
       :meth:`~IncomingJob.submit` method to actually submit the job to the
       cluster, then point the user to the URL where job results can be obtained.
       
-   .. method:: get_results_page(job, archive_time)
+   .. method:: get_results_page(job)
 
       Return the HTML content of the results page (that shown when the user
-      tries to view job results). It is passed the name of the job and the time
+      tries to view job results). It is passed a :class:`CompletedJob` object
+      that contains information such as the name of the job and the time
       at which job results will be removed, and is run in the job's directory.
       This method is empty by default, and
       must be overridden for each web service. Typically this method will
@@ -180,6 +181,23 @@ the web frontend.
    .. method:: submit()
 
       Submits the job to the backend to run on the cluster.
+
+
+.. class:: CompletedJob
+
+   This represents a job that has completed, and for which results are
+   available. These objects are created automatically and passed to
+   :meth:`saliweb::frontend.get_results_page`, and can be queried to get
+   information about the job.
+
+   .. attribute:: name
+
+      The name of the job.
+
+   .. attribute:: directory
+
+      The directory on disk containing job results.
+
 
 .. exception:: InputValidationError(message)
 

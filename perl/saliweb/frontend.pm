@@ -114,6 +114,32 @@ sub try_job_name {
   }
 }
 
+package CompletedJob;
+
+sub new {
+    my ($invocant, $job_row) = @_;
+    my $class = ref($invocant) || $invocant;
+    my %hash = %$job_row;
+    my $self = \%hash;
+    bless($self, $class);
+    return $self;
+}
+
+sub name {
+    my $self = shift;
+    return $self->{name};
+}
+
+sub directory {
+    my $self = shift;
+    return $self->{directory};
+}
+
+sub archive_time {
+    my $self = shift;
+    return $self->{archive_time};
+}
+
 
 package saliweb::frontend;
 
@@ -431,28 +457,28 @@ sub display_results_page {
     my $passwd = $q->param('passwd');
     my $file = $q->param('file');
 
-    my $query = $dbh->prepare("select state,directory,archive_time from jobs " .
-                              "where name=? and passwd=?")
+    my $query = $dbh->prepare("select * from jobs where name=? and passwd=?")
                 or die "Cannot prepare: " . $dbh->errstr;
     $query->execute($job, $passwd) or die "Cannot execute " . $dbh->errstr;
 
-    my @data = $query->fetchrow_array();
+    my $job_row = $query->fetchrow_hashref();
 
-    if (!@data) {
+    if ($job_row) {
         $self->_display_web_page(
                  $q->p("Job '$job' does not exist, or wrong password."));
-    } elsif ($data[0] ne 'COMPLETED') {
+    } elsif ($job_row->{state} ne 'COMPLETED') {
         $self->_display_web_page(
                  $q->p("Job '$job' has not yet completed; please check " .
                        "back later.") .
                  $q->p("You can also check on your job at the " .
                        "<a href=\"queue\">queue</a> page."));
     } else {
-        chdir($data[1]);
+        chdir($job_row->{directory});
         if (defined($file) and -f $file and $self->allow_file_download($file)) {
             $self->download_file($q, $file);
         } else {
-            $self->_display_web_page($self->get_results_page($job, $data[2]));
+            my $jobobj = new CompletedJob($job_row);
+            $self->_display_web_page($self->get_results_page($jobobj));
         }
     }
 }
