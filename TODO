@@ -5,7 +5,7 @@ Frontend:
     - Write a command-line tool to model loops with ModLoop, to demo this
       API for Chimera integration
   - Add unit tests.
-  - Fix markup and CSS to properly validate.
+  - Fix CSS to properly validate.
   - Only read the user cookie if our session is SSL-encrypted.
   - If no user is logged in, don't display a logout link.
   - Switch http:// to https:// when setting up htmlroot/cgiroot from config file
