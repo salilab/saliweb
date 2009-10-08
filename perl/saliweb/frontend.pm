@@ -38,11 +38,11 @@ sub submit {
   my $dbh = $self->{frontend}->{'dbh'};
 
   # Insert row into database table
-  my $query = "insert into jobs (name,passwd,contact_email,directory,url," .
-              "submit_time) VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())";
+  my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
+              "url,submit_time) VALUES(?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
   my $in = $dbh->prepare($query) or die "Cannot prepare query ". $dbh->errstr;
-  $in->execute($self->{name}, $self->{passwd}, $self->{email},
-               $self->{directory}, $self->{url})
+  $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
+               $self->{email}, $self->{directory}, $self->{url})
         or die "Cannot execute query " . $dbh->errstr;
 
   # Use socket to inform backend of new incoming job
@@ -227,8 +227,13 @@ sub new {
     $self->{'server_name'} = $server_name;
     # Read configuration file
     $self->{'config'} = my $config = read_config($config_file);
-    $self->{'htmlroot'} = $config->{general}->{urltop} . "/html/";
-    $self->{'cgiroot'} = $config->{general}->{urltop};
+    my $urltop = $config->{general}->{urltop};
+    # Make sure any links we generate are also secure if we are secure
+    if ($self->cgi->https) {
+        $urltop =~ s/^http:/https:/;
+    }
+    $self->{'htmlroot'} = $urltop . "/html/";
+    $self->{'cgiroot'} = $urltop;
     $self->{'dbh'} = my $dbh = connect_to_database($config);
     $self->_setup_user($dbh);
     return $self;
@@ -292,7 +297,8 @@ sub _setup_user {
     my ($self, $dbh) = @_;
     my $q = $self->cgi;
 
-    $self->{'user_name'} = "Anonymous";
+    # No user logged in by default
+    $self->{'user_name'} = undef;
     $self->{'user_info'} = undef;
 
     # Only try to get user information if we are SSL-secured
@@ -577,7 +583,7 @@ sub display_results_page {
                  $q->p("Job '$job' has not yet completed; please check " .
                        "back later.") .
                  $q->p("You can also check on your job at the " .
-                       "<a href=\"queue\">queue</a> page."));
+                       $q->a({-href=>$self->queue_url}, "queue") . " page."));
     } else {
         chdir($job_row->{directory});
         if (defined($file) and -f $file and $self->allow_file_download($file)) {
