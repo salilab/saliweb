@@ -262,17 +262,21 @@ sub _setup_cgi {
 
 sub _setup_user {
     my ($self, $dbh) = @_;
-    my $q = $self->{'CGI'};
+    my $q = $self->cgi;
 
-    my %cookie = $q->cookie('sali-servers');
     $self->{'user_name'} = "Anonymous";
     $self->{'user_info'} = undef;
+
+    # Only try to get user information if we are SSL-secured
+    if (!$q->https) { return; }
+
+    my %cookie = $q->cookie('sali-servers');
     if ($cookie{'user_name'}) {
         my ($user_name, $hash, $user_info) =
             &validate_user($dbh, 'servers', 'hash', $cookie{'user_name'},
                            $cookie{'session'});
         if (($user_name ne "not validated") && ($user_name ne "")
-            && ($user_name)) {
+            && ($user_name) && $user_name ne "Anonymous") {
             $self->{'user_name'} = $user_name;
             $self->{'user_info'} = $user_info;
         }
@@ -317,13 +321,19 @@ sub header {
     my $projects = $self->get_projects();
     my $project_menu = $self->get_project_menu($q);
     my $navigation_links = $self->get_navigation_links($q);
-    my $user_name = $self->{'user_name'};
-    unshift @$navigation_links,
-            $q->a({-href=>"https://$web_server/scgi/server.cgi?logout=true"},
-                  "Logout");
-    unshift @$navigation_links,
-            $q->a({-href=>"https://$web_server/scgi/server.cgi"},
-                  "Current User:$user_name");
+    if ($self->{'user_info'}) {
+        my $user_name = $self->{'user_name'};
+        unshift @$navigation_links,
+              $q->a({-href=>"https://$web_server/scgi/server.cgi?logout=true"},
+                    "Logout");
+        unshift @$navigation_links,
+                $q->a({-href=>"https://$web_server/scgi/server.cgi"},
+                      "Current User:$user_name");
+    } else {
+        unshift @$navigation_links,
+                $q->a({-href=>"https://$web_server/scgi/server.cgi"},
+                      "Login");
+    }
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";

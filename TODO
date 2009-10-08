@@ -6,8 +6,6 @@ Frontend:
       API for Chimera integration
   - Add unit tests.
   - Fix CSS to properly validate.
-  - Only read the user cookie if our session is SSL-encrypted.
-  - If no user is logged in, don't display a logout link.
   - Switch http:// to https:// when setting up htmlroot/cgiroot from config file
     if our session is SSL, so further page loads stay SSL.
   - Pass name of authenticated user to backend.
