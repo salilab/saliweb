@@ -8,8 +8,8 @@ Frontend:
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to get version number of the web service (see Build).
-  - Use InternalError, DatabaseError etc. exceptions rather than simple die.
-    Catch if necessary.
+  - Catch fatal errors. Email the server admin but rate limit to once per hour
+    (use state file in /tmp).
   - Make sure that reported archive times are correct and that we are not
     confusing UTC with local time.
   - Take out a mandatory lock on the socket whenever we access it.

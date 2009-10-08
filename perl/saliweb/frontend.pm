@@ -40,10 +40,13 @@ sub submit {
   # Insert row into database table
   my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
               "url,submit_time) VALUES(?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
-  my $in = $dbh->prepare($query) or die "Cannot prepare query ". $dbh->errstr;
+  my $in = $dbh->prepare($query)
+           or throw saliweb::frontend::DatabaseError(
+                               "Cannot prepare query ". $dbh->errstr);
   $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
                $self->{email}, $self->{directory}, $self->{url})
-        or die "Cannot execute query " . $dbh->errstr;
+        or throw saliweb::frontend::DatabaseError(
+                               "Cannot execute query ". $dbh->errstr);
 
   # Use socket to inform backend of new incoming job
   my $s = IO::Socket::UNIX->new(Peer=>$config->{general}->{'socket'},
@@ -65,7 +68,8 @@ sub _get_job_name_directory {
   $user_jobname = substr($user_jobname, 0, 30);
 
   my $query = $dbh->prepare('select count(name) from jobs where name=?')
-                 or die "Cannot prepare query ". $dbh->errstr;
+                 or throw saliweb::frontend::DatabaseError(
+                             "Cannot prepare query ". $dbh->errstr);
   my ($jobname, $jobdir);
   $jobdir = try_job_name($user_jobname, $query, $dbh, $config);
   if ($jobdir) {
@@ -78,7 +82,8 @@ sub _get_job_name_directory {
       return ($jobname, $jobdir);
     }
   }
-  die "Could not determine a unique job name";
+  throw saliweb::frontend::InternalError(
+                     "Could not determine a unique job name");
 }
 
 sub _generate_results_url {
@@ -102,11 +107,16 @@ sub try_job_name {
   if (-d $jobdir) {
     return;
   }
-  $query->execute($jobname) or die "Cannot execute: " . $dbh->errstr;
+  $query->execute($jobname)
+         or throw saliweb::frontend::DatabaseError(
+                                 "Cannot execute: " . $dbh->errstr);
   my @data = $query->fetchrow_array();
   if ($data[0] == 0) {
-    mkdir($jobdir) or die "Cannot make job directory $jobdir: $!";
-    $query->execute($jobname) or die "Cannot execute: " . $dbh->errstr;
+    mkdir($jobdir) or throw saliweb::frontend::InternalError(
+                            "Cannot make job directory $jobdir: $!");
+    $query->execute($jobname)
+         or throw saliweb::frontend::DatabaseError(
+                                 "Cannot execute: " . $dbh->errstr);
     @data = $query->fetchrow_array();
     if ($data[0] == 0) {
       return $jobdir;
@@ -198,7 +208,8 @@ sub _to_unix_time {
     } elsif ($db_utc_time =~ /^(\d+)\-(\d+)\-(\d+) (\d+):(\d+):(\d+)$/) {
         return timegm($6, $5, $4, $3, $2 - 1, $1);
     } else {
-        die "Cannot parse time $db_utc_time";
+        throw saliweb::frontend::InternalError(
+                                     "Cannot parse time $db_utc_time");
     }
 }
 
@@ -470,8 +481,11 @@ sub get_queue_rows {
          $dbh->prepare("select name,submit_time,state from jobs " .
                        "where state != 'ARCHIVED' and state != 'EXPIRED' ".
                        "order by submit_time desc")
-              or die "Couldn't prepare query " . $dbh->errstr;
-    $query->execute() or die "Couldn't execute query " . $dbh->errstr;
+             or throw saliweb::frontend::DatabaseError(
+                                 "Couldn't prepare query: " . $dbh->errstr);
+    $query->execute()
+             or throw saliweb::frontend::DatabaseError(
+                                 "Couldn't execute query: " . $dbh->errstr);
     while (my @data = $query->fetchrow_array()) {
         push @rows, $q->td([$data[0], $data[1], $data[2]]);
     }
@@ -580,8 +594,11 @@ sub display_results_page {
     }
 
     my $query = $dbh->prepare("select * from jobs where name=? and passwd=?")
-                or die "Cannot prepare: " . $dbh->errstr;
-    $query->execute($job, $passwd) or die "Cannot execute " . $dbh->errstr;
+             or throw saliweb::frontend::DatabaseError(
+                                 "Couldn't prepare query: " . $dbh->errstr);
+    $query->execute($job, $passwd)
+             or throw saliweb::frontend::DatabaseError(
+                                 "Couldn't execute query: " . $dbh->errstr);
 
     my $job_row = $query->fetchrow_hashref();
 
@@ -617,7 +634,8 @@ sub get_file_mime_type {
 sub download_file {
     my ($self, $q, $file) = @_;
     print $q->header($self->get_file_mime_type($file));
-    open(FILE, "$file") or die "Cannot open $file: $!";
+    open(FILE, "$file")
+        or throw saliweb::frontend::InternalError("Cannot open $file: $!");
     while(<FILE>) {
         print;
     }
@@ -644,7 +662,8 @@ sub make_job {
 
 sub read_ini_file {
   my ($filename) = @_;
-  open(FILE, $filename) or die "Cannot open $filename: $!";
+  open(FILE, $filename)
+        or throw saliweb::frontend::InternalError("Cannot open $filename: $!");
   my $contents;
   my $section;
   while(<FILE>) {
@@ -679,12 +698,21 @@ sub connect_to_database {
   my $dbh = DBI->connect("DBI:mysql:" . $config->{database}->{db},
                          $config->{database}->{user},
                          $config->{database}->{passwd})
-            or die "Cannot connect to database: $!";
+            or throw saliweb::frontend::DatabaseError(
+                       "Cannot connect to database: $!");
   return $dbh;
 }
 
 1;
 
 package saliweb::frontend::InputValidationError;
+use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::InternalError;
+use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::DatabaseError;
 use base qw(Error::Simple);
 1;
