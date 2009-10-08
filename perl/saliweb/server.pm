@@ -81,7 +81,7 @@ sub header {
     }
               
     $headertable="<div id=\"container\">\n    <div id=\"header1\"> 
-        <h3><img src=\"http://salilab.org/img/logo_small.gif\" height=\"40px\" alt=\"\" /> $title</h3>\n    </div>";
+        <h3><img src=\"http://salilab.org/img/logo_small.gif\" height=\"40\" alt=\"\" /> $title</h3>\n    </div>";
     $headertable.="\n    <div id=\"navigation_lab\">\n
             &bull;&nbsp;<a href=\"http://salilab.org\">Sali Lab Home</a>&nbsp;&bull;&nbsp;
 
