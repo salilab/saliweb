@@ -10,6 +10,7 @@ Contents
    introduction
    backend
    configfile
+   frontend
    deploy
 
 Reference:
