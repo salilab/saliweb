@@ -20,11 +20,11 @@ Job
 ---
 
 The :class:`Job` class represents a single job known to the backend. This
-can be job just submitted by the frontend, it can be running on the cluster,
-it could have finished and its results placed on long-term storage, or the
-results from a very old job could have been deleted (only the job metadata
-remains). Each job corresponds to a single row in the jobs database table
-and a directory on disk.
+could have just been submitted by the frontend, it could be running on the
+cluster, it could have finished and its results placed on long-term storage,
+or the results from a very old job could have been deleted (only the job
+metadata remains). Each job corresponds to a single row in the jobs database
+table and a directory on disk.
 
 For any web service, the :class:`Job` class must first be subclassed and then
 one or more of its methods implemented to actually do the work of running jobs.
