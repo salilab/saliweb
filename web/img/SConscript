@@ -1,0 +1,10 @@
+import os
+
+Import('env')
+
+web_files = [ 'help.jpg' ]
+
+# Install web files:
+instdir = os.path.join(env['webdir'], 'img')
+webinst = env.Install(instdir, web_files)
+env.Alias('install', webinst)

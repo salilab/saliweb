@@ -484,7 +484,7 @@ sub help_link {
 
     return $q->a({-href=>"$url",-border=>"0",
                   -onClick=>"launchHelp(\'$url\'); return false;"},
-                 $q->img({-src=>"/img/help.jpg", -border=>0,
+                 $q->img({-src=>"/saliweb/img/help.jpg", -border=>0,
                           -valign=>"bottom", -alt=>"help"} ));
 }
 

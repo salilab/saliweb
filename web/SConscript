@@ -1,2 +1,3 @@
 SConscript('css/SConscript')
 SConscript('js/SConscript')
+SConscript('img/SConscript')
