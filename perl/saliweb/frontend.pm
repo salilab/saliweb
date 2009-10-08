@@ -398,7 +398,7 @@ sub display_submit_page {
     } catch saliweb::frontend::InputValidationError with {
         my $ex = shift;
         $content = $self->failure($ex->text);
-    }
+    };
     $self->_display_web_page($content);
 }
 
