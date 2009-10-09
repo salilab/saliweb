@@ -702,9 +702,9 @@ sub get_file_mime_type {
 
 sub download_file {
     my ($self, $q, $file) = @_;
-    print $q->header($self->get_file_mime_type($file));
     open(FILE, "$file")
         or throw saliweb::frontend::InternalError("Cannot open $file: $!");
+    print $q->header($self->get_file_mime_type($file));
     while(<FILE>) {
         print;
     }
