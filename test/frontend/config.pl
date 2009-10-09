@@ -6,7 +6,7 @@ use test_setup;
 use Test::More 'no_plan';
 use Test::Exception;
 use Error;
-use File::Temp;
+use File::Temp qw(tempdir);
 
 BEGIN { use_ok('saliweb::frontend'); }
 
@@ -40,4 +40,35 @@ END
        'directory key for job state INCOMING should be caps');
     is($config->{directories}->{RUNNING}, 'runningvalue',
        'directory key for job state RUNNING should be caps');
+}
+
+# Test read_config function
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    my $main = "$dir/main.ini";
+    my $frontend = "$dir/frontend.ini";
+
+    open(FH, "> $main") or die "Cannot open $main: $!";
+    # Note that path to frontend.ini is relative to that of main.ini
+    print FH <<END;
+[database]
+frontend_config=frontend.ini
+END
+    close FH or die "Cannot close $main: $!";
+
+    open(FH, "> $frontend") or die "Cannot open $frontend: $!";
+    print FH <<END;
+[frontend_db]
+user=myuser
+passwd=mypasswd
+END
+    close FH or die "Cannot close $frontend: $!";
+
+    my $config = saliweb::frontend::read_config($main);
+    is($config->{database}->{frontend_config}, 'frontend.ini',
+       'check read of config file frontend_config key');
+    is($config->{database}->{user}, 'myuser',
+       'check read of config file database user key');
+    is($config->{database}->{passwd}, 'mypasswd',
+       'check read of config file database password key');
 }
