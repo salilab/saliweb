@@ -4,9 +4,10 @@ Deploying the web service
 *************************
 
 To actually deploy the web service, you should package your Python classes that
-implement the backend, then use the build system to install these classes in
-the correct location, together with the web pages, CGI scripts and other files
-that constitute the frontend.
+implement the backend, and the Perl classes that implement the frontend, then
+use the build system to install these classes in the correct location,
+together with other resources such as images, style sheets or text files needed
+by the web interface.
 
 Python package
 ==============
