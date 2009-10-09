@@ -67,7 +67,10 @@ The bulk of the functionality of the frontend is implemented by overriding
 a single method for each page. For a typical web service, the index,
 submission and results pages need to be implemented by overriding the
 :meth:`get_index_page`, :meth:`get_submit_page` and :meth:`get_results_page`
-methods respectively. These will be considered in turn.
+methods respectively. (There are also :meth:`get_queue_page` and
+:meth:`get_help_page` methods but the default implementations already show
+all jobs in the queue and a simple help page, respectively, so do not need to
+be customized.) These pages will be considered in turn.
 
 Index page
 ----------
@@ -142,3 +145,11 @@ that a problem occurred.
 
 .. literalinclude:: ../examples/frontend-results.pm
    :language: perl
+
+Help page
+---------
+
+The help page is used to display basic help, contact details, or news. It is
+probably unnecessary to customize this method, as by default it will simply
+display a similarly-named text file (``txt/help.txt``, ``txt/contact.txt``
+or ``txt/news.txt``). See :meth:`get_help_page` for more details.

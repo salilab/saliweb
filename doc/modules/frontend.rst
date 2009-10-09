@@ -103,7 +103,10 @@ the web frontend.
    .. method:: get_queue_page()
 
       Return the HTML content of the queue page. By default this simply shows
-      all jobs in the queue in date order, plus some basic help text.
+      all jobs in the queue in date order, plus some basic help text. (Note that
+      there is currently no interface defined to do this any differently. If
+      you need to customize the queue page, please talk to Ben so we can design
+      a suitable interface.)
 
    .. method:: get_help_page(type)
 
