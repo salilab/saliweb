@@ -1,11 +1,13 @@
+import os
+
 Import('env')
 
 e = env.Clone()
-e['ENV']['PYTHONPATH'] = Dir('#/python').abspath
 
 # Custom builder to run unit tests:
 def builder_unit_test(target, source, env):
-    app = "%s %s -v > /dev/null" % (e['PYTHON'], source[0])
+    dir = os.path.dirname(str(source[0]))
+    app = "cd %s && prove -v *.pl" % dir
     if e.Execute(app) == 0:
         file(str(target[0]), 'w').write('PASSED\n')
     else:
@@ -13,11 +15,8 @@ def builder_unit_test(target, source, env):
         return 1
 e.Append(BUILDERS = {'Test': Builder(action=builder_unit_test)})
 
-# Subdirectories
-env.SConscript('frontend/SConscript')
-
 # Always run our unit tests:
-test = e.Test("test.passed", "run-all-tests.py")
+test = e.Test("test.passed", 'SConscript')
 e.Alias("test", test)
 e.AlwaysBuild("test.passed")
 Return('test')
