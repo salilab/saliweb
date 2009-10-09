@@ -11,8 +11,10 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 # Test hierarchy of exception classes
 {
-    isa_ok(saliweb::frontend::InputValidationError, Error::Simple,
+    isa_ok(new saliweb::frontend::InputValidationError("x"), Error::Simple,
            'InputValidationError');
-    isa_ok(saliweb::frontend::InternalError, Error::Simple, 'InternalError');
-    isa_ok(saliweb::frontend::DatabaseError, Error::Simple, 'DatabaseError');
+    isa_ok(new saliweb::frontend::InternalError("x"), Error::Simple,
+           'InternalError');
+    isa_ok(new saliweb::frontend::DatabaseError("x"), Error::Simple,
+           'DatabaseError');
 }
