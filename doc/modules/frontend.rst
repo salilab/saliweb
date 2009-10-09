@@ -128,8 +128,8 @@ the web frontend.
    .. method:: get_file_mime_type(file)
 
       When downloading a results file (see :meth:`get_results_page`) this
-      method to get the correct MIME type for the file. By default, it always
-      returns 'text/plain'.
+      method is called to get the correct MIME type for the file. By default,
+      it always returns 'text/plain'.
 
    .. method:: make_job(jobname, email)
 
