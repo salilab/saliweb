@@ -341,7 +341,19 @@ sub set_page_title {
 }
 
 sub _setup_cgi {
-    return new CGI;
+    my $q = new CGI;
+    # Handle a CGI error if one occurred
+    my $error = $q->cgi_error;
+    if ($error) {
+        print $q->header(-status=>$error),
+              $q->start_html('CGI error encountered'),
+              $q->h2('CGI error encountered'),
+              $q->strong($error),
+              $q->end_html;
+        exit 0;
+    } else {
+        return $q;
+    }
 }
 
 sub _setup_user {
