@@ -9,7 +9,7 @@ def _action_sphinx(target, source, env):
     outdir = os.path.dirname(target[0].path)
     app = "%s %s %s %s" % (env['SPHINX_BUILD'], env['SPHINX_OPTS'],
                            sourcedir, outdir)
-    ret = env.Execute(app)
+    ret = env.Execute([app, 'tools/munge-sphinx-perl.pl'])
     if not ret:
         print "Build finished. The HTML pages are in " + outdir
     return ret
