@@ -253,8 +253,9 @@ the web frontend.
 .. exception:: InputValidationError(message)
 
    This exception is used to report failures with job submission from within
-   :meth:`get_submit_page` or functions it calls. These errors are handled by
-   reporting them to the user and asking them to fix their input accordingly.
+   :meth:`~saliwebfrontend.get_submit_page` or functions it calls. These
+   errors are handled by reporting them to the user and asking them to
+   fix their input accordingly.
 
 .. exception:: InternalError(message)
                DatabaseError(message)
