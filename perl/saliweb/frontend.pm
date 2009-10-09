@@ -124,7 +124,7 @@ sub try_job_name {
   }
 }
 
-package CompletedJob;
+package saliweb::frontend::CompletedJob;
 
 use Time::Local;
 
@@ -685,7 +685,7 @@ sub _internal_display_results_page {
         if (defined($file) and -f $file and $self->allow_file_download($file)) {
             $self->download_file($q, $file);
         } else {
-            my $jobobj = new CompletedJob($job_row);
+            my $jobobj = new saliweb::frontend::CompletedJob($job_row);
             $self->_display_web_page($self->get_results_page($jobobj));
         }
     }
