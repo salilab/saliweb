@@ -739,7 +739,8 @@ sub read_ini_file {
     if (/^\[(\S+)\]$/) {
       $section = lc $1;
     } elsif (/^\s*(\S+)\s*[=:]\s*(\S+)\s*$/) {
-      my ($key, $value) = (lc $1, $2);
+      my $key = lc $1;
+      my $value = $2;
       if ($section eq 'directories' and $key ne 'install') {
         $key = uc $key;
       }
