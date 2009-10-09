@@ -205,7 +205,7 @@ sub upload_file {
     my $path=shift@_;
     my ($file,$bytesread,$buffer,$save);
 
-    use constant UPLOAD_DIR => $path;
+#   use constant UPLOAD_DIR => $path;
     use constant BUFFER_SIZE => 16_384;
     use constant MAX_FILE_SIZE => 2_048_576;
     use constant MAX_DIR_SIZE => 2000*1_048_576;
