@@ -13,11 +13,11 @@ def builder_unit_test(target, source, env):
         return 1
 e.Append(BUILDERS = {'Test': Builder(action=builder_unit_test)})
 
-# Subdirectories
-env.SConscript('frontend/SConscript')
+test = (e.Test("test.passed", "run-all-tests.py"),
+        env.SConscript('frontend/SConscript'))
+e.Alias("test", test)
 
 # Always run our unit tests:
-test = e.Test("test.passed", "run-all-tests.py")
-e.Alias("test", test)
 e.AlwaysBuild("test.passed")
+
 Return('test')

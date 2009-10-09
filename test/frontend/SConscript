@@ -15,8 +15,7 @@ def builder_unit_test(target, source, env):
         return 1
 e.Append(BUILDERS = {'Test': Builder(action=builder_unit_test)})
 
-# Always run our unit tests:
 test = e.Test("test.passed", 'SConscript')
-e.Alias("test", test)
+# Always run our unit tests:
 e.AlwaysBuild("test.passed")
 Return('test')
