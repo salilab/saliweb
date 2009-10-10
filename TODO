@@ -4,12 +4,16 @@ Frontend:
     for common practice).
     - Write a command-line tool to model loops with ModLoop, to demo this
       API for Chimera integration
-  - Add unit tests.
+  - Add more unit tests.
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to get version number of the web service (see Build).
-  - Catch fatal errors. Email the server admin but rate limit to once per hour
-    (use state file in /tmp).
+  - Catch fatal errors. Email the server admin but rate limit to once per period
+    (use locked state file in /tmp; record time of start of period and # of
+    errors; only email if # < rate limit, if # == rate limit, add footer to
+    the email; if time + period < now, reset time to now and count to 0). Add
+    method to frontend class to configure rate limit and period, for debugging;
+    default to 5/hour.
   - Make sure that reported archive times are correct and that we are not
     confusing UTC with local time.
   - Take out a mandatory lock on the socket whenever we access it.
