@@ -226,6 +226,7 @@ use File::Spec;
 use DBI;
 use CGI;
 use Error qw(:try);
+use MIME::Lite;
 
 our $web_server = 'modbase.compbio.ucsf.edu';
 
@@ -270,7 +271,6 @@ sub _admin_email {
 sub handle_fatal_error {
     my ($self, $exc) = @_;
     my $q = new CGI; # We may not have created $self->cgi yet
-    my $admin_email = $self->_admin_email;
     my $status = "500 Internal Server Error";
     print $q->header(-status=>$status) .
           $q->start_html(-title => $status) .
@@ -282,7 +282,34 @@ sub handle_fatal_error {
           $q->pre($exc) .
           $q->p("Apologies for the inconvenience.") .
           $q->end_html;
+
+    $self->_email_admin_fatal_error($exc);
+
+    # Rethrow the error to terminate the process
     $exc->throw();
+}
+
+sub _email_admin_fatal_error {
+    my ($self, $exc) = @_;
+
+    my $subject = "Fatal error in " .  $self->{server_name} .
+                  " web service frontend";
+    my $data = <<END;
+A fatal error occurred in the $self->{server_name} web service frontend.
+Please correct this problem as soon as possible, as it prevents end users
+from being able to use your web service.
+
+The specific error message is shown below:
+$exc
+END
+
+    my $admin_email = $self->_admin_email;
+    my $msg = MIME::Lite->new(From => $admin_email,
+                              To => $admin_email,
+                              Subject => $subject,
+                              Data => $data);
+    # If an error occurs here, there's not much we can do about it, so ignore it
+    $msg->send();
 }
 
 sub htmlroot {
