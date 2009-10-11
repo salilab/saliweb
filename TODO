@@ -12,7 +12,6 @@ Frontend:
     limit and period of error reporting, for debugging.
   - Make sure that reported archive times are correct and that we are not
     confusing UTC with local time.
-  - Take out a mandatory lock on the socket whenever we access it.
 
 Backend:
   - Test Python coverage in unit tests.
@@ -22,7 +21,6 @@ Backend:
     row and filesystem directory; should accept wildcards for job names;
     should work only on failed/completed/expired/archived jobs if the backend
     is running, other states only if the backend is stopped.
-  - Take out a mandatory lock on the socket whenever we access it.
   - At startup, for each job in the system, check to make sure that directories
     for the same job in *different* states do not exist. For example, if the
     INCOMING job 'foo' exists in /incoming/foo/, but the directory /running/foo/

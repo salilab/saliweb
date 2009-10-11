@@ -1,6 +1,7 @@
 package IncomingJob;
 
 use IO::Socket;
+use Fcntl ':flock';
 
 sub new {
     my ($invocant, $frontend, $given_name, $email) = @_;
@@ -52,7 +53,9 @@ sub submit {
   my $s = IO::Socket::UNIX->new(Peer=>$config->{general}->{'socket'},
                                 Type=>SOCK_STREAM);
   if (defined($s)) {
+    flock($s, LOCK_EX);
     print $s "INCOMING " . $self->{name};
+    flock($s, LOCK_UN);
     $s->close();
   }
 }
@@ -227,6 +230,7 @@ use DBI;
 use CGI;
 use Error qw(:try);
 use MIME::Lite;
+use Fcntl ':flock';
 
 our $web_server = 'modbase.compbio.ucsf.edu';
 
