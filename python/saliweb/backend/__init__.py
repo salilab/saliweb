@@ -597,6 +597,8 @@ have done this, delete the state file (%s) to reenable runs.
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if len(rlist) == 1:
                 conn, addr = sock.accept()
+                # Note that currently we don't do anything with the
+                # message itself coming in on the socket
                 self._process_incoming_jobs()
                 incoming_action.reset()
             for x in actions:
