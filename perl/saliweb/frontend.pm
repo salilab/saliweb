@@ -236,6 +236,8 @@ sub new {
     my $self = {};
     bless($self, $class);
     $self->{server_name} = $server_name;
+    $self->{rate_limit_period} = 3600;
+    $self->{rate_limit} = 10;
     try {
         $self->{'CGI'} = $self->_setup_cgi();
         $self->{page_title} = $server_name;
@@ -289,8 +291,50 @@ sub handle_fatal_error {
     $exc->throw();
 }
 
+sub _check_rate_limit {
+    my $self = shift;
+    my $file = "/tmp/" . lc($self->{server_name}) . "-service.state";
+    my $period = $self->{rate_limit_period};
+    my $limit = $self->{rate_limit};
+
+    # Get timestamp of start of rate period, and number of errors during that
+    # period, from the state file (if it does not exist, assume 0,0).
+    # Lock it to ensure consistency.
+    open(FH, '+>>', $file) or die "Cannot open $file: $!";
+    flock(FH, LOCK_EX);
+    seek(FH, 0, 0);
+    my $line = <FH>;
+    my $start_time = my $count = 0;
+    if (defined($line) and $line =~ /^(\d+)\t(\d+)$/) {
+        ($start_time, $count) = ($1, $2);
+    }
+    my $current_time = time();
+
+    # Reset the count if the period has elapsed
+    if ($current_time - $start_time > $period) {
+        $start_time = $current_time;
+        $count = 1;
+    }
+
+    # Update the file with new count
+    truncate FH, 0;
+    printf FH "$start_time\t%d\n", $count + 1;
+    flock(FH, LOCK_UN);
+    close FH or die "Cannot close file: $!";
+
+    return ($count, $limit, $period);
+}
+
 sub _email_admin_fatal_error {
     my ($self, $exc) = @_;
+
+    my ($count, $limit, $period) = $self->_check_rate_limit();
+    if ($count > $limit) {
+        # Don't send email if we've hit the rate limit, to avoid overloading
+        # the mail server (and the server admin!)
+        return;
+    }
+
 
     my $subject = "Fatal error in " .  $self->{server_name} .
                   " web service frontend";
@@ -302,6 +346,14 @@ from being able to use your web service.
 The specific error message is shown below:
 $exc
 END
+
+    if ($count == $limit) {
+        $data .= "\n\n" . <<END;
+These emails are rate-limited to $limit every $period seconds, and with
+this email that limit has been reached. Thus, further errors for up to
+$period seconds will not trigger additional emails.
+END
+    }
 
     my $admin_email = $self->_admin_email;
     my $msg = MIME::Lite->new(From => $admin_email,
