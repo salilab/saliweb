@@ -1,4 +1,4 @@
-package IncomingJob;
+package saliweb::frontend::IncomingJob;
 
 use IO::Socket;
 use Fcntl ':flock';
@@ -60,15 +60,22 @@ sub submit {
   }
 }
 
+sub _sanitize_jobname {
+    my $jobname = shift;
+    # Remove potentially dodgy characters in jobname
+    $jobname =~ s/[^a-zA-Z0-9_-]//g;
+    # Make sure jobname fits in the db (plus extra space for
+    # auto-generated suffix if needed)
+    $jobname = substr($jobname, 0, 30);
+    return $jobname;
+}
+
 sub _get_job_name_directory {
   my ($frontend, $user_jobname) = @_;
   my $config = $frontend->{'config'};
   my $dbh = $frontend->{'dbh'};
-  # Remove potentially dodgy characters in jobname
-  $user_jobname =~ s/[^a-zA-Z0-9_-]//g;
-  # Make sure jobname fits in the db (plus extra space for
-  # auto-generated suffix if needed)
-  $user_jobname = substr($user_jobname, 0, 30);
+
+  $user_jobname = _sanitize_jobname($user_jobname);
 
   my $query = $dbh->prepare('select count(name) from jobs where name=?')
                  or throw saliweb::frontend::DatabaseError(
@@ -809,7 +816,7 @@ sub help_link {
 
 sub make_job {
   my ($self, $user_jobname, $email) = @_;
-  return new IncomingJob($self, $user_jobname, $email);
+  return new saliweb::frontend::IncomingJob($self, $user_jobname, $email);
 }
 
 sub read_ini_file {
