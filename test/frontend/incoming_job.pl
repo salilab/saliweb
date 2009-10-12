@@ -70,22 +70,22 @@ BEGIN { use_ok('saliweb::frontend'); }
     # Check errors thrown by $query->execute
     throws_ok { try_job_name("fail-1") }
               saliweb::frontend::DatabaseError,
-              "             exception in first execute";
-    is($query->{execute_calls}, 1, "                          (execute calls)");
+              "            exception in first execute";
+    is($query->{execute_calls}, 1, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
     throws_ok { try_job_name("fail-2") }
               saliweb::frontend::DatabaseError,
-              "             exception in second execute";
-    is($query->{execute_calls}, 2, "                          (execute calls)");
+              "            exception in second execute";
+    is($query->{execute_calls}, 2, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
     # Check for mkdir failure
     throws_ok { try_job_name("existing-file") }
               saliweb::frontend::InternalError,
-              "             mkdir failure";
+              "            mkdir failure";
     is($query->{execute_calls}, 1,
-       "             mkdir failure (execute calls)");
+       "            mkdir failure (execute calls)");
 }
 
 # Test _generate_results_url function
