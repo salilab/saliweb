@@ -129,6 +129,27 @@ BEGIN { use_ok('saliweb::frontend'); }
               "                       (failure in \$dbh->prepare)";
 }
 
+# Test creation of IncomingJob objects
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    mkdir("$dir/myjob");
+    my $dbh = new DummyDB;
+    my $config = {};
+    $config->{directories}->{INCOMING} = $dir;
+    my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
+    bless($frontend, 'saliweb::frontend');
+    my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
+    ok(defined $job, 'Test creation of IncomingJob objects');
+    is($job->{given_name}, 'myjob', '   given_name');
+    is($job->{email}, 'myemail', '   email');
+    like($job->name, qr/^myjob_\d{5}0$/, '   name');
+    my $jobname = $job->name;
+    is($job->directory, "$dir/$jobname", '   directory');
+    like($job->results_url,
+         qr/^mycgiroot\/results\.cgi\?job=$jobname\&amp;passwd=.{10}$/,
+         '   results_url');
+}
+
 
 package DummyQuery;
 
