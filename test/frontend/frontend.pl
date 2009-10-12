@@ -94,6 +94,24 @@ BEGIN { use_ok('saliweb::frontend'); }
     is(@$links, 0, 'get_navigation_links returns an empty arrayref');
 }
 
+# Test footer method
+{
+    my $self = {CGI=>new CGI};
+    bless($self, 'saliweb::frontend');
+    is($self->footer, "", 'footer returns an empty string');
+}
+
+# Test format_input_validation_error method
+{
+    my $self = {CGI=>new CGI};
+    bless($self, 'saliweb::frontend');
+    my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
+    like($self->format_input_validation_error($exc),
+         '/<h2>.*Invalid input.*<\/h2>.*<b>.*' .
+         'An error occurred during your request:.*<\/b>.*my inpvalid error/s',
+         'format_input_validation_error');
+}
+
 # Test check_required_email method
 {
     throws_ok { check_required_email(undef) }
