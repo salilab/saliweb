@@ -99,6 +99,36 @@ BEGIN { use_ok('saliweb::frontend'); }
          "                     (URL)");
 }
 
+# Test _get_job_name_directory
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    mkdir("$dir/existing-dir");
+    my $dbh = new DummyDB;
+    my $config = {};
+    $config->{directories}->{INCOMING} = $dir;
+    my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
+    bless($frontend, 'saliweb::frontend');
+
+    my ($jobname, $jobdir);
+    ($jobname, $jobdir) =
+          saliweb::frontend::IncomingJob::_get_job_name_directory(
+                      $frontend, "my &^! job");
+    is($jobname, "myjob", "get_job_name_directory (new job, name)");
+    is($jobdir, "$dir/myjob", "                       (new job, directory)");
+
+    ($jobname, $jobdir) =
+          saliweb::frontend::IncomingJob::_get_job_name_directory(
+                      $frontend, "existing-dir");
+    like($jobname, qr/^existing\-dir_\d{5}0$/,
+         "                       (existing directory)");
+
+    $dbh->{failprepare} = 1;
+    throws_ok { saliweb::frontend::IncomingJob::_get_job_name_directory(
+                          $frontend, "myjob") }
+              saliweb::frontend::DatabaseError,
+              "                       (failure in \$dbh->prepare)";
+}
+
 
 package DummyQuery;
 
@@ -138,6 +168,7 @@ package DummyDB;
 
 sub new {
     my $self = {};
+    $self->{failprepare} = 0;
     bless($self, shift);
     return $self;
 }
@@ -145,4 +176,13 @@ sub new {
 sub errstr {
     my $self = shift;
     return "DB error";
+}
+
+sub prepare {
+    my ($self, $query) = @_;
+    if ($self->{failprepare}) {
+        return undef;
+    } else {
+        return new DummyQuery;
+    }
 }
