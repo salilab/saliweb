@@ -6,6 +6,7 @@ use test_setup;
 use Test::More 'no_plan';
 use Test::Exception;
 use File::Temp qw(tempdir);
+use Dummy;
 
 BEGIN { use_ok('saliweb::frontend'); }
 
@@ -33,8 +34,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     mkdir("$dir/existing-dir");
     open(FH, "> $dir/existing-file");
     close FH;
-    my $query = new DummyQuery;
-    my $dbh = new DummyDB;
+    my $query = new Dummy::Query;
+    my $dbh = new Dummy::DB;
     my $config = {};
     $config->{directories}->{INCOMING} = $dir;
     sub try_job_name {
@@ -103,7 +104,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     my $dir = tempdir( CLEANUP => 1 );
     mkdir("$dir/existing-dir");
-    my $dbh = new DummyDB;
+    my $dbh = new Dummy::DB;
     my $config = {};
     $config->{directories}->{INCOMING} = $dir;
     my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
@@ -133,7 +134,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     my $dir = tempdir( CLEANUP => 1 );
     mkdir("$dir/myjob");
-    my $dbh = new DummyDB;
+    my $dbh = new Dummy::DB;
     my $config = {};
     $config->{directories}->{INCOMING} = $dir;
     my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
@@ -154,7 +155,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     my $dir = tempdir( CLEANUP => 1 );
     my $socket = "$dir/socket";
-    my $dbh = new DummyDB;
+    my $dbh = new Dummy::DB;
     my $config = {};
     $config->{directories}->{INCOMING} = $dir;
     $config->{general}->{socket} = $socket;
@@ -178,65 +179,4 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { $job->submit() }
               saliweb::frontend::DatabaseError,
               "                    (failure at prepare)";
-}
-
-
-package DummyQuery;
-
-sub new {
-    my $self = {};
-    bless($self, shift);
-    $self->{execute_calls} = 0;
-    return $self;
-}
-
-sub execute {
-    my $self = shift;
-    my $jobname = shift;
-    $self->{jobname} = $jobname;
-    $self->{execute_calls}++;
-    my $calls = $self->{execute_calls};
-    if ($jobname eq "fail-$calls") {
-        return undef;
-    }
-    return $jobname ne "fail-job";
-}
-
-sub fetchrow_array {
-    my $self = shift;
-    if ($self->{jobname} eq "existing-job") {
-        return (1);
-    } elsif ($self->{jobname} eq "justmade-job"
-             and $self->{execute_calls} > 1) {
-        return (1);
-    } else {
-        return (0);
-    }
-}
-
-1;
-
-package DummyDB;
-
-sub new {
-    my $self = {};
-    $self->{failprepare} = 0;
-    $self->{query} = undef;
-    bless($self, shift);
-    return $self;
-}
-
-sub errstr {
-    my $self = shift;
-    return "DB error";
-}
-
-sub prepare {
-    my ($self, $query) = @_;
-    if ($self->{failprepare}) {
-        return undef;
-    } else {
-        $self->{query} = new DummyQuery;
-        return $self->{query};
-    }
 }
