@@ -132,6 +132,7 @@ sub try_job_name {
       return $jobdir;
     }
   }
+  return undef;
 }
 
 package saliweb::frontend::CompletedJob;
