@@ -119,7 +119,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     ($jobname, $jobdir) =
           saliweb::frontend::IncomingJob::_get_job_name_directory(
                       $frontend, "existing-dir");
-    like($jobname, qr/^existing\-dir_\d{5}0$/,
+    like($jobname, qr/^existing\-dir_\d{0,5}0$/,
          "                       (existing directory)");
 
     $dbh->{failprepare} = 1;
@@ -142,12 +142,42 @@ BEGIN { use_ok('saliweb::frontend'); }
     ok(defined $job, 'Test creation of IncomingJob objects');
     is($job->{given_name}, 'myjob', '   given_name');
     is($job->{email}, 'myemail', '   email');
-    like($job->name, qr/^myjob_\d{5}0$/, '   name');
+    like($job->name, qr/^myjob_\d{0,5}0$/, '   name');
     my $jobname = $job->name;
     is($job->directory, "$dir/$jobname", '   directory');
     like($job->results_url,
          qr/^mycgiroot\/results\.cgi\?job=$jobname\&amp;passwd=.{10}$/,
          '   results_url');
+}
+
+# Test submit method
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    my $socket = "$dir/socket";
+    my $dbh = new DummyDB;
+    my $config = {};
+    $config->{directories}->{INCOMING} = $dir;
+    $config->{general}->{socket} = $socket;
+    my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
+    bless($frontend, 'saliweb::frontend');
+    my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
+    ok(defined $job, "Create IncomingJob for submit");
+    $job->submit();
+    is($dbh->{query}->{execute_calls}, 1,
+       "IncomingJob::submit (execute calls)");
+
+    $job->{name} = 'fail-job';
+    throws_ok { $job->submit() }
+              saliweb::frontend::DatabaseError,
+              "                    (failure at execute)";
+    # Make sure it works with a correct job name
+    $job->{name} = 'ok-job';
+    $job->submit();
+    # Now check for failure in prepare
+    $dbh->{failprepare} = 1;
+    throws_ok { $job->submit() }
+              saliweb::frontend::DatabaseError,
+              "                    (failure at prepare)";
 }
 
 
@@ -161,7 +191,8 @@ sub new {
 }
 
 sub execute {
-    my ($self, $jobname) = @_;
+    my $self = shift;
+    my $jobname = shift;
     $self->{jobname} = $jobname;
     $self->{execute_calls}++;
     my $calls = $self->{execute_calls};
@@ -190,6 +221,7 @@ package DummyDB;
 sub new {
     my $self = {};
     $self->{failprepare} = 0;
+    $self->{query} = undef;
     bless($self, shift);
     return $self;
 }
@@ -204,6 +236,7 @@ sub prepare {
     if ($self->{failprepare}) {
         return undef;
     } else {
-        return new DummyQuery;
+        $self->{query} = new DummyQuery;
+        return $self->{query};
     }
 }
