@@ -552,7 +552,7 @@ sub format_input_validation_error {
     my $msg = $exc->text;
     return $q->h2("Invalid input") .
            $q->p("&nbsp;") .
-           $q->p($q->b("An error occured during your request:")) .
+           $q->p($q->b("An error occurred during your request:")) .
            "<div class=\"standout\"><p>$msg</p></div>" .
            $q->p($q->b("Please click on your browser's \"BACK\" " .
                        "button, and correct the problem."));
