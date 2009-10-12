@@ -88,6 +88,17 @@ BEGIN { use_ok('saliweb::frontend'); }
        "             mkdir failure (execute calls)");
 }
 
+# Test _generate_results_url function
+{
+    my $frontend = {cgiroot=>'mycgiroot'};
+    bless($frontend, 'saliweb::frontend');
+    my ($url, $passwd) = saliweb::frontend::IncomingJob::_generate_results_url(
+                                           $frontend, "myjob");
+    is(length($passwd), 10, "generate_results_url (password length)");
+    like($url, qr/^mycgiroot\/results\.cgi\?job=myjob\&amp;passwd=.{10}$/,
+         "                     (URL)");
+}
+
 
 package DummyQuery;
 
