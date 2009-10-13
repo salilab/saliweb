@@ -86,3 +86,27 @@ sub prepare {
     }
 }
 1;
+
+package Dummy::Frontend;
+our @ISA = qw/saliweb::frontend/;
+
+sub get_project_menu {
+    my $self = shift;
+    return "Project menu for " . $self->{server_name} . " service";
+}
+
+sub get_navigation_links {
+    my $self = shift;
+    return ["Link 1", "Link 2 for " . $self->{server_name} . " service"];
+}
+
+sub get_index_page {
+    my $self = shift;
+    if ($self->{server_name} eq "failindex") {
+        raise saliweb::frontend::InternalError("get_index_page failure");
+    } else {
+        return "test_index_page";
+    }
+}
+
+1;

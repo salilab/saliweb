@@ -8,6 +8,7 @@ use Test::Exception;
 use MIME::Lite;
 use Test::Output qw(stdout_from);
 use Error;
+use Dummy;
 use CGI;
 
 # Miscellaneous tests of the saliweb::frontend class
@@ -172,7 +173,25 @@ BEGIN {
          'server\.cgi">Current User:testuser<\/a>.*' .
          '<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
          'server\.cgi\?logout=true">Logout<\/a>/s',
-         'header with logged-in user');
+         '       with logged-in user');
+
+    $self = {CGI=>new CGI, page_title=>'header test', server_name=>'foo'};
+    bless($self, 'Dummy::Frontend');
+    like($self->header,
+         '/header test.*Link 1.*Link 2 for foo service.*' .
+         'Project menu for foo service/s', '       with overridden methods');
+    
+}
+
+# Test display_index_page method
+{
+    my $self = {CGI=>new CGI, page_title=>'test title', server_name=>'test'};
+    bless($self, 'Dummy::Frontend');
+    my $out = stdout_from { $self->display_index_page() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               '<title>test title<\/title>.*<body.*Link 1.*Project menu for.*' .
+               'test_index_page.*<\/html>/s',
+         'display_index_page generates valid complete HTML page');
 }
 
 # Test footer method
