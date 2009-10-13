@@ -12,7 +12,13 @@ use CGI;
 
 # Miscellaneous tests of the saliweb::frontend class
 
-BEGIN { use_ok('saliweb::frontend'); }
+my $exitvalue;
+
+BEGIN {
+    # Make sure we can catch the result from exit()
+    *CORE::GLOBAL::exit = sub { $exitvalue = $_[0] };
+    use_ok('saliweb::frontend');
+}
 
 # Test help_link method
 {
@@ -64,6 +70,60 @@ BEGIN { use_ok('saliweb::frontend'); }
          '.*<link rel="stylesheet".*href="mystyle.css"' .
          '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
          '.*<body onload=/s', "           (mystyle)");
+}
+
+# Test simple accessors
+{
+    my $user_info = {email=>'myemail'};
+    my $self = {CGI=>'mycgi', htmlroot=>'myhtmlroot', cgiroot=>'mycgiroot',
+                user_info=>$user_info};
+    bless($self, 'saliweb::frontend');
+    is($self->cgi, 'mycgi', 'saliweb::frontend accessors: cgi');
+    is($self->htmlroot, 'myhtmlroot', '                             htmlroot');
+    is($self->cgiroot, 'mycgiroot', '                             cgiroot');
+    is($self->email, 'myemail', '                             email');
+    undef $self->{user_info};
+    is($self->email, undef, '                             undef email');
+}
+
+# Test URL methods
+{
+    my $self = {};
+    bless($self, 'saliweb::frontend');
+    is($self->index_url, '.', 'saliweb::frontend URL (index)');
+    is($self->submit_url, 'submit.cgi', '                      (submit)');
+    is($self->queue_url, 'queue.cgi', '                      (queue)');
+    is($self->help_url, 'help.cgi?type=help', '                      (help)');
+    is($self->news_url, 'help.cgi?type=news', '                      (news)');
+    is($self->contact_url, 'help.cgi?type=contact',
+       '                      (contact)');
+    is($self->results_url, 'results.cgi', '                      (results)');
+}
+
+
+# Test setup_cgi method
+{
+    my $self = {};
+    bless($self, 'saliweb::frontend');
+    my $q = $self->_setup_cgi();
+    isa_ok($q, 'CGI', 'CGI object');
+
+    # Force failure of creation of CGI object
+    $CGI::POST_MAX = 1;
+    $ENV{'CONTENT_LENGTH'} = 1024;
+    my $out = stdout_from { $self->_setup_cgi() };
+
+    # Reset to defaults
+    $CGI::POST_MAX = -1;
+    undef $ENV{'CONTENT_LENGTH'};
+
+    is($exitvalue, 0, 'setup_cgi with bad input should call exit()');
+    $exitvalue = undef;
+    like($out, '/Status: 413 Request entity too large.*' .
+               '<!DOCTYPE html.*<html.*<head>.*<title>CGI error.*' .
+               '<body>.*<h2>.*CGI error.*413 Request entity too large.*' .
+               '<\/html>/s',
+         '                         should return a 413 HTML page');
 }
 
 # Test end_html method
