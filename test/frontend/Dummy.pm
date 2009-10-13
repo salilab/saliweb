@@ -89,6 +89,13 @@ sub prepare {
 
 package Dummy::Frontend;
 our @ISA = qw/saliweb::frontend/;
+use saliweb::frontend;
+
+sub _check_rate_limit {
+    my $self = shift;
+    $self->{rate_limit_checked} = 1;
+    return (1, 10, 30);
+}
 
 sub get_project_menu {
     my $self = shift;
@@ -103,9 +110,20 @@ sub get_navigation_links {
 sub get_index_page {
     my $self = shift;
     if ($self->{server_name} eq "failindex") {
-        raise saliweb::frontend::InternalError("get_index_page failure");
+        throw saliweb::frontend::InternalError("get_index_page failure");
     } else {
         return "test_index_page";
+    }
+}
+
+sub get_submit_page {
+    my $self = shift;
+    if ($self->{server_name} eq "invalidsubmit") {
+        throw saliweb::frontend::InputValidationError("bad submission");
+    } elsif ($self->{server_name} eq "failsubmit") {
+        throw saliweb::frontend::InternalError("get_submit_page failure");
+    } else {
+        return "test_submit_page";
     }
 }
 

@@ -8,7 +8,6 @@ use Test::Exception;
 use MIME::Lite;
 use Test::Output qw(stdout_from);
 use Error;
-use Dummy;
 use CGI;
 
 # Miscellaneous tests of the saliweb::frontend class
@@ -19,6 +18,7 @@ BEGIN {
     # Make sure we can catch the result from exit()
     *CORE::GLOBAL::exit = sub { $exitvalue = $_[0] };
     use_ok('saliweb::frontend');
+    require Dummy;
 }
 
 # Test help_link method
@@ -183,15 +183,56 @@ BEGIN {
     
 }
 
+sub make_test_frontend {
+    my $self = {CGI=>new CGI, page_title=>'test title',
+                rate_limit_checked=>0, server_name=>shift};
+    bless($self, 'Dummy::Frontend');
+    return $self;
+}
+
 # Test display_index_page method
 {
-    my $self = {CGI=>new CGI, page_title=>'test title', server_name=>'test'};
-    bless($self, 'Dummy::Frontend');
+    my $self = make_test_frontend('test');
     my $out = stdout_from { $self->display_index_page() };
     like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test title<\/title>.*<body.*Link 1.*Project menu for.*' .
                'test_index_page.*<\/html>/s',
          'display_index_page generates valid complete HTML page');
+
+    $self = make_test_frontend('failindex');
+    throws_ok { stdout_from { $self->display_index_page() } }
+              saliweb::frontend::InternalError,
+              '                   exception is reraised';
+    is($self->{rate_limit_checked}, 1,
+       '                   exception triggered handle_fatal error');
+    like($MIME::Lite::last_email->{Data}, qr/get_index_page failure/,
+         '                   exception sent failure email');
+}
+
+# Test display_submit_page method
+{
+    my $self = make_test_frontend('test');
+    my $out = stdout_from { $self->display_submit_page() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               '<title>test Submission<\/title>.*<body.*Link 1.*' .
+               'Project menu for.*test_submit_page.*<\/html>/s',
+         'display_submit_page generates valid complete HTML page');
+
+    $self = make_test_frontend('failsubmit');
+    throws_ok { stdout_from { $self->display_submit_page() } }
+              saliweb::frontend::InternalError,
+              '                    exception is reraised';
+    is($self->{rate_limit_checked}, 1,
+       '                    exception triggered handle_fatal error');
+    like($MIME::Lite::last_email->{Data}, qr/get_submit_page failure/,
+         '                    exception sent failure email');
+
+    $self = make_test_frontend('invalidsubmit');
+    $out = stdout_from { $self->display_submit_page() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               '<title>invalidsubmit Submission<\/title>.*<body.*Link 1.*' .
+               'Project menu for.*bad submission.*<\/html>/s',
+         '                    handles invalid submission');
 }
 
 # Test footer method
