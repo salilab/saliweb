@@ -395,6 +395,8 @@ sub email {
     my $self = shift;
     if (defined($self->{'user_info'})) {
         return $self->{'user_info'}->{'email'};
+    } else {
+        return undef;
     }
 }
 
