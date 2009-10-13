@@ -644,6 +644,12 @@ class JobTest(unittest.TestCase):
         # In r62 and earlier, a race condition could cause a failure here if
         # the SGE job finished just after the state file check is done
         self.assertEqual(job._has_completed(), True)
+        jobdir = os.path.join(conf.directories['RUNNING'],
+                              'batch-complete-race')
+        self.assertEqual(job.directory, jobdir)
+        os.unlink(os.path.join(jobdir, 'job-state'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
 
     def test_skip_run(self):
         """Check Job.skip_run method"""
@@ -652,6 +658,11 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'test')
         # skip_run should only work on PREPROCESSING jobs
         self.assertRaises(InvalidStateError, job.skip_run)
+        jobdir = os.path.join(conf.directories['RUNNING'], 'test')
+        self.assertEqual(job.directory, jobdir)
+        os.unlink(os.path.join(jobdir, 'job-state'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
 
     def test_reschedule(self):
         """Check rescheduling of jobs"""
@@ -687,6 +698,11 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'test')
         # reschedule_run should only work on POSTPROCESSING jobs
         self.assertRaises(InvalidStateError, job.reschedule_run)
+        jobdir = os.path.join(conf.directories['RUNNING'], 'test')
+        self.assertEqual(job.directory, jobdir)
+        os.unlink(os.path.join(jobdir, 'job-state'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
 
 if __name__ == '__main__':
     unittest.main()
