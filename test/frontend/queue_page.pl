@@ -4,7 +4,7 @@ use lib '.';
 use test_setup;
 
 use Test::More 'no_plan';
-use Error;
+use Test::Exception;
 use CGI;
 use Dummy;
 
@@ -24,7 +24,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     my $q = new CGI;
     my $self = {CGI=>$q};
     bless($self, 'saliweb::frontend');
-    my $dbh = Dummy::DB;
+    my $dbh = new Dummy::DB;
     $dbh->{query_class} = "Dummy::QueueQuery";
 
     my @rows = $self->get_queue_rows($q, $dbh);
@@ -33,11 +33,22 @@ BEGIN { use_ok('saliweb::frontend'); }
          "               (content, row 1)");
     like($rows[1], qr/<td>.*job2.*<td>.*time2.*<td>.*state2/s,
          "               (content, row 2)");
+
+    $dbh->{failprepare} = 1;
+    throws_ok { $self->get_queue_rows($q, $dbh) }
+              saliweb::frontend::DatabaseError,
+              "               (prepare error)";
+
+    $dbh->{failprepare} = 0;
+    $dbh->{failexecute} = 1;
+    throws_ok { $self->get_queue_rows($q, $dbh) }
+              saliweb::frontend::DatabaseError,
+              "               (execute error)";
 }
 
 # Test get_queue_page
 {
-    my $dbh = Dummy::DB;
+    my $dbh = new Dummy::DB;
     $dbh->{query_class} = "Dummy::QueueQuery";
     my $self = {CGI=>new CGI, dbh=>$dbh, server_name=>'test server'};
     bless($self, 'saliweb::frontend');

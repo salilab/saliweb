@@ -41,8 +41,7 @@ our @ISA = qw/Dummy::Query/;
 sub execute {
     my $self = shift;
     $self->{execute_calls}++;
-    my $calls = $self->{execute_calls};
-    return 1;
+    return $self->{failexecute} != 1;
 }
 
 sub fetchrow_array {
@@ -64,6 +63,7 @@ package Dummy::DB;
 sub new {
     my $self = {};
     $self->{failprepare} = 0;
+    $self->{failexecute} = 0;
     $self->{query} = undef;
     $self->{query_class} = 'Dummy::Query';
     bless($self, shift);
@@ -81,6 +81,7 @@ sub prepare {
         return undef;
     } else {
         $self->{query} = new $self->{query_class};
+        $self->{query}->{failexecute} = $self->{failexecute};
         return $self->{query};
     }
 }
