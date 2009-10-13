@@ -8,6 +8,7 @@ use Test::Exception;
 use MIME::Lite;
 use Test::Output qw(stdout_from);
 use Error;
+use strict;
 use CGI;
 
 # Miscellaneous tests of the saliweb::frontend class
@@ -201,7 +202,7 @@ sub make_test_frontend {
 
     $self = make_test_frontend('failindex');
     throws_ok { stdout_from { $self->display_index_page() } }
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
               '                   exception is reraised';
     is($self->{rate_limit_checked}, 1,
        '                   exception triggered handle_fatal error');
@@ -220,7 +221,7 @@ sub make_test_frontend {
 
     $self = make_test_frontend('failsubmit');
     throws_ok { stdout_from { $self->display_submit_page() } }
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
               '                    exception is reraised';
     is($self->{rate_limit_checked}, 1,
        '                    exception triggered handle_fatal error');
@@ -256,15 +257,15 @@ sub make_test_frontend {
 # Test check_required_email method
 {
     throws_ok { check_required_email(undef) }
-              saliweb::frontend::InputValidationError,
+              'saliweb::frontend::InputValidationError',
               "check_required_email (undef)";
 
     throws_ok { check_required_email("") }
-              saliweb::frontend::InputValidationError,
+              'saliweb::frontend::InputValidationError',
               "                     (\"\")";
 
     throws_ok { check_required_email("garbage") }
-              saliweb::frontend::InputValidationError,
+              'saliweb::frontend::InputValidationError',
               "                     (invalid address)";
 
     lives_ok { check_required_email("test\@test.com") }
@@ -280,7 +281,7 @@ sub make_test_frontend {
              "                     (\"\")";
 
     throws_ok { check_optional_email("garbage") }
-              saliweb::frontend::InputValidationError,
+              'saliweb::frontend::InputValidationError',
               "                     (invalid address)";
 
     lives_ok { check_optional_email("test\@test.com") }
@@ -371,7 +372,7 @@ sub make_test_frontend {
     my $exc = new saliweb::frontend::InternalError("my internal error");
 
     throws_ok { my $out = stdout_from { $self->handle_fatal_error($exc) } }
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
               'handle_fatal_error (exception thrown)';
               
     my $email = $MIME::Lite::last_email;

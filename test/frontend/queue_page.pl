@@ -7,6 +7,7 @@ use Test::More 'no_plan';
 use Test::Exception;
 use CGI;
 use Dummy;
+use strict;
 
 # Tests of the saliweb::frontend queue page methods
 
@@ -36,13 +37,13 @@ BEGIN { use_ok('saliweb::frontend'); }
 
     $dbh->{failprepare} = 1;
     throws_ok { $self->get_queue_rows($q, $dbh) }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "               (prepare error)";
 
     $dbh->{failprepare} = 0;
     $dbh->{failexecute} = 1;
     throws_ok { $self->get_queue_rows($q, $dbh) }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "               (execute error)";
 }
 

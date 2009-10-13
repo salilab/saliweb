@@ -7,13 +7,14 @@ use Test::More 'no_plan';
 use Test::Exception;
 use Error;
 use File::Temp qw(tempdir);
+use strict;
 
 BEGIN { use_ok('saliweb::frontend'); }
 
 # Test reading in .ini files
 {
     throws_ok { saliweb::frontend::read_ini_file("/not/exist.ini") }
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
               "read_ini_file should fail on files that don't exist";
 
     my $fh = File::Temp->new();

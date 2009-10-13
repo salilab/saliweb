@@ -7,6 +7,7 @@ use Test::More 'no_plan';
 use Test::Exception;
 use POSIX qw(strftime);
 use CGI;
+use strict;
 
 BEGIN { use_ok('saliweb::frontend'); }
 
@@ -25,7 +26,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     throws_ok {new saliweb::frontend::CompletedJob(
                     {archive_time=>'garbage'})}
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
              'CompletedJob should fail on invalid date format';
 }
 

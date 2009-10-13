@@ -7,6 +7,7 @@ use Test::More 'no_plan';
 use Test::Exception;
 use File::Temp qw(tempdir);
 use Dummy;
+use strict;
 
 BEGIN { use_ok('saliweb::frontend'); }
 
@@ -70,20 +71,20 @@ BEGIN { use_ok('saliweb::frontend'); }
 
     # Check errors thrown by $query->execute
     throws_ok { try_job_name("fail-1") }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "            exception in first execute";
     is($query->{execute_calls}, 1, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
     throws_ok { try_job_name("fail-2") }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "            exception in second execute";
     is($query->{execute_calls}, 2, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
     # Check for mkdir failure
     throws_ok { try_job_name("existing-file") }
-              saliweb::frontend::InternalError,
+              'saliweb::frontend::InternalError',
               "            mkdir failure";
     is($query->{execute_calls}, 1,
        "            mkdir failure (execute calls)");
@@ -126,7 +127,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     $dbh->{failprepare} = 1;
     throws_ok { saliweb::frontend::IncomingJob::_get_job_name_directory(
                           $frontend, "myjob") }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "                       (failure in \$dbh->prepare)";
 }
 
@@ -169,7 +170,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
     $job->{name} = 'fail-job';
     throws_ok { $job->submit() }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "                    (failure at execute)";
     # Make sure it works with a correct job name
     $job->{name} = 'ok-job';
@@ -177,6 +178,6 @@ BEGIN { use_ok('saliweb::frontend'); }
     # Now check for failure in prepare
     $dbh->{failprepare} = 1;
     throws_ok { $job->submit() }
-              saliweb::frontend::DatabaseError,
+              'saliweb::frontend::DatabaseError',
               "                    (failure at prepare)";
 }
