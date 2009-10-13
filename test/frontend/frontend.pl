@@ -145,3 +145,34 @@ BEGIN { use_ok('saliweb::frontend'); }
     lives_ok { check_optional_email("test\@test.com") }
               "                     (good address)";
 }
+
+# Test _check_rate_limit method
+{
+    my $tmpfile = "/tmp/unittest-server-service.state";
+    my $self = {server_name=>'unittest-server', rate_limit_period=>30,
+                rate_limit=>10};
+    bless($self, 'saliweb::frontend');
+    if (-f $tmpfile) {
+        unlink $tmpfile;
+    }
+    my ($count, $limit, $period);
+    ($count, $limit, $period) = $self->_check_rate_limit;
+    is($count, 1, 'check_rate_limit (no file, count)');
+    is($limit, 10, '                 (no file, limit)');
+    is($period, 30, '                 (no file, period)');
+    ok(open(FH, $tmpfile), '                 (no file, open file)');
+    like(<FH>, qr/\d+\t2$/, '                 (no file, file contents)');
+    ok(close(FH), '                 (no file, close file)');
+
+    ($count, $limit, $period) = $self->_check_rate_limit;
+    is($count, 2, '                 (existing file, count)');
+    ok(unlink($tmpfile), '                 (delete file)');
+
+    ok(open(FH, "> $tmpfile"), '                 (new file, open file)');
+    printf FH "%d\t%d\n", time() - 40, 20;
+    ok(close(FH), '                 (new file, close file)');
+
+    ($count, $limit, $period) = $self->_check_rate_limit;
+    is($count, 1, '                 (expired file, count)');
+    ok(unlink($tmpfile), '                 (delete file)');
+}
