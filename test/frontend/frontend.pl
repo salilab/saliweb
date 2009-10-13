@@ -156,6 +156,25 @@ BEGIN {
     is(@$links, 0, 'get_navigation_links returns an empty arrayref');
 }
 
+# Test header method
+{
+    my $self = {CGI=>new CGI, page_title=>'header test'};
+    bless($self, 'saliweb::frontend');
+    like($self->header,
+         '/<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
+         'server\.cgi">Login<\/a>/s',
+         'header with anonymous user');
+
+    $self->{'user_info'} = 'foo';
+    $self->{'user_name'} = 'testuser';
+    like($self->header,
+         '/<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
+         'server\.cgi">Current User:testuser<\/a>.*' .
+         '<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
+         'server\.cgi\?logout=true">Logout<\/a>/s',
+         'header with logged-in user');
+}
+
 # Test footer method
 {
     my $self = {CGI=>new CGI};
