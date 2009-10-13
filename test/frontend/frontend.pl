@@ -6,6 +6,7 @@ use test_setup;
 use Test::More 'no_plan';
 use Test::Exception;
 use MIME::Lite;
+use Test::Output qw(stdout_from);
 use Error;
 use CGI;
 
@@ -218,3 +219,42 @@ BEGIN { use_ok('saliweb::frontend'); }
        '                        (rate limit exceeded - no email)');
     ok(unlink($tmpfile), '                        (delete file)');
 }
+
+# Test handle_fatal_error method
+{
+    my $tmpfile = "/tmp/unittest2-server-service.state";
+    my $self = {server_name=>'unittest2-server', rate_limit_period=>30,
+                rate_limit=>10};
+    bless($self, 'saliweb::frontend');
+    if (-f $tmpfile) {
+        unlink $tmpfile;
+    }
+    my $exc = new saliweb::frontend::InternalError("my internal error");
+
+    throws_ok { my $out = stdout_from { $self->handle_fatal_error($exc) } }
+              saliweb::frontend::InternalError,
+              'handle_fatal_error (exception thrown)';
+              
+    my $email = $MIME::Lite::last_email;
+    $MIME::Lite::last_email = undef;
+    like($email->{Data}, qr/A fatal error occurred in the unittest2\-server.*/,
+         '                   (data)');
+
+    $exc = new NoThrowError("my internal error");
+    my $out = stdout_from { $self->handle_fatal_error($exc) };
+    like($out, 
+         '/Status: 500.*<!DOCTYPE html.*<html.*<head>.*<title>500.*' .
+         '<body>.*<h1>.*500.*A fatal internal error occurred.*' .
+         'my internal error.*<\/body>.*<\/html>/s',
+         '                   (stdout)');
+
+    ok(unlink($tmpfile), '                   (unlink file)');
+}
+
+package NoThrowError;
+use base qw(Error::Simple);
+
+sub throw {
+    # do-nothing throw, so we can catch stdout reliably
+}
+1;
