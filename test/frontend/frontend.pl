@@ -5,6 +5,7 @@ use test_setup;
 
 use Test::More 'no_plan';
 use Test::Exception;
+use MIME::Lite;
 use Error;
 use CGI;
 
@@ -175,4 +176,45 @@ BEGIN { use_ok('saliweb::frontend'); }
     ($count, $limit, $period) = $self->_check_rate_limit;
     is($count, 1, '                 (expired file, count)');
     ok(unlink($tmpfile), '                 (delete file)');
+}
+
+# Test _email_admin_fatal_error method
+{
+    my $tmpfile = "/tmp/unittest-server-service.state";
+    my $self = {server_name=>'unittest-server', rate_limit_period=>30,
+                rate_limit=>10};
+    bless($self, 'saliweb::frontend');
+    if (-f $tmpfile) {
+        unlink $tmpfile;
+    }
+    my $exc = new saliweb::frontend::InternalError("my internal error");
+
+    $self->_email_admin_fatal_error($exc);
+    my $email = $MIME::Lite::last_email;
+    $MIME::Lite::last_email = undef;
+    is($email->{From}, 'system@salilab.org', 'email_admin_fatal_error (from)');
+    is($email->{To}, 'system@salilab.org', '                        (to)');
+    is($email->{Subject}, 'Fatal error in unittest-server web service frontend',
+       '                        (subject)');
+    like($email->{Data},
+         '/A fatal error occurred in the unittest\-server.*' .
+         'error message.*my internal error/s', 
+         '                        (data)');
+
+    # Make a state file that indicates we're about to hit the rate limit
+    ok(open(FH, "> $tmpfile"), '                        (make file)');
+    printf FH "%d\t%d\n", time() - 20, 10;
+    ok(close(FH), '                        (close file)');
+
+    $self->_email_admin_fatal_error($exc);
+    $email = $MIME::Lite::last_email;
+    $MIME::Lite::last_email = undef;
+    like($email->{Data},
+         qr/These emails are rate\-limited to 10 every 30 seconds.*/,
+         '                        (rate limit reached data)');
+
+    $self->_email_admin_fatal_error($exc);
+    is($MIME::Lite::last_email, undef,
+       '                        (rate limit exceeded - no email)');
+    ok(unlink($tmpfile), '                        (delete file)');
 }
