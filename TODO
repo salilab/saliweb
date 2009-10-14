@@ -42,6 +42,8 @@ Build:
     the webserver is properly configured and there are no Perl compile errors.
   - Check db users access and permissions; if they do not exist, generate MySQL
     script for admin to run.
+  - Check config file for all options needed by both backend and frontend.
+  - Make sure that lowercased service_name matches Python and Perl modules.
   - Check schema; if table does not exist, generate MySQL script for
     backend user to run; if table does exist but does not match, dump correct
     schema and suggest user drops table then reruns, or alters table by hand.
