@@ -4,14 +4,11 @@ Frontend:
     for common practice).
     - Write a command-line tool to model loops with ModLoop, to demo this
       API for Chimera integration
-  - Add more unit tests.
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to get version number of the web service (see Build).
   - Add method to frontend class (or options to config file) to configure rate
     limit and period of error reporting, for debugging.
-  - Make sure that reported archive times are correct and that we are not
-    confusing UTC with local time.
 
 Backend:
   - Test Python coverage in unit tests.
