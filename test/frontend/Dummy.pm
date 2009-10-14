@@ -136,4 +136,13 @@ sub get_queue_page {
     }
 }
 
+sub get_help_page {
+    my $self = shift;
+    if ($self->{server_name} eq "failhelp") {
+        throw saliweb::frontend::InternalError("get_help_page failure");
+    } else {
+        return "test_help_page";
+    }
+}
+
 1;

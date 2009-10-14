@@ -235,6 +235,11 @@ sub test_display_page {
     test_display_page('queue', 'test Queue');
 }
 
+# Test display_help_page method
+{
+    test_display_page('help', 'test Help');
+}
+
 # Test footer method
 {
     my $self = {CGI=>new CGI};
