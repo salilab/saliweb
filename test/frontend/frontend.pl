@@ -8,10 +8,18 @@ use Test::Exception;
 use MIME::Lite;
 use Test::Output qw(stdout_from);
 use Error;
+use File::Temp;
 use strict;
 use CGI;
 
 # Miscellaneous tests of the saliweb::frontend class
+
+# Redirect STDIN to a temporary file so older versions of CGI.pm
+# have somewhere to read data from
+my $stdin_fh = File::Temp->new();
+print $stdin_fh "1234567890";
+$stdin_fh->close();
+open(STDIN, "<", $stdin_fh->filename) or die "can't open tempfile: $!";
 
 my $exitvalue;
 
@@ -112,12 +120,12 @@ BEGIN {
 
     # Force failure of creation of CGI object
     $CGI::POST_MAX = 1;
-    $ENV{'CONTENT_LENGTH'} = 1024;
+    $ENV{'CONTENT_LENGTH'} = 6;
     my $out = stdout_from { $self->_setup_cgi() };
 
     # Reset to defaults
     $CGI::POST_MAX = -1;
-    undef $ENV{'CONTENT_LENGTH'};
+    delete $ENV{'CONTENT_LENGTH'};
 
     is($exitvalue, 0, 'setup_cgi with bad input should call exit()');
     $exitvalue = undef;
