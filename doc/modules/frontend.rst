@@ -6,7 +6,7 @@ The :mod:`saliweb::frontend` Perl module
 This module provides Perl functions and classes useful for implementing
 the web frontend.
 
-.. class:: saliwebfrontend(config_file, server_name)
+.. class:: saliwebfrontend(config_file, version, server_name)
 
    The main class used by the frontend. Typically a web service will subclass
    this class and override one or more methods to actually implement the

@@ -219,13 +219,14 @@ passwd=mypasswd
 END
     ok(close(FH), "Close frontend.ini");
 
-    my $self = new saliweb::frontend($main, 'test_server');
+    my $self = new saliweb::frontend($main, '1.0', 'test_server');
     isa_ok($self, 'saliweb::frontend', 'saliweb::frontend object');
     is($self->{server_name}, 'test_server', 'saliweb::frontend server_name');
     is($self->{rate_limit_period}, 3600, '                  rate_limit_period');
     is($self->{rate_limit}, 10, '                  rate_limit');
     isa_ok($self->{CGI}, 'CGI', '                  CGI');
     is($self->{page_title}, 'test_server', '                  page_title');
+    is($self->{version}, '1.0', '                  version');
     is($self->{config}->{general}->{urltop}, 'http://foo.com/mytop',
        '                  config.urltop');
     is($self->{htmlroot}, 'http://foo.com/mytop/html/',
@@ -241,7 +242,7 @@ END
 
     # Make sure roots are modified to use https: if we are SSL secured
     $ENV{HTTPS} = 'on';
-    $self = new saliweb::frontend($main, 'test_server');
+    $self = new saliweb::frontend($main, '1.0', 'test_server');
     delete $ENV{HTTPS};
     is($self->{config}->{general}->{urltop}, 'http://foo.com/mytop',
        'saliweb::frontend SSL-secured config.urltop');
@@ -252,7 +253,7 @@ END
 
     # Make sure setup errors are caught
     stdout_from {
-        throws_ok { new saliweb::frontend('/not/exist', 'test_server') }
+        throws_ok { new saliweb::frontend('/not/exist', '1.0', 'test_server') }
                   "saliweb::frontend::InternalError",
                   "saliweb::frontend constructor fail, no config file";
     };
@@ -264,7 +265,7 @@ END
 
     $DBI::connect_failure = 1;
     stdout_from {
-        throws_ok { new saliweb::frontend($main, 'test_server') }
+        throws_ok { new saliweb::frontend($main, '1.0', 'test_server') }
                   "saliweb::frontend::DatabaseError",
                   "saliweb::frontend constructor fail, DB connect failure";
     };

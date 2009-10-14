@@ -45,14 +45,14 @@ def _add_build_variable(vars, configs):
                "service)""", default=default, allowed_values=buildmap.keys()))
     return buildmap
 
-def Environment(variables, configfiles, service_name=None):
+def Environment(variables, configfiles, version=None):
     buildmap = _add_build_variable(variables, configfiles)
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
     env['config'] = config = saliweb.backend.Config(configfile)
-    if service_name is None:
-        env['service_name'] = config.service_name.lower()
+    _setup_version(env, version)
+    env['service_name'] = config.service_name.lower()
     _setup_install_directories(env)
     if not env.GetOption('clean') and not env.GetOption('help'):
         _check(env)
@@ -67,6 +67,20 @@ def Environment(variables, configfiles, service_name=None):
     env.AddMethod(_InstallPerl, 'InstallPerl')
     env.Default(env['instdir'])
     return env
+
+def _setup_version(env, version):
+    if version is None:
+        svnversion = env.WhereIs('svnversion')
+        if svnversion:
+            try:
+                v = os.popen(svnversion).read().split('\n')[0]
+                if v and v != 'exported':
+                    version = 'r' + v
+            except OSError, detail:
+                print "Could not run %s: %s" % (svnversion, str(detail))
+        else:
+            print "Warning: could not find 'svnversion' binary in path"
+    env['version'] = version
 
 def _setup_install_directories(env):
     config = env['config']
@@ -271,7 +285,9 @@ def _subst_install(env, target, source):
     fout = open(target[0].path, 'w')
     configfile = env['instconfigfile']
     for line in fin:
-        line = line.replace('@CONFIGFILE@', "'" + configfile + "'")
+        line = line.replace('@CONFIG@', "'%s', '%s', '%s'" \
+                               % (env['instconfigfile'], env['version'],
+                                  env['config'].service_name))
         fout.write(line)
     fin.close()
     fout.close()

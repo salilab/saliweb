@@ -243,11 +243,12 @@ use Fcntl ':flock';
 our $web_server = 'modbase.compbio.ucsf.edu';
 
 sub new {
-    my ($invocant, $config_file, $server_name) = @_;
+    my ($invocant, $config_file, $version, $server_name) = @_;
     my $class = ref($invocant) || $invocant;
     my $self = {};
     bless($self, $class);
     $self->{server_name} = $server_name;
+    $self->{version} = $version;
     $self->{rate_limit_period} = 3600;
     $self->{rate_limit} = 10;
     try {

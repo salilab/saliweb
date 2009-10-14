@@ -38,9 +38,6 @@ Backend:
 
 Build:
   - Add unit tests.
-  - Environment should take a version parameter; if not specified, try to run
-    svnversion to get this information. Substitute @VERSION@ into generated
-    webservice.py and user-provided lib/modloop.pm, etc.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
   - Check db users access and permissions; if they do not exist, generate MySQL

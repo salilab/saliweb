@@ -28,9 +28,8 @@ done in the Perl module ``modfoo.pm``. This is fairly standard boilerplate:
 .. literalinclude:: ../examples/frontend-new.pm
    :language: perl
 
-The 'new' method sets the name of the service ('ModFoo' in this case)
-and the name of the configuration file (@CONFIGFILE@ is filled in automatically
-by the build system).
+The 'new' method simply creates a new Perl object and passes it configuration
+information (@CONFIG@ is filled in automatically by the build system).
 
 Web page layout
 ===============
