@@ -57,6 +57,29 @@ sub fetchrow_array {
 }
 1;
 
+package Dummy::ResultsQuery;
+our @ISA = qw/Dummy::Query/;
+
+sub execute {
+    my $self = shift;
+    $self->{job} = shift;
+    $self->{passwd} = shift;
+    $self->{execute_calls}++;
+    return $self->{failexecute} != 1;
+}
+
+sub fetchrow_hashref {
+    my $self = shift;
+    if ($self->{job} eq "not-exist-job") {
+        return undef;
+    } elsif ($self->{job} eq "running-job") {
+        return {state=>'RUNNING'};
+    } else {
+        return {state=>'COMPLETED', directory=>'/', name=>$self->{job}};
+    }
+}
+1;
+
 
 package Dummy::DB;
 
@@ -142,6 +165,15 @@ sub get_help_page {
         throw saliweb::frontend::InternalError("get_help_page failure");
     } else {
         return "test_help_page";
+    }
+}
+
+sub get_results_page {
+    my ($self, $jobobj) = @_;
+    if ($self->{server_name} eq "failresults") {
+        throw saliweb::frontend::InternalError("get_results_page failure");
+    } else {
+        return "test_results_page " . ref($jobobj) . " " . $jobobj->{name};
     }
 }
 
