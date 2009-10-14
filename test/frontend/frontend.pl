@@ -191,49 +191,48 @@ sub make_test_frontend {
     return $self;
 }
 
+sub test_display_page {
+    my $page_type = shift;
+    my $title = shift;
+    my $sub = "display_${page_type}_page";
+    my $prefix = ' ' x (length($sub) + 1);
+    my $self = make_test_frontend('test');
+    my $out = stdout_from { $self->$sub() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               "<title>$title<\/title>.*<body.*Link 1.*Project menu for.*" .
+               "test_${page_type}_page.*<\/html>/s",
+         "$sub generates valid complete HTML page");
+
+    $self = make_test_frontend("fail${page_type}");
+    throws_ok { stdout_from { $self->$sub() } }
+              'saliweb::frontend::InternalError',
+              "${prefix}exception is reraised";
+    is($self->{rate_limit_checked}, 1,
+       "${prefix}exception triggered handle_fatal error");
+    like($MIME::Lite::last_email->{Data}, "/get_${page_type}_page failure/",
+         "${prefix}exception sent failure email");
+}
+
 # Test display_index_page method
 {
-    my $self = make_test_frontend('test');
-    my $out = stdout_from { $self->display_index_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
-               '<title>test title<\/title>.*<body.*Link 1.*Project menu for.*' .
-               'test_index_page.*<\/html>/s',
-         'display_index_page generates valid complete HTML page');
-
-    $self = make_test_frontend('failindex');
-    throws_ok { stdout_from { $self->display_index_page() } }
-              'saliweb::frontend::InternalError',
-              '                   exception is reraised';
-    is($self->{rate_limit_checked}, 1,
-       '                   exception triggered handle_fatal error');
-    like($MIME::Lite::last_email->{Data}, qr/get_index_page failure/,
-         '                   exception sent failure email');
+    test_display_page('index', 'test title');
 }
 
 # Test display_submit_page method
 {
-    my $self = make_test_frontend('test');
+    test_display_page('submit', 'test Submission');
+
+    my $self = make_test_frontend('invalidsubmit');
     my $out = stdout_from { $self->display_submit_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
-               '<title>test Submission<\/title>.*<body.*Link 1.*' .
-               'Project menu for.*test_submit_page.*<\/html>/s',
-         'display_submit_page generates valid complete HTML page');
-
-    $self = make_test_frontend('failsubmit');
-    throws_ok { stdout_from { $self->display_submit_page() } }
-              'saliweb::frontend::InternalError',
-              '                    exception is reraised';
-    is($self->{rate_limit_checked}, 1,
-       '                    exception triggered handle_fatal error');
-    like($MIME::Lite::last_email->{Data}, qr/get_submit_page failure/,
-         '                    exception sent failure email');
-
-    $self = make_test_frontend('invalidsubmit');
-    $out = stdout_from { $self->display_submit_page() };
     like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>invalidsubmit Submission<\/title>.*<body.*Link 1.*' .
                'Project menu for.*bad submission.*<\/html>/s',
          '                    handles invalid submission');
+}
+
+# Test display_queue_page method
+{
+    test_display_page('queue', 'test Queue');
 }
 
 # Test footer method

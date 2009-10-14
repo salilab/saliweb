@@ -127,4 +127,13 @@ sub get_submit_page {
     }
 }
 
+sub get_queue_page {
+    my $self = shift;
+    if ($self->{server_name} eq "failqueue") {
+        throw saliweb::frontend::InternalError("get_queue_page failure");
+    } else {
+        return "test_queue_page";
+    }
+}
+
 1;
