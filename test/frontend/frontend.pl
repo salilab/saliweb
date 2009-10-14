@@ -207,6 +207,8 @@ sub test_display_page {
     throws_ok { stdout_from { $self->$sub() } }
               'saliweb::frontend::InternalError',
               "${prefix}exception is reraised";
+    like($@, qr/^get_${page_type}_page failure/,
+         "${prefix}exception message");
     is($self->{rate_limit_checked}, 1,
        "${prefix}exception triggered handle_fatal error");
     like($MIME::Lite::last_email->{Data}, "/get_${page_type}_page failure/",
