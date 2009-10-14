@@ -136,6 +136,63 @@ BEGIN {
          '                         should return a 413 HTML page');
 }
 
+# Test setup_user method
+{
+    sub test_setup_user {
+        my $q = new CGI;
+        my $dbh = new Dummy::DB;
+        $dbh->{query_class} = "Dummy::UserQuery";
+        my $self = {CGI=>$q, dbh=>$dbh};
+        bless($self, 'saliweb::frontend');
+        $self->_setup_user($dbh);
+        return $self;
+    }
+    sub check_anon_user {
+        my ($self, $dbcalls, $msg) = @_;
+        ok(exists($self->{'user_name'}) && !defined($self->{'user_name'}),
+           "           anonymous user (user_name, $msg)");
+        ok(exists($self->{'user_info'}) && !defined($self->{'user_info'}),
+           "           anonymous user (user_info, $msg)");
+        is($self->{dbh}->{preparecalls}, $dbcalls,
+           "           DB accesses (user_info, $msg)");
+    }
+
+    # Check valid user (HTTPS, valid cookie)
+    $ENV{'HTTPS'} = 'on';
+    $ENV{'HTTP_COOKIE'} = 'sali-servers=user_name&test%20user&session&foobar';
+    my $self = test_setup_user();
+    delete $ENV{'HTTP_COOKIE'};
+    delete $ENV{'HTTPS'};
+    is($self->{user_name}, 'test user', 'setup_user valid user (user name)');
+    is($self->{user_info}->{email}, 'test email',
+       '           valid user (email)');
+
+    # Check anonymous user, no cookie, no HTTPS
+    $self = test_setup_user();
+    check_anon_user($self, 0, 'no cookie, no HTTPS');
+
+    # User validation should fail if the cookie is valid but HTTPS is off
+    $ENV{'HTTP_COOKIE'} = 'sali-servers=user_name&test%20user&session&foobar';
+    $self = test_setup_user();
+    delete $ENV{'HTTP_COOKIE'};
+    check_anon_user($self, 0, 'valid cookie, no HTTPS');
+
+    # User validation should fail if HTTPS is on but no cookie is present
+    $ENV{'HTTPS'} = 'on';
+    $self = test_setup_user();
+    delete $ENV{'HTTPS'};
+    check_anon_user($self, 0, 'HTTPS, no cookie');
+
+    # User validation should fail if HTTPS is on but the cookie is invalid
+    $ENV{'HTTPS'} = 'on';
+    $ENV{'HTTP_COOKIE'} =
+                  'sali-servers=user_name&test%20user&session&wronghash';
+    $self = test_setup_user();
+    delete $ENV{'HTTPS'};
+    delete $ENV{'HTTP_COOKIE'};
+    check_anon_user($self, 1, 'HTTPS, invalid cookie');
+}
+
 # Test end_html method
 {
     my $self = {CGI=>new CGI};

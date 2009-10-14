@@ -81,12 +81,34 @@ sub fetchrow_hashref {
 1;
 
 
+package Dummy::UserQuery;
+our @ISA = qw/Dummy::Query/;
+
+sub execute {
+    my ($self, $user, $hash) = @_;
+    $self->{hash} = $hash;
+    $self->{execute_calls}++;
+    return $self->{failexecute} != 1;
+}
+
+sub fetchrow_array {
+    my $self = shift;
+    if ($self->{hash} eq 'wronghash') {
+        return undef;
+    } else {
+        return ('test user', 'hash', 'first', 'last', 'test email');
+    }
+}
+1;
+
+
 package Dummy::DB;
 
 sub new {
     my $self = {};
     $self->{failprepare} = 0;
     $self->{failexecute} = 0;
+    $self->{preparecalls} = 0;
     $self->{query} = undef;
     $self->{query_class} = 'Dummy::Query';
     bless($self, shift);
@@ -100,6 +122,7 @@ sub errstr {
 
 sub prepare {
     my ($self, $query) = @_;
+    $self->{preparecalls}++;
     if ($self->{failprepare}) {
         return undef;
     } else {
