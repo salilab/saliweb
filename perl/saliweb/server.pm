@@ -122,17 +122,21 @@ sub validate_user {
     if ($user_name ne "Anonymous") {
         if ($type eq "password") {
             $query="select user_name,password,first_name,last_name,email from "
-                  ."$database.users where user_name='$user_name' and "
-                  ." password=password('$password') limit 1";
+                  ."$database.users where user_name=? and "
+                  ." password=password(?) limit 1";
         } elsif ($type eq "hash") {
             $query="select user_name,password,first_name,last_name,email from "
-            ."$database.users where user_name='$user_name' and password='$password' limit 1";
+            ."$database.users where user_name=? and password=? limit 1";
         }
         $sth=$dbh->prepare($query);
-        $sth->execute();
+        $sth->execute($user_name, $password);
         ($user_name,$hash,$first,$last,$email)=$sth->fetchrow_array();
-        $userinfo{'name'}="$first $last";
-        $userinfo{'email'}="$email";
+        if (defined($user_name)) {
+            $userinfo{'name'}="$first $last";
+            $userinfo{'email'}="$email";
+        } else {
+            $user_name = "Anonymous";
+        }
     } elsif ($user_name eq "Anonymous") {
         $hash="";
     }
