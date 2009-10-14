@@ -154,8 +154,8 @@ sub make_test_frontend {
     print FH "test text\n";
     ok(close(FH), '                     (close testfile)');
 
-    # substr forces relative path to /
-    my $cls = make_test_results_file(substr($testfile, 1));
+    # substr forces relative path to /tmp/
+    my $cls = make_test_results_file(substr($testfile, 5));
     my $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content-Type: text\/plain;.*test text/s',
          '                     (download valid file)');
@@ -171,5 +171,5 @@ sub make_test_frontend {
 
     check_invalid_file($testfile, 'download file with absolute path');
     check_invalid_file('/not/exist', 'download non-existing file');
-    check_invalid_file("tmp/../$testfile", 'download file containing ..');
+    check_invalid_file("../$testfile", 'download file containing ..');
 }

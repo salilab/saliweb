@@ -75,7 +75,7 @@ sub fetchrow_hashref {
     } elsif ($self->{job} eq "running-job") {
         return {state=>'RUNNING'};
     } else {
-        return {state=>'COMPLETED', directory=>'/', name=>$self->{job}};
+        return {state=>'COMPLETED', directory=>'/tmp', name=>$self->{job}};
     }
 }
 1;
