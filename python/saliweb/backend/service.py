@@ -53,16 +53,15 @@ def stop(web):
             sys.exit(2)
 
 def start(web):
-    print "Starting %s: " % web.config.service_name
+    print "Starting %s" % web.config.service_name
     web.do_all_processing(daemonize=True)
 
 def condstart(web):
-    sys.stdout.write("Starting %s: " % web.config.service_name)
+    print "Starting %s" % web.config.service_name
     try:
         web.do_all_processing(daemonize=True)
-        print "OK"
     except saliweb.backend.StateFileError, detail:
-        print "not started: " + str(detail)
+        print "   not started: " + str(detail)
 
 def restart(web):
     stop(web)
