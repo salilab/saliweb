@@ -8,9 +8,10 @@ use Test::Exception;
 use MIME::Lite;
 use Test::Output qw(stdout_from);
 use Error;
-use File::Temp;
+use File::Temp qw(tempdir);
 use strict;
 use CGI;
+use DBI;
 
 # Miscellaneous tests of the saliweb::frontend class
 
@@ -191,6 +192,92 @@ BEGIN {
     delete $ENV{'HTTPS'};
     delete $ENV{'HTTP_COOKIE'};
     check_anon_user($self, 1, 'HTTPS, invalid cookie');
+}
+
+# Test constructor
+{
+    my $tmpdir = tempdir( CLEANUP => 1 );
+    my $main = "$tmpdir/main.ini";
+    my $frontend = "$tmpdir/frontend.ini";
+
+    ok(open(FH, "> $main"), "Open main.ini");
+    print FH <<END;
+[database]
+db=testdb
+frontend_config=frontend.ini
+
+[general]
+urltop: http://foo.com/mytop
+END
+    ok(close(FH), "Close main.ini");
+
+    ok(open(FH, "> $frontend"), "Open frontend.ini");
+    print FH <<END;
+[frontend_db]
+user=myuser
+passwd=mypasswd
+END
+    ok(close(FH), "Close frontend.ini");
+
+    my $self = new saliweb::frontend($main, 'test_server');
+    isa_ok($self, 'saliweb::frontend', 'saliweb::frontend object');
+    is($self->{server_name}, 'test_server', 'saliweb::frontend server_name');
+    is($self->{rate_limit_period}, 3600, '                  rate_limit_period');
+    is($self->{rate_limit}, 10, '                  rate_limit');
+    isa_ok($self->{CGI}, 'CGI', '                  CGI');
+    is($self->{page_title}, 'test_server', '                  page_title');
+    is($self->{config}->{general}->{urltop}, 'http://foo.com/mytop',
+       '                  config.urltop');
+    is($self->{htmlroot}, 'http://foo.com/mytop/html/',
+       '                  htmlroot');
+    is($self->{cgiroot}, 'http://foo.com/mytop',
+       '                  cgiroot');
+    is($self->{dbh}, 'dummy DB handle',
+       '                  dbh');
+    ok(exists($self->{user_info}),
+       '                  user_info');
+    ok(exists($self->{user_name}),
+       '                  user_name');
+
+    # Make sure roots are modified to use https: if we are SSL secured
+    $ENV{HTTPS} = 'on';
+    $self = new saliweb::frontend($main, 'test_server');
+    delete $ENV{HTTPS};
+    is($self->{config}->{general}->{urltop}, 'http://foo.com/mytop',
+       'saliweb::frontend SSL-secured config.urltop');
+    is($self->{htmlroot}, 'https://foo.com/mytop/html/',
+       '                              htmlroot');
+    is($self->{cgiroot}, 'https://foo.com/mytop',
+       '                              cgiroot');
+
+    # Make sure setup errors are caught
+    stdout_from {
+        throws_ok { new saliweb::frontend('/not/exist', 'test_server') }
+                  "saliweb::frontend::InternalError",
+                  "saliweb::frontend constructor fail, no config file";
+    };
+    like($@, qr#^Cannot open /not/exist: No such file or directory#,
+         " " x 51 . "(exception message)");
+    like($MIME::Lite::last_email->{Data},
+         qr#A fatal error occurred.*Cannot open /not/exist: No such file#s,
+         " " x 51 . "(failure email)");
+
+    $DBI::connect_failure = 1;
+    stdout_from {
+        throws_ok { new saliweb::frontend($main, 'test_server') }
+                  "saliweb::frontend::DatabaseError",
+                  "saliweb::frontend constructor fail, DB connect failure";
+    };
+    like($@, qr/^Cannot connect to database/,
+         " " x 51 . "(exception message)");
+    like($MIME::Lite::last_email->{Data},
+         qr/A fatal error occurred.*Cannot connect to database/s,
+         " " x 51 . "(failure email)");
+    $DBI::connect_failure = 0;
+
+    my $ratefile = '/tmp/test_server-service.state';
+    ok(-f $ratefile, 'saliweb::frontend updated rate-limit file');
+    ok(unlink($ratefile), 'unlink rate-limit file');
 }
 
 # Test end_html method
