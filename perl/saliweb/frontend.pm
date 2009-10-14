@@ -777,8 +777,14 @@ sub _internal_display_results_page {
                        $q->a({-href=>$self->queue_url}, "queue") . " page."));
     } else {
         chdir($job_row->{directory});
-        if (defined($file) and -f $file and $self->allow_file_download($file)) {
-            $self->download_file($q, $file);
+        if (defined($file)) {
+            if (-f $file and $file !~ /^\s*\// and $file !~ /\.\./
+                and $self->allow_file_download($file)) {
+                $self->download_file($q, $file);
+            } else {
+                $self->_display_web_page(
+                     $q->p("Invalid results file requested"));
+            }
         } else {
             my $jobobj = new saliweb::frontend::CompletedJob($job_row);
             $self->_display_web_page($self->get_results_page($jobobj));
