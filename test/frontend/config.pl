@@ -23,6 +23,10 @@ BEGIN { use_ok('saliweb::frontend'); }
 [SectionTitle]
 key1: value1
 Key2 = VALUE2
+key3:my:value
+key4:my=value
+key5=my:value
+key6=my=value
 [directories]
 install= installvalue
 incoming=incomingvalue
@@ -36,6 +40,17 @@ END
        'key:value, whitespace stripped');
     is($config->{sectiontitle}->{key2}, 'VALUE2',
        'key=value, case preserved in values but not keys');
+
+    # In r236 or earlier, 'urltop:http://foo/bar' would be misparsed as
+    # key='urltop:http', value '//foo/bar'
+    is($config->{sectiontitle}->{key3}, 'my:value',
+       'test colons in values, colon for key:value separator');
+    is($config->{sectiontitle}->{key4}, 'my=value',
+       'test equals in values, colon for key:value separator');
+    is($config->{sectiontitle}->{key5}, 'my:value',
+       'test colons in values, equals for key=value separator');
+    is($config->{sectiontitle}->{key6}, 'my=value',
+       'test equals in values, equals for key=value separator');
     is($config->{directories}->{install}, 'installvalue',
        '{directories}->{install} key should be lowercase');
     is($config->{directories}->{INCOMING}, 'incomingvalue',
