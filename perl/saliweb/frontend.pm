@@ -605,7 +605,8 @@ sub get_help_page {
 
 sub get_text_file {
     my ($self, $file) = @_;
-    open ("TXT","../txt/$file");
+    open ("TXT","../txt/$file") or return "";
+    my $ret = "";
     while ($line=<TXT>) {
         $ret .= $line;
     }
