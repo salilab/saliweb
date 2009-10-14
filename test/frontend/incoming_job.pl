@@ -73,12 +73,16 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { try_job_name("fail-1") }
               'saliweb::frontend::DatabaseError',
               "            exception in first execute";
+    like($@, qr/Cannot execute: DB error/,
+         "                         (exception message)");
     is($query->{execute_calls}, 1, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
     throws_ok { try_job_name("fail-2") }
               'saliweb::frontend::DatabaseError',
               "            exception in second execute";
+    like($@, qr/Cannot execute: DB error/,
+         "                         (exception message)");
     is($query->{execute_calls}, 2, "                         (execute calls)");
     $query->{execute_calls} = 0;
 
@@ -86,6 +90,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { try_job_name("existing-file") }
               'saliweb::frontend::InternalError',
               "            mkdir failure";
+    like($@, qr/Cannot make job directory .*: File exists/,
+         "            exception message");
     is($query->{execute_calls}, 1,
        "            mkdir failure (execute calls)");
 }
@@ -129,6 +135,8 @@ BEGIN { use_ok('saliweb::frontend'); }
                           $frontend, "myjob") }
               'saliweb::frontend::DatabaseError',
               "                       (failure in \$dbh->prepare)";
+    like($@, qr/Cannot prepare query DB error/,
+         "                       (exception message)");
 }
 
 # Test creation of IncomingJob objects
@@ -172,6 +180,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { $job->submit() }
               'saliweb::frontend::DatabaseError',
               "                    (failure at execute)";
+    like($@, qr/Cannot execute query DB error/,
+         "                    (exception message)");
     # Make sure it works with a correct job name
     $job->{name} = 'ok-job';
     $job->submit();
@@ -180,4 +190,6 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { $job->submit() }
               'saliweb::frontend::DatabaseError',
               "                    (failure at prepare)";
+    like($@, qr/Cannot prepare query DB error/,
+         "                    (exception message)");
 }

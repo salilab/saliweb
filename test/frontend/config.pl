@@ -16,6 +16,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { saliweb::frontend::read_ini_file("/not/exist.ini") }
               'saliweb::frontend::InternalError',
               "read_ini_file should fail on files that don't exist";
+    like($@, qr#Cannot open /not/exist\.ini#, '... check exception message');
 
     my $fh = File::Temp->new();
     print $fh <<END;

@@ -39,12 +39,16 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { $self->get_queue_rows($q, $dbh) }
               'saliweb::frontend::DatabaseError',
               "               (prepare error)";
+    like($@, qr/Couldn't prepare query: DB error/,
+         "               (exception message)");
 
     $dbh->{failprepare} = 0;
     $dbh->{failexecute} = 1;
     throws_ok { $self->get_queue_rows($q, $dbh) }
               'saliweb::frontend::DatabaseError',
               "               (execute error)";
+    like($@, qr/Couldn't execute query: DB error/,
+         "               (exception message)");
 }
 
 # Test get_queue_page

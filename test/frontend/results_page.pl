@@ -52,6 +52,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     throws_ok { $cls->download_file($q, "/not/exist") }
               'saliweb::frontend::InternalError',
               "test download_file on non-existing file";
+    like($@, qr#Cannot open /not/exist: No such file or directory#,
+         "                                        (exception message)");
 }
 
 sub make_test_frontend {

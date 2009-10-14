@@ -129,7 +129,7 @@ BEGIN {
 
     is($exitvalue, 0, 'setup_cgi with bad input should call exit()');
     $exitvalue = undef;
-    like($out, '/Status: 413 Request entity too large.*' .
+    like($out, '/^Status: 413 Request entity too large.*' .
                '<!DOCTYPE html.*<html.*<head>.*<title>CGI error.*' .
                '<body>.*<h2>.*CGI error.*413 Request entity too large.*' .
                '<\/html>/s',
@@ -206,7 +206,7 @@ sub test_display_page {
     my $prefix = ' ' x (length($sub) + 1);
     my $self = make_test_frontend('test');
     my $out = stdout_from { $self->$sub() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                "<title>$title<\/title>.*<body.*Link 1.*Project menu for.*" .
                "test_${page_type}_page.*<\/html>/s",
          "$sub generates valid complete HTML page");
@@ -234,7 +234,7 @@ sub test_display_page {
 
     my $self = make_test_frontend('invalidsubmit');
     my $out = stdout_from { $self->display_submit_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>invalidsubmit Submission<\/title>.*<body.*Link 1.*' .
                'Project menu for.*bad submission.*<\/html>/s',
          '                    handles invalid submission');
@@ -273,14 +273,20 @@ sub test_display_page {
     throws_ok { check_required_email(undef) }
               'saliweb::frontend::InputValidationError',
               "check_required_email (undef)";
+    like($@, qr/Please provide a valid return email/,
+              "                     (exception message)");
 
     throws_ok { check_required_email("") }
               'saliweb::frontend::InputValidationError',
               "                     (\"\")";
+    like($@, qr/Please provide a valid return email/,
+              "                     (exception message)");
 
     throws_ok { check_required_email("garbage") }
               'saliweb::frontend::InputValidationError',
               "                     (invalid address)";
+    like($@, qr/Please provide a valid return email/,
+              "                     (exception message)");
 
     lives_ok { check_required_email("test\@test.com") }
               "                     (good address)";
@@ -297,6 +303,8 @@ sub test_display_page {
     throws_ok { check_optional_email("garbage") }
               'saliweb::frontend::InputValidationError',
               "                     (invalid address)";
+    like($@, qr/Please provide a valid return email/,
+              "                     (exception message)");
 
     lives_ok { check_optional_email("test\@test.com") }
               "                     (good address)";
@@ -388,6 +396,8 @@ sub test_display_page {
     throws_ok { my $out = stdout_from { $self->handle_fatal_error($exc) } }
               'saliweb::frontend::InternalError',
               'handle_fatal_error (exception thrown)';
+    like($@, qr/my internal error/,
+              '                   (exception message)');
               
     my $email = $MIME::Lite::last_email;
     $MIME::Lite::last_email = undef;
@@ -397,7 +407,7 @@ sub test_display_page {
     $exc = new NoThrowError("my internal error");
     my $out = stdout_from { $self->handle_fatal_error($exc) };
     like($out, 
-         '/Status: 500.*<!DOCTYPE html.*<html.*<head>.*<title>500.*' .
+         '/^Status: 500.*<!DOCTYPE html.*<html.*<head>.*<title>500.*' .
          '<body>.*<h1>.*500.*A fatal internal error occurred.*' .
          'my internal error.*<\/body>.*<\/html>/s',
          '                   (stdout)');

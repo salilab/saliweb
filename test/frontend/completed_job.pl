@@ -28,6 +28,7 @@ BEGIN { use_ok('saliweb::frontend'); }
                     {archive_time=>'garbage'})}
               'saliweb::frontend::InternalError',
              'CompletedJob should fail on invalid date format';
+    like($@, qr/Cannot parse time garbage/, '... check exception message');
 }
 
 sub mkjob_with_arc {
