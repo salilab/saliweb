@@ -231,7 +231,7 @@ use saliweb::server qw(validate_user);
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(check_optional_email check_required_email);
+@EXPORT = qw(check_optional_email check_required_email check_modeller_key);
 
 use File::Spec;
 use DBI;
@@ -401,6 +401,12 @@ sub email {
     }
 }
 
+sub modeller_key {
+    # Right now user_info does not contain the Modeller key, but when it does,
+    # this should function like email(), above.
+    return undef;
+}
+
 sub index_url {
     return ".";
 }
@@ -546,6 +552,14 @@ sub check_required_email {
         || $email !~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
         throw saliweb::frontend::InputValidationError(
                  "Please provide a valid return email address");
+    }
+}
+
+sub check_modeller_key {
+    my ($modkey) = @_;
+    if (!defined($modkey) || $modkey ne "***REMOVED***") {
+        throw saliweb::frontend::InputValidationError(
+                 "You have entered an invalid MODELLER key");
     }
 }
 

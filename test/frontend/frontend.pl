@@ -95,6 +95,7 @@ BEGIN {
     is($self->email, 'myemail', '                             email');
     undef $self->{user_info};
     is($self->email, undef, '                             undef email');
+    is($self->modeller_key, undef, '                             modeller_key');
 }
 
 # Test URL methods
@@ -453,6 +454,23 @@ sub test_display_page {
 
     lives_ok { check_optional_email("test\@test.com") }
               "                     (good address)";
+}
+
+# Test check_modeller_key function
+{
+    throws_ok { check_modeller_key("garbage") }
+              'saliweb::frontend::InputValidationError',
+              "check_modeller_key (invalid key)";
+    like($@, qr/^You have entered an invalid MODELLER key/,
+         "                   (exception message)");
+    throws_ok { check_modeller_key(undef) }
+              'saliweb::frontend::InputValidationError',
+              "                   (undef)";
+    like($@, qr/^You have entered an invalid MODELLER key/,
+         "                   (exception message)");
+
+    lives_ok { check_modeller_key("***REMOVED***") }
+             "                   (valid key)";
 }
 
 # Test _check_rate_limit method

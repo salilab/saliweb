@@ -29,6 +29,11 @@ the web frontend.
       If a user is authenticated against the service, this is their email
       address; otherwise, it is undef.
 
+   .. attribute:: modeller_key
+
+      If a user is authenticated against the service and has already provided
+      a MODELLER key, this is it; otherwise, it is undef.
+
    .. attribute:: cgi
 
       A pointer to the CGI.pm object used to display HTML.
@@ -275,3 +280,8 @@ the web frontend.
    Check a provided email address. This is similar to
    :func:`check_required_email`, except that only invalid addresses cause
    an error; it is OK to provide an empty address.
+
+.. function:: check_modeller_key(modkey)
+
+   Check a provided MODELLER key. If the key is empty or invalid,
+   throw an :exc:`InputValidationError` exception.
