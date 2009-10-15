@@ -15,6 +15,7 @@ try:
     import MySQLdb
 except ImportError, detail:
     MySQLdb = detail
+import warnings
 import sys
 import os.path
 import pwd
@@ -77,9 +78,10 @@ def _setup_version(env, version):
                 if v and v != 'exported':
                     version = 'r' + v
             except OSError, detail:
-                print "Could not run %s: %s" % (svnversion, str(detail))
+                warnings.warn("Could not run %s: %s" \
+                              % (svnversion, str(detail)))
         else:
-            print "Warning: could not find 'svnversion' binary in path"
+            warnings.warn("Could not find 'svnversion' binary in path")
     env['version'] = version
 
 def _setup_service_name(env, config):
