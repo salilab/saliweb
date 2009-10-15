@@ -52,7 +52,7 @@ def Environment(variables, configfiles, version=None):
     env['configfile'] = File(configfile)
     env['config'] = config = saliweb.backend.Config(configfile)
     _setup_version(env, version)
-    env['service_name'] = config.service_name.lower()
+    _setup_service_name(env, config)
     _setup_install_directories(env)
     if not env.GetOption('clean') and not env.GetOption('help'):
         _check(env)
@@ -81,6 +81,10 @@ def _setup_version(env, version):
         else:
             print "Warning: could not find 'svnversion' binary in path"
     env['version'] = version
+
+def _setup_service_name(env, config):
+    env['service_name'] = config.service_name
+    env['service_module'] = config.service_name.lower()
 
 def _setup_install_directories(env):
     config = env['config']
@@ -225,8 +229,8 @@ def _make_cgi_script(env, target, source):
     f = open(target[0].path, 'w')
     print >> f, "#!/usr/bin/perl -w"
     print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
-    print >> f, "use %s;" % env['service_name']
-    print >> f, "my $m = new %s;" % env['service_name']
+    print >> f, "use %s;" % env['service_module']
+    print >> f, "my $m = new %s;" % env['service_module']
     print >> f, "$m->display_%s_page();" % name
     f.close()
     env.Execute(Chmod(target, 0755))
@@ -251,7 +255,7 @@ def _InstallAdminTools(env, tools=None):
         env.Command(os.path.join(env['bindir'], bin + '.py'), None,
                     _make_script)
     env.Command(os.path.join(env['bindir'], 'webservice.py'),
-                [Value(env['instconfigfile']), Value(env['service_name']),
+                [Value(env['instconfigfile']), Value(env['service_module']),
                  Value(env['pythondir'])], _make_web_service)
 
 def _InstallCGIScripts(env, scripts=None):
@@ -263,7 +267,7 @@ def _InstallCGIScripts(env, scripts=None):
                     _make_cgi_script)
 
 def _InstallPython(env, files, subdir=None):
-    dir = os.path.join(env['pythondir'], env['service_name'])
+    dir = os.path.join(env['pythondir'], env['service_module'])
     if subdir:
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
@@ -287,7 +291,7 @@ def _subst_install(env, target, source):
     for line in fin:
         line = line.replace('@CONFIG@', "'%s', '%s', '%s'" \
                                % (env['instconfigfile'], env['version'],
-                                  env['config'].service_name))
+                                  env['service_name']))
         fout.write(line)
     fin.close()
     fout.close()
