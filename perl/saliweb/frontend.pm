@@ -392,6 +392,11 @@ sub cgi {
     return $self->{CGI};
 }
 
+sub version {
+    my $self = shift;
+    return $self->{version};
+}
+
 sub email {
     my $self = shift;
     if (defined($self->{'user_info'})) {

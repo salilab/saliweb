@@ -24,6 +24,10 @@ the web frontend.
 
       The top-level URL under which all CGI scripts are found.
 
+   .. attribute:: version
+
+      The version number of this web service.
+
    .. attribute:: email
 
       If a user is authenticated against the service, this is their email
