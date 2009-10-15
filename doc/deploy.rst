@@ -9,6 +9,36 @@ frontend, then use the build system to install these classes in the correct
 location, together with other resources such as images, style sheets or
 text files needed by the web interface.
 
+Prerequisites
+=============
+
+Every service needs some basic setup:
+
+* The service needs its own MySQL database, and two MySQL users set up, one for
+  the backend and the other for the frontend. A sysadmin can set this up on
+  the `modbase` machine.
+
+* Generally speaking, the service needs its own user on the `modbase` machine;
+  for example, there is a `modloop` user for the ModLoop service. It is this
+  user that runs `scons` (below). All of the backend also runs as this user,
+  and jobs on the SGE clusters also run under this user's account. It is
+  generally not a good idea to use a regular user for this purpose, as it will
+  use up the regular user's quota (disk and runtime) on the cluster, and bugs
+  in the service could lead to deletion of that user's files or their exposure
+  to outside attack. A sysadmin can also set up this user account.
+
+* The web service user needs a directory on the NetApp disk in order to store
+  running jobs, and at least one directory on a local `modbase` disk so the
+  frontend can create incoming jobs.
+
+* A sysadmin needs to configure the web server on `modbase` so that the
+  ``html`` and ``cgi`` subdirectories of the directory the service is deployed
+  into are visible to the outside world. They can also password protect the
+  page if it is not yet ready for a full release.
+
+* It is usually a good idea to put the implementation files for a web service
+  in an SVN repository.
+
 .. _backend_package:
 
 Backend Python package
@@ -40,6 +70,20 @@ The frontend for the service should be implemented as a Perl module in the
 ``lib`` subdirectory, named as for the :ref:`backend <backend_module>` (e.g.
 the 'ModFoo' web service's frontend should be implemented by the file
 :file:`lib/modfoo.pm`).
+An example is shown below. For clarity, only the methods are shown, not their
+contents; for full implementations of the methods see the :ref:`frontend` page.
+
+.. literalinclude:: ../examples/frontend-complete.pm
+   :language: perl
+
+Configuration file
+==================
+
+The service's configuration should be placed in a configuration file in the
+``conf`` subdirectory. Multiple files can be created if desired, for example
+to maintain both a testing and a live version of the service. Each
+configuration file can specify a different install location, MySQL database,
+etc.
 
 Using the build system
 ======================
@@ -54,9 +98,7 @@ similar to the following:
 
 This script creates an :class:`~saliweb.build.Environment` object which will set
 up the web service using either the configuration file *live.conf* or the file
-*test.conf* in the *conf* subdirectory, which need to be provided. Each
-configuration file can specify a different install location, MySQL database,
-etc. (only one configuration file is required).
+*test.conf* in the *conf* subdirectory.
 
 The :class:`~saliweb.build.Environment` class derives from the standard SCons
 Environment class, but adds additional methods which simplify the setup of
@@ -71,8 +113,8 @@ necessary files for the web service.
 To actually install the web service, run `scons build=live`
 or `scons build=test` from the command line on the `modbase` machine, as the web
 service backend user, to install using either of the two
-configuration files listed in the example above. (If you simply run
-`scons` with no arguments, it will use the first one, *live.conf*.) Before
+configuration files listed in the example above. (If `scons` is run with no
+arguments, it will use the first one, *live.conf*.) Before
 actually installing any files, this will check to make sure things are set
 up for the web service to work properly - for example, that the necessary
 MySQL users and databases are present.
