@@ -370,6 +370,20 @@ sub test_display_page {
          "${prefix}exception sent failure email");
 }
 
+# Check failures in footer() etc. are caught
+{
+    my $self = make_test_frontend("failfooter");
+    my $out = stdout_from { $self->display_index_page() };
+    like($out, '/^Status: 500 Internal Server Error.*' .
+               '<!DOCTYPE html.*<html.*<head>.*<body>.*' .
+               'footer failure.*<\/html>/s',
+         'exception in footer() is caught properly');
+    is($self->{rate_limit_checked}, 1,
+       '                      triggers handle_fatal_error');
+    like($MIME::Lite::last_email->{Data}, "/footer failure/",
+         '                      sent failure email');
+}
+
 # Test display_index_page method
 {
     test_display_page('index', 'test title');
@@ -568,7 +582,7 @@ sub test_display_page {
     like($email->{Data}, qr/A fatal error occurred in the unittest2\-server.*/,
          '                   (data)');
 
-    $exc = new NoThrowError("my internal error");
+    $exc = new Dummy::NoThrowError("my internal error");
     my $out = stdout_from { $self->handle_fatal_error($exc) };
     like($out, 
          '/^Status: 500.*<!DOCTYPE html.*<html.*<head>.*<title>500.*' .
@@ -578,11 +592,3 @@ sub test_display_page {
 
     ok(unlink($tmpfile), '                   (unlink file)');
 }
-
-package NoThrowError;
-use base qw(Error::Simple);
-
-sub throw {
-    # do-nothing throw, so we can catch stdout reliably
-}
-1;

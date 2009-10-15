@@ -136,6 +136,7 @@ sub prepare {
 package Dummy::Frontend;
 our @ISA = qw/saliweb::frontend/;
 use saliweb::frontend;
+use Error;
 
 sub _check_rate_limit {
     my $self = shift;
@@ -200,4 +201,23 @@ sub get_results_page {
     }
 }
 
+sub footer {
+    my $self = shift;
+    if ($self->{server_name} eq "failfooter") {
+        # NoThrowError has no throw method, so use the superclass
+        my $exc = new Dummy::NoThrowError("footer failure");
+        Error::throw($exc);
+    }
+    return "";
+}
+1;
+
+
+package Dummy::NoThrowError;
+use base qw(Error::Simple);
+
+sub throw {
+    # do-nothing throw, so that the exception cannot be rethrown by
+    # fatal error handlers (so we can catch stdout reliably)
+}
 1;

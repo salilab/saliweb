@@ -689,12 +689,13 @@ sub _display_content {
 
 sub _display_web_page {
     my ($self, $content) = @_;
-    print $self->start_html();
-    print $self->header();
+    # Call all prefix and suffix methods before printing anything, in case one
+    # of them raises an error
+    my $prefix = $self->start_html() . $self->header();
+    my $suffix = $self->footer() . "</div>\n" . $self->end_html;
+    print $prefix;
     _display_content($content);
-    print $self->footer();
-    print "</div>\n";
-    print $self->end_html;
+    print $suffix;
 }
 
 sub display_index_page {
