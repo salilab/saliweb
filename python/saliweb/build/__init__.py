@@ -84,7 +84,7 @@ def _setup_version(env, version):
 
 def _setup_service_name(env, config):
     env['service_name'] = config.service_name
-    env['service_module'] = config.service_name.lower()
+    env['service_module'] = config.service_name.lower().replace(' ', '_')
 
 def _setup_install_directories(env):
     config = env['config']
