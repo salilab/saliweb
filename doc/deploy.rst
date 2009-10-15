@@ -3,21 +3,27 @@
 Deploying the web service
 *************************
 
-To actually deploy the web service, you should package your Python classes that
-implement the backend, and the Perl classes that implement the frontend, then
-use the build system to install these classes in the correct location,
-together with other resources such as images, style sheets or text files needed
-by the web interface.
+To actually deploy the web service, it is necessary to package the Python
+classes that implement the backend and the Perl classes that implement the
+frontend, then use the build system to install these classes in the correct
+location, together with other resources such as images, style sheets or
+text files needed by the web interface.
 
-Python package
-==============
+.. _backend_package:
 
-Your web service should be designed as a Python package (i.e. the
-'ModFoo' web service should be implemented by the file ``modfoo/__init__.py``).
+Backend Python package
+======================
+
+The backend for the service should be implemented as a Python package in the
+``python`` subdirectory. Its name should be the same as the service, except
+that it should be all lowercase, and any spaces in the service name should be
+replaced with underscores. For example, the 'ModFoo' web service should be
+implemented by the file :file:`python/modfoo/__init__.py`).
 This package should implement a :class:`Job` subclass and may also
 optionally implement :class:`Database` or :class:`Config` subclasses. It should
 also provide a function `get_web_service` which, given the name of a
-configuration file, will instantiate a :class:`WebService` object and return it.
+configuration file, will instantiate a :class:`WebService` object, using these
+custom subclasses, and return it.
 This function will be used by utility scripts set up by the build system to
 run and maintain the web service. An example, building on previous ones,
 is shown below.
@@ -25,12 +31,22 @@ is shown below.
 .. literalinclude:: ../examples/package.py
    :language: python
 
+.. _frontend_module:
+
+Frontend Perl module
+====================
+
+The frontend for the service should be implemented as a Perl module in the
+``lib`` subdirectory, named as for the :ref:`backend <backend_module>` (e.g.
+the 'ModFoo' web service's frontend should be implemented by the file
+:file:`lib/modfoo.pm`).
+
 Using the build system
 ======================
 
 The build system is a set of extensions to SCons that simplifies the
 setup and installation of a web service. To use, create a directory in which
-to develop your web service, and create a file *SConstruct* in that directory
+to develop the web service, and create a file *SConstruct* in that directory
 similar to the following:
 
 .. literalinclude:: ../examples/SConstruct.simple
@@ -38,7 +54,7 @@ similar to the following:
 
 This script creates an :class:`~saliweb.build.Environment` object which will set
 up the web service using either the configuration file *live.conf* or the file
-*test.conf* in the *conf* subdirectory. Each
+*test.conf* in the *conf* subdirectory, which need to be provided. Each
 configuration file can specify a different install location, MySQL database,
 etc. (only one configuration file is required).
 
@@ -89,12 +105,10 @@ This tool will move a single job from the **FAILED** state back to the
 whatever problem with the web service that caused these jobs to fail the
 first time around has been resolved.
 
-.. _complete_service:
+.. _complete_examples:
 
-A complete web service
-======================
+Examples
+========
 
-A complete web service is built up using the frontend, backend, and build
-system. A simple example of such a complete web service is ModLoop,
-which can be found at
+A simple example of a complete web service is ModLoop, which can be found at
 https://svn.salilab.org/modloop/branches/new-framework/
