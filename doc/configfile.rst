@@ -5,16 +5,17 @@
 Configuration file
 ******************
 
+The configuration file is used to store information used by the
+:ref:`backend <backend>`, the
+:ref:`frontend <frontend>`, and the build system. It is a fairly standard
+'INI' file, containing
+section titles in square brackets (e.g. [general]) and key-value pairs within
+the sections, either of the form 'foo: bar' or 'foo = bar'.
+
 The example file below defines the configuration for a fictional 'ModFoo'
 service:
 
 .. literalinclude:: ../examples/example.conf
-
-The configuration file is used to store information used by the
-:ref:`backend <backend>`, the
-frontend, and the build system. It is a fairly standard 'INI' file, containing
-section titles in square brackets (e.g. [general]) and key-value pairs within
-the sections, either of the form 'foo: bar' or 'foo = bar'.
 
 Each section in the configuration file is described below.
 
