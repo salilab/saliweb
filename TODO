@@ -1,13 +1,18 @@
 Frontend:
   - Automatically add machine-readable HTML comments to submit and results
-    pages, to allow automation, OR add a SOAP API (check services like BLAST
-    for common practice).
+    pages, to allow automation, OR add a SOAP API (do something like Opal,
+    for easy integration with Chimera).
     - Write a command-line tool to model loops with ModLoop, to demo this
       API for Chimera integration
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
+  - Add method to display a link to a downloadable file (allows for this
+    location to be changed without modifying web services; allows for a web API
+    like SOAP to reliably get this list without having to parse HTML).
   - Add method to frontend class (or options to config file) to configure rate
     limit and period of error reporting, for debugging.
+  - Check job state file in queue page to distinguish between QUEUED and
+    RUNNING jobs.
 
 Backend:
   - Test Python coverage in unit tests.
