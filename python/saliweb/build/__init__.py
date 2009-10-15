@@ -287,11 +287,12 @@ def _InstallTXT(env, files, subdir=None):
 def _subst_install(env, target, source):
     fin = open(source[0].path, 'r')
     fout = open(target[0].path, 'w')
-    configfile = env['instconfigfile']
+    configfile = source[1].get_contents()
+    version = source[2].get_contents()
+    service_name = source[3].get_contents()
     for line in fin:
         line = line.replace('@CONFIG@', "'%s', '%s', '%s'" \
-                               % (env['instconfigfile'], env['version'],
-                                  env['service_name']))
+                               % (configfile, version, service_name))
         fout.write(line)
     fin.close()
     fout.close()
@@ -302,11 +303,19 @@ def _InstallCGI(env, files, subdir=None):
     if subdir:
         dir = os.path.join(dir, subdir)
     for f in files:
-        env.Command(os.path.join(dir, f), f, _subst_install)
+        env.Command(os.path.join(dir, f),
+                    [f, env.Value(env['instconfigfile']),
+                     env.Value(env['version']),
+                     env.Value(env['service_name'])],
+                    _subst_install)
 
 def _InstallPerl(env, files, subdir=None):
     dir = env['perldir']
     if subdir:
         dir = os.path.join(dir, subdir)
     for f in files:
-        env.Command(os.path.join(dir, f), f, _subst_install)
+        env.Command(os.path.join(dir, f),
+                    [f, env.Value(env['instconfigfile']),
+                     env.Value(env['version']),
+                     env.Value(env['service_name'])],
+                    _subst_install)

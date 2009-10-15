@@ -37,7 +37,6 @@ Backend:
 
 Build:
   - Add unit tests.
-  - Use Value() to make sure files are rebuilt if version number changes.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
   - Check db users access and permissions; if they do not exist, generate MySQL
