@@ -74,7 +74,14 @@ def _setup_version(env, version):
         svnversion = env.WhereIs('svnversion')
         if svnversion:
             try:
-                v = os.popen(svnversion).read().split('\n')[0]
+                p = subprocess.Popen(svnversion, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+                ret = p.communicate()
+                if p.returncode:
+                    raise OSError("returned exit code %d, stdout %s, "
+                                  "stderr %s" \
+                                  % (p.returncode, ret[0], ret[1]))
+                v = ret[0].split('\n')[0]
                 if v and v != 'exported':
                     version = 'r' + v
             except OSError, detail:
