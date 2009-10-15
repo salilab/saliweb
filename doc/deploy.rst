@@ -110,5 +110,8 @@ first time around has been resolved.
 Examples
 ========
 
-A simple example of a complete web service is ModLoop, which can be found at
+A simple example of a complete web service is ModLoop. The source code for
+this service can be found at
 https://svn.salilab.org/modloop/branches/new-framework/
+and the service can be seen in action at
+http://modbase.compbio.ucsf.edu/modloop-test/
