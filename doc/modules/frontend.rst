@@ -251,13 +251,19 @@ the web frontend.
       time has already passed, this will return undef.
       See also :meth:`get_results_available_time`.
 
-   .. method:: get_results_available_time(cgi)
+   .. method:: get_results_available_time()
 
-      Given a CGI object, this will return a short paragraph, suitable for
+      This will return a short paragraph, suitable for
       adding to a human-readable results page, indicating how long the results
       will be available for.
       If the backend is configured to never archive job results, or the time
       has already passed, this will simply return an empty string.
+
+   .. method:: get_results_file_url(file)
+
+      Given a file which is an output file from the job, this will return
+      a URL which can be used to download the file. The filename should be
+      relative to the job directory, not an absolute path.
 
 
 .. exception:: InputValidationError(message)

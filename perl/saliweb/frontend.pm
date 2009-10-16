@@ -140,10 +140,11 @@ package saliweb::frontend::CompletedJob;
 use Time::Local;
 
 sub new {
-    my ($invocant, $job_row) = @_;
+    my ($invocant, $frontend, $job_row) = @_;
     my $class = ref($invocant) || $invocant;
     my %hash = %$job_row;
     my $self = \%hash;
+    $self->{frontend} = $frontend;
     for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'end',
                       'archive', 'expire') {
         my $key = "${timename}_time";
@@ -174,15 +175,21 @@ sub to_archive_time {
 }
 
 sub get_results_available_time {
-    my ($self, $q) = @_;
+    my $self = shift;
     my $toarc = $self->to_archive_time;
     if ($toarc) {
+        my $q = $self->{frontend}->{CGI};
         return $q->p("Job results will be available at this URL for $toarc.");
     } else {
         return "";
     }
 }
 
+sub get_results_file_url {
+    my ($self, $file) = @_;
+    my $q = $self->{frontend}->{CGI};
+    return $q->self_url . "&amp;file=$file";
+}
 
 sub _format_timediff_unit {
     my ($timediff, $unit) = @_;
@@ -810,7 +817,7 @@ sub _internal_display_results_page {
                      $q->p("Invalid results file requested"));
             }
         } else {
-            my $jobobj = new saliweb::frontend::CompletedJob($job_row);
+            my $jobobj = new saliweb::frontend::CompletedJob($self, $job_row);
             $self->_display_web_page($self->get_results_page($jobobj));
         }
     }

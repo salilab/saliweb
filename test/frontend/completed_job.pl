@@ -13,7 +13,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 # Test creating new CompletedJob objects
 {
-    my $job = new saliweb::frontend::CompletedJob(
+    my $job = new saliweb::frontend::CompletedJob({},
                         {name=>'testjob', directory=>'/foo/bar',
                          archive_time=>'2009-01-01 08:45:00'});
     ok(defined $job, 'Test creation of CompletedJob class');
@@ -24,7 +24,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 # Test date format parsing
 {
-    throws_ok {new saliweb::frontend::CompletedJob(
+    throws_ok {new saliweb::frontend::CompletedJob({},
                     {archive_time=>'garbage'})}
               'saliweb::frontend::InternalError',
              'CompletedJob should fail on invalid date format';
@@ -35,7 +35,7 @@ sub mkjob_with_arc {
     my $secs = shift;
     my $arctime = strftime "%Y-%02m-%02d %02H:%02M:%02S",
                   gmtime(time + $secs);
-    return new saliweb::frontend::CompletedJob(
+    return new saliweb::frontend::CompletedJob({},
                        {name=>'testjob', directory=>'/foo/bar',
                         archive_time=>$arctime});
 }
@@ -63,7 +63,7 @@ sub mkjob_with_arc {
     $job = mkjob_with_arc(-10);
     is($job->to_archive_time, undef, '                (-10 secs)');
 
-    $job = new saliweb::frontend::CompletedJob(
+    $job = new saliweb::frontend::CompletedJob({},
                            {name=>'testjob', directory=>'/foo/bar'});
     is($job->to_archive_time, undef, '               (no archival)');
 }
@@ -72,16 +72,27 @@ sub mkjob_with_arc {
 {
     my $q = new CGI;
     my $job = mkjob_with_arc(0);
-    is($job->get_results_available_time($q),
+    $job->{frontend}->{CGI} = $q;
+    is($job->get_results_available_time(),
        "<p>\n\tJob results will be available at this URL for " .
        "0 seconds.\n</p>\n", "get_results_available_time (0 secs)");
 
     $job = mkjob_with_arc(-20);
-    is($job->get_results_available_time($q), "",
+    $job->{frontend}->{CGI} = $q;
+    is($job->get_results_available_time(), "",
        "                           (-20 secs)");
 
-    $job = new saliweb::frontend::CompletedJob(
+    $job = new saliweb::frontend::CompletedJob({CGI=>$q},
                            {name=>'testjob', directory=>'/foo/bar'});
-    is($job->get_results_available_time($q), "",
+    is($job->get_results_available_time(), "",
        "                           (no archival)");
+}
+
+# Test get_results_file_url
+{
+    my $q = new CGI;
+    my $job = mkjob_with_arc(0);
+    $job->{frontend}->{CGI} = $q;
+    is($job->get_results_file_url('test.txt'),
+       'http://localhost&amp;file=test.txt', 'get_results_file_url');
 }
