@@ -32,7 +32,7 @@ sub test_display_page {
     my $self = make_test_frontend('test');
     my $out = stdout_from { $self->$sub() };
     like($out,
-         '/^Content\-Type: text\/xml.*' .
+         '/^Status: 201 Created.*Content\-Type: text\/xml.*' .
          '<\?xml version="1\.0"\?>.*' .
          '<job xlink:href="http:\/\/test\/results\.cgi' .
          '\?job=foo&passwd=bar"\/>/s',

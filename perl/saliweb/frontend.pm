@@ -763,6 +763,7 @@ sub display_submit_page {
                 throw saliweb::frontend::InternalError(
                                  "No job submitted by submit page.")
             }
+            $self->http_status('201 Created');
             $self->_internal_display_submit_page($content,
                                                  $self->{submitted_jobs});
             delete $self->{submitted_jobs};

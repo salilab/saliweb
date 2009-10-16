@@ -355,11 +355,16 @@ sub make_test_frontend {
 sub test_display_page {
     my $page_type = shift;
     my $title = shift;
+    my $status = shift || "";
+    if ($status) {
+        $status .= ".*";
+    }
     my $sub = "display_${page_type}_page";
     my $prefix = ' ' x (length($sub) + 1);
     my $self = make_test_frontend('test');
     my $out = stdout_from { $self->$sub() };
-    like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, "/^$status" .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                "<title>$title<\/title>.*<body.*Link 1.*Project menu for.*" .
                "test_${page_type}_page.*<\/html>/s",
          "$sub generates valid complete HTML page");
@@ -397,7 +402,7 @@ sub test_display_page {
 
 # Test display_submit_page method
 {
-    test_display_page('submit', 'test Submission');
+    test_display_page('submit', 'test Submission', 'Status: 201 Created');
 
     my $self = make_test_frontend('invalidsubmit');
     my $out = stdout_from { $self->display_submit_page() };
