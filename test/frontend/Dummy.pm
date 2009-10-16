@@ -267,4 +267,11 @@ sub get_submit_page {
     }
 }
 
+sub get_results_page {
+    my ($self, $jobobj) = @_;
+    return "test_results_page " .
+           $jobobj->get_results_file_url('test.txt') . ' ' .
+           $jobobj->get_results_file_url('log.out');
+}
+
 1;

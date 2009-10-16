@@ -66,7 +66,7 @@ sub test_display_page {
     my $self = make_test_frontend('invalidsubmit');
     my $out = stdout_from { $self->display_submit_page() };
     like($out,
-         '/^Content\-Type: text\/xml.*' .
+         '/^Status: 400 Bad Request.*Content\-Type: text\/xml.*' .
          '<\?xml version="1\.0"\?>.*' .
          '<error type="input_validation">bad submission.*<\/error>/s',
          '                    handles invalid submission');
