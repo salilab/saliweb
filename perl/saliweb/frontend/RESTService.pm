@@ -38,12 +38,14 @@ sub format_fatal_error {
 
 sub format_input_validation_error {
     my ($self, $exc) = @_;
-    return "<error type=\"input_validation\">$exc</error>";
+    my $msg = $exc->text;
+    return "<error type=\"input_validation\">$msg</error>";
 }
 
 sub format_results_error {
     my ($self, $exc) = @_;
-    return "<error type=\"results\">$exc</error>";
+    my $msg = $exc->text;
+    return "<error type=\"results\">$msg</error>";
 }
 
 sub _internal_display_submit_page {
