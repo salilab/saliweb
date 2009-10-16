@@ -100,7 +100,8 @@ sub _get_job_name_directory {
 sub _generate_results_url {
     my ($frontend, $jobname) = @_;
     my $passwd = &generate_random_passwd(10);
-    $url = $frontend->cgiroot . "/results.cgi?job=$jobname&amp;passwd=$passwd";
+    $url = $frontend->cgiroot . "/" . $frontend->results_url .
+           "?job=$jobname&amp;passwd=$passwd";
     return ($url, $passwd);
 }
 
@@ -189,8 +190,8 @@ sub get_results_available_time {
 
 sub get_results_file_url {
     my ($self, $file) = @_;
-    my $q = $self->{frontend}->{CGI};
-    my $url = $q->self_url . "&amp;file=$file";
+    my $url = $self->{frontend}->cgiroot . "/"
+              . $self->{frontend}->results_url . ";file=$file";
     push @{$self->{results}}, {name=>$file, url=>$url};
     return $url;
 }

@@ -7,6 +7,7 @@ use Test::More 'no_plan';
 use Test::Exception;
 use POSIX qw(strftime);
 use CGI;
+use Dummy;
 use strict;
 
 BEGIN { use_ok('saliweb::frontend'); }
@@ -92,15 +93,19 @@ sub mkjob_with_arc {
 {
     my $q = new CGI;
     my $job = mkjob_with_arc(0);
-    $job->{frontend}->{CGI} = $q;
+    my $frontend = {CGI=>$q, page_title=>'test title', cgiroot=>"http://test",
+                    rate_limit_checked=>0, server_name=>'test server'};
+    bless($frontend, 'Dummy::Frontend');
+    $job->{frontend} = $frontend;
+
     is(scalar(@{$job->{results}}), 0,
        'get_results_file_url empty files list');
     is($job->get_results_file_url('test.txt'),
-       'http://localhost&amp;file=test.txt', 'get_results_file_url');
+       'http://test/results.cgi;file=test.txt', 'get_results_file_url');
     is(scalar(@{$job->{results}}), 1,
        '                     one file added');
     is($job->{results}->[0]->{name}, 'test.txt',
        '                     one file name');
-    is($job->{results}->[0]->{url}, 'http://localhost&amp;file=test.txt',
+    is($job->{results}->[0]->{url}, 'http://test/results.cgi;file=test.txt',
        '                     one file URL');
 }

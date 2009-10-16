@@ -17,6 +17,24 @@ BEGIN {
     require Dummy;
 }
 
+# Test simple accessors
+{
+    my $self = {};
+    bless($self, 'saliweb::frontend::RESTService');
+    is($self->rest_url, 'job.cgi', 'RESTService rest_url');
+}
+
+# Test munge_url
+{
+    my $self = {};
+    bless($self, 'saliweb::frontend::RESTService');
+    is($self->_munge_url('http://test/results.cgi?a=b'),
+       'http://test/job.cgi?a=b', 'munge_url');
+    throws_ok { $self->_munge_url('garbage') }
+              'saliweb::frontend::InternalError',
+              '          cannot find substring';
+}
+
 sub make_test_frontend {
     my $self = {CGI=>new CGI, page_title=>'test title',
                 rate_limit_checked=>0, server_name=>shift};
@@ -34,7 +52,7 @@ sub test_display_page {
     like($out,
          '/^Status: 201 Created.*Content\-Type: text\/xml.*' .
          '<\?xml version="1\.0"\?>.*' .
-         '<job xlink:href="http:\/\/test\/results\.cgi' .
+         '<job xlink:href="http:\/\/test\/job\.cgi' .
          '\?job=foo&passwd=bar"\/>/s',
          "$sub generates valid complete XML");
 

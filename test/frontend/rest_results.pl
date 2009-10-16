@@ -21,7 +21,8 @@ sub make_test_frontend {
     $q->param('passwd', shift);
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = 'Dummy::ResultsQuery';
-    my $cls = {CGI=>$q, dbh=>$dbh, server_name=>'test'};
+    my $cls = {CGI=>$q, dbh=>$dbh, server_name=>'test',
+               cgiroot=>'http://test'};
     bless($cls, 'Dummy::RESTService');
     return $cls;
 }
@@ -40,8 +41,8 @@ sub make_test_frontend {
     $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content\-Type: text\/xml.*' .
                '<results_files>.*' .
-               '<results_file xlink:href=.*test\.txt.*>test\.txt' .
-               '<\/results_file>.*' .
+               '<results_file xlink:href="http:\/\/test/job\.cgi;' .
+               'file=test\.txt.*>test\.txt<\/results_file>.*' .
                '<results_file xlink:href=.*log\.out.*>log\.out' .
                '<\/results_file>.*' .
                '<\/results_files>/s',
