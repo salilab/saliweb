@@ -728,6 +728,11 @@ sub _add_submitted_job {
     push @{$self->{submitted_jobs}}, $job;
 }
 
+sub _internal_display_submit_page {
+    my ($self, $content, $submitted_jobs) = @_;
+    $self->_display_web_page($content);
+}
+
 sub display_submit_page {
     my $self = shift;
     try {
@@ -740,11 +745,13 @@ sub display_submit_page {
                 throw saliweb::frontend::InternalError(
                                  "No job submitted by submit page.")
             }
+            $self->_internal_display_submit_page($content,
+                                                 $self->{submitted_jobs});
             delete $self->{submitted_jobs};
         } catch saliweb::frontend::InputValidationError with {
             $content = $self->format_input_validation_error(shift);
+            $self->_display_web_page($content);
         };
-        $self->_display_web_page($content);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
