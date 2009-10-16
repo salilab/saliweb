@@ -72,7 +72,7 @@ sub make_test_frontend {
     sub check_missing_job_passwd {
         my $cls = make_test_frontend(shift, shift);
         my $out = stdout_from { $cls->display_results_page() };
-        like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+        like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*' .
                    'Missing \'job\' and \'passwd\'.*<\/html>/s',
              "                     (" . shift() . ")");
@@ -103,7 +103,8 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('not-exist-job', 'passwd');
     my $out = stdout_from { $cls->display_results_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Status: 400 Bad Request.*' .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Job \'not\-exist\-job\' does not exist,' .
                ' or wrong password\..*<\/html>/s',
@@ -111,7 +112,8 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('running-job', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Status: 404 Not Found.*' .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Job \'running\-job\' has not yet ' .
                'completed.*check on your job.*queue\.cgi.*<\/html>/s',
@@ -119,7 +121,8 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('archived-job', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Status: 410 Gone.*' .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Results for job \'archived\-job\' are no ' .
                'longer available.*<\/html>/s',
@@ -127,7 +130,8 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('expired-job', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Status: 410 Gone.*' .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Results for job \'expired\-job\' are no ' .
                'longer available.*<\/html>/s',
@@ -135,7 +139,7 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('testjob', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
-    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*test_results_page ' .
                'saliweb::frontend::CompletedJob testjob.*<\/html>/s',
@@ -179,7 +183,8 @@ sub make_test_frontend {
     sub check_invalid_file {
         my $cls = make_test_results_file(shift);
         my $out = stdout_from { $cls->display_results_page() };
-        like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+        like($out, '/^Status: 404 Not Found.*' .
+                   'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*Link 1.*' .
                    'Project menu for.*Invalid results file.*<\/html>/s',
              '                     (' . shift() . ')');

@@ -18,29 +18,34 @@ the web frontend.
    .. attribute:: htmlroot
 
       The top-level URL under which all static web files (HTML, style sheets,
-      images) are found.
+      images) are found (read-only).
 
    .. attribute:: cgiroot
 
-      The top-level URL under which all CGI scripts are found.
+      The top-level URL under which all CGI scripts are found (read-only).
+
+   .. attribute:: http_status
+
+      The HTTP status code (e.g. 200 OK, 404 Not Found) that will be
+      reported when the web page is printed.
 
    .. attribute:: version
 
-      The version number of this web service.
+      The version number of this web service (read-only).
 
    .. attribute:: email
 
       If a user is authenticated against the service, this is their email
-      address; otherwise, it is undef.
+      address; otherwise, it is undef (read-only).
 
    .. attribute:: modeller_key
 
       If a user is authenticated against the service and has already provided
-      a MODELLER key, this is it; otherwise, it is undef.
+      a MODELLER key, this is it; otherwise, it is undef (read-only).
 
    .. attribute:: cgi
 
-      A pointer to the CGI.pm object used to display HTML.
+      A pointer to the CGI.pm object used to display HTML (read-only).
 
    .. attribute:: index_url
                   submit_url
@@ -50,7 +55,7 @@ the web frontend.
                   contact_url
                   results_url
 
-      Relative URLs to each web page.
+      Relative URLs to each web page (read-only).
 
    .. method:: get_navigation_links()
 

@@ -87,7 +87,8 @@ BEGIN {
 {
     my $user_info = {email=>'myemail'};
     my $self = {CGI=>'mycgi', htmlroot=>'myhtmlroot', cgiroot=>'mycgiroot',
-                user_info=>$user_info, version=>'myversion'};
+                user_info=>$user_info, version=>'myversion',
+                http_status=>'200'};
     bless($self, 'saliweb::frontend');
     is($self->cgi, 'mycgi', 'saliweb::frontend accessors: cgi');
     is($self->htmlroot, 'myhtmlroot', '                             htmlroot');
@@ -97,6 +98,11 @@ BEGIN {
     undef $self->{user_info};
     is($self->email, undef, '                             undef email');
     is($self->modeller_key, undef, '                             modeller_key');
+    is($self->http_status, '200',
+       '                             get http_status');
+    $self->http_status('404');
+    is($self->http_status, '404',
+       '                             set http_status');
 }
 
 # Test URL methods
@@ -395,7 +401,8 @@ sub test_display_page {
 
     my $self = make_test_frontend('invalidsubmit');
     my $out = stdout_from { $self->display_submit_page() };
-    like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+    like($out, '/^Status: 400 Bad Request.*' .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>invalidsubmit Submission<\/title>.*<body.*Link 1.*' .
                'Project menu for.*bad submission.*<\/html>/s',
          '                    handles invalid submission');
