@@ -146,6 +146,7 @@ sub new {
     my %hash = %$job_row;
     my $self = \%hash;
     $self->{frontend} = $frontend;
+    $self->{results} = [];
     for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'end',
                       'archive', 'expire') {
         my $key = "${timename}_time";
@@ -189,7 +190,9 @@ sub get_results_available_time {
 sub get_results_file_url {
     my ($self, $file) = @_;
     my $q = $self->{frontend}->{CGI};
-    return $q->self_url . "&amp;file=$file";
+    my $url = $q->self_url . "&amp;file=$file";
+    push @{$self->{results}}, {name=>$file, url=>$url};
+    return $url;
 }
 
 sub _format_timediff_unit {
@@ -865,9 +868,15 @@ sub _internal_display_results_page {
             }
         } else {
             my $jobobj = new saliweb::frontend::CompletedJob($self, $job_row);
-            $self->_display_web_page($self->get_results_page($jobobj));
+            my $contents = $self->get_results_page($jobobj);
+            $self->_display_results_page_index($contents, $jobobj);
         }
     }
+}
+
+sub _display_results_page_index {
+    my ($self, $contents, $jobobj) = @_;
+    $self->_display_web_page($contents);
 }
 
 sub allow_file_download {
