@@ -840,7 +840,7 @@ sub _internal_display_results_page {
                  $q->p("Results for job '$job' are no longer available " .
                        "for download."));
     } elsif ($job_row->{state} ne 'COMPLETED') {
-        $self->http_status('404 Not Found');
+        $self->http_status('503 Service Unavailable');
         $self->_display_web_page(
                  $q->p("Job '$job' has not yet completed; please check " .
                        "back later.") .

@@ -112,7 +112,7 @@ sub make_test_frontend {
 
     $cls = make_test_frontend('running-job', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
-    like($out, '/^Status: 404 Not Found.*' .
+    like($out, '/^Status: 503 Service Unavailable.*' .
                'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Job \'running\-job\' has not yet ' .
