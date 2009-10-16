@@ -72,7 +72,8 @@ sub make_test_frontend {
     sub check_missing_job_passwd {
         my $cls = make_test_frontend(shift, shift);
         my $out = stdout_from { $cls->display_results_page() };
-        like($out, '/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+        like($out, '/^Status: 400 Bad Request.*' .
+                   'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*' .
                    'Missing \'job\' and \'passwd\'.*<\/html>/s',
              "                     (" . shift() . ")");

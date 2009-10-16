@@ -18,4 +18,15 @@ BEGIN { use_ok('saliweb::frontend'); }
            'InternalError');
     isa_ok(new saliweb::frontend::DatabaseError("x"), 'Error::Simple',
            'DatabaseError');
+
+    isa_ok(new saliweb::frontend::ResultsError("x"), 'Error::Simple',
+           'ResultsError');
+    isa_ok(new saliweb::frontend::ResultsBadJobError("x"),
+           'saliweb::frontend::ResultsError', 'ResultsBadJobError');
+    isa_ok(new saliweb::frontend::ResultsBadFileError("x"),
+           'saliweb::frontend::ResultsError', 'ResultsBadFileError');
+    isa_ok(new saliweb::frontend::ResultsGoneError("x"),
+           'saliweb::frontend::ResultsError', 'ResultsGoneError');
+    isa_ok(new saliweb::frontend::ResultsStillRunningError("x"),
+           'saliweb::frontend::ResultsError', 'ResultsStillRunningError');
 }

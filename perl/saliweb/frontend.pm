@@ -603,6 +603,14 @@ sub format_input_validation_error {
                        "button, and correct the problem."));
 }
 
+sub format_results_error {
+    my ($self, $exc) = @_;
+    my $q = $self->{'CGI'};
+    my $msg = $exc->text;
+    return $q->p("$msg.") .
+           $q->p("You can also check on your job at the " .
+                 $q->a({-href=>$self->queue_url}, "queue") . " page.");
+}
 
 sub footer {
     return "";
@@ -799,6 +807,11 @@ sub display_results_page {
     my $self = shift;
     try {
         $self->_internal_display_results_page();
+    } catch saliweb::frontend::ResultsError with {
+        my $exc = shift;
+        $self->http_status($exc->http_status);
+        my $content = $self->format_results_error($exc);
+        $self->_display_web_page($content);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
@@ -815,9 +828,8 @@ sub _internal_display_results_page {
     $self->set_page_title("Results");
 
     if (!defined($job) || !defined($passwd)) {
-        $self->_display_web_page(
-                 $q->p("Missing 'job' and 'passwd' parameters."));
-        return;
+        throw saliweb::frontend::ResultsBadJobError(
+                       "Missing 'job' and 'passwd' parameters");
     }
 
     my $query = $dbh->prepare("select * from jobs where name=? and passwd=?")
@@ -830,22 +842,17 @@ sub _internal_display_results_page {
     my $job_row = $query->fetchrow_hashref();
 
     if (!$job_row) {
-        $self->http_status('400 Bad Request');
-        $self->_display_web_page(
-                 $q->p("Job '$job' does not exist, or wrong password."));
+        throw saliweb::frontend::ResultsBadJobError(
+                 "Job '$job' does not exist, or wrong password");
     } elsif ($job_row->{state} eq 'EXPIRED'
              || $job_row->{state} eq 'ARCHIVED') {
-        $self->http_status('410 Gone');
-        $self->_display_web_page(
-                 $q->p("Results for job '$job' are no longer available " .
-                       "for download."));
+        throw saliweb::frontend::ResultsGoneError(
+                 "Results for job '$job' are no longer available " .
+                 "for download");
     } elsif ($job_row->{state} ne 'COMPLETED') {
-        $self->http_status('503 Service Unavailable');
-        $self->_display_web_page(
-                 $q->p("Job '$job' has not yet completed; please check " .
-                       "back later.") .
-                 $q->p("You can also check on your job at the " .
-                       $q->a({-href=>$self->queue_url}, "queue") . " page."));
+        throw saliweb::frontend::ResultsStillRunningError(
+                 "Job '$job' has not yet completed; please check " .
+                 "back later");
     } else {
         chdir($job_row->{directory});
         if (defined($file)) {
@@ -853,9 +860,8 @@ sub _internal_display_results_page {
                 and $self->allow_file_download($file)) {
                 $self->download_file($q, $file);
             } else {
-                $self->http_status('404 Not Found');
-                $self->_display_web_page(
-                     $q->p("Invalid results file requested"));
+                throw saliweb::frontend::ResultsBadFileError(
+                           "Invalid results file requested");
             }
         } else {
             my $jobobj = new saliweb::frontend::CompletedJob($self, $job_row);
@@ -958,4 +964,40 @@ use base qw(Error::Simple);
 
 package saliweb::frontend::DatabaseError;
 use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::ResultsError;
+use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::ResultsBadJobError;
+our @ISA = 'saliweb::frontend::ResultsError';
+
+sub http_status {
+    return '400 Bad Request';
+}
+1;
+
+package saliweb::frontend::ResultsBadFileError;
+our @ISA = 'saliweb::frontend::ResultsError';
+
+sub http_status {
+    return '404 Not Found';
+}
+1;
+
+package saliweb::frontend::ResultsGoneError;
+our @ISA = 'saliweb::frontend::ResultsError';
+
+sub http_status {
+    return "410 Gone";
+}
+1;
+
+package saliweb::frontend::ResultsStillRunningError;
+our @ISA = 'saliweb::frontend::ResultsError';
+
+sub http_status {
+    return "503 Service Unavailable";
+}
 1;
