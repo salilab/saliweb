@@ -36,8 +36,8 @@ This module provides a simple SCons-based build infrastructure for web services.
       directory underneath the
       installation directory. *scripts* is a list of names to install that
       must be selected from the various display_*_page() methods implemented
-      by the :class:`saliweb::frontend` class, such as `index` or `submit`.
-      If *scripts* is not specified, all scripts are installed.
+      by the :class:`saliweb::frontend` class, such as `index.cgi` or
+      `submit.cgi`. If *scripts* is not specified, all scripts are installed.
 
    .. method:: InstallPython(files[, subdir])
 

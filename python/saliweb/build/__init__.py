@@ -239,8 +239,19 @@ def _make_cgi_script(env, target, source):
     print >> f, "#!/usr/bin/perl -w"
     print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
     print >> f, "use %s;" % env['service_module']
-    print >> f, "my $m = new %s;" % env['service_module']
-    print >> f, "$m->display_%s_page();" % name
+    if name == 'job':  # Set up REST interface
+        print >> f, "use saliweb::frontend::RESTService;"
+        print >> f, "@%s::ISA = qw(saliweb::frontend::RESTService);" \
+                    % env['service_module']
+        print >> f, "my $m = new %s;" % env['service_module']
+        print >> f, "if ($m->cgi->request_method eq 'POST') {"
+        print >> f, "    $m->display_submit_page();"
+        print >> f, "} else {"
+        print >> f, "    $m->display_results_page();"
+        print >> f, "}"
+    else:
+        print >> f, "my $m = new %s;" % env['service_module']
+        print >> f, "$m->display_%s_page();" % name
     f.close()
     env.Execute(Chmod(target, 0755))
 
@@ -270,9 +281,10 @@ def _InstallAdminTools(env, tools=None):
 def _InstallCGIScripts(env, scripts=None):
     if scripts is None:
         # todo: this list should be auto-generated from backend
-        scripts = ['help', 'index', 'queue', 'results', 'submit']
+        scripts = ['help.cgi', 'index.cgi', 'queue.cgi', 'results.cgi',
+                   'submit.cgi', 'job']
     for bin in scripts:
-        env.Command(os.path.join(env['cgidir'], bin + '.cgi'), None,
+        env.Command(os.path.join(env['cgidir'], bin), None,
                     _make_cgi_script)
 
 def _InstallPython(env, files, subdir=None):
