@@ -170,6 +170,9 @@ sub get_submit_page {
     } elsif ($self->{server_name} eq "failsubmit") {
         throw saliweb::frontend::InternalError("get_submit_page failure");
     } else {
+        if ($self->{server_name} ne "nosubmit") {
+            $self->_add_submitted_job("Dummy");
+        }
         return "test_submit_page";
     }
 }

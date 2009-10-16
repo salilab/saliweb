@@ -399,6 +399,15 @@ sub test_display_page {
                '<title>invalidsubmit Submission<\/title>.*<body.*Link 1.*' .
                'Project menu for.*bad submission.*<\/html>/s',
          '                    handles invalid submission');
+
+    my $self = make_test_frontend('nosubmit');
+    stdout_from {
+        throws_ok { $self->display_submit_page() }
+                  "saliweb::frontend::InternalError",
+                  '                    handles no submission';
+    };
+    like($@, qr/^No job submitted by submit page/,
+         '                    (exception message)');
 }
 
 # Test display_queue_page method

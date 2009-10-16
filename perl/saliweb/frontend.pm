@@ -58,6 +58,7 @@ sub submit {
     flock($s, LOCK_UN);
     $s->close();
   }
+  $self->{frontend}->_add_submitted_job($self);
 }
 
 sub _sanitize_jobname {
@@ -717,13 +718,24 @@ sub display_index_page {
     };
 }
 
+sub _add_submitted_job {
+    my ($self, $job) = @_;
+    push @{$self->{submitted_jobs}}, $job;
+}
+
 sub display_submit_page {
     my $self = shift;
     try {
         my $content;
         $self->set_page_title("Submission");
         try {
+            $self->{submitted_jobs} = [];
             $content = $self->get_submit_page();
+            if (scalar(@{$self->{submitted_jobs}}) == 0) {
+                throw saliweb::frontend::InternalError(
+                                 "No job submitted by submit page.")
+            }
+            delete $self->{submitted_jobs};
         } catch saliweb::frontend::InputValidationError with {
             $content = $self->format_input_validation_error(shift);
         };
