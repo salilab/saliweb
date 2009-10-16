@@ -294,20 +294,25 @@ sub _admin_email {
     }
 }
 
-sub handle_fatal_error {
+sub format_fatal_error {
     my ($self, $exc) = @_;
     my $q = new CGI; # We may not have created $self->cgi yet
     my $status = "500 Internal Server Error";
-    print $q->header(-status=>$status) .
-          $q->start_html(-title => $status) .
-          $q->h1($status) .
-          $q->p("A fatal internal error occurred in this web service. ". 
-                "We have been notified of the problem, and should " .
-                "fix it shortly.") .
-          $q->p("For your reference, the error message reported is below:") .
-          $q->pre($exc) .
-          $q->p("Apologies for the inconvenience.") .
-          $q->end_html;
+    return $q->header(-status=>$status) .
+           $q->start_html(-title => $status) .
+           $q->h1($status) .
+           $q->p("A fatal internal error occurred in this web service. ". 
+                 "We have been notified of the problem, and should " .
+                 "fix it shortly.") .
+           $q->p("For your reference, the error message reported is below:") .
+           $q->pre($exc) .
+           $q->p("Apologies for the inconvenience.") .
+           $q->end_html;
+}
+
+sub handle_fatal_error {
+    my ($self, $exc) = @_;
+    print $self->format_fatal_error($exc);
 
     $self->_email_admin_fatal_error($exc);
 

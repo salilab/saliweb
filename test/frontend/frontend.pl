@@ -400,7 +400,7 @@ sub test_display_page {
                'Project menu for.*bad submission.*<\/html>/s',
          '                    handles invalid submission');
 
-    my $self = make_test_frontend('nosubmit');
+    $self = make_test_frontend('nosubmit');
     stdout_from {
         throws_ok { $self->display_submit_page() }
                   "saliweb::frontend::InternalError",
@@ -567,6 +567,18 @@ sub test_display_page {
     is($MIME::Lite::last_email, undef,
        '                        (rate limit exceeded - no email)');
     ok(unlink($tmpfile), '                        (delete file)');
+}
+
+# Test format_fatal_error method
+{
+    my $self = {};
+    bless($self, 'saliweb::frontend');
+    my $exc = new saliweb::frontend::InternalError("my internal error");
+    like($self->format_fatal_error($exc),
+         '/^Status: 500.*<!DOCTYPE html.*<html.*<head>.*<title>500.*' .
+         '<body>.*<h1>.*500.*A fatal internal error occurred.*' .
+         'my internal error.*<\/body>.*<\/html>/s',
+         'format_fatal_error');
 }
 
 # Test handle_fatal_error method
