@@ -2,7 +2,7 @@ package saliweb::frontend::RESTService;
 use base 'saliweb::frontend';
 
 sub rest_url {
-    return "job.cgi";
+    return "job";
 }
 
 # Replace HTML URLs with REST-style
