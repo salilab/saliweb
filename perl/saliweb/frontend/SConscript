@@ -1,0 +1,10 @@
+import os
+
+Import('env')
+
+perl_files = [ 'RESTService.pm' ]
+
+# Install files:
+instdir = os.path.join(env['perldir'], 'saliweb', 'frontend')
+plinst = env.Install(instdir, perl_files)
+env.Alias('install', plinst)

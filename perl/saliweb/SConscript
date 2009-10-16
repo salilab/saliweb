@@ -8,3 +8,6 @@ perl_files = [ 'frontend.pm', 'server.pm' ]
 instdir = os.path.join(env['perldir'], 'saliweb')
 plinst = env.Install(instdir, perl_files)
 env.Alias('install', plinst)
+
+# Subdirectories
+env.SConscript('frontend/SConscript')

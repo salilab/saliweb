@@ -1,3 +1,17 @@
+package Dummy::IncomingJob;
+
+sub new {
+    my $self = {};
+    bless($self, shift);
+    return $self;
+}
+
+sub results_url {
+    return "http://test/results.cgi?job=foo&passwd=bar";
+}
+1;
+
+
 package Dummy::Query;
 
 sub new {
@@ -223,4 +237,30 @@ sub throw {
     # do-nothing throw, so that the exception cannot be rethrown by
     # fatal error handlers (so we can catch stdout reliably)
 }
+1;
+
+package Dummy::RESTService;
+use base "saliweb::frontend::RESTService";
+use Error;
+
+sub _check_rate_limit { return Dummy::Frontend::_check_rate_limit(@_); }
+
+sub get_project_menu { return Dummy::Frontend::get_project_menu(@_); }
+
+sub get_navigation_links { return Dummy::Frontend::get_navigation_links(@_); }
+
+sub get_submit_page {
+    my $self = shift;
+    if ($self->{server_name} eq "invalidsubmit") {
+        throw saliweb::frontend::InputValidationError("bad submission");
+    } elsif ($self->{server_name} eq "failsubmit") {
+        throw saliweb::frontend::InternalError("get_submit_page failure");
+    } else {
+        if ($self->{server_name} ne "nosubmit") {
+            $self->_add_submitted_job(new Dummy::IncomingJob());
+        }
+        return "test_submit_page";
+    }
+}
+
 1;
