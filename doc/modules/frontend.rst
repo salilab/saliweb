@@ -247,16 +247,17 @@ the web frontend.
 
       A human-readable string giving the time from now at which job results
       will become unavailable (e.g. '6 days', '24 hours'). 
-      If the backend is configured to never archive job results, this will
-      return undef. See also :meth:`get_results_available_time`.
+      If the backend is configured to never archive job results, or the
+      time has already passed, this will return undef.
+      See also :meth:`get_results_available_time`.
 
    .. method:: get_results_available_time(cgi)
 
       Given a CGI object, this will return a short paragraph, suitable for
       adding to a human-readable results page, indicating how long the results
       will be available for.
-      If the backend is configured to never archive job results, this will
-      simply return an empty string.
+      If the backend is configured to never archive job results, or the time
+      has already passed, this will simply return an empty string.
 
 
 .. exception:: InputValidationError(message)

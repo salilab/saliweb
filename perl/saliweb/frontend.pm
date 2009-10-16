@@ -175,9 +175,9 @@ sub to_archive_time {
 
 sub get_results_available_time {
     my ($self, $q) = @_;
-    if ($self->unix_archive_time) {
-        return $q->p("Job results will be available at this URL for " .
-                     $self->to_archive_time . ".");
+    my $toarc = $self->to_archive_time;
+    if ($toarc) {
+        return $q->p("Job results will be available at this URL for $toarc.");
     } else {
         return "";
     }
@@ -197,6 +197,9 @@ sub _format_timediff {
         return undef;
     }
     $timediff -= time;
+    if ($timediff < 0) {
+        return undef;
+    }
     if ($timediff < 120) {
         return _format_timediff_unit($timediff, "second");
     }

@@ -60,6 +60,8 @@ sub mkjob_with_arc {
     is($job->to_archive_time, '2 days', '               (2 days)');
     $job = mkjob_with_arc(100 * 24 * 60 * 60);
     is($job->to_archive_time, '100 days', '               (100 days)');
+    $job = mkjob_with_arc(-10);
+    is($job->to_archive_time, undef, '                (-10 secs)');
 
     $job = new saliweb::frontend::CompletedJob(
                            {name=>'testjob', directory=>'/foo/bar'});
@@ -73,6 +75,10 @@ sub mkjob_with_arc {
     is($job->get_results_available_time($q),
        "<p>\n\tJob results will be available at this URL for " .
        "0 seconds.\n</p>\n", "get_results_available_time (0 secs)");
+
+    $job = mkjob_with_arc(-20);
+    is($job->get_results_available_time($q), "",
+       "                           (-20 secs)");
 
     $job = new saliweb::frontend::CompletedJob(
                            {name=>'testjob', directory=>'/foo/bar'});
