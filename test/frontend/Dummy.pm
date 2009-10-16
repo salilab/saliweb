@@ -88,6 +88,10 @@ sub fetchrow_hashref {
         return undef;
     } elsif ($self->{job} eq "running-job") {
         return {state=>'RUNNING'};
+    } elsif ($self->{job} eq "archived-job") {
+        return {state=>'ARCHIVED'};
+    } elsif ($self->{job} eq "expired-job") {
+        return {state=>'EXPIRED'};
     } else {
         return {state=>'COMPLETED', directory=>'/tmp', name=>$self->{job}};
     }

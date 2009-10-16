@@ -822,9 +822,17 @@ sub _internal_display_results_page {
     my $job_row = $query->fetchrow_hashref();
 
     if (!$job_row) {
+        # Return 400 Bad Request
         $self->_display_web_page(
                  $q->p("Job '$job' does not exist, or wrong password."));
+    } elsif ($job_row->{state} eq 'EXPIRED'
+             || $job_row->{state} eq 'ARCHIVED') {
+        # Return 410 Gone
+        $self->_display_web_page(
+                 $q->p("Results for job '$job' are no longer available " .
+                       "for download."));
     } elsif ($job_row->{state} ne 'COMPLETED') {
+        # Return 404 Not Found
         $self->_display_web_page(
                  $q->p("Job '$job' has not yet completed; please check " .
                        "back later.") .
@@ -837,6 +845,7 @@ sub _internal_display_results_page {
                 and $self->allow_file_download($file)) {
                 $self->download_file($q, $file);
             } else {
+                # Return 404 Not Found
                 $self->_display_web_page(
                      $q->p("Invalid results file requested"));
             }

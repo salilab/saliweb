@@ -117,6 +117,22 @@ sub make_test_frontend {
                'completed.*check on your job.*queue\.cgi.*<\/html>/s',
          '                     (still running job)');
 
+    $cls = make_test_frontend('archived-job', 'passwd');
+    $out = stdout_from { $cls->display_results_page() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               '<title>test Results<\/title>.*<body.*Link 1.*' .
+               'Project menu for.*Results for job \'archived\-job\' are no ' .
+               'longer available.*<\/html>/s',
+         '                     (archived job)');
+
+    $cls = make_test_frontend('expired-job', 'passwd');
+    $out = stdout_from { $cls->display_results_page() };
+    like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               '<title>test Results<\/title>.*<body.*Link 1.*' .
+               'Project menu for.*Results for job \'expired\-job\' are no ' .
+               'longer available.*<\/html>/s',
+         '                     (expired job)');
+
     $cls = make_test_frontend('testjob', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
     like($out, '/Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
