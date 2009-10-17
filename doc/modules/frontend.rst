@@ -60,14 +60,14 @@ the web frontend.
    .. method:: get_navigation_links()
 
       Return a reference to a list of navigation links, used by
-      :meth:`~saliwebfrontend.header`. This should be overridden for each
+      :meth:`~saliwebfrontend.get_header`. This should be overridden for each
       service to add links to pages to submit jobs, show help, list jobs
       in the queue, etc.
 
    .. method:: get_project_menu()
 
       Return an HTML fragment which will be displayed in a project menu,
-      used by :meth:`~saliwebfrontend.header`. This can contain general
+      used by :meth:`~saliwebfrontend.get_header`. This can contain general
       information about the service, links, etc., and should be overridden
       for each service.
 
@@ -79,7 +79,7 @@ the web frontend.
 
       Convenience methods designed to be called from CGI scripts. Each displays
       a complete web page by calling :meth:`~saliwebfrontend.start_html`,
-      :meth:`~saliwebfrontend.header`, :meth:`~saliwebfrontend.footer`,
+      :meth:`~saliwebfrontend.get_header`, :meth:`~saliwebfrontend.get_footer`,
       and :meth:`~saliwebfrontend.end_html`. The actual page content is obtained
       from a similarly named get_*_page() method; for example,
       :meth:`~saliwebfrontend.display_index_page` calls
@@ -180,14 +180,14 @@ the web frontend.
 
       Return the content of the end of the web page.
 
-   .. method:: header()
+   .. method:: get_header()
 
       Return the header of each web page, which contains navigation links
       (provided by :meth:`~saliwebfrontend.get_navigation_links`), a side
       menu for the service (provided by
       :meth:`~saliwebfrontend.get_project_menu`), and links to other services.
 
-   .. method:: footer()
+   .. method:: get_footer()
 
       Return the footer of each web page. By default, this is empty, but it
       can be subclassed to display references, contact addresses etc.

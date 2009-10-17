@@ -16,7 +16,7 @@ automatically by the build system.
           object, $self, as its first argument. To override a method, simply
           define a function with the same name as one in the
           :class:`saliwebfrontend` class, for example
-          :meth:`~saliwebfrontend.footer`.
+          :meth:`~saliwebfrontend.get_footer`.
 
 Initialization
 ==============
@@ -49,7 +49,7 @@ for this menu.
 
 Finally, after the actual page content itself a footer is displayed, in which
 information such as paper references can be placed. This can be customized by
-overriding the :meth:`~saliwebfrontend.footer` method, which returns an HTML
+overriding the :meth:`~saliwebfrontend.get_footer` method, which returns an HTML
 fragment.
 
 .. literalinclude:: ../examples/frontend-layout.pm

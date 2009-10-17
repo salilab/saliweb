@@ -547,7 +547,7 @@ sub get_navigation_links {
     return [];
 }
 
-sub header {
+sub get_header {
     my $self = shift;
     my $q = $self->{'CGI'};
     my $projects = $self->get_projects();
@@ -619,7 +619,7 @@ sub format_results_error {
                  $q->a({-href=>$self->queue_url}, "queue") . " page.");
 }
 
-sub footer {
+sub get_footer {
     return "";
 }
 
@@ -729,8 +729,8 @@ sub _display_web_page {
     my ($self, $content) = @_;
     # Call all prefix and suffix methods before printing anything, in case one
     # of them raises an error
-    my $prefix = $self->start_html() . $self->header();
-    my $suffix = $self->footer() . "</div>\n" . $self->end_html;
+    my $prefix = $self->start_html() . $self->get_header();
+    my $suffix = $self->get_footer() . "</div>\n" . $self->end_html;
     print $prefix;
     _display_content($content);
     print $suffix;

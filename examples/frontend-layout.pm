@@ -16,7 +16,7 @@ sub get_project_menu {
 MENU
 }
 
-sub footer {
+sub get_footer {
     my $self = shift;
     return <<FOOTER;
 <p>

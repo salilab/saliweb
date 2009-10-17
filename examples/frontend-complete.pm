@@ -15,7 +15,7 @@ sub get_project_menu {
 ...
 }
 
-sub footer {
+sub get_footer {
 ...
 }
 

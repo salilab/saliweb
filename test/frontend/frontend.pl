@@ -319,18 +319,18 @@ END
     is(@$links, 0, 'get_navigation_links returns an empty arrayref');
 }
 
-# Test header method
+# Test get_header method
 {
     my $self = {CGI=>new CGI, page_title=>'header test'};
     bless($self, 'saliweb::frontend');
-    like($self->header,
+    like($self->get_header,
          '/<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
          'server\.cgi">Login<\/a>/s',
          'header with anonymous user');
 
     $self->{'user_info'} = 'foo';
     $self->{'user_name'} = 'testuser';
-    like($self->header,
+    like($self->get_header,
          '/<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
          'server\.cgi">Current User:testuser<\/a>.*' .
          '<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
@@ -339,7 +339,7 @@ END
 
     $self = {CGI=>new CGI, page_title=>'header test', server_name=>'foo'};
     bless($self, 'Dummy::Frontend');
-    like($self->header,
+    like($self->get_header,
          '/header test.*Link 1.*Link 2 for foo service.*' .
          'Project menu for foo service/s', '       with overridden methods');
     
@@ -381,14 +381,14 @@ sub test_display_page {
          "${prefix}exception sent failure email");
 }
 
-# Check failures in footer() etc. are caught
+# Check failures in get_footer() etc. are caught
 {
     my $self = make_test_frontend("failfooter");
     my $out = stdout_from { $self->display_index_page() };
     like($out, '/^Status: 500 Internal Server Error.*' .
                '<!DOCTYPE html.*<html.*<head>.*<body>.*' .
                'footer failure.*<\/html>/s',
-         'exception in footer() is caught properly');
+         'exception in get_footer() is caught properly');
     is($self->{rate_limit_checked}, 1,
        '                      triggers handle_fatal_error');
     like($MIME::Lite::last_email->{Data}, "/footer failure/",
@@ -432,11 +432,11 @@ sub test_display_page {
     test_display_page('help', 'test Help');
 }
 
-# Test footer method
+# Test get_footer method
 {
     my $self = {CGI=>new CGI};
     bless($self, 'saliweb::frontend');
-    is($self->footer, "", 'footer returns an empty string');
+    is($self->get_footer, "", 'get_footer returns an empty string');
 }
 
 # Test format_input_validation_error method

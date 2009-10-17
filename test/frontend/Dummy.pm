@@ -223,7 +223,7 @@ sub get_results_page {
     }
 }
 
-sub footer {
+sub get_footer {
     my $self = shift;
     if ($self->{server_name} eq "failfooter") {
         # NoThrowError has no throw method, so use the superclass
