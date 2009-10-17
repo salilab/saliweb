@@ -40,12 +40,12 @@ sub make_test_frontend {
     $cls = make_test_frontend('testjob', 'passwd');
     $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content\-Type: text\/xml.*' .
-               '<results_files>.*' .
+               '<saliweb.*' .
                '<results_file xlink:href="http:\/\/test/job\?' .
                'job=testjob;passwd=testpw;file=test\.txt.*>' .
                'test\.txt<\/results_file>.*' .
                '<results_file xlink:href=.*log\.out.*>log\.out' .
                '<\/results_file>.*' .
-               '<\/results_files>/s',
+               '<\/saliweb>/s',
          '                     (completed job)');
 }
