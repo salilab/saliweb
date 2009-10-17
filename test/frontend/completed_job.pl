@@ -101,13 +101,13 @@ sub mkjob_with_arc {
     is(scalar(@{$job->{results}}), 0,
        'get_results_file_url empty files list');
     is($job->get_results_file_url('test.txt'),
-       'http://test/results.cgi?name=testjob;passwd=testpw;file=test.txt',
+       'http://test/results.cgi/testjob/test.txt?passwd=testpw',
        'get_results_file_url');
     is(scalar(@{$job->{results}}), 1,
        '                     one file added');
     is($job->{results}->[0]->{name}, 'test.txt',
        '                     one file name');
     is($job->{results}->[0]->{url},
-       'http://test/results.cgi?name=testjob;passwd=testpw;file=test.txt',
+       'http://test/results.cgi/testjob/test.txt?passwd=testpw',
        '                     one file URL');
 }

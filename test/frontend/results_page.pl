@@ -58,7 +58,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 sub make_test_frontend {
     my $q = new CGI;
-    $q->param('name', shift);
+    $q->path_info('/' . (shift() || ''));
     $q->param('passwd', shift);
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = 'Dummy::ResultsQuery';
@@ -75,7 +75,7 @@ sub make_test_frontend {
         like($out, '/^Status: 400 Bad Request.*' .
                    'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*' .
-                   'Missing \'name\' and \'passwd\'.*<\/html>/s',
+                   'Missing job name and password.*<\/html>/s',
              "                     (" . shift() . ")");
     }
     my $cls = make_test_frontend('testjob', 'testpasswd');
@@ -107,7 +107,7 @@ sub make_test_frontend {
     like($out, '/^Status: 400 Bad Request.*' .
                'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
-               'Project menu for.*Job \'not\-exist\-job\' does not exist,' .
+               'Project menu for.*Job does not exist,' .
                ' or wrong password\..*<\/html>/s',
          '                     (non-existing job)');
 
@@ -165,7 +165,7 @@ sub make_test_frontend {
 {
     sub make_test_results_file {
         my $cls = make_test_frontend('testjob', 'passwd');
-        $cls->{CGI}->param('file', shift);
+        $cls->{CGI}->path_info($cls->{CGI}->path_info . '/' . (shift() || ''));
         return $cls;
     }
 
@@ -175,11 +175,23 @@ sub make_test_frontend {
     print FH "test text\n";
     ok(close(FH), '                     (close testfile)');
 
+    ok(mkdir("$tmpdir/subdir"), '                     (make subdir)');
+    my $subtestfile = "$tmpdir/subdir/testfile";
+    ok(open(FH, "> $subtestfile"), '                     (open subtestfile)');
+    print FH "other test\n";
+    ok(close(FH), '                     (close testfile)');
+
     # substr forces relative path to /tmp/
     my $cls = make_test_results_file(substr($testfile, 5));
     my $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content-Type: text\/plain;.*test text/s',
          '                     (download valid file)');
+
+    # Check file in subdirectory
+    $cls = make_test_results_file(substr($subtestfile, 5));
+    $out = stdout_from { $cls->display_results_page() };
+    like($out, '/^Content-Type: text\/plain;.*other test/s',
+         '                     (download subdir valid file)');
 
     sub check_invalid_file {
         my $cls = make_test_results_file(shift);
