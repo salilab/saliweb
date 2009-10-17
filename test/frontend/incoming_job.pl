@@ -103,7 +103,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     my ($url, $passwd) = saliweb::frontend::IncomingJob::_generate_results_url(
                                            $frontend, "myjob");
     is(length($passwd), 10, "generate_results_url (password length)");
-    like($url, qr/^mycgiroot\/results\.cgi\?job=myjob\&amp;passwd=.{10}$/,
+    like($url, qr/^mycgiroot\/results\.cgi\?name=myjob\&amp;passwd=.{10}$/,
          "                     (URL)");
 }
 
@@ -156,7 +156,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     my $jobname = $job->name;
     is($job->directory, "$dir/$jobname", '   directory');
     like($job->results_url,
-         qr/^mycgiroot\/results\.cgi\?job=$jobname\&amp;passwd=.{10}$/,
+         qr/^mycgiroot\/results\.cgi\?name=$jobname\&amp;passwd=.{10}$/,
          '   results_url');
 }
 

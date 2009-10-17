@@ -101,7 +101,7 @@ sub _generate_results_url {
     my ($frontend, $jobname) = @_;
     my $passwd = &generate_random_passwd(10);
     $url = $frontend->cgiroot . "/" . $frontend->results_url .
-           "?job=$jobname&amp;passwd=$passwd";
+           "?name=$jobname&amp;passwd=$passwd";
     return ($url, $passwd);
 }
 
@@ -194,7 +194,7 @@ sub get_results_file_url {
     my $passwd = $self->{passwd};
     my $url = $self->{frontend}->cgiroot . "/" .
               $self->{frontend}->results_url .
-              "?job=$jobname;passwd=$passwd;file=$file";
+              "?name=$jobname;passwd=$passwd;file=$file";
     push @{$self->{results}}, {name=>$file, url=>$url};
     return $url;
 }
@@ -830,14 +830,14 @@ sub _internal_display_results_page {
     my $q = $self->{'CGI'};
     my $dbh = $self->{'dbh'};
 
-    my $job = $q->param('job');
+    my $job = $q->param('name');
     my $passwd = $q->param('passwd');
     my $file = $q->param('file');
     $self->set_page_title("Results");
 
     if (!defined($job) || !defined($passwd)) {
         throw saliweb::frontend::ResultsBadJobError(
-                       "Missing 'job' and 'passwd' parameters");
+                       "Missing 'name' and 'passwd' parameters");
     }
 
     my $query = $dbh->prepare("select * from jobs where name=? and passwd=?")

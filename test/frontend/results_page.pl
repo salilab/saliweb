@@ -58,7 +58,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 sub make_test_frontend {
     my $q = new CGI;
-    $q->param('job', shift);
+    $q->param('name', shift);
     $q->param('passwd', shift);
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = 'Dummy::ResultsQuery';
@@ -75,7 +75,7 @@ sub make_test_frontend {
         like($out, '/^Status: 400 Bad Request.*' .
                    'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*' .
-                   'Missing \'job\' and \'passwd\'.*<\/html>/s',
+                   'Missing \'name\' and \'passwd\'.*<\/html>/s',
              "                     (" . shift() . ")");
     }
     my $cls = make_test_frontend('testjob', 'testpasswd');
