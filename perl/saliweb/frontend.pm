@@ -190,8 +190,11 @@ sub get_results_available_time {
 
 sub get_results_file_url {
     my ($self, $file) = @_;
-    my $url = $self->{frontend}->cgiroot . "/"
-              . $self->{frontend}->results_url . ";file=$file";
+    my $jobname = $self->{name};
+    my $passwd = $self->{passwd};
+    my $url = $self->{frontend}->cgiroot . "/" .
+              $self->{frontend}->results_url .
+              "?job=$jobname;passwd=$passwd;file=$file";
     push @{$self->{results}}, {name=>$file, url=>$url};
     return $url;
 }

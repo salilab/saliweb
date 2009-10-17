@@ -93,7 +93,8 @@ sub fetchrow_hashref {
     } elsif ($self->{job} eq "expired-job") {
         return {state=>'EXPIRED'};
     } else {
-        return {state=>'COMPLETED', directory=>'/tmp', name=>$self->{job}};
+        return {state=>'COMPLETED', directory=>'/tmp',
+                name=>$self->{job}, passwd=>'testpw'};
     }
 }
 1;

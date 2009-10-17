@@ -41,8 +41,9 @@ sub make_test_frontend {
     $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content\-Type: text\/xml.*' .
                '<results_files>.*' .
-               '<results_file xlink:href="http:\/\/test/job;' .
-               'file=test\.txt.*>test\.txt<\/results_file>.*' .
+               '<results_file xlink:href="http:\/\/test/job\?' .
+               'job=testjob;passwd=testpw;file=test\.txt.*>' .
+               'test\.txt<\/results_file>.*' .
                '<results_file xlink:href=.*log\.out.*>log\.out' .
                '<\/results_file>.*' .
                '<\/results_files>/s',
