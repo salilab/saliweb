@@ -19,6 +19,12 @@ BEGIN { use_ok('saliweb::frontend'); }
     is(saliweb::frontend::IncomingJob::_sanitize_jobname(
          "012345678901234567890123456789abcdefghijlk"),
          "012345678901234567890123456789", "                 (length)");
+
+    is(saliweb::frontend::IncomingJob::_sanitize_jobname(undef),
+       "job", "                 (default, undef)");
+    is(saliweb::frontend::IncomingJob::_sanitize_jobname(''),
+       "job", "                 (default, empty)");
+
 }
 
 # Test generate_random_passwd function

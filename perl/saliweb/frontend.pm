@@ -63,6 +63,8 @@ sub submit {
 
 sub _sanitize_jobname {
     my $jobname = shift;
+    # Provide default
+    $jobname = $jobname || "job";
     # Remove potentially dodgy characters in jobname
     $jobname =~ s/[^a-zA-Z0-9_-]//g;
     # Make sure jobname fits in the db (plus extra space for
