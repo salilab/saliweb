@@ -1,8 +1,6 @@
 Frontend:
   - Write a command-line tool to model loops with ModLoop, to demo this
     API for Chimera integration.
-  - Catch GET of plain 'job' CGI ('no job or passwd' error) and display simple
-    usage info.
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to frontend class (or options to config file) to configure rate

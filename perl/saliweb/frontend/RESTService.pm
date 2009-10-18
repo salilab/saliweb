@@ -50,7 +50,41 @@ sub format_input_validation_error {
 sub format_results_error {
     my ($self, $exc) = @_;
     my $msg = $exc->text;
-    return "   <error type=\"results\">$msg</error>";
+    return "   <error type=\"results\">$msg</error>\n" . $self->get_help();
+}
+
+sub get_help {
+    my $self = shift;
+    my $service = $self->{server_name};
+    my $cgiroot = $self->cgiroot;
+    my $rest_url = $cgiroot . "/" . $self->rest_url;
+    return <<END;
+   <help>
+This URL provides a REST-style interface to the Sali Lab's $service
+web service. It is designed to be used for automated job submission
+and collection of job results.
+
+If you want to use the web interface for this service, please
+open $cgiroot in a web browser.
+
+To submit a job to the service, submit an HTTP POST request to
+$rest_url
+The POST data should be encoded as multipart/form-data and include the same
+options and uploaded files that are submitted by the web interface. The service
+will return a simple XML file that contains a URL for the completed job, which
+will look like
+$rest_url/jobname
+If an error occurs, a suitable HTTP status code will be set and the XML
+file will contain a human-readable error string.
+
+To retrieve job results, submit an HTTP GET request to the previously-obtained
+URL. If the job is not yet complete an HTTP status code is returned; otherwise,
+a simple XML file containing a list of the job's output files is returned.
+Each output file is named with a URL of the form
+$rest_url/jobname/outputfile
+and the file itself can be obtained by a GET request to that URL.
+   </help>
+END
 }
 
 sub _internal_display_submit_page {
