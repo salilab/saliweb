@@ -843,7 +843,7 @@ sub _internal_display_results_page {
     $self->set_page_title("Results");
 
     if (!defined($job) || !defined($passwd)) {
-        throw saliweb::frontend::ResultsBadJobError(
+        throw saliweb::frontend::ResultsBadURLError(
                        "Missing job name and password");
     }
 
@@ -989,6 +989,14 @@ use base qw(Error::Simple);
 
 package saliweb::frontend::ResultsError;
 use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::ResultsBadURLError;
+our @ISA = 'saliweb::frontend::ResultsError';
+
+sub http_status {
+    return '400 Bad Request';
+}
 1;
 
 package saliweb::frontend::ResultsBadJobError;

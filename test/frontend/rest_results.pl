@@ -34,8 +34,16 @@ sub make_test_frontend {
     like($out, '/^Status: 400 Bad Request.*' .
                'Content\-Type: text\/xml.*' .
                '<error type="results">Missing job name and password.*' .
-               '<\/error>/s',
+               '<\/error>.*<help>.*<\/help>/s',
          "REST display_results_page missing job and passwd");
+
+    $cls = make_test_frontend('running-job', 'passwd');
+    $out = stdout_from { $cls->display_results_page() };
+    # Note that no <help> tag should be displayed here
+    like($out, '/^Status: 503.*Content\-Type: text\/xml.*' .
+               '<saliweb.*' .
+               '<error.*<\/error>\s*<\/saliweb>/s',
+         '                     (running job)');
 
     $cls = make_test_frontend('testjob', 'passwd');
     $out = stdout_from { $cls->display_results_page() };

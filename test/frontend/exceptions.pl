@@ -21,6 +21,8 @@ BEGIN { use_ok('saliweb::frontend'); }
 
     isa_ok(new saliweb::frontend::ResultsError("x"), 'Error::Simple',
            'ResultsError');
+    isa_ok(new saliweb::frontend::ResultsBadURLError("x"),
+           'saliweb::frontend::ResultsError', 'ResultsBadURLError');
     isa_ok(new saliweb::frontend::ResultsBadJobError("x"),
            'saliweb::frontend::ResultsError', 'ResultsBadJobError');
     isa_ok(new saliweb::frontend::ResultsBadFileError("x"),

@@ -50,7 +50,11 @@ sub format_input_validation_error {
 sub format_results_error {
     my ($self, $exc) = @_;
     my $msg = $exc->text;
-    return "   <error type=\"results\">$msg</error>\n" . $self->get_help();
+    my $ret = "   <error type=\"results\">$msg</error>\n";
+    if ($exc->isa('saliweb::frontend::ResultsBadURLError')) {
+        $ret .= $self->get_help();
+    }
+    return $ret;
 }
 
 sub get_help {
