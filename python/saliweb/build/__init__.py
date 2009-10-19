@@ -133,14 +133,23 @@ Please run again with something like \"/usr/bin/sudo -u %s scons\"
 """ % (backend_user, env['configfile'], current_user, backend_user)
         env.Exit(1)
 
+def _format_shell_command(env, cmd):
+    sudo_user = os.environ.get('SUDO_USER')
+    if sudo_user and sudo_user != env['config'].backend['user']:
+        return "/usr/bin/sudo -u %s " % env['config'].backend['user'] + cmd
+    else:
+        return cmd
+
 def _check_crontab(env):
     """Make sure that a crontab is set up to run the service."""
     binary = os.path.join(env['bindir'], 'service.py')
     if not _found_binary_in_crontab(binary):
-        print "To make your web service active, add the following to "
-        print "your crontab (use crontab -e to edit it):"
-        print
+        print "** To make your web service active, add the following to "
+        print "** the backend user's crontab;"
+        print "** use " + _format_shell_command(env, "crontab -e") \
+              + " to edit it:"
         print "0 * * * * " + binary + " condstart > /dev/null"
+        print
 
 def _check_service(env):
     config = env['config']
@@ -150,13 +159,13 @@ def _check_service(env):
         pid = ws.get_running_pid()
         if pid is not None:
             binary = os.path.join(env['bindir'], 'service.py')
-            print "Backend daemon is currently running. Run"
-            print "%s restart" % binary
-            print "to restart it to pick up any changes."
+            print "** Backend daemon is currently running. Run"
+            print "   " + _format_shell_command(env, "%s restart" % binary)
+            print "** to restart it to pick up any changes."
     except saliweb.backend.StateFileError, detail:
-        print "Backend daemon will not start due to a previous failure. "
-        print "You will need to fix this manually before it will run again."
-        print "Refer to %s for more information" % config.state_file
+        print "** Backend daemon will not start due to a previous failure. "
+        print "** You will need to fix this manually before it will run again."
+        print "** Refer to %s for more information" % config.state_file
 
 def _found_binary_in_crontab(binary):
     """See if the given binary is run from the user's crontab"""
