@@ -66,7 +66,7 @@ def Environment(variables, configfiles, version=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
-    env.Default(env['instdir'])
+    env.Default('/')
     return env
 
 def _setup_sconsign(env):
