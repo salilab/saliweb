@@ -26,7 +26,6 @@ import subprocess
 import re
 
 frontend_user = 'apache'
-backend_user = pwd.getpwuid(os.getuid()).pw_name
 
 def _add_build_variable(vars, configs):
     if not isinstance(configs, (list, tuple)):
@@ -113,6 +112,7 @@ def _setup_install_directories(env):
     env['perldir'] = os.path.join(env['instdir'], 'lib')
 
 def _check(env):
+    _check_user(env)
     if isinstance(MySQLdb, Exception):
         print >> sys.stderr, "Could not import the MySQLdb module: %s" % MySQLdb
         print >> sys.stderr, "This module is needed by the backend."
@@ -120,6 +120,18 @@ def _check(env):
     _check_mysql(env)
     _check_crontab(env)
     _check_service(env)
+
+def _check_user(env):
+    backend_user = env['config'].backend['user']
+    current_user = pwd.getpwuid(os.getuid()).pw_name
+    if backend_user != current_user:
+        print >> sys.stderr, """
+scons must be run as the backend user, which is '%s' according to the
+config file, %s.
+You are currently trying to run scons as the '%s' user.
+Please run again with something like \"/usr/bin/sudo -u %s scons\"
+""" % (backend_user, env['configfile'], current_user, backend_user)
+        env.Exit(1)
 
 def _check_crontab(env):
     """Make sure that a crontab is set up to run the service."""
@@ -219,6 +231,7 @@ def _install_directories(env):
                     Mkdir(config.directories[key]))
     # Set permissions for incoming directory: both backend and frontend can
     # write to this directory and any newly-created subdirectories (-d)
+    backend_user = env['config'].backend['user']
     env.Command(config.directories['INCOMING'], None,
                 [Mkdir(config.directories['INCOMING']),
                  "setfacl -d -m u:%s:rwx $TARGET" % frontend_user,
