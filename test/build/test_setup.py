@@ -124,5 +124,21 @@ sys.exit(1)""")
 
         shutil.rmtree(tmpdir, ignore_errors=True)
 
+    def test_setup_sconsign(self):
+        """Test _setup_sconsign function"""
+        class DummyEnv:
+            def SConsignFile(self, file): self.file = file
+        # Try with existing .scons directory
+        env = DummyEnv()
+        os.mkdir('.scons')
+        saliweb.build._setup_sconsign(env)
+        self.assertEqual(env.file, '.scons/sconsign.dblite')
+        os.rmdir('.scons')
+        # Try without .scons directory
+        env = DummyEnv()
+        saliweb.build._setup_sconsign(env)
+        self.assertEqual(env.file, '.scons/sconsign.dblite')
+        os.rmdir('.scons')
+
 if __name__ == '__main__':
     unittest.main()

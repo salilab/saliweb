@@ -47,8 +47,8 @@ Build:
     schema and suggest user drops table then reruns, or alters table by hand.
   - Add backend user to config file; on install, check to make sure we are
     running as that user; if not, suggest
-    - setfacl -m u:backend_user:rwx (if no read access to config, or write
-      access to .sconsign)
+    - setfacl -m u:backend_user:rwx .scons (if no read access to config,
+      or write access to .scons/sconsign)
     - sudo -u backend_user scons
     - backend.conf and frontend.conf should be readable only by owner
       and backend_user (setfacl -m u:modloop:r conf/backend.conf

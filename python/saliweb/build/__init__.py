@@ -52,6 +52,7 @@ def Environment(variables, configfiles, version=None):
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
     env['config'] = config = saliweb.backend.Config(configfile)
+    _setup_sconsign(env)
     _setup_version(env, version)
     _setup_service_name(env, config)
     _setup_install_directories(env)
@@ -68,6 +69,11 @@ def Environment(variables, configfiles, version=None):
     env.AddMethod(_InstallPerl, 'InstallPerl')
     env.Default(env['instdir'])
     return env
+
+def _setup_sconsign(env):
+    if not os.path.exists('.scons'):
+        os.mkdir('.scons')
+    env.SConsignFile('.scons/sconsign.dblite')
 
 def _setup_version(env, version):
     if version is None:
