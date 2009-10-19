@@ -27,6 +27,27 @@ admin_email
     to notify the admin if a job fails with a technical error or the entire
     web service encounters an unrecoverable error and cannot continue.
 
+socket
+    The full path to a socket file that is used for the frontend to send
+    messages to the backend.
+
+service_name
+    The name of the service. This is used in emails to the owners of jobs and
+    the server admin, and by the build system.
+
+urltop
+    The URL under which the service's web pages live. This is used to construct
+    URLs containing job results, for example.
+
+backend
+=======
+
+user
+    The system user that the backend runs as. For security, robustness and
+    easier monitoring, each web service has its own system user (e.g. the
+    ModLoop web service runs as the 'modloop' system user). Note that the
+    system user is distinct from the MySQL users set up to access the database.
+
 state_file
     The full path to a file that is used by the backend to store state
     between calls. In normal operation this is simply used as a lock file to
@@ -34,10 +55,6 @@ state_file
     unrecoverable error, this file continues information on the nature of the
     failure and must be manually removed by the admin before the backend will
     run again.
-
-socket
-    The full path to a socket file that is used for the frontend to send
-    messages to the backend.
 
 check_minutes
     The backend checks periodically to see if the batch system (e.g. SGE)
@@ -47,14 +64,6 @@ check_minutes
     servers but increases the apparent time a job takes to run. Archived and
     expired jobs are also checked for periodically, but this interval is
     fixed at 10% of the shorter of the archive and expiry times.
-
-service_name
-    The name of the service. This is used in emails to the owners of jobs and
-    the server admin, and by the build system.
-
-urltop
-    The URL under which the service's web pages live. This is used to construct
-    URLs containing job results, for example.
 
 database
 ========

@@ -160,11 +160,10 @@ class Config(object):
         self._populate_database(config)
         self._populate_directories(config)
         self._populate_oldjobs(config)
+        self._populate_backend(config)
+        self.socket = config.get('general', 'socket')
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
-        self.state_file = config.get('general', 'state_file')
-        self.socket = config.get('general', 'socket')
-        self.check_minutes = config.getint('general', 'check_minutes')
 
     def send_admin_email(self, subject, body):
         """Send an email to the admin for this web service, with the given
@@ -222,6 +221,13 @@ class Config(object):
                 self.directories[key] = config.get('directories', key)
             else:
                 self.directories[key] = self.directories['PREPROCESSING']
+
+    def _populate_backend(self, config):
+        self.backend = {}
+        self.backend['state_file'] = config.get('backend', 'state_file')
+        self.backend['check_minutes'] = config.getint('backend',
+                                                      'check_minutes')
+        self.backend['user'] = config.get('backend', 'user')
 
     def _populate_oldjobs(self, config):
         self.oldjobs = {}
@@ -422,14 +428,14 @@ class WebService(object):
 
     def __del__(self):
         if self.__delete_state_file_on_exit:
-            os.unlink(self.config.state_file)
+            os.unlink(self.config.backend['state_file'])
 
     def get_running_pid(self):
         """Return the process ID of a currently running web service, by querying
            the state file. If no service is running, return None; if the last
            run of the service failed with an unrecoverable error, raise a
            :exc:`StateFileError`."""
-        state_file = self.config.state_file
+        state_file = self.config.backend['state_file']
         try:
             old_state = open(state_file).read().rstrip('\r\n')
         except IOError:
@@ -453,7 +459,7 @@ class WebService(object):
            an unrecoverable error."""
         if self.__delete_state_file_on_exit: # state file checked already
             return
-        state_file = self.config.state_file
+        state_file = self.config.backend['state_file']
         old_pid = self.get_running_pid()
         if old_pid is not None:
             raise StateFileError("A previous run (pid %d) " % old_pid + \
@@ -464,7 +470,7 @@ class WebService(object):
 
     def _write_state_file(self):
         """Write the current PID into the state file"""
-        f = open(self.config.state_file, 'w')
+        f = open(self.config.backend['state_file'], 'w')
         print >> f, os.getpid()
         self.__delete_state_file_on_exit = True
 
@@ -475,7 +481,7 @@ class WebService(object):
         if hasattr(detail, 'original_error'):
             err += "\n\nThis error in turn occurred while trying to " + \
                    "handle the original error below:\n" + detail.original_error
-        f = open(self.config.state_file, 'w')
+        f = open(self.config.backend['state_file'], 'w')
         print >> f, "FAILED: " + err
         f.close()
         self.__delete_state_file_on_exit = False
@@ -490,7 +496,7 @@ has been shut down.
 Since this can leave the system in an inconsistent state, no further
 runs will start until the problem has been manually resolved. When you
 have done this, delete the state file (%s) to reenable runs.
-""" % (self.config.service_name, err, self.config.state_file)
+""" % (self.config.service_name, err, self.config.backend['state_file'])
         self.config.send_admin_email(subject, body)
         raise
 
@@ -580,9 +586,10 @@ have done this, delete the state file (%s) to reenable runs.
            check_minutes; and archived and expired jobs are also
            checked periodically."""
         oldjob_interval = self._get_oldjob_interval()
-        incoming_action = _PeriodicAction(self.config.check_minutes * 60,
+        check_minutes = self.config.backend['check_minutes']
+        incoming_action = _PeriodicAction(check_minutes * 60,
                                           self._process_incoming_jobs)
-        actions = [_PeriodicAction(self.config.check_minutes * 60,
+        actions = [_PeriodicAction(check_minutes * 60,
                                    self._process_completed_jobs),
                    _PeriodicAction(oldjob_interval,
                                    self._process_old_jobs), incoming_action]
