@@ -152,6 +152,17 @@ def _check_permissions(env):
     for end in ('back', 'front'):
         conf = env['config'].database['%send_config' % end]
         if not os.path.exists(conf): continue
+        out, err = subprocess.Popen(['/usr/bin/getfacl', conf],
+                                    stdout=subprocess.PIPE).communicate()
+        if not re.search('^group::\-\-\-.*^other::\-\-\-', out,
+                         re.MULTILINE | re.DOTALL):
+            print >> sys.stderr, """
+** The database configuration file %s appears to be group- or world-
+** readable or writable. It should only be user readable and writable.
+** To fix this, run
+   chmod 0600 %s
+""" % (conf, conf)
+            env.Exit(1)
         try:
             open(conf)
         except IOError, detail:
