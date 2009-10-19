@@ -83,7 +83,12 @@ The service's configuration should be placed in a configuration file in the
 ``conf`` subdirectory. Multiple files can be created if desired, for example
 to maintain both a testing and a live version of the service. Each
 configuration file can specify a different install location, MySQL database,
-etc.
+etc. This directory will also contain the supplementary configuration files
+that contain the usernames and passwords that the backend and frontend need
+to access the MySQL database. Since these files contain sensitive information
+(passwords), they should **not** be group- or world-readable
+(`chmod 0600 backend.conf`), and if using SVN, **do not** put these database
+configuration files into the repository. 
 
 Using the build system
 ======================
