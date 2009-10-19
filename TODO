@@ -1,6 +1,4 @@
 Frontend:
-  - Write a command-line tool to model loops with ModLoop, to demo this
-    API for Chimera integration.
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to frontend class (or options to config file) to configure rate
@@ -53,4 +51,5 @@ Build:
       access to .sconsign)
     - sudo -u backend_user scons
     - backend.conf and frontend.conf should be readable only by owner
-      and backend_user (setfacl)
+      and backend_user (setfacl -m u:modloop:r conf/backend.conf
+                        conf/frontend.conf)
