@@ -7,3 +7,5 @@ class Mkdir: pass
 class Chmod: pass
 
 class Value: pass
+
+class Action: pass

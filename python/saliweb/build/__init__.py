@@ -21,7 +21,7 @@ import os.path
 import pwd
 import saliweb.backend
 import SCons.Script
-from SCons.Script import File, Mkdir, Chmod, Value
+from SCons.Script import File, Mkdir, Chmod, Value, Action
 import subprocess
 import re
 
@@ -66,8 +66,41 @@ def Environment(variables, configfiles, version=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
+    check = env.Command('check', None,
+                        Action(_install_check, 'Check installation ...'))
+    env.AlwaysBuild(check)
+    env.Requires('/', check)
     env.Default('/')
     return env
+
+def _install_check(target, source, env):
+    """Check the final installation for sanity"""
+    _check_perl_import(env)
+    _check_python_import(env)
+
+def _check_perl_import(env):
+    """Check to make sure Perl import of modname will work"""
+    modname = env['service_module']
+    modfile = '%s/%s.pm' % (env['perldir'], modname)
+    glob_modfile = env.Glob(modfile, ondisk=False)
+    if len(glob_modfile) != 1:
+        warnings.warn("The Perl module file %s does not appear to be set "
+                      "up for installation. Thus, the frontend will probably "
+                      "not work. Make sure that the Perl module is named '%s' "
+                      "and there is an InstallPerl call somewhere in the "
+                      "SConscripts to install it. " % (modfile, modname))
+
+def _check_python_import(env):
+    """Check to make sure Python import of modname will work"""
+    modname = env['service_module']
+    modfile = '%s/%s/__init__.py' % (env['pythondir'], modname)
+    glob_modfile = env.Glob(modfile, ondisk=False)
+    if len(glob_modfile) != 1:
+        warnings.warn("The Python module file %s does not appear to be set "
+                      "up for installation. Thus, the backend will probably "
+                      "not work. Make sure that the Python package is named "
+                      "'%s' and there is an InstallPython call somewhere "
+                      "in the SConscripts to install it. " % (modfile, modname))
 
 def _setup_sconsign(env):
     if not os.path.exists('.scons'):
@@ -364,24 +397,25 @@ def _make_script(env, target, source):
 
 def _make_cgi_script(env, target, source):
     name = os.path.basename(str(target[0]))
+    modname = source[0].get_contents()
     if name.endswith('.cgi'):
         name = name[:-4]
     f = open(target[0].path, 'w')
     print >> f, "#!/usr/bin/perl -w"
     print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
-    print >> f, "use %s;" % env['service_module']
+    print >> f, "use %s;" % modname
     if name == 'job':  # Set up REST interface
         print >> f, "use saliweb::frontend::RESTService;"
         print >> f, "@%s::ISA = qw(saliweb::frontend::RESTService);" \
-                    % env['service_module']
-        print >> f, "my $m = new %s;" % env['service_module']
+                    % modname
+        print >> f, "my $m = new %s;" % modname
         print >> f, "if ($m->cgi->request_method eq 'POST') {"
         print >> f, "    $m->display_submit_page();"
         print >> f, "} else {"
         print >> f, "    $m->display_results_page();"
         print >> f, "}"
     else:
-        print >> f, "my $m = new %s;" % env['service_module']
+        print >> f, "my $m = new %s;" % modname
         print >> f, "$m->display_%s_page();" % name
     f.close()
     env.Execute(Chmod(target, 0755))
@@ -415,7 +449,8 @@ def _InstallCGIScripts(env, scripts=None):
         scripts = ['help.cgi', 'index.cgi', 'queue.cgi', 'results.cgi',
                    'submit.cgi', 'job']
     for bin in scripts:
-        env.Command(os.path.join(env['cgidir'], bin), None,
+        env.Command(os.path.join(env['cgidir'], bin),
+                    Value(env['service_module']),
                     _make_cgi_script)
 
 def _InstallPython(env, files, subdir=None):
