@@ -163,6 +163,18 @@ def _check_permissions(env):
    chmod 0600 %s
 """ % (conf, conf)
             env.Exit(1)
+        dir, base = os.path.split(conf)
+        svnbase = os.path.join(dir, '.svn', 'text-base', base + '.svn-base')
+        if os.path.exists(svnbase):
+            print >> sys.stderr, """
+** The database configuration file %s appears to be under SVN control.
+** Please do not put files containing sensitive information (i.e. passwords)
+** under SVN control.
+** To fix this, run
+   svn rm %s; svn ci %s
+** Then recreate %s using a fresh password.
+""" % (conf, conf, conf, conf)
+            env.Exit(1)
         try:
             open(conf)
         except IOError, detail:

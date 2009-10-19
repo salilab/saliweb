@@ -33,7 +33,7 @@ Backend:
       per daemon); fall back to polling if the daemon is restarted.
 
 Build:
-  - Add unit tests.
+  - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
   - Check db users access and permissions; if they do not exist, generate MySQL
@@ -45,11 +45,3 @@ Build:
   - Check schema; if table does not exist, generate MySQL script for
     backend user to run; if table does exist but does not match, dump correct
     schema and suggest user drops table then reruns, or alters table by hand.
-  - Add backend user to config file; on install, check to make sure we are
-    running as that user; if not, suggest
-    - setfacl -m u:backend_user:rwx .scons (if no read access to config,
-      or write access to .scons/sconsign)
-    - sudo -u backend_user scons
-    - backend.conf and frontend.conf should be readable only by owner
-      and backend_user (setfacl -m u:modloop:r conf/backend.conf
-                        conf/frontend.conf)

@@ -67,6 +67,7 @@ class CheckTest(unittest.TestCase):
         tmpdir = RunInTempDir()
         conf = 'test.conf'
         open(conf, 'w').write('test')
+        os.chmod(conf, 0600)
         os.mkdir('.scons')
         def make_env():
             env = DummyEnv('testuser')
@@ -87,10 +88,10 @@ class CheckTest(unittest.TestCase):
                                    'To fix this.*chmod 0600 test\.conf',
                                    stderr, re.DOTALL),
                          'regex match failed on ' + stderr)
+        os.chmod(conf, 0600)
 
         # Everything should work OK here
         env = make_env()
-        os.chmod(conf, 0600)
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
@@ -107,10 +108,10 @@ class CheckTest(unittest.TestCase):
                                'be able to write.*To fix this problem.*'
                                'setfacl -m u:testuser:rwx \.scons', stderr,
                                re.DOTALL), 'regex match failed on ' + stderr)
+        os.chmod('.scons', 0755)
 
         # If config files are not readable, warnings should be printed
         env = make_env()
-        os.chmod('.scons', 0755)
         os.chmod(conf, 0200)
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
@@ -120,6 +121,23 @@ class CheckTest(unittest.TestCase):
                               'needs to be able to read.*To fix this problem.*'
                               'setfacl -m u:testuser:r test.conf', stderr,
                               re.DOTALL), 'regex match failed on ' + stderr)
+        os.chmod(conf, 0600)
+
+        # If config files are under SVN control, warnings should be printed
+        env = make_env()
+        os.mkdir('.svn')
+        os.mkdir('.svn/text-base')
+        open('.svn/text-base/test.conf.svn-base', 'w')
+        ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('The database configuration file test\.conf '
+                               'appears to be under SVN.*To fix this.*'
+                               'svn rm test\.conf; svn ci test\.conf.*'
+                               'Then recreate test\.conf using a '
+                               'fresh password', stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+        shutil.rmtree('.svn', ignore_errors=True)
 
 if __name__ == '__main__':
     unittest.main()
