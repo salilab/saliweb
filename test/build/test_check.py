@@ -139,5 +139,48 @@ class CheckTest(unittest.TestCase):
                      'regex match failed on ' + stderr)
         shutil.rmtree('.svn', ignore_errors=True)
 
+    def test_check_directories(self):
+        """Check _check_directories function"""
+        def make_env(incoming, running):
+            env = DummyEnv('testuser')
+            env['config'].directories = {'INCOMING': incoming,
+                                         'RUNNING': running}
+            return env
+
+        # Incoming on local disk, running on cluster disk is OK
+        for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
+                     '/modbase3', '/modbase4', '/modbase5'):
+            env = make_env(disk, '/netapp/ok')
+            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
+                                           env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, None)
+            self.assertEqual(stderr, '')
+
+        # Incoming on a network disk is NOT OK
+        for disk in ('/guitar1', '/netapp', '/salilab'):
+            env = make_env(disk, '/netapp/ok')
+            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
+                                           env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assertEqual(stderr, '\n** The INCOMING directory is set to ' \
+                             + disk + '.\n** It must be on a local disk '
+                             '(e.g. /modbase1).\n\n')
+
+        # Running on a non-netapp disk is NOT OK
+        for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
+                     '/modbase3', '/modbase4', '/modbase5', '/guitar1',
+                     '/salilab'):
+            env = make_env('/modbase1', disk)
+            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
+                                           env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assertEqual(stderr, '\n** The RUNNING directory is set to ' \
+                             + disk + \
+                             '.\n** It must be on a cluster-accessible disk '
+                             '(i.e. /netapp).\n\n')
+
 if __name__ == '__main__':
     unittest.main()

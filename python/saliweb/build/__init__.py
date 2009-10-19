@@ -114,6 +114,7 @@ def _setup_install_directories(env):
 def _check(env):
     _check_user(env)
     _check_permissions(env)
+    _check_directories(env)
     if isinstance(MySQLdb, Exception):
         print >> sys.stderr, "Could not import the MySQLdb module: %s" % MySQLdb
         print >> sys.stderr, "This module is needed by the backend."
@@ -121,6 +122,24 @@ def _check(env):
     _check_mysql(env)
     _check_crontab(env)
     _check_service(env)
+
+def _check_directories(env):
+    incoming = env['config'].directories['INCOMING']
+    if not incoming.startswith('/modbase') and not incoming.startswith('/usr') \
+       and not incoming.startswith('/var') and not incoming.startswith('/home'):
+        print >> sys.stderr, """
+** The INCOMING directory is set to %s.
+** It must be on a local disk (e.g. /modbase1).
+""" % incoming
+        env.Exit(1)
+
+    running = env['config'].directories['RUNNING']
+    if not running.startswith('/netapp'):
+        print >> sys.stderr, """
+** The RUNNING directory is set to %s.
+** It must be on a cluster-accessible disk (i.e. /netapp).
+""" % running
+        env.Exit(1)
 
 def _check_user(env):
     backend_user = env['config'].backend['user']
