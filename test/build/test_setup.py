@@ -130,7 +130,8 @@ sys.exit(1)""")
             def SConsignFile(self, file): self.file = file
         # Try with existing .scons directory
         env = DummyEnv()
-        os.mkdir('.scons')
+        if not os.path.exists('.scons'):
+            os.mkdir('.scons')
         saliweb.build._setup_sconsign(env)
         self.assertEqual(env.file, '.scons/sconsign.dblite')
         os.rmdir('.scons')

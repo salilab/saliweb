@@ -113,6 +113,7 @@ def _setup_install_directories(env):
 
 def _check(env):
     _check_user(env)
+    _check_permissions(env)
     if isinstance(MySQLdb, Exception):
         print >> sys.stderr, "Could not import the MySQLdb module: %s" % MySQLdb
         print >> sys.stderr, "This module is needed by the backend."
@@ -132,6 +133,36 @@ You are currently trying to run scons as the '%s' user.
 Please run again with something like \"/usr/bin/sudo -u %s scons\"
 """ % (backend_user, env['configfile'], current_user, backend_user)
         env.Exit(1)
+
+def _check_permissions(env):
+    """Make sure we can write to the .scons directory, and read the
+       database configuration files"""
+    try:
+        open('.scons/.test', 'w')
+        os.unlink('.scons/.test')
+    except IOError, detail:
+        print >> sys.stderr, """
+** Cannot write to .scons directory: %s
+** The backend user needs to be able to write to this directory.
+** To fix this problem, make sure that your checkout is on a local disk
+** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
+   setfacl -m u:%s:rwx .scons
+""" % (str(detail), env['config'].backend['user'])
+        env.Exit(1)
+    for end in ('back', 'front'):
+        conf = env['config'].database['%send_config' % end]
+        if not os.path.exists(conf): continue
+        try:
+            open(conf)
+        except IOError, detail:
+            print >> sys.stderr, """
+** Cannot read database configuration file: %s
+** The backend user needs to be able to read this file.
+** To fix this problem, make sure that your checkout is on a local disk
+** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
+   setfacl -m u:%s:r %s
+""" % (str(detail), env['config'].backend['user'], conf)
+            env.Exit(1)
 
 def _format_shell_command(env, cmd):
     sudo_user = os.environ.get('SUDO_USER')
