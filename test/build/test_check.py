@@ -139,8 +139,8 @@ class CheckTest(unittest.TestCase):
                      'regex match failed on ' + stderr)
         shutil.rmtree('.svn', ignore_errors=True)
 
-    def test_check_directories(self):
-        """Check _check_directories function"""
+    def test_check_directory_locations(self):
+        """Check _check_directory_locations function"""
         def make_env(incoming, running):
             env = DummyEnv('testuser')
             env['config'].directories = {'INCOMING': incoming,
@@ -151,8 +151,8 @@ class CheckTest(unittest.TestCase):
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5'):
             env = make_env(disk, '/netapp/ok')
-            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
-                                           env)
+            ret, stderr = run_catch_stderr(
+                               saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, None)
             self.assertEqual(stderr, '')
@@ -160,8 +160,8 @@ class CheckTest(unittest.TestCase):
         # Incoming on a network disk is NOT OK
         for disk in ('/guitar1', '/netapp', '/salilab'):
             env = make_env(disk, '/netapp/ok')
-            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
-                                           env)
+            ret, stderr = run_catch_stderr(
+                               saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertEqual(stderr, '\n** The INCOMING directory is set to ' \
@@ -173,14 +173,55 @@ class CheckTest(unittest.TestCase):
                      '/modbase3', '/modbase4', '/modbase5', '/guitar1',
                      '/salilab'):
             env = make_env('/modbase1', disk)
-            ret, stderr = run_catch_stderr(saliweb.build._check_directories,
-                                           env)
+            ret, stderr = run_catch_stderr(
+                               saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertEqual(stderr, '\n** The RUNNING directory is set to ' \
                              + disk + \
                              '.\n** It must be on a cluster-accessible disk '
                              '(i.e. /netapp).\n\n')
+
+    def test_check_directory_permissions(self):
+        """Check _check_directory_permissions function"""
+        tmpdir = RunInTempDir()
+        def make_env(dir):
+            env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
+            env['config'].directories = {'testdir': dir}
+            return env
+
+        # Backend does not own this directory
+        env = make_env('/')
+        ret, stderr = run_catch_stderr(
+                           saliweb.build._check_directory_permissions, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('Install directory / is not owned by the '
+                               'backend user', stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
+        # Backend *does* own this directory
+        os.mkdir('test')
+        env = make_env('test')
+        ret, stderr = run_catch_stderr(
+                           saliweb.build._check_directory_permissions, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
+        # Group- or world-writable directories should cause an error
+        for perm in (0775, 0757):
+            os.chmod('test', perm)
+            env = make_env('test')
+            ret, stderr = run_catch_stderr(
+                           saliweb.build._check_directory_permissions, env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assert_(re.search('Install directory test appears to be '
+                                   'group\- or world\-writable.*fix this.*'
+                                   'chmod 755 test', stderr, re.DOTALL),
+                         'regex match failed on ' + stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -124,6 +124,10 @@ def _check(env):
     _check_service(env)
 
 def _check_directories(env):
+    _check_directory_locations(env)
+    _check_directory_permissions(env)
+
+def _check_directory_locations(env):
     incoming = env['config'].directories['INCOMING']
     if not incoming.startswith('/modbase') and not incoming.startswith('/usr') \
        and not incoming.startswith('/var') and not incoming.startswith('/home'):
@@ -140,6 +144,31 @@ def _check_directories(env):
 ** It must be on a cluster-accessible disk (i.e. /netapp).
 """ % running
         env.Exit(1)
+
+def _check_directory_permissions(env):
+    backend_user = env['config'].backend['user']
+    for dir in env['config'].directories.values():
+        if not os.path.exists(dir): continue
+        out, err = subprocess.Popen(['/usr/bin/getfacl', dir],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE).communicate()
+        if not re.search('^# owner: ' + backend_user, out,
+                         re.MULTILINE | re.DOTALL):
+            print >> sys.stderr, """
+** Install directory %s is not owned by the backend user, %s!
+** Please change the ownership of this directory.
+""" % (dir, backend_user)
+            env.Exit(1)
+        if not re.search('^group::.\-..*other::.\-.', out,
+                         re.MULTILINE | re.DOTALL):
+            print >> sys.stderr, """
+** Install directory %s appears to be group- or world-writable!
+** It should only be writable by the backend user, %s.
+** To fix this, run
+   chmod 755 %s
+""" % (dir, backend_user, dir)
+            env.Exit(1)
+
 
 def _check_user(env):
     backend_user = env['config'].backend['user']
@@ -172,7 +201,8 @@ def _check_permissions(env):
         conf = env['config'].database['%send_config' % end]
         if not os.path.exists(conf): continue
         out, err = subprocess.Popen(['/usr/bin/getfacl', conf],
-                                    stdout=subprocess.PIPE).communicate()
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE).communicate()
         if not re.search('^group::\-\-\-.*^other::\-\-\-', out,
                          re.MULTILINE | re.DOTALL):
             print >> sys.stderr, """
