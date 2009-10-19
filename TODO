@@ -47,3 +47,10 @@ Build:
   - Check schema; if table does not exist, generate MySQL script for
     backend user to run; if table does exist but does not match, dump correct
     schema and suggest user drops table then reruns, or alters table by hand.
+  - Add backend user to config file; on install, check to make sure we are
+    running as that user; if not, suggest
+    - setfacl -m u:backend_user:rwx (if no read access to config, or write
+      access to .sconsign)
+    - sudo -u backend_user scons
+    - backend.conf and frontend.conf should be readable only by owner
+      and backend_user (setfacl)
