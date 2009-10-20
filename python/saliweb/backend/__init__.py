@@ -265,12 +265,24 @@ class Config(object):
 class MySQLField(object):
     """Description of a single field in a MySQL database. Each field must have
        a unique `name` (e.g. 'user') and a given `type`
-       (e.g. 'VARCHAR(15)'). Other parameters specify whether the field can
-       be NULL, what kind of key it is if any (e.g. 'PRIMARY'), and whether
-       it has a default value."""
+       (e.g. 'VARCHAR(15)'). `null` specifies whether the field can be NULL
+       (valid values are True, False, 'YES', 'NO'). `key` if given specifies
+       what kind of key it is (e.g. 'PRIMARY' or 'PRI'). `default` specifies
+       the default value of the field."""
     def __init__(self, name, type, null=True, key=None, default=None):
         self.name = name
         self.type = type
+        # Map MySQL DESCRIBE null types to Python booleans
+        if null == 'NO':
+            null = False
+        if null == 'YES':
+            null = True
+        # default cannot be NULL if NULL is not allowed for this field
+        if not null and default is None:
+            default = ''
+        # Map MySQL DESCRIBE key type to full name
+        if key == 'PRI':
+            key = 'PRIMARY'
         self.null = null
         self.key = key
         self.default = default
@@ -282,7 +294,7 @@ class MySQLField(object):
             schema += " %s KEY" % self.key
         if not self.null:
             schema += " NOT NULL"
-        if self.default:
+        if self.default is not None:
             schema += " DEFAULT '%s'" % self.default
         return schema
 
