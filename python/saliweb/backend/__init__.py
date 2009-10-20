@@ -283,6 +283,8 @@ class MySQLField(object):
         # Map MySQL DESCRIBE key type to full name
         if key == 'PRI':
             key = 'PRIMARY'
+        if key == '':
+            key = None
         self.null = null
         self.key = key
         self.default = default

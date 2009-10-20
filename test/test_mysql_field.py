@@ -15,6 +15,8 @@ class MySQLFieldTest(unittest.TestCase):
         # Check mapping of MySQL DESCRIBE key types
         field = MySQLField('name', 'TEXT', key='PRI')
         self.assertEqual(field.get_schema(), "name TEXT PRIMARY KEY")
+        field = MySQLField('name', 'TEXT', key='')
+        self.assertEqual(field.get_schema(), "name TEXT")
         # Check mapping of MySQL DESCRIBE null types
         field = MySQLField('name', 'TEXT', null='YES')
         self.assertEqual(field.get_schema(), "name TEXT")
