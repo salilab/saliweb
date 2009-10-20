@@ -239,5 +239,68 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
 """)
         os.unlink(o)
 
+    def test_check_mysql_schema(self):
+        """Test _check_mysql_schema function"""
+        # Number of fields differs between DB and backend
+        env = DummyEnv('testuser')
+        dbfields = []
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_schema, env, dbfields)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search("'jobs' database table schema does not match.*"
+                               'it has 0 fields, while the backend has 16 '
+                               'fields.*entire table schema should look like.*'
+                               'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                               "DEFAULT ''", stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
+        # Field definition differs
+        env = DummyEnv('testuser')
+        dbfields = [('name', 'varchar(30)', 'NO', 'PRI', '', '')]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_schema, env, dbfields)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('table schema does not match.*'
+                               'mismatch has been found in the \'name\' field.*'
+                               'Database schema for \'name\' field:.*'
+                               'name VARCHAR\(30\).*'
+                               'Should be modified.*'
+                               'name VARCHAR\(40\).*'
+                               'entire table schema.*'
+                               'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                               'DEFAULT \'\',.*user VARCHAR\(40\)',
+                               stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
+        # Fields match between DB and backend
+        env = DummyEnv('testuser')
+        dbfields = [('name', 'varchar(40)', 'NO', 'PRI', '', ''),
+                    ('user', 'varchar(40)', 'YES', '', None, ''),
+                    ('passwd', 'char(10)', 'YES', '', None, ''),
+                    ('contact_email', 'varchar(100)', 'YES', '', None, ''),
+                    ('directory', 'text', 'YES', '', None, ''),
+                    ('url', 'text', 'NO', '', '', ''),
+                    ('state', "ENUM('INCOMING','PREPROCESSING','RUNNING',"
+                              "'POSTPROCESSING','COMPLETED','FAILED',"
+                              "'EXPIRED','ARCHIVED')", 'NO', '',
+                              'INCOMING', ''),
+                    ('submit_time', 'datetime', 'NO', '', '', ''),
+                    ('preprocess_time', 'datetime', 'YES', '', None, ''),
+                    ('run_time', 'datetime', 'YES', '', None, ''),
+                    ('postprocess_time', 'datetime', 'YES', '', None, ''),
+                    ('end_time', 'datetime', 'YES', '', None, ''),
+                    ('archive_time', 'datetime', 'YES', '', None, ''),
+                    ('expire_time', 'datetime', 'YES', '', None, ''),
+                    ('runner_id', 'varchar(50)', 'YES', '', None, ''),
+                    ('failure', 'text', 'YES', '', None, ''),
+                   ]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_schema, env, dbfields)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
 if __name__ == '__main__':
     unittest.main()

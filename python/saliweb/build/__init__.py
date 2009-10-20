@@ -388,8 +388,31 @@ def _check_mysql_schema(env, cursor):
 
     for dbfield, backfield in zip(dbfields, d._fields):
         if dbfield != backfield:
-            print "Need to modify table at field %s: existing schema is %s, new schema is %s" % (dbfield.name, ', '.join(x.get_schema() for x in dbfields), ', '.join(x.get_schema() for x in d._fields))
+            print >> sys.stderr, """
+** The 'jobs' database table schema does not match that expected by the backend;
+** a mismatch has been found in the '%s' field. Please modify the
+** table schema accordingly.
+**
+** Database schema for '%s' field:
+   %s
+** Should be modified to match the schema in the backend:
+   %s
+**
+** For reference, the entire table schema should look like:
+   %s
+""" % (dbfield.name, dbfield.name, dbfield.get_schema(), backfield.get_schema(),
+       ',\n   '.join(x.get_schema() for x in d._fields))
             env.Exit(1)
+
+    if len(dbfields) != len(d._fields):
+        print >> sys.stderr, """
+** The 'jobs' database table schema does not match that expected by the backend;
+** it has %d fields, while the backend has %d fields. Please modify the
+** table schema accordingly. The entire table schema should look like:
+   %s
+""" % (len(dbfields), len(d._fields),
+       ',\n   '.join(x.get_schema() for x in d._fields))
+        env.Exit(1)
 
 def _install_config(env):
     config = env['config']

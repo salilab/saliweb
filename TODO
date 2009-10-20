@@ -36,10 +36,6 @@ Build:
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
-  - Check db users access and permissions; if they do not exist, generate MySQL
-    script for admin to run.
-  - Check schema; if table does not exist, generate MySQL script for
-    backend user to run; if table does exist but does not match, dump correct
-    schema and suggest user drops table then reruns, or alters table by hand.
   - Check job directories to make sure that the DB and filesystem are in
     sync (similar to the check run by the backend, above).
+  - Check MySQL grants to make sure users have the right set of permissions
