@@ -319,7 +319,7 @@ class Database(object):
         self._jobcls = jobcls
         self._fields = []
         # Add fields used by all web services
-        states = ", ".join("'%s'" % x for x in _JobState.get_valid_states())
+        states = ",".join("'%s'" % x for x in _JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(40)', key='PRIMARY',
                                   null=False))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
