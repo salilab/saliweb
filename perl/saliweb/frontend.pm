@@ -774,8 +774,9 @@ sub display_submit_page {
                                                  $self->{submitted_jobs});
             delete $self->{submitted_jobs};
         } catch saliweb::frontend::InputValidationError with {
-            $self->http_status('400 Bad Request');
-            $content = $self->format_input_validation_error(shift);
+            my $exc = shift;
+            $self->http_status($exc->http_status);
+            $content = $self->format_input_validation_error($exc);
             $self->_display_web_page($content);
         };
     } catch Error with {
@@ -979,6 +980,10 @@ sub connect_to_database {
 
 package saliweb::frontend::InputValidationError;
 use base qw(Error::Simple);
+
+sub http_status {
+    return "400 Bad Request";
+}
 1;
 
 package saliweb::frontend::InternalError;
