@@ -289,6 +289,11 @@ class MySQLField(object):
         self.key = key
         self.default = default
 
+    def __eq__(self, other):
+        return self.name == other.name and self.type == other.type \
+               and self.key == other.key and self.null == other.null \
+               and self.default == other.default
+
     def get_schema(self):
         """Get the SQL schema needed to create a table containing this field."""
         schema = self.name + " " + self.type

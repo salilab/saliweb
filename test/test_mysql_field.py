@@ -26,5 +26,31 @@ class MySQLFieldTest(unittest.TestCase):
         field = MySQLField('name', 'TEXT', null=False, default=None)
         self.assertEqual(field.get_schema(), "name TEXT NOT NULL DEFAULT ''")
 
+    def test_equals(self):
+        """Check MySQLField equality"""
+        def make_pair():
+            a = MySQLField('testname', 'testtype', null=False,
+                           default='testdef', key='PRIMARY')
+            b = MySQLField('testname', 'testtype', null=False,
+                           default='testdef', key='PRIMARY')
+            return a, b
+        a,b = make_pair()
+        self.assertEquals(a, b)
+        a,b = make_pair()
+        a.name = 'othername'
+        self.assertNotEquals(a, b)
+        a,b = make_pair()
+        a.type = 'othertype'
+        self.assertNotEquals(a, b)
+        a,b = make_pair()
+        a.null = True
+        self.assertNotEquals(a, b)
+        a,b = make_pair()
+        a.default = 'otherdefault'
+        self.assertNotEquals(a, b)
+        a,b = make_pair()
+        a.key = None
+        self.assertNotEquals(a, b)
+
 if __name__ == '__main__':
     unittest.main()
