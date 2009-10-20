@@ -25,4 +25,4 @@ class MemoryDatabase(saliweb.backend.Database):
         self.conn.create_function('UTC_TIMESTAMP', 0, utc_timestamp)
         # sqlite has no enum field, so hack it to look like a text field
         assert self._fields[6].name == 'state'
-        self._fields[6].sqltype = 'TEXT'
+        self._fields[6].type = 'TEXT'

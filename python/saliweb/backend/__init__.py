@@ -264,15 +264,27 @@ class Config(object):
 
 class MySQLField(object):
     """Description of a single field in a MySQL database. Each field must have
-       a unique `name` (e.g. 'user') and a given `sqltype`
-       (e.g. 'VARCHAR(15) PRIMARY KEY NOT NULL')."""
-    def __init__(self, name, sqltype):
+       a unique `name` (e.g. 'user') and a given `type`
+       (e.g. 'VARCHAR(15)'). Other parameters specify whether the field can
+       be NULL, what kind of key it is if any (e.g. 'PRIMARY'), and whether
+       it has a default value."""
+    def __init__(self, name, type, null=True, key=None, default=None):
         self.name = name
-        self.sqltype = sqltype
+        self.type = type
+        self.null = null
+        self.key = key
+        self.default = default
 
     def get_schema(self):
         """Get the SQL schema needed to create a table containing this field."""
-        return self.name + " " + self.sqltype
+        schema = self.name + " " + self.type
+        if self.key:
+            schema += " %s KEY" % self.key
+        if not self.null:
+            schema += " NOT NULL"
+        if self.default:
+            schema += " DEFAULT '%s'" % self.default
+        return schema
 
 
 class Database(object):
@@ -289,15 +301,16 @@ class Database(object):
         self._fields = []
         # Add fields used by all web services
         states = ", ".join("'%s'" % x for x in _JobState.get_valid_states())
-        self.add_field(MySQLField('name', 'VARCHAR(40) PRIMARY KEY NOT NULL'))
+        self.add_field(MySQLField('name', 'VARCHAR(40)', key='PRIMARY',
+                                  null=False))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('passwd', 'CHAR(10)'))
         self.add_field(MySQLField('contact_email', 'VARCHAR(100)'))
         self.add_field(MySQLField('directory', 'TEXT'))
-        self.add_field(MySQLField('url', 'TEXT NOT NULL'))
-        self.add_field(MySQLField('state',
-                              "ENUM(%s) NOT NULL DEFAULT 'INCOMING'" % states))
-        self.add_field(MySQLField('submit_time', 'DATETIME NOT NULL'))
+        self.add_field(MySQLField('url', 'TEXT', null=False))
+        self.add_field(MySQLField('state', "ENUM(%s)" % states,
+                                  null=False, default='INCOMING'))
+        self.add_field(MySQLField('submit_time', 'DATETIME', null=False))
         self.add_field(MySQLField('preprocess_time', 'DATETIME'))
         self.add_field(MySQLField('run_time', 'DATETIME'))
         self.add_field(MySQLField('postprocess_time', 'DATETIME'))
