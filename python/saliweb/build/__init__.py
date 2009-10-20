@@ -23,6 +23,7 @@ import saliweb.backend
 import SCons.Script
 from SCons.Script import File, Mkdir, Chmod, Value, Action
 import subprocess
+import tempfile
 import re
 
 frontend_user = 'apache'
@@ -331,23 +332,64 @@ def _check_mysql(env):
     c._read_db_auth('front')
     frontend = dict(c.database)
 
-    db = MySQLdb.connect(db=c.database['db'], user=backend['user'],
-                         passwd=backend['passwd'])
-    cur = db.cursor()
-    cur.execute('DESCRIBE jobs')
-#   for row in cur:
-#       print row
-    cur.execute('SHOW GRANTS')
-#   for row in cur:
-#       print row
+    try:
+        db = MySQLdb.connect(db=c.database['db'], user=backend['user'],
+                             passwd=backend['passwd'])
+        cur = db.cursor()
+        cur.execute('DESCRIBE jobs')
+        _check_mysql_schema(env, cur)
+        cur.execute('SHOW GRANTS')
+#       for row in cur:
+#           print row
 
-    db = MySQLdb.connect(db=c.database['db'], user=frontend['user'],
-                         passwd=frontend['passwd'])
-    cur = db.cursor()
-    cur.execute('SHOW GRANTS')
-#   for row in cur:
-#       print row
+        db = MySQLdb.connect(db=c.database['db'], user=frontend['user'],
+                             passwd=frontend['passwd'])
+        cur = db.cursor()
+#       cur.execute('SHOW GRANTS')
+#       for row in cur:
+#           print row
+    except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
+        outfile = _generate_admin_mysql_script(c.database['db'], backend,
+                                               frontend)
+        print >> sys.stderr, """
+** Could not query the jobs table in the %s database using both the
+** frontend and backend users. The actual error message follows:
+** %s
+** This generally means that the web service is not set up correctly
+** for MySQL. Please ask a sysadmin to run the commands in the file
+** %s to set this up properly.
+""" % (c.database['db'], str(detail), outfile)
+        env.Exit(1)
 
+def _generate_admin_mysql_script(database, backend, frontend):
+    d = saliweb.backend.Database(None)
+    fd, outfile = tempfile.mkstemp()
+    commands = """CREATE DATABASE %(database)s
+GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s'
+CREATE TABLE %(database)s.jobs (%(schema)s)
+GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s'
+GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost'
+""" % {'database': database, 'backend_user': backend['user'],
+       'backend_passwd': backend['passwd'], 'frontend_user': frontend['user'],
+       'frontend_passwd': frontend['passwd'],
+       'schema': ', '.join(x.get_schema() for x in d._fields)}
+    os.write(fd, commands)
+    os.close(fd)
+    os.chmod(outfile, 0600)
+    return outfile
+
+def _check_mysql_schema(env, cursor):
+    d = saliweb.backend.Database(None)
+    dbfields = []
+    for row in cursor:
+        dbfields.append(saliweb.backend.MySQLField(row[0], row[1].upper(),
+                                                   null=row[2], key=row[3],
+                                                   default=row[4]))
+
+    for dbfield, backfield in zip(dbfields, d._fields):
+        if dbfield != backfield:
+            print "Need to modify table at field %s: existing schema is %s, new schema is %s" % (dbfield.name, ', '.join(x.get_schema() for x in dbfields), ', '.join(x.get_schema() for x in d._fields))
+            env.Exit(1)
 
 def _install_config(env):
     config = env['config']

@@ -222,6 +222,22 @@ class CheckTest(unittest.TestCase):
                                    'chmod 755 test', stderr, re.DOTALL),
                          'regex match failed on ' + stderr)
 
+    def test_generate_admin_mysql_script(self):
+        """Test _generate_admin_mysql_script function"""
+        frontend = {'user': 'frontuser', 'passwd': 'frontpwd'}
+        backend = {'user': 'backuser', 'passwd': 'backpwd'}
+        o = saliweb.build._generate_admin_mysql_script('testdb', backend,
+                                                       frontend)
+        self.assertEqual(os.stat(o).st_mode, 0100600)
+        contents = open(o).read()
+        self.assertEquals(contents, \
+"""CREATE DATABASE testdb
+GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd'
+CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL DEFAULT '', state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL DEFAULT '', preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(50), failure TEXT)
+GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost' identified by 'frontpwd'
+GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testdb.jobs to 'frontuser'@'localhost'
+""")
+        os.unlink(o)
 
 if __name__ == '__main__':
     unittest.main()
