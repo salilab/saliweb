@@ -36,21 +36,27 @@ class MySQLFieldTest(unittest.TestCase):
             return a, b
         a,b = make_pair()
         self.assertEquals(a, b)
+        self.assert_(not a != b)
         a,b = make_pair()
         a.name = 'othername'
         self.assertNotEquals(a, b)
+        self.assert_(not a == b)
         a,b = make_pair()
         a.type = 'othertype'
         self.assertNotEquals(a, b)
+        self.assert_(not a == b)
         a,b = make_pair()
         a.null = True
         self.assertNotEquals(a, b)
+        self.assert_(not a == b)
         a,b = make_pair()
         a.default = 'otherdefault'
         self.assertNotEquals(a, b)
+        self.assert_(not a == b)
         a,b = make_pair()
         a.key = None
         self.assertNotEquals(a, b)
+        self.assert_(not a == b)
 
 if __name__ == '__main__':
     unittest.main()

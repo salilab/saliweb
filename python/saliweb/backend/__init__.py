@@ -294,6 +294,9 @@ class MySQLField(object):
                and self.key == other.key and self.null == other.null \
                and self.default == other.default
 
+    def __ne__(self, other):
+        return not self == other
+
     def get_schema(self):
         """Get the SQL schema needed to create a table containing this field."""
         schema = self.name + " " + self.type
