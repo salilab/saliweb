@@ -38,4 +38,3 @@ Build:
     the webserver is properly configured and there are no Perl compile errors.
   - Check job directories to make sure that the DB and filesystem are in
     sync (similar to the check run by the backend, above).
-  - Check MySQL grants to make sure users have the right set of permissions

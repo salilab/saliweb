@@ -302,5 +302,41 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
 
+    def test_check_mysql_grants(self):
+        """Test _check_mysql_grants function"""
+        # Grant is present on all tables
+        env = DummyEnv('testuser')
+        grants = [("GRANT INSERT ON `testdb`.* TO 'testuser'@'localhost'",)]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_grants, env, grants,
+                         'testdb', 'testuser', 'INSERT')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
+        # Grant is present on a single table
+        env = DummyEnv('testuser')
+        grants = [("GRANT INSERT ON `testdb`.`job` TO 'testuser'@'localhost'",)]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_grants, env, grants,
+                         'testdb', 'testuser', 'INSERT', table='job')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
+        # Grant is not present
+        env = DummyEnv('testuser')
+        grants = [("GRANT INSERT ON `testdb`.* TO 'testuser'@'localhost'",)]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_grants, env, grants,
+                         'testdb', 'testuser', 'DROP')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('The testuser user does not appear to have.*'
+                               'admin run the following.*'
+                               'GRANT DROP ON `testdb`.* TO '
+                               "'testuser'@'localhost'", stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
 if __name__ == '__main__':
     unittest.main()

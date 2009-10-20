@@ -338,16 +338,18 @@ def _check_mysql(env):
         cur = db.cursor()
         cur.execute('DESCRIBE jobs')
         _check_mysql_schema(env, cur)
-        cur.execute('SHOW GRANTS')
-#       for row in cur:
-#           print row
+        cur.execute('SHOW GRANTS FOR CURRENT_USER')
+        _check_mysql_grants(env, cur, c.database['db'], backend['user'],
+                            'SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, '
+                            'INDEX')
 
         db = MySQLdb.connect(db=c.database['db'], user=frontend['user'],
                              passwd=frontend['passwd'])
         cur = db.cursor()
-#       cur.execute('SHOW GRANTS')
-#       for row in cur:
-#           print row
+        cur.execute('SHOW GRANTS FOR CURRENT_USER')
+        _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
+                            'SELECT, INSERT (submit_time, contact_email, url, '
+                            'passwd, user, directory, name)', table='jobs')
     except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
         outfile = _generate_admin_mysql_script(c.database['db'], backend,
                                                frontend)
@@ -360,6 +362,24 @@ def _check_mysql(env):
 ** %s to set this up properly.
 """ % (c.database['db'], str(detail), outfile)
         env.Exit(1)
+
+def _check_mysql_grants(env, cursor, database, user, grant, table=None):
+    if table is None:
+        table = '*'
+    else:
+        table = '`%s`' % table
+    grant = "GRANT %s ON `%s`.%s TO '%s'@'localhost'" % (grant, database,
+                                                         table, user)
+    for row in cursor:
+        if row[0] == grant:
+            return
+    print >> sys.stderr, """
+** The %s user does not appear to have the necessary
+** MySQL privileges.
+** Please have an admin run the following MySQL command:
+   %s
+""" % (user, grant)
+    env.Exit(1)
 
 def _generate_admin_mysql_script(database, backend, frontend):
     d = saliweb.backend.Database(None)
