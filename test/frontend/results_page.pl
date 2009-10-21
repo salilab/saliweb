@@ -62,7 +62,7 @@ sub make_test_frontend {
     $q->param('passwd', shift);
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = 'Dummy::ResultsQuery';
-    my $cls = {CGI=>$q, dbh=>$dbh, server_name=>'test'};
+    my $cls = {CGI=>$q, dbh=>$dbh, server_name=>'test', cgiroot=>'testcgiroot'};
     bless($cls, 'Dummy::Frontend');
     return $cls;
 }
@@ -196,10 +196,14 @@ sub make_test_frontend {
     sub check_invalid_file {
         my $cls = make_test_results_file(shift);
         my $out = stdout_from { $cls->display_results_page() };
+        # Note that queue page link is absolute, since we may be in a
+        # 'subdirectory' of the results page.
         like($out, '/^Status: 404 Not Found.*' .
                    'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*Link 1.*' .
-                   'Project menu for.*Invalid results file.*<\/html>/s',
+                   'Project menu for.*Invalid results file.*' .
+                   'You can also check.*<a href="testcgiroot\/queue\.cgi">' .
+                   'queue.*page.*<\/html>/s',
              '                     (' . shift() . ')');
     }
 

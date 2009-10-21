@@ -107,16 +107,20 @@ BEGIN {
 
 # Test URL methods
 {
-    my $self = {};
+    my $self = {'cgiroot'=>'testroot'};
     bless($self, 'saliweb::frontend');
-    is($self->index_url, '.', 'saliweb::frontend URL (index)');
-    is($self->submit_url, 'submit.cgi', '                      (submit)');
-    is($self->queue_url, 'queue.cgi', '                      (queue)');
-    is($self->help_url, 'help.cgi?type=help', '                      (help)');
-    is($self->news_url, 'help.cgi?type=news', '                      (news)');
-    is($self->contact_url, 'help.cgi?type=contact',
+    is($self->index_url, 'testroot/', 'saliweb::frontend URL (index)');
+    is($self->submit_url, 'testroot/submit.cgi',
+       '                      (submit)');
+    is($self->queue_url, 'testroot/queue.cgi', '                      (queue)');
+    is($self->help_url, 'testroot/help.cgi?type=help',
+       '                      (help)');
+    is($self->news_url, 'testroot/help.cgi?type=news',
+       '                      (news)');
+    is($self->contact_url, 'testroot/help.cgi?type=contact',
        '                      (contact)');
-    is($self->results_url, 'results.cgi', '                      (results)');
+    is($self->results_url, 'testroot/results.cgi',
+       '                      (results)');
 }
 
 

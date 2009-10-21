@@ -102,8 +102,7 @@ sub _get_job_name_directory {
 sub _generate_results_url {
     my ($frontend, $jobname) = @_;
     my $passwd = &generate_random_passwd(10);
-    $url = $frontend->cgiroot . "/" . $frontend->results_url .
-           "/$jobname?passwd=$passwd";
+    $url = $frontend->results_url . "/$jobname?passwd=$passwd";
     return ($url, $passwd);
 }
 
@@ -194,9 +193,7 @@ sub get_results_file_url {
     my ($self, $file) = @_;
     my $jobname = $self->{name};
     my $passwd = $self->{passwd};
-    my $url = $self->{frontend}->cgiroot . "/" .
-              $self->{frontend}->results_url .
-              "/$jobname/$file?passwd=$passwd";
+    my $url = $self->{frontend}->results_url . "/$jobname/$file?passwd=$passwd";
     push @{$self->{results}}, {name=>$file, url=>$url};
     return $url;
 }
@@ -445,31 +442,38 @@ sub modeller_key {
 }
 
 sub index_url {
-    return ".";
+    my $self = shift;
+    return $self->cgiroot . "/";
 }
 
 sub submit_url {
-    return "submit.cgi";
+    my $self = shift;
+    return $self->cgiroot . "/submit.cgi";
 }
 
 sub queue_url {
-    return "queue.cgi";
+    my $self = shift;
+    return $self->cgiroot . "/queue.cgi";
 }
 
 sub help_url {
-    return "help.cgi?type=help";
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=help";
 }
 
 sub news_url {
-    return "help.cgi?type=news";
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=news";
 }
 
 sub contact_url {
-    return "help.cgi?type=contact";
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=contact";
 }
 
 sub results_url {
-    return "results.cgi";
+    my $self = shift;
+    return $self->cgiroot . "/results.cgi";
 }
 
 sub set_page_title {
@@ -618,7 +622,7 @@ sub format_results_error {
     my $msg = $exc->text;
     return $q->p("$msg.") .
            $q->p("You can also check on your job at the " .
-                 $q->a({-href=>'../' . $self->queue_url}, "queue") . " page.");
+                 $q->a({-href=>$self->queue_url}, "queue") . " page.");
 }
 
 sub get_footer {

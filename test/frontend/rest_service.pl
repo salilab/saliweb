@@ -19,14 +19,14 @@ BEGIN {
 
 # Test simple accessors
 {
-    my $self = {};
+    my $self = {'cgiroot'=>'testroot'};
     bless($self, 'saliweb::frontend::RESTService');
-    is($self->rest_url, 'job', 'RESTService rest_url');
+    is($self->rest_url, 'testroot/job', 'RESTService rest_url');
 }
 
 # Test munge_url
 {
-    my $self = {};
+    my $self = {'cgiroot'=>'http://test'};
     bless($self, 'saliweb::frontend::RESTService');
     is($self->_munge_url('http://test/results.cgi?a=b'),
        'http://test/job?a=b', 'munge_url');
@@ -36,7 +36,7 @@ BEGIN {
 }
 
 sub make_test_frontend {
-    my $self = {CGI=>new CGI, page_title=>'test title',
+    my $self = {CGI=>new CGI, page_title=>'test title', cgiroot=>'http://test',
                 rate_limit_checked=>0, server_name=>shift};
     bless($self, 'Dummy::RESTService');
     return $self;

@@ -2,7 +2,8 @@ package saliweb::frontend::RESTService;
 use base 'saliweb::frontend';
 
 sub rest_url {
-    return "job";
+    my $self = shift;
+    return $self->cgiroot . "/job";
 }
 
 # Replace HTML URLs with REST-style
@@ -61,7 +62,7 @@ sub get_help {
     my $self = shift;
     my $service = $self->{server_name};
     my $cgiroot = $self->cgiroot;
-    my $rest_url = $cgiroot . "/" . $self->rest_url;
+    my $rest_url = $self->rest_url;
     return <<END;
    <help>
 This URL provides a REST-style interface to the Sali Lab's $service
