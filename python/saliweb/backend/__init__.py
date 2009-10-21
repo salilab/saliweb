@@ -1,5 +1,6 @@
 import subprocess
 import re
+import glob
 import sys
 import os.path
 import datetime
@@ -601,10 +602,67 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _sanity_check(self):
         """Do basic sanity checking of the web service"""
+        self._filesystem_sanity_check()
+        self._job_sanity_check()
+
+    def _job_sanity_check(self):
+        """Check for jobs in incorrect states"""
         for job in self.db._get_all_jobs_in_state('PREPROCESSING'):
             job._sanity_check()
         for job in self.db._get_all_jobs_in_state('POSTPROCESSING'):
             job._sanity_check()
+
+    def _filesystem_sanity_check(self):
+        """Check that filesystem is consistent with the database"""
+        # Get list of all unique directory names for job states
+        states = _JobState.get_valid_states()
+        states.remove('EXPIRED')
+        directories = dict.fromkeys(self.config.directories[x] for x in states)
+        # Build a list of all job directories; error out if 'garbage' files
+        # are found in any top-level directory
+        jobdirs = {}
+        garbage = []
+        baddirs = []
+        for dir in directories:
+            if not os.path.isdir(dir):
+                baddirs.append(dir)
+            for f in glob.glob(os.path.join(dir, '*')):
+                if not os.path.isdir(f):
+                    garbage.append(f)
+                else:
+                    jobdirs[f] = None
+        if len(baddirs) > 0:
+            raise SanityError("The following job directories were not found. "
+                              "The service will not function correctly without "
+                              "them: %s" % ", ".join(baddirs))
+        if len(garbage) > 0:
+            raise SanityError("The following files were found in job "
+                              "directories. They need to be removed, since "
+                              "their presence may interfere with the correct "
+                              "operation of the service: %s" \
+                              % ", ".join(garbage))
+
+        # Get all jobs from the database for each state
+        for state in states:
+            for job in self.db._get_all_jobs_in_state(state):
+                dir = job.directory
+                # Check to make sure directory exists
+                if not os.path.exists(dir):
+                    raise SanityError("Directory %s for job %s does not exist" \
+                                      % (dir, job.name))
+                # Remove from list of filesystem directories
+                # Note that we don't ensure that the directory is *in* this
+                # list, since if the directories in the configuration file
+                # were changed, old jobs may still live in the old locations
+                jobdirs.pop(os.path.normpath(dir), None)
+        # Check to see if any directories are left that weren't in the db
+        if len(jobdirs) > 0:
+            raise SanityError("The following directories were found on disk "
+                              "that don't have a matching entry in the job "
+                              "database. Please remove these directories, "
+                              "since their presence may interfere with the "
+                              "correct operation of the service: %s" \
+                              % ", ".join(jobdirs.iterkeys()))
 
     def _make_socket(self):
         """Create the socket used by the frontend to talk to us."""

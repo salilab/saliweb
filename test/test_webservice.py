@@ -2,11 +2,24 @@ import unittest
 import os
 import re
 import datetime
+import tempfile
+import shutil
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
-from saliweb.backend import WebService, Job, StateFileError
+from saliweb.backend import WebService, Job, StateFileError, SanityError
 from StringIO import StringIO
+
+class RunInTempDir(object):
+    """Simple RAII-style class to run a test in a temporary directory"""
+    def __init__(self):
+        self.origdir = os.getcwd()
+        self.tmpdir = tempfile.mkdtemp()
+        os.chdir(self.tmpdir)
+    def __del__(self):
+        os.chdir(self.origdir)
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
 
 basic_config = """
 [general]
@@ -26,8 +39,8 @@ backend_config: backend.conf
 
 [directories]
 install: /
-incoming: /
-preprocessing: /
+incoming: %(directory)s/incoming
+preprocessing: %(directory)s/preprocessing
 
 [oldjobs]
 archive: 30d
@@ -52,9 +65,9 @@ class LoggingJob(Job):
 class WebServiceTest(unittest.TestCase):
     """Check WebService class"""
 
-    def _setup_webservice(self):
+    def _setup_webservice(self, directory='/'):
         db = MemoryDatabase(LoggingJob)
-        conf = Config(StringIO(basic_config))
+        conf = Config(StringIO(basic_config % {'directory': directory}))
         web = WebService(conf, db)
         web.create_database_tables()
         make_test_jobs(db.conn)
@@ -63,7 +76,7 @@ class WebServiceTest(unittest.TestCase):
     def test_init(self):
         """Check WebService init"""
         db = MemoryDatabase(Job)
-        conf = Config(StringIO(basic_config))
+        conf = Config(StringIO(basic_config % {'directory': '/'}))
         ws = WebService(conf, db)
         # OK to make multiple WebService instances
         ws2 = WebService(conf, db)
@@ -181,15 +194,68 @@ class WebServiceTest(unittest.TestCase):
 #                                  (u'ready-for-archive', 'archive'),
 #                                  (u'ready-for-expire', 'expire')])
 
-    def test_sanity_check(self):
-        """Check WebService._sanity_check()"""
+    def test_job_sanity_check(self):
+        """Check WebService._job_sanity_check()"""
         global job_log
         job_log = []
         db, conf, web = self._setup_webservice()
-        web._sanity_check()
+        web._job_sanity_check()
         # sanity check should check PREPROCESSING and POSTPROCESSING jobs
         self.assertEqual(job_log, [('preproc', 'sanity_check'),
                                    ('postproc', 'sanity_check')])
+
+    def test_filesystem_sanity_check(self):
+        """Check WebService._filesystem_sanity_check()"""
+        t = RunInTempDir()
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        # Fail if job directories do not exist
+        self.assertRaises(SanityError, web._filesystem_sanity_check)
+        # Make job directories
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        # Garbage files not in job directories are fine
+        open('garbage-file', 'w').write('test')
+        web._filesystem_sanity_check()
+
+    def test_filesystem_sanity_check_garbage_files(self):
+        """Check WebService._filesystem_sanity_check() with garbage files"""
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        web._filesystem_sanity_check()
+        # Make files (not directories) in job directories
+        open('incoming/garbage-file', 'w').write('test')
+        self.assertRaises(SanityError, web._filesystem_sanity_check)
+
+    def test_filesystem_sanity_check_garbage_dirs(self):
+        """Check WebService._filesystem_sanity_check() with garbage dirs"""
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        web._filesystem_sanity_check()
+        # Make extra directories in job directories
+        os.mkdir('incoming/garbage-job')
+        self.assertRaises(SanityError, web._filesystem_sanity_check)
+
+    def test_filesystem_sanity_check_badjobdir(self):
+        """Check WebService._filesystem_sanity_check() with bad job dir"""
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        web._filesystem_sanity_check()
+        # Make job with non-existing directory
+        c = db.conn.cursor()
+        utcnow = datetime.datetime.utcnow()
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+                  ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
+                  utcnow + datetime.timedelta(days=1), '/not/exist',
+                  'http://testurl'))
+        db.conn.commit()
+        self.assertRaises(SanityError, web._filesystem_sanity_check)
 
 if __name__ == '__main__':
     unittest.main()

@@ -73,6 +73,7 @@ def _install_check(target, source, env):
     """Check the final installation for sanity"""
     _check_perl_import(env)
     _check_python_import(env)
+    _check_filesystem_sanity(env)
 
 def _check_perl_import(env):
     """Check to make sure Perl import of modname will work"""
@@ -97,6 +98,13 @@ def _check_python_import(env):
                       "not work. Make sure that the Python package is named "
                       "'%s' and there is an InstallPython call somewhere "
                       "in the SConscripts to install it. " % (modfile, modname))
+
+def _check_filesystem_sanity(env):
+    """Check the filesystem for consistency with the job database"""
+    config = env['config']
+    db = saliweb.backend.Database(saliweb.backend.Job)
+    ws = saliweb.backend.WebService(config, db)
+    ws._filesystem_sanity_check()
 
 def _setup_sconsign(env):
     if not os.path.exists('.scons'):

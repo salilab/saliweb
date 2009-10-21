@@ -7,12 +7,6 @@ Frontend:
 Backend:
   - Test Python coverage in unit tests.
   - Add method to get version number of the web service (see Build).
-  - At startup, for each job in the system, check to make sure that directories
-    for the same job in *different* states do not exist. For example, if the
-    INCOMING job 'foo' exists in /incoming/foo/, but the directory /running/foo/
-    already exists (left over from testing/failures/etc.) the system will later
-    fail when it tries to move 'foo' into the RUNNING state, since the directory
-    already exists.
   - Run/check jobs using DRMAA
     - Build DRMAA Python extension (fix SWIG problems with newer SWIG so that
       the example programs run).
@@ -29,5 +23,3 @@ Build:
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
-  - Check job directories to make sure that the DB and filesystem are in
-    sync (similar to the check run by the backend, above).
