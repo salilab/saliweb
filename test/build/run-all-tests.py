@@ -1,4 +1,26 @@
 import unittest, sys, os, re
+import coverage
+
+class RunAllTests(unittest.TestProgram):
+    """Custom main program that also displays a final coverage report"""
+    def __init__(self, *args, **keys):
+        # Start coverage testing now before we import any modules
+        coverage.start()
+
+        # Run the tests
+        unittest.TestProgram.__init__(self, *args, **keys)
+
+    def runTests(self):
+        self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
+        result = self.testRunner.run(self.test)
+        coverage.stop()
+        coverage.the_coverage.collect()
+        coverage.use_cache(False)
+        print >> sys.stderr, "\nPython coverage report\n"
+        mods = ['python/saliweb/*.py', 'python/saliweb/build/*.py']
+        coverage.the_coverage.relative_dir = 'python/'
+        coverage.report(mods, file=sys.stderr)
+        sys.exit(not result.wasSuccessful())
 
 def regressionTest():
     try:
@@ -16,4 +38,4 @@ def regressionTest():
     return unittest.TestSuite(tests)
 
 if __name__ == "__main__":
-    unittest.main(defaultTest="regressionTest")
+    RunAllTests(defaultTest="regressionTest")

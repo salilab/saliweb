@@ -5,7 +5,6 @@ Frontend:
     limit and period of error reporting, for debugging.
 
 Backend:
-  - Test Python coverage in unit tests.
   - Run/check jobs using DRMAA
     - Build DRMAA Python extension (fix SWIG problems with newer SWIG so that
       the example programs run).
