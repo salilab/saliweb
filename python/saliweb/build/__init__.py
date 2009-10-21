@@ -513,12 +513,18 @@ def _make_web_service(env, target, source):
     config = source[0].get_contents()
     modname = source[1].get_contents()
     pydir = source[2].get_contents()
+    version = source[3].get_contents()
+    if version:
+        version = "r'%s'" % version
     print >> f, "config = '%s'" % config
     print >> f, "pydir = '%s'" % pydir
     print >> f, "import sys"
     print >> f, "sys.path.insert(0, pydir)"
     print >> f, "import %s" % modname
-    print >> f, "get_web_service = %s.get_web_service" % modname
+    print >> f, "def get_web_service(config):"
+    print >> f, "    ws = %s.get_web_service(config)" % modname
+    print >> f, "    ws.version = %s" % version
+    print >> f, "    return ws"
 
 def _InstallAdminTools(env, tools=None):
     if tools is None:
@@ -529,7 +535,8 @@ def _InstallAdminTools(env, tools=None):
                     _make_script)
     env.Command(os.path.join(env['bindir'], 'webservice.py'),
                 [Value(env['instconfigfile']), Value(env['service_module']),
-                 Value(env['pythondir'])], _make_web_service)
+                 Value(env['pythondir']), Value(env['version'])],
+                _make_web_service)
 
 def _InstallCGIScripts(env, scripts=None):
     if scripts is None:
@@ -564,9 +571,13 @@ def _subst_install(env, target, source):
     fout = open(target[0].path, 'w')
     configfile = source[1].get_contents()
     version = source[2].get_contents()
+    if version:
+        version = "'%s'" % version
+    else:
+        version = 'undef'
     service_name = source[3].get_contents()
     for line in fin:
-        line = line.replace('@CONFIG@', "'%s', '%s', '%s'" \
+        line = line.replace('@CONFIG@', "'%s', %s, '%s'" \
                                % (configfile, version, service_name))
         fout.write(line)
     fin.close()

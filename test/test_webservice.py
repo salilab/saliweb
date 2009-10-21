@@ -78,6 +78,7 @@ class WebServiceTest(unittest.TestCase):
         db = MemoryDatabase(Job)
         conf = Config(StringIO(basic_config % {'directory': '/'}))
         ws = WebService(conf, db)
+        self.assertEqual(ws.version, None)
         # OK to make multiple WebService instances
         ws2 = WebService(conf, db)
 

@@ -6,7 +6,6 @@ Frontend:
 
 Backend:
   - Test Python coverage in unit tests.
-  - Add method to get version number of the web service (see Build).
   - Run/check jobs using DRMAA
     - Build DRMAA Python extension (fix SWIG problems with newer SWIG so that
       the example programs run).

@@ -479,6 +479,10 @@ class WebService(object):
        (or subclass) object for the `config` argument, and a :class:`Database`
        (or subclass) object for the `db` argument.
     """
+
+    #: Version number of the service, or None
+    version = None
+
     def __init__(self, config, db):
         self.config = config
         self.config._read_db_auth('back')
