@@ -89,6 +89,18 @@ sub mkjob_with_arc {
        "                           (no archival)");
 }
 
+# Test results_url
+{
+    my $q = new CGI;
+    my $job = mkjob_with_arc(0);
+    my $frontend = {CGI=>$q, page_title=>'test title', cgiroot=>"http://test",
+                    rate_limit_checked=>0, server_name=>'test server'};
+    bless($frontend, 'Dummy::Frontend');
+    $job->{frontend} = $frontend;
+    is($job->results_url, "http://test/results.cgi/testjob?passwd=testpw",
+       "results_url");
+}
+
 # Test get_results_file_url
 {
     my $q = new CGI;

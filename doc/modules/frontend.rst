@@ -55,7 +55,7 @@ the web frontend.
                   contact_url
                   results_url
 
-      Relative URLs to each web page (read-only).
+      Absolute URLs to each web page (read-only).
 
    .. method:: get_navigation_links()
 
@@ -238,6 +238,10 @@ the web frontend.
    .. attribute:: directory
 
       The directory on disk containing job results.
+
+   .. attribute:: results_url
+
+      The URL where this job's results can be found.
 
    .. attribute:: unix_archive_time
 

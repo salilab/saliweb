@@ -189,6 +189,13 @@ sub get_results_available_time {
     }
 }
 
+sub results_url {
+    my $self = shift;
+    my $jobname = $self->{name};
+    my $passwd = $self->{passwd};
+    return $self->{frontend}->results_url . "/$jobname?passwd=$passwd";
+}
+
 sub get_results_file_url {
     my ($self, $file) = @_;
     my $jobname = $self->{name};
@@ -682,7 +689,7 @@ sub get_queue_rows {
     my ($self, $q, $dbh) = @_;
     my @rows;
     my $query =
-         $dbh->prepare("select name,submit_time,state from jobs " .
+         $dbh->prepare("select * from jobs " .
                        "where state != 'ARCHIVED' and state != 'EXPIRED' ".
                        "order by submit_time desc")
              or throw saliweb::frontend::DatabaseError(
@@ -690,8 +697,17 @@ sub get_queue_rows {
     $query->execute()
              or throw saliweb::frontend::DatabaseError(
                                  "Couldn't execute query: " . $dbh->errstr);
-    while (my @data = $query->fetchrow_array()) {
-        push @rows, $q->td([$data[0], $data[1], $data[2]]);
+    while (my $data = $query->fetchrow_hashref()) {
+        if ($data->{state} eq 'COMPLETED' && $self->{'user_name'}
+            && $data->{user} && $data->{user} eq $self->{'user_name'}) {
+            my $jobobj = new saliweb::frontend::CompletedJob($self, $data);
+            push @rows, $q->td([$q->a({-href=>$jobobj->results_url},
+                                      $data->{name}),
+                                $data->{submit_time}, $data->{state}]);
+        } else {
+            push @rows, $q->td([$data->{name}, $data->{submit_time},
+                                $data->{state}]);
+        }
     }
     return @rows;
 }

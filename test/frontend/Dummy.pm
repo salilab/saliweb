@@ -58,13 +58,24 @@ sub execute {
     return $self->{failexecute} != 1;
 }
 
-sub fetchrow_array {
+sub fetchrow_hashref {
     my $self = shift;
     $self->{fetch_calls}++;
     if ($self->{fetch_calls} == 1) {
-        return "job1", "time1", "state1";
+        return {name=>'job1', submit_time=>'time1', state=>'RUNNING',
+                user=>undef};
     } elsif ($self->{fetch_calls} == 2) {
-        return "job2", "time2", "state2";
+        return {name=>'job2', submit_time=>'time2', state=>'INCOMING',
+                user=>'testuser'};
+    } elsif ($self->{fetch_calls} == 3) {
+        return {name=>'job3', submit_time=>'2009-10-01 00:10:20',
+                state=>'COMPLETED', user=>'testuser', passwd=>'testpw'};
+    } elsif ($self->{fetch_calls} == 4) {
+        return {name=>'job4', submit_time=>'time4', state=>'COMPLETED',
+                user=>'otheruser'};
+    } elsif ($self->{fetch_calls} == 5) {
+        return {name=>'job5', submit_time=>'time5', state=>'COMPLETED',
+                user=>undef};
     } else {
         return;
     }

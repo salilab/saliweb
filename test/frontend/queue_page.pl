@@ -33,16 +33,16 @@ BEGIN { use_ok('saliweb::frontend'); }
 # Test get_queue_rows
 {
     my $q = new CGI;
-    my $self = {CGI=>$q};
+    my $self = {CGI=>$q, cgiroot=>'testroot'};
     bless($self, 'saliweb::frontend');
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = "Dummy::QueueQuery";
 
     my @rows = $self->get_queue_rows($q, $dbh);
-    is(scalar(@rows), 2, "get_queue_rows (length)");
-    like($rows[0], qr/<td>.*job1.*<td>.*time1.*<td>.*state1/s,
+    is(scalar(@rows), 5, "get_queue_rows (length)");
+    like($rows[0], qr/<td>.*job1.*<td>.*time1.*<td>.*RUNNING/s,
          "               (content, row 1)");
-    like($rows[1], qr/<td>.*job2.*<td>.*time2.*<td>.*state2/s,
+    like($rows[1], qr/<td>.*job2.*<td>.*time2.*<td>.*INCOMING/s,
          "               (content, row 2)");
 
     $dbh->{failprepare} = 1;
@@ -51,14 +51,30 @@ BEGIN { use_ok('saliweb::frontend'); }
               "               (prepare error)";
     like($@, qr/Couldn't prepare query: DB error/,
          "               (exception message)");
-
     $dbh->{failprepare} = 0;
+
     $dbh->{failexecute} = 1;
     throws_ok { $self->get_queue_rows($q, $dbh) }
               'saliweb::frontend::DatabaseError',
               "               (execute error)";
     like($@, qr/Couldn't execute query: DB error/,
          "               (exception message)");
+    $dbh->{failexecute} = 0;
+
+    $self->{user_name} = 'testuser';
+    @rows = $self->get_queue_rows($q, $dbh);
+    is(scalar(@rows), 5, "get_queue_rows with user (length)");
+    for (my $i = 0; $i < 5; $i++) {
+        if ($i == 2) {
+            like($rows[2], '/<td><a href="testroot\/results.cgi\/job3\?' .
+                           'passwd=testpw">job3<\/a>.*<\/td>.*' .
+                           '2009\-10\-01.*COMPLETED/s',
+                   "                         (content, row 3)");
+        } else {
+            unlike($rows[$i], qr/<a href/,
+                   "                         (content, row " . ($i + 1) . ")");
+        }
+    }
 }
 
 # Test get_queue_page
@@ -74,7 +90,7 @@ BEGIN { use_ok('saliweb::frontend'); }
          '/<h3>.*Current test server Queue.*<\/h3>.*' .
          '<table>.*<tr>.*<th>.*Job ID.*' .
          '<th>.*Submit time \(UTC\).*<th>.*Status.*<\/tr>.*' .
-         '<td>.*job1.*<td>.*time1.*<td>.*state1.*' .
-         '<td>.*job2.*<td>.*time2.*<td>.*state2.*' .
+         '<td>.*job1.*<td>.*time1.*<td>.*RUNNING.*' .
+         '<td>.*job2.*<td>.*time2.*<td>.*INCOMING.*' .
          'INCOMING.*FAILED/s', 'get_queue_page');
 }
