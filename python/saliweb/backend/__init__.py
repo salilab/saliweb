@@ -161,6 +161,7 @@ class Config(object):
         self._populate_directories(config)
         self._populate_oldjobs(config)
         self._populate_backend(config)
+        self._populate_limits(config)
         self.socket = config.get('general', 'socket')
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
@@ -197,6 +198,13 @@ class Config(object):
             if not os.path.isabs(fname) and self._config_dir:
                 fname = os.path.abspath(os.path.join(self._config_dir, fname))
             self.database[key] = fname
+
+    def _populate_limits(self, config):
+        self.limits = {}
+        if config.has_option('limits', 'running'):
+            self.limits['running'] = config.getint('limits', 'running')
+        else:
+            self.limits['running'] = 5
 
     def _read_db_auth(self, end='back'):
         filename = self.database[end + 'end_config']
@@ -370,6 +378,13 @@ class Database(object):
         schema = ', '.join(x.get_schema() for x in self._fields)
         c.execute('CREATE TABLE %s (%s)' % (self._jobtable, schema))
         self.conn.commit()
+
+    def _count_all_jobs_in_state(self, state):
+        """Return a count of all the jobs in the given job state."""
+        c = self.conn.cursor()
+        c.execute('SELECT COUNT() FROM %s WHERE state=%s' \
+                  % (self._jobtable, self._placeholder), (state,))
+        return c.fetchone()[0]
 
     def _get_all_jobs_in_state(self, state, name=None, after_time=None):
         """Get all the jobs in the given job state, as a generator of
@@ -648,8 +663,16 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""
+        numrunning = self.db._count_all_jobs_in_state('RUNNING')
+        maxrunning = self.config.limits['running']
+        # Save doing an extra SQL SELECT if we're already at the maximum
+        if numrunning >= maxrunning:
+            return
         for job in self.db._get_all_jobs_in_state('INCOMING'):
             job._try_run()
+            numrunning += 1
+            if numrunning >= maxrunning:
+                return
 
     def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""

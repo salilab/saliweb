@@ -65,6 +65,12 @@ check_minutes
     expired jobs are also checked for periodically, but this interval is
     fixed at 10% of the shorter of the archive and expiry times.
 
+limits
+======
+
+running
+    The maximum number of jobs that will run simultaneously. Defaults to 5.
+
 database
 ========
 

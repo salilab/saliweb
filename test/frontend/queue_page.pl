@@ -15,9 +15,19 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 # Test get_queue_key
 {
-    my $self = {CGI=> new CGI};
+    my $config = {limits=>{running=>10}};
+    my $self = {CGI=> new CGI, config=>$config};
     bless($self, 'saliweb::frontend');
-    like($self->get_queue_key, qr/INCOMING.*FAILED/s, 'get_queue_key');
+    like($self->get_queue_key,
+         qr/INCOMING.*RUNNING.*No more than 10 jobs may.*FAILED/s,
+         'get_queue_key (10 jobs)');
+
+    $config = {limits=>{running=>1}};
+    $self = {CGI=> new CGI, config=>$config};
+    bless($self, 'saliweb::frontend');
+    like($self->get_queue_key,
+         qr/INCOMING.*RUNNING.*No more than 1 job may.*FAILED/s,
+         '              (1 job)');
 }
 
 # Test get_queue_rows
@@ -55,7 +65,9 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     my $dbh = new Dummy::DB;
     $dbh->{query_class} = "Dummy::QueueQuery";
-    my $self = {CGI=>new CGI, dbh=>$dbh, server_name=>'test server'};
+    my $config = {limits=>{running=>10}};
+    my $self = {CGI=>new CGI, dbh=>$dbh, server_name=>'test server',
+                config=>$config};
     bless($self, 'saliweb::frontend');
 
     like($self->get_queue_page,

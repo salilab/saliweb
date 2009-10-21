@@ -9,7 +9,6 @@ Frontend:
 Backend:
   - Test Python coverage in unit tests.
   - Add method to get version number of the web service (see Build).
-  - Add maximum number of running jobs parameter, and enforce it.
   - Add command-line admin tool to delete a job; should delete both database
     row and filesystem directory; should accept wildcards for job names;
     should work only on failed/completed/expired/archived jobs if the backend

@@ -88,6 +88,37 @@ class WebServiceTest(unittest.TestCase):
         ws2 = WebService(conf, db)
         self.assertRaises(StateFileError, ws2._check_state_file)
 
+    def test_max_running(self):
+        """Make sure that limits.running is honored"""
+        global job_log
+        def setup_two_incoming(running):
+            global job_log
+            job_log = []
+            db, conf, web = self._setup_webservice()
+            conf.limits['running'] = running
+            c = db.conn.cursor()
+            c.execute("INSERT INTO jobs(name,state,submit_time, "
+                      "directory,url) VALUES(?,?,?,?,?)",
+                      ('injob2', 'INCOMING', datetime.datetime.utcnow(),
+                       '/', 'http://testurl'))
+            db.conn.commit()
+            return db, conf, web
+
+        # No jobs should be run if the limit is already met
+        db, conf, web = setup_two_incoming(2)
+        web._process_incoming_jobs()
+        self.assertEqual(job_log, [])
+
+        # Both incoming jobs should be run if the limit permits it
+        db, conf, web = setup_two_incoming(10)
+        web._process_incoming_jobs()
+        self.assertEqual(job_log, [('job1', 'run'), ('injob2', 'run')])
+
+        # Only one incoming job should be run if the limit is reached
+        db, conf, web = setup_two_incoming(3)
+        web._process_incoming_jobs()
+        self.assertEqual(job_log, [('job1', 'run')])
+
     def test_fatal_error_propagated(self):
         """Make sure that fatal errors are propagated"""
         db, conf, web = self._setup_webservice()

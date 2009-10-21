@@ -28,8 +28,8 @@ archive: %s
 expire: %s
 """
 
-def get_config(archive='3h', expire='90d'):
-    return Config(StringIO(basic_config % (archive, expire)))
+def get_config(archive='3h', expire='90d', extra=''):
+    return Config(StringIO(basic_config % (archive, expire) + extra))
 
 class ConfigTest(unittest.TestCase):
     """Check Config class"""
@@ -43,6 +43,10 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.directories['FAILED'], '/preproc')
         self.assertEqual(conf.oldjobs['expire'].days, 90)
         self.assertEqual(conf.admin_email, 'test@salilab.org')
+        self.assertEqual(conf.limits['running'], 5)
+
+        conf = get_config(extra='[limits]\nrunning: 10')
+        self.assertEqual(conf.limits['running'], 10)
 
     def test_time_deltas(self):
         """Check parsing of time deltas in config files"""

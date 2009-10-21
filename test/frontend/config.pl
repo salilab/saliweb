@@ -57,6 +57,8 @@ END
        'directory key for job state INCOMING should be caps');
     is($config->{directories}->{RUNNING}, 'runningvalue',
        'directory key for job state RUNNING should be caps');
+    is($config->{limits}->{running}, 5,
+       'check defaults (limits.running)');
 }
 
 # Test read_config function

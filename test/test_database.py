@@ -92,6 +92,16 @@ class DatabaseTest(unittest.TestCase):
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE jobs')
 
+    def test_count_jobs(self):
+        """Check Database._count_all_jobs_in_state()"""
+        db = MemoryDatabase(Job)
+        db._connect(None)
+        db._create_tables()
+        make_test_jobs(db.conn)
+        self.assertEqual(db._count_all_jobs_in_state('INCOMING'), 1)
+        self.assertEqual(db._count_all_jobs_in_state('RUNNING'), 2)
+        self.assertEqual(db._count_all_jobs_in_state('EXPIRED'), 0)
+
     def test_get_jobs(self):
         """Check Database._get_all_jobs_in_state()"""
         db = MemoryDatabase(Job)

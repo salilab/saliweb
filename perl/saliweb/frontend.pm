@@ -695,17 +695,20 @@ sub get_queue_rows {
 sub get_queue_key {
     my $self = shift;
     my $q = $self->{'CGI'};
+    my $maxjobs = $self->{config}->{limits}->{running};
     return
       $q->h3("Key") .
       $q->p($q->b("INCOMING:"),
             " the job has been successfully submitted by the " .
-            "web interface. If your job is stuck in this state for more than " .
-            "15 minutes, contact us for help.") .
+            "web interface, but has not yet started running.") .
 
       $q->p($q->b("RUNNING:"),
-            " the job is running on our grid machines. When the system is " .
-            "is particularly busy, this could take hours or days, so please " .
-            "be patient. Resubmitting your job will not help.") .
+            " the job is running on our grid machines. " .
+            sprintf("No more than %d job%s may run simultaneously on the " .
+                    "system. ", $maxjobs, ($maxjobs == 1 ? '' : 's')) .
+            "When the system is particularly busy, a job could run for hours " .
+            "or days, so please be patient. Resubmitting your job will " .
+            "not help.") .
 
       $q->p($q->b("COMPLETED:"),
             " the job has finished. You can find the job " .
@@ -938,6 +941,8 @@ sub read_ini_file {
         or throw saliweb::frontend::InternalError("Cannot open $filename: $!");
   my $contents;
   my $section;
+  # Set defaults
+  $contents->{limits}->{running} = 5;
   while(<FILE>) {
     if (/^\[(\S+)\]$/) {
       $section = lc $1;
