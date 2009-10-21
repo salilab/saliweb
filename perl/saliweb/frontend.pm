@@ -618,7 +618,7 @@ sub format_results_error {
     my $msg = $exc->text;
     return $q->p("$msg.") .
            $q->p("You can also check on your job at the " .
-                 $q->a({-href=>$self->queue_url}, "queue") . " page.");
+                 $q->a({-href=>'../' . $self->queue_url}, "queue") . " page.");
 }
 
 sub get_footer {
