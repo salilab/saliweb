@@ -514,8 +514,10 @@ def _make_web_service(env, target, source):
     modname = source[1].get_contents()
     pydir = source[2].get_contents()
     version = source[3].get_contents()
-    if version:
+    if version != 'None':
         version = "r'%s'" % version
+    else:
+        version = None
     print >> f, "config = '%s'" % config
     print >> f, "pydir = '%s'" % pydir
     print >> f, "import sys"
@@ -571,7 +573,7 @@ def _subst_install(env, target, source):
     fout = open(target[0].path, 'w')
     configfile = source[1].get_contents()
     version = source[2].get_contents()
-    if version:
+    if version != 'None':
         version = "'%s'" % version
     else:
         version = 'undef'
