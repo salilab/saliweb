@@ -152,6 +152,15 @@ This tool will move a single job from the **FAILED** state back to the
 whatever problem with the web service that caused these jobs to fail the
 first time around has been resolved.
 
+deljob.py
+---------
+
+This tool will delete a single job in a given state. It can be used to remove
+failed jobs from the system, or to purge information from the database on
+expired jobs. Jobs in other states (such as **RUNNING** or **COMPLETED**) can
+also be deleted, but only if the backend service is stopped first, since that
+service actively manages jobs in these states.
+
 .. _complete_examples:
 
 Examples

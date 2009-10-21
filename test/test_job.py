@@ -174,6 +174,14 @@ def add_archived_job(db, name, expire_time):
     db.conn.commit()
     return jobdir
 
+def add_expired_job(db, name):
+    c = db.conn.cursor()
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
+              + "url) VALUES(?,?,?,?,?)",
+              (name, 'EXPIRED', utcnow, None, 'http://testurl'))
+    db.conn.commit()
+
 def add_failed_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['FAILED'], name)
@@ -637,6 +645,28 @@ class JobTest(unittest.TestCase):
         injobdir = os.path.join(conf.directories['INCOMING'], 'job1')
         self.assertEqual(job.directory, injobdir)
         os.rmdir(injobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_delete(self):
+        """Check deletion of jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_failed_job(db, 'job1')
+        add_expired_job(db, 'job2')
+        add_expired_job(db, 'job3')
+        job = web.get_job_by_name('FAILED', 'job1')
+        job.delete()
+        job = web.get_job_by_name('EXPIRED', 'job2')
+        job.delete()
+        # Jobs should now be removed
+        job = web.get_job_by_name('FAILED', 'job1')
+        self.assertEqual(job, None)
+        job = web.get_job_by_name('EXPIRED', 'job2')
+        self.assertEqual(job, None)
+        self.assert_(not os.path.exists(injobdir))
+        # Make sure that the database rows really went away
+        c = db.conn.cursor()
+        c.execute('SELECT COUNT(*) FROM jobs')
+        self.assertEqual(c.fetchone()[0], 1)
         cleanup_webservice(conf, tmpdir)
 
     def test_has_completed(self):

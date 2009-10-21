@@ -417,6 +417,15 @@ class Database(object):
             metadata = _JobMetadata(fields, row)
             yield self._jobcls(self, metadata, _JobState(state))
 
+    def _delete_job(self, metadata, state):
+        """Delete a job from the job state table."""
+        c = self.conn.cursor()
+        query = 'DELETE FROM ' + self._jobtable \
+                + ' WHERE name=' + self._placeholder
+        c.execute(query, [metadata['name']])
+        self.conn.commit()
+        metadata.mark_synced()
+
     def _update_job(self, metadata, state):
         """Update a job in the job state table."""
         c = self.conn.cursor()
@@ -972,6 +981,13 @@ class Job(object):
             s.close()
         except socket.error:
             pass
+
+    def delete(self):
+        """Delete the job directory and database row."""
+        if self._metadata['directory']:
+            shutil.rmtree(self._metadata['directory'])
+        self._db._delete_job(self._metadata, self._get_state())
+        self._metadata = None
 
     def run(self):
         """Run the job, e.g. on an SGE cluster.
