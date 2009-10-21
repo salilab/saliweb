@@ -22,6 +22,10 @@ sub new {
     return $self;
 }
 
+sub _preparehook {
+    my ($self, $dbh) = @_;
+}
+
 sub execute {
     my $self = shift;
     my $jobname = shift;
@@ -52,6 +56,11 @@ sub fetchrow_array {
 package Dummy::QueueQuery;
 our @ISA = qw/Dummy::Query/;
 
+sub _preparehook {
+    my ($self, $dbh) = @_;
+    $self->{jobdir} = $dbh->{jobdir};
+}
+
 sub execute {
     my $self = shift;
     $self->{execute_calls}++;
@@ -63,19 +72,23 @@ sub fetchrow_hashref {
     $self->{fetch_calls}++;
     if ($self->{fetch_calls} == 1) {
         return {name=>'job1', submit_time=>'time1', state=>'RUNNING',
-                user=>undef};
+                user=>undef, directory=>$self->{jobdir}};
     } elsif ($self->{fetch_calls} == 2) {
-        return {name=>'job2', submit_time=>'time2', state=>'INCOMING',
-                user=>'testuser'};
+        return {name=>'job2', submit_time=>'time2', state=>'RUNNING',
+                user=>undef, directory=>'/not/exist'};
     } elsif ($self->{fetch_calls} == 3) {
-        return {name=>'job3', submit_time=>'2009-10-01 00:10:20',
-                state=>'COMPLETED', user=>'testuser', passwd=>'testpw'};
+        return {name=>'job3', submit_time=>'time3', state=>'INCOMING',
+                user=>'testuser', directory=>'/not/exist'};
     } elsif ($self->{fetch_calls} == 4) {
-        return {name=>'job4', submit_time=>'time4', state=>'COMPLETED',
-                user=>'otheruser'};
+        return {name=>'job4', submit_time=>'2009-10-01 00:10:20',
+                state=>'COMPLETED', user=>'testuser', passwd=>'testpw',
+                directory=>'/not/exist'};
     } elsif ($self->{fetch_calls} == 5) {
-        return {name=>'job5', submit_time=>'time5', state=>'COMPLETED',
-                user=>undef};
+        return {name=>'job5', submit_time=>'time4', state=>'COMPLETED',
+                user=>'otheruser', directory=>'/not/exist'};
+    } elsif ($self->{fetch_calls} == 6) {
+        return {name=>'job6', submit_time=>'time5', state=>'COMPLETED',
+                user=>undef, directory=>'/not/exist'};
     } else {
         return;
     }
@@ -157,6 +170,7 @@ sub prepare {
         return undef;
     } else {
         $self->{query} = new $self->{query_class};
+        $self->{query}->_preparehook($self);
         $self->{query}->{failexecute} = $self->{failexecute};
         return $self->{query};
     }

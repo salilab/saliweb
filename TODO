@@ -3,8 +3,6 @@ Frontend:
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to frontend class (or options to config file) to configure rate
     limit and period of error reporting, for debugging.
-  - Check job state file in queue page to distinguish between QUEUED and
-    RUNNING jobs.
 
 Backend:
   - Test Python coverage in unit tests.

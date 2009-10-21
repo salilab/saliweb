@@ -705,6 +705,14 @@ sub get_queue_rows {
                                       $data->{name}),
                                 $data->{submit_time}, $data->{state}]);
         } else {
+            # If the job has been submitted to the cluster but hasn't started
+            # yet, report it in QUEUED status
+            if ($data->{state} eq 'RUNNING') {
+                my $state_file = $data->{directory} . '/job-state';
+                if (! -f $state_file) {
+                    $data->{state} = 'QUEUED';
+                }
+            }
             push @rows, $q->td([$data->{name}, $data->{submit_time},
                                 $data->{state}]);
         }
@@ -720,15 +728,19 @@ sub get_queue_key {
       $q->h3("Key") .
       $q->p($q->b("INCOMING:"),
             " the job has been successfully submitted by the " .
-            "web interface, but has not yet started running.") .
+            "web interface, but has not yet started running. " .
+            sprintf("No more than %d job%s may run simultaneously on the " .
+                    "system.", $maxjobs, ($maxjobs == 1 ? '' : 's'))) .
+
+      $q->p($q->b("QUEUED:"),
+            " the job has been passed to our compute cluster, but the " .
+            "cluster is currently busy with other jobs, and so the job is " .
+            "not yet running. When the system is particularly busy, a job " .
+            "could wait for hours or days, so please be patient. " .
+            "Resubmitting your job will not help.") .
 
       $q->p($q->b("RUNNING:"),
-            " the job is running on our grid machines. " .
-            sprintf("No more than %d job%s may run simultaneously on the " .
-                    "system. ", $maxjobs, ($maxjobs == 1 ? '' : 's')) .
-            "When the system is particularly busy, a job could run for hours " .
-            "or days, so please be patient. Resubmitting your job will " .
-            "not help.") .
+            " the job is running on our compute cluster.") .
 
       $q->p($q->b("COMPLETED:"),
             " the job has finished. You can find the job " .
