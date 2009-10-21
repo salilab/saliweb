@@ -382,7 +382,7 @@ class Database(object):
     def _count_all_jobs_in_state(self, state):
         """Return a count of all the jobs in the given job state."""
         c = self.conn.cursor()
-        c.execute('SELECT COUNT() FROM %s WHERE state=%s' \
+        c.execute('SELECT COUNT(*) FROM %s WHERE state=%s' \
                   % (self._jobtable, self._placeholder), (state,))
         return c.fetchone()[0]
 
