@@ -480,7 +480,7 @@ class WebService(object):
        (or subclass) object for the `db` argument.
     """
 
-    #: Version number of the service, or None
+    #: Version number of the service, or None.
     version = None
 
     def __init__(self, config, db):
