@@ -15,6 +15,17 @@ End users can simply use the web service by pointing their web browsers to
 `http://modbase.compbio.ucsf.edu/modfoo/`. This will display the index page,
 from where they can submit jobs or navigate to other pages.
 
+User authentication
+===================
+
+The web framework ties in automatically to Ursula's login page for web service
+accounts. If a user logs in, his or her email address is automatically
+supplied to forms that ask for it; job results pages are linked from the
+queue page; and, potentially, data files can be passed between multiple lab
+web services. Unauthenticated (anonymous) users can still use lab web services,
+however, unless the service is experimental or very expensive in terms of
+computer time.
+
 Automated use
 =============
 
@@ -32,8 +43,8 @@ This URL can be queried by an HTTP GET to see if the job has finished.
 If it has, a list of URLs for job results files is returned; if it has not,
 an HTTP error is returned and the request can be retried later.
 Finally, the job results files can be downloaded using the provided URLs.
-A simple example Python script to
-automatically submit a job, and then gather the results, is shown below.
+A simple example Python script to automatically submit a job, and then
+wait for and gather the results, is shown below.
 
 .. literalinclude:: ../examples/modfoo_rest.py
    :language: python

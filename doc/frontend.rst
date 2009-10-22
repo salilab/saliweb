@@ -96,6 +96,12 @@ the job completes:
 .. literalinclude:: ../examples/frontend-index.pm
    :language: perl
 
+Note that the email address is filled in using
+:attr:`saliwebfrontend.email`. If the user is logged in to the webserver,
+their email address will be available for use in this fashion (otherwise, the
+user will simply have to input a suitable address if they want to be
+notified). See also :attr:`saliwebfrontend.modeller_key`.
+
 Submission page
 ---------------
 

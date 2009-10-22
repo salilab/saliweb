@@ -7,7 +7,7 @@ sub get_index_page {
            $q->p("Job name (optional)") .
            $q->textfield({-name=>'job_name'}) .
            $q->p("Email address (optional)") .
-           $q->textfield({-name=>'email'}) .
+           $q->textfield({-name=>'email', -value=>$self->email}) .
            $q->p("Upload PDB file") .
            $q->filefield({-name=>'input_pdb'}) .
            $q->end_form;
