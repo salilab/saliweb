@@ -27,3 +27,4 @@ Build:
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
   - Add a script to set up a simple directory structure for a new service.
+  - Make sure that install directory is on a local disk.
