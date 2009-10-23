@@ -33,6 +33,11 @@ the web frontend.
 
       The version number of this web service (read-only).
 
+   .. attribute:: user_name
+
+      If a user is authenticated against the service, this is their user
+      name; otherwise, it is undef (read-only).
+
    .. attribute:: email
 
       If a user is authenticated against the service, this is their email

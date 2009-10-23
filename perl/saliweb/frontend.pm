@@ -433,6 +433,11 @@ sub version {
     return $self->{version};
 }
 
+sub user_name {
+    my $self = shift;
+    return $self->{user_name};
+}
+
 sub email {
     my $self = shift;
     if (defined($self->{'user_info'})) {

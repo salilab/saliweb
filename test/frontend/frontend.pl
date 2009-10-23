@@ -88,12 +88,13 @@ BEGIN {
     my $user_info = {email=>'myemail'};
     my $self = {CGI=>'mycgi', htmlroot=>'myhtmlroot', cgiroot=>'mycgiroot',
                 user_info=>$user_info, version=>'myversion',
-                http_status=>'200'};
+                http_status=>'200', user_name=>'testuser'};
     bless($self, 'saliweb::frontend');
     is($self->cgi, 'mycgi', 'saliweb::frontend accessors: cgi');
     is($self->htmlroot, 'myhtmlroot', '                             htmlroot');
     is($self->cgiroot, 'mycgiroot', '                             cgiroot');
     is($self->email, 'myemail', '                             email');
+    is($self->user_name, 'testuser', '                             user_name');
     is($self->version, 'myversion', '                             version');
     undef $self->{user_info};
     is($self->email, undef, '                             undef email');

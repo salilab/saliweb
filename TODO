@@ -3,7 +3,6 @@ Frontend:
   - Add methods to get extra stylesheets, JavaScripts.
   - Add method to frontend class (or options to config file) to configure rate
     limit and period of error reporting, for debugging.
-  - Add accessor for authenticated user name.
   - Add method to control access to each page.
   - Add a set of UserErrors (make InputValidationError a subclass) to report
     user errors in any page; e.g. AccessDeniedError, SystemBusyError (if number
