@@ -12,8 +12,6 @@ BEGIN { use_ok('saliweb::frontend'); }
 
 # Test hierarchy of exception classes
 {
-    isa_ok(new saliweb::frontend::InputValidationError("x"), 'Error::Simple',
-           'InputValidationError');
     isa_ok(new saliweb::frontend::InternalError("x"), 'Error::Simple',
            'InternalError');
     isa_ok(new saliweb::frontend::DatabaseError("x"), 'Error::Simple',
@@ -31,4 +29,11 @@ BEGIN { use_ok('saliweb::frontend'); }
            'saliweb::frontend::ResultsError', 'ResultsGoneError');
     isa_ok(new saliweb::frontend::ResultsStillRunningError("x"),
            'saliweb::frontend::ResultsError', 'ResultsStillRunningError');
+
+    isa_ok(new saliweb::frontend::UserError("x"), 'Error::Simple',
+           'UserError');
+    isa_ok(new saliweb::frontend::InputValidationError("x"),
+           'saliweb::frontend::UserError', 'InputValidationError');
+    isa_ok(new saliweb::frontend::AccessDeniedError("x"),
+           'saliweb::frontend::UserError', 'AccessDeniedError');
 }

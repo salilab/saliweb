@@ -374,6 +374,14 @@ sub test_display_page {
                "test_${page_type}_page.*<\/html>/s",
          "$sub generates valid complete HTML page");
 
+    $self = make_test_frontend("access${page_type}");
+    $out = stdout_from { $self->$sub() };
+    like($out, "/^Status: 401.*" .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               "<body.*Link 1.*Project menu for.*" .
+               "get_${page_type}_page access.*<\/html>/s",
+         "${prefix}handles user errors");
+
     $self = make_test_frontend("fail${page_type}");
     throws_ok { stdout_from { $self->$sub() } }
               'saliweb::frontend::InternalError',
@@ -444,15 +452,38 @@ sub test_display_page {
     is($self->get_footer, "", 'get_footer returns an empty string');
 }
 
-# Test format_input_validation_error method
+# Test format_user_error method
 {
     my $self = {CGI=>new CGI};
     bless($self, 'saliweb::frontend');
     my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
-    like($self->format_input_validation_error($exc),
-         '/<h2>.*Invalid input.*<\/h2>.*<b>.*' .
-         'An error occurred during your request:.*<\/b>.*my inpvalid error/s',
-         'format_input_validation_error');
+    like($self->format_user_error($exc),
+         '/^<h2>.*Invalid input.*<\/h2>.*<b>.*' .
+         'An error occurred during your request:.*<\/b>.*my inpvalid error.*' .
+         'browser.*BACK/s',
+         'format_user_error');
+}
+
+# Test handle_user_error method
+{
+    my $self = {CGI=>new CGI, page_title=>'testtitle'};
+    bless($self, 'saliweb::frontend');
+    my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
+    my $out = stdout_from { $self->handle_user_error($exc) };
+    like($out,
+         '/^Status: 400.*<h2>.*Invalid input.*<\/h2>.*<b>.*' .
+         'An error occurred during your request:.*<\/b>.*my inpvalid error.*' .
+         'browser.*BACK/s',
+         'handle_user_error');
+
+    $exc = new saliweb::frontend::AccessDeniedError("accdenied error");
+    $out = stdout_from { $self->handle_user_error($exc) };
+    like($out,
+         '/^Status: 401.*<h2>.*Invalid input.*<\/h2>.*<b>.*' .
+         'An error occurred during your request:.*<\/b>.*accdenied error/s',
+         '                  (access denied)');
+    unlike($out, '/browser.*BACK/s',
+           '                  (access denied)');
 }
 
 # Test check_required_email method

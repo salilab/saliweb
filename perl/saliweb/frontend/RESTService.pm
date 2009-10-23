@@ -42,10 +42,14 @@ sub format_fatal_error {
            "</saliweb>\n";
 }
 
-sub format_input_validation_error {
+sub format_user_error {
     my ($self, $exc) = @_;
     my $msg = $exc->text;
-    return "   <error type=\"input_validation\">$msg</error>";
+    my $type = "user";
+    if ($exc->isa("saliweb::frontend::InputValidationError")) {
+        $type = "input_validation";
+    }
+    return "   <error type=\"$type\">$msg</error>";
 }
 
 sub format_results_error {

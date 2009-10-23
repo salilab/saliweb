@@ -202,6 +202,8 @@ sub get_index_page {
     my $self = shift;
     if ($self->{server_name} eq "failindex") {
         throw saliweb::frontend::InternalError("get_index_page failure");
+    } elsif ($self->{server_name} eq "accessindex") {
+        throw saliweb::frontend::AccessDeniedError("get_index_page access");
     } else {
         return "test_index_page";
     }
@@ -213,6 +215,8 @@ sub get_submit_page {
         throw saliweb::frontend::InputValidationError("bad submission");
     } elsif ($self->{server_name} eq "failsubmit") {
         throw saliweb::frontend::InternalError("get_submit_page failure");
+    } elsif ($self->{server_name} eq "accesssubmit") {
+        throw saliweb::frontend::AccessDeniedError("get_submit_page access");
     } else {
         if ($self->{server_name} ne "nosubmit") {
             $self->_add_submitted_job("Dummy");
@@ -225,6 +229,8 @@ sub get_queue_page {
     my $self = shift;
     if ($self->{server_name} eq "failqueue") {
         throw saliweb::frontend::InternalError("get_queue_page failure");
+    } elsif ($self->{server_name} eq "accessqueue") {
+        throw saliweb::frontend::AccessDeniedError("get_queue_page access");
     } else {
         return "test_queue_page";
     }
@@ -234,6 +240,8 @@ sub get_help_page {
     my $self = shift;
     if ($self->{server_name} eq "failhelp") {
         throw saliweb::frontend::InternalError("get_help_page failure");
+    } elsif ($self->{server_name} eq "accesshelp") {
+        throw saliweb::frontend::AccessDeniedError("get_help_page access");
     } else {
         return "test_help_page";
     }
@@ -243,6 +251,8 @@ sub get_results_page {
     my ($self, $jobobj) = @_;
     if ($self->{server_name} eq "failresults") {
         throw saliweb::frontend::InternalError("get_results_page failure");
+    } elsif ($self->{server_name} eq "accessresults") {
+        throw saliweb::frontend::AccessDeniedError("get_results_page access");
     } else {
         return "test_results_page " . ref($jobobj) . " " . $jobobj->{name};
     }
@@ -285,6 +295,8 @@ sub get_submit_page {
         throw saliweb::frontend::InputValidationError("bad submission");
     } elsif ($self->{server_name} eq "failsubmit") {
         throw saliweb::frontend::InternalError("get_submit_page failure");
+    } elsif ($self->{server_name} eq "accesssubmit") {
+        throw saliweb::frontend::AccessDeniedError("get_submit_page access");
     } else {
         if ($self->{server_name} ne "nosubmit") {
             $self->_add_submitted_job(new Dummy::IncomingJob());

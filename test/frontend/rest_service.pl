@@ -89,6 +89,14 @@ sub test_display_page {
          '<error type="input_validation">bad submission.*<\/error>/s',
          '                    handles invalid submission');
 
+    $self = make_test_frontend('accesssubmit');
+    $out = stdout_from { $self->display_submit_page() };
+    like($out,
+         '/^Status: 401 Unauthorized.*Content\-Type: text\/xml.*' .
+         '<\?xml version="1\.0"\?>.*' .
+         '<error type="user">get_submit_page access<\/error>/s',
+         '                    handles access denied errors');
+
     $self = make_test_frontend('nosubmit');
     stdout_from {
         throws_ok { $self->display_submit_page() }

@@ -334,6 +334,13 @@ sub handle_fatal_error {
     $exc->throw();
 }
 
+sub handle_user_error {
+    my ($self, $exc) = @_;
+    $self->http_status($exc->http_status);
+    my $content = $self->format_user_error($exc);
+    $self->_display_web_page($content);
+}
+
 sub _check_rate_limit {
     my $self = shift;
     my $file = "/tmp/" . lc($self->{server_name}) . "-service.state";
@@ -616,16 +623,19 @@ sub check_modeller_key {
     }
 }
 
-sub format_input_validation_error {
+sub format_user_error {
     my ($self, $exc) = @_;
     my $q = $self->{'CGI'};
     my $msg = $exc->text;
-    return $q->h2("Invalid input") .
-           $q->p("&nbsp;") .
-           $q->p($q->b("An error occurred during your request:")) .
-           "<div class=\"standout\"><p>$msg</p></div>" .
-           $q->p($q->b("Please click on your browser's \"BACK\" " .
-                       "button, and correct the problem."));
+    my $ret = $q->h2("Invalid input") .
+              $q->p("&nbsp;") .
+              $q->p($q->b("An error occurred during your request:")) .
+              "<div class=\"standout\"><p>$msg</p></div>";
+    if ($exc->isa('saliweb::frontend::InputValidationError')) {
+        $ret .= $q->p($q->b("Please click on your browser's \"BACK\" " .
+                            "button, and correct the problem."));
+    }
+    return $ret;
 }
 
 sub format_results_error {
@@ -782,6 +792,8 @@ sub display_index_page {
     my $self = shift;
     try {
         $self->_display_web_page($self->get_index_page());
+    } catch saliweb::frontend::UserError with {
+        $self->handle_user_error(shift);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
@@ -813,11 +825,8 @@ sub display_submit_page {
             $self->_internal_display_submit_page($content,
                                                  $self->{submitted_jobs});
             delete $self->{submitted_jobs};
-        } catch saliweb::frontend::InputValidationError with {
-            my $exc = shift;
-            $self->http_status($exc->http_status);
-            $content = $self->format_input_validation_error($exc);
-            $self->_display_web_page($content);
+        } catch saliweb::frontend::UserError with {
+            $self->handle_user_error(shift);
         };
     } catch Error with {
         $self->handle_fatal_error(shift);
@@ -829,6 +838,8 @@ sub display_queue_page {
     try {
         $self->set_page_title("Queue");
         $self->_display_web_page($self->get_queue_page());
+    } catch saliweb::frontend::UserError with {
+        $self->handle_user_error(shift);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
@@ -849,6 +860,8 @@ sub display_help_page {
         } else {
             $self->_display_web_page($content);
         }
+    } catch saliweb::frontend::UserError with {
+        $self->handle_user_error(shift);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
@@ -858,6 +871,8 @@ sub display_results_page {
     my $self = shift;
     try {
         $self->_internal_display_results_page();
+    } catch saliweb::frontend::UserError with {
+        $self->handle_user_error(shift);
     } catch saliweb::frontend::ResultsError with {
         my $exc = shift;
         $self->http_status($exc->http_status);
@@ -1020,11 +1035,23 @@ sub connect_to_database {
 
 1;
 
-package saliweb::frontend::InputValidationError;
+package saliweb::frontend::UserError;
 use base qw(Error::Simple);
+1;
+
+package saliweb::frontend::InputValidationError;
+our @ISA = 'saliweb::frontend::UserError';
 
 sub http_status {
     return "400 Bad Request";
+}
+1;
+
+package saliweb::frontend::AccessDeniedError;
+our @ISA = 'saliweb::frontend::UserError';
+
+sub http_status {
+    return "401 Unauthorized";
 }
 1;
 

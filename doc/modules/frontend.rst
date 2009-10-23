@@ -280,9 +280,15 @@ the web frontend.
       relative to the job directory, not an absolute path.
 
 
+.. exception:: AccessDeniedError(message)
+
+   This exception is raised if the end user does not have permission to view
+   a page.
+
 .. exception:: InputValidationError(message)
 
-   This exception is used to report failures with job submission from within
+   This exception is typically used to report failures with job submission
+   (due to invalid user input) from within
    :meth:`~saliwebfrontend.get_submit_page` or functions it calls. These
    errors are handled by reporting them to the user and asking them to
    fix their input accordingly.
