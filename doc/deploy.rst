@@ -1,5 +1,7 @@
 .. currentmodule:: saliweb.backend
 
+.. _build_system:
+
 Deploying the web service
 *************************
 

@@ -9,27 +9,33 @@ long period of time.
 
 The framework is split up into four distinct parts:
 
-* The *frontend* consists of HTML pages and Perl-CGI scripts that interact
-  with an end user. It handles the uploading of input files, the initial
+* The :ref:`frontend <frontend>` consists of HTML pages and Perl-CGI scripts
+  that provide a web interface to interact with an end user. It also provides an
+  XML-based interface to allow automated submission of jobs. It handles the
+  uploading of input files, the initial
   submission of jobs, displaying a queue of all jobs in the system, and
   showing the results of completed jobs. It can also potentially handle
   user logins.
 
-* The *backend* is a set of Python classes that manages jobs after the
-  initial submission. This typically runs from a cronjob on our 'modbase'
-  machine, picking up submitted jobs from the frontend, submitting jobs
-  to the cluster and gathering results, and doing any necessary pre- or
+* The :ref:`backend <backend>` is a set of Python classes that manages jobs
+  after the initial submission. This typically runs from a cronjob on our
+  `modbase` machine, picking up submitted jobs from the frontend, submitting
+  jobs to the cluster and gathering results, and doing any necessary pre- or
   post-processing.
 
-* The *build system* is a set of extensions to SCons that simplifies the
-  procedure of setting up a web service and installing everything in the
-  correct locations and with the right permissions.
+* The :ref:`build system <build_system>` is a set of extensions to SCons that
+  simplifies the procedure of deploying a a web service (initial setup,
+  and installing everything in the correct locations and with the right
+  permissions).
 
 * *Monitoring* is typically set up by a sysadmin, and ensures that the
   web service, once set up and made available to end users, is correctly
   functioning.
 
-The web framework stores all persistent data about the jobs in a MySQL database.
+The web framework stores all persistent data about the jobs in a MySQL database,
+and configuration for the service is stored in a set of
+:ref:`configuration files <configfile>` that are shared between all parts of
+the framework.
 
 The framework aims to be:
 
