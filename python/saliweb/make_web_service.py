@@ -57,6 +57,7 @@ class MakeWebService(object):
         f = open(os.path.join(self.topdir, 'SConstruct'), 'w')
         print >> f, """import saliweb.build
 
+vars = Variables('config.py')
 env = saliweb.build.Environment(vars, ['conf/live.conf']%s)
 Help(vars.GenerateHelpText(env))
 
