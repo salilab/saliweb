@@ -165,14 +165,15 @@ def _check_directories(env):
     _check_directory_permissions(env)
 
 def _check_directory_locations(env):
-    incoming = env['config'].directories['INCOMING']
-    if not incoming.startswith('/modbase') and not incoming.startswith('/usr') \
-       and not incoming.startswith('/var') and not incoming.startswith('/home'):
-        print >> sys.stderr, """
-** The INCOMING directory is set to %s.
+    for key in ('install', 'INCOMING'):
+        dir = env['config'].directories[key]
+        if not dir.startswith('/modbase') and not dir.startswith('/usr') \
+           and not dir.startswith('/var') and not dir.startswith('/home'):
+            print >> sys.stderr, """
+** The %s directory is set to %s.
 ** It must be on a local disk (e.g. /modbase1).
-""" % incoming
-        env.Exit(1)
+""" % (key, dir)
+            env.Exit(1)
 
     running = env['config'].directories['RUNNING']
     if not running.startswith('/netapp'):

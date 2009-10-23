@@ -34,7 +34,6 @@ Build:
     test case should run it then make sure that the generated config file is
     readable; auto-generate frontend.conf and backend.conf with random
     passwords.
-  - Make sure that install directory is on a local disk.
   - Add the 'service_module' argument back to the Environment constructor, so
     the implementer can choose a longer name for the service but use a shorter
     form for the module.

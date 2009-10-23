@@ -141,38 +141,42 @@ class CheckTest(unittest.TestCase):
 
     def test_check_directory_locations(self):
         """Check _check_directory_locations function"""
-        def make_env(incoming, running):
+        def make_env(install, incoming, running):
             env = DummyEnv('testuser')
-            env['config'].directories = {'INCOMING': incoming,
+            env['config'].directories = {'install': install,
+                                         'INCOMING': incoming,
                                          'RUNNING': running}
             return env
 
-        # Incoming on local disk, running on cluster disk is OK
+        # Incoming/install on local disk, running on cluster disk is OK
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5'):
-            env = make_env(disk, '/netapp/ok')
+            env = make_env(disk, disk, '/netapp/ok')
             ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, None)
             self.assertEqual(stderr, '')
 
-        # Incoming on a network disk is NOT OK
+        # Incoming/install on a network disk is NOT OK
         for disk in ('/guitar1', '/netapp', '/salilab'):
-            env = make_env(disk, '/netapp/ok')
-            ret, stderr = run_catch_stderr(
+            env1 = make_env('/var', disk, '/netapp/ok')
+            env2 = make_env(disk, '/var', '/netapp/ok')
+            for (name, env) in (('INCOMING', env1), ('install', env2)):
+                ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
-            self.assertEqual(ret, None)
-            self.assertEqual(env.exitval, 1)
-            self.assertEqual(stderr, '\n** The INCOMING directory is set to ' \
-                             + disk + '.\n** It must be on a local disk '
-                             '(e.g. /modbase1).\n\n')
+                self.assertEqual(ret, None)
+                self.assertEqual(env.exitval, 1)
+                self.assertEqual(stderr, '\n** The ' + name + \
+                                 ' directory is set to ' + disk + \
+                                 '.\n** It must be on a local disk '
+                                 '(e.g. /modbase1).\n\n')
 
         # Running on a non-netapp disk is NOT OK
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5', '/guitar1',
                      '/salilab'):
-            env = make_env('/modbase1', disk)
+            env = make_env('/modbase1', '/modbase1', disk)
             ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
