@@ -198,6 +198,14 @@ sub get_navigation_links {
     return ["Link 1", "Link 2 for " . $self->{server_name} . " service"];
 }
 
+sub check_page_access {
+    my ($self, $page_type) = @_;
+    if (substr($self->{server_name}, 0, 11) eq 'checkaccess') {
+        throw saliweb::frontend::AccessDeniedError(
+                                          "access to $page_type denied");
+    }
+}
+
 sub get_index_page {
     my $self = shift;
     if ($self->{server_name} eq "failindex") {

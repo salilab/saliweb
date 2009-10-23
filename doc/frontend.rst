@@ -177,3 +177,17 @@ The help page is used to display basic help, contact details, or news. It is
 probably unnecessary to customize this method, as by default it will simply
 display a similarly-named text file (``txt/help.txt``, ``txt/contact.txt``
 or ``txt/news.txt``). See :meth:`~saliwebfrontend.get_help_page` for more details.
+
+Controlling page access
+=======================
+
+By default, all pages can be viewed by both anonymous and logged-in users.
+This can be modified, for example to restrict access only to named users, by
+modifying the :meth:`~saliwebfrontend.check_page_access` method. This method
+is given the type of the page (index, submit, queue etc.) and can also query
+other attributes, such as :attr:`saliwebfrontend.user_name`, to make its
+decision. If access should be denied, simply throw an :exc:`AccessDeniedError`
+exception.
+
+.. literalinclude:: ../examples/frontend-check-access.pm
+   :language: perl

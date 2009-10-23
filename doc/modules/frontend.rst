@@ -89,6 +89,8 @@ the web frontend.
       from a similarly named get_*_page() method; for example,
       :meth:`~saliwebfrontend.display_index_page` calls
       :meth:`~saliwebfrontend.get_index_page`.
+      Each method also calls :meth:`~saliwebfrontend.check_page_access` to
+      check whether access to the page is permitted.
 
    .. method:: get_index_page()
 
@@ -140,6 +142,14 @@ the web frontend.
       simply displays a suitable text file installed as part of the web
       service in the ``txt`` directory, named ``help.txt``, ``contact.txt`` or
       ``news.txt`` respectively.
+
+   .. method:: check_page_access(page_type)
+
+      Check whether access to the given *page_type* is allowed. *page_type*
+      is one of 'index', 'submit', 'queue', 'results', 'help'. It should
+      simply return if access is allowed, or throw an :exc:`AccessDeniedError`
+      if access is not permitted. By default, it simply returns, allowing
+      all access.
 
    .. method:: allow_file_download(file)
 
@@ -283,7 +293,8 @@ the web frontend.
 .. exception:: AccessDeniedError(message)
 
    This exception is raised if the end user does not have permission to view
-   a page.
+   a page. It is generally raised from within
+   :meth:`~saliwebfrontend.check_page_access`.
 
 .. exception:: InputValidationError(message)
 

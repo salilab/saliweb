@@ -382,6 +382,14 @@ sub test_display_page {
                "get_${page_type}_page access.*<\/html>/s",
          "${prefix}handles user errors");
 
+    $self = make_test_frontend("checkaccess${page_type}");
+    $out = stdout_from { $self->$sub() };
+    like($out, "/^Status: 401.*" .
+               'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
+               "<body.*Link 1.*Project menu for.*" .
+               "access to ${page_type} denied.*<\/html>/s",
+         "${prefix}calls check_page_access");
+
     $self = make_test_frontend("fail${page_type}");
     throws_ok { stdout_from { $self->$sub() } }
               'saliweb::frontend::InternalError',

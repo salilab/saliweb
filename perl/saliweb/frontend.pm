@@ -623,6 +623,10 @@ sub check_modeller_key {
     }
 }
 
+sub check_page_access {
+    my ($self, $page_name) = @_;
+}
+
 sub format_user_error {
     my ($self, $exc) = @_;
     my $q = $self->{'CGI'};
@@ -791,6 +795,7 @@ sub _display_web_page {
 sub display_index_page {
     my $self = shift;
     try {
+        $self->check_page_access('index');
         $self->_display_web_page($self->get_index_page());
     } catch saliweb::frontend::UserError with {
         $self->handle_user_error(shift);
@@ -815,6 +820,7 @@ sub display_submit_page {
         my $content;
         $self->set_page_title("Submission");
         try {
+            $self->check_page_access('submit');
             $self->{submitted_jobs} = [];
             $content = $self->get_submit_page();
             if (scalar(@{$self->{submitted_jobs}}) == 0) {
@@ -837,6 +843,7 @@ sub display_queue_page {
     my $self = shift;
     try {
         $self->set_page_title("Queue");
+        $self->check_page_access('queue');
         $self->_display_web_page($self->get_queue_page());
     } catch saliweb::frontend::UserError with {
         $self->handle_user_error(shift);
@@ -852,6 +859,7 @@ sub display_help_page {
         my $display_type = $q->param('type') || 'help';
         my $style = $q->param('style') || '';
         $self->set_page_title("Help");
+        $self->check_page_access('help');
         my $content = $self->get_help_page($display_type);
         if ($style eq "helplink") {
             print $self->start_html("/saliweb/css/help.css");
@@ -870,6 +878,7 @@ sub display_help_page {
 sub display_results_page {
     my $self = shift;
     try {
+        $self->check_page_access('results');
         $self->_internal_display_results_page();
     } catch saliweb::frontend::UserError with {
         $self->handle_user_error(shift);
