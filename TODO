@@ -8,6 +8,8 @@ Frontend:
   - Add a set of UserErrors (make InputValidationError a subclass) to report
     user errors in any page; e.g. AccessDeniedError, SystemBusyError (if number
     of incoming jobs exceeds some limit).
+  - Queue page should highlight authenticated user's own jobs, and have a JS
+    button to toggle showing all jobs or just their own.
 
 Backend:
   - Run/check jobs using DRMAA
@@ -26,5 +28,14 @@ Build:
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
-  - Add a script to set up a simple directory structure for a new service.
+  - If we are not running scons as the backend user, before recommending sudo,
+    check to make sure the user exists, and if not, prompt the user to ask a
+    sysadmin to add it. 
+  - Add a script to set up a simple directory structure for a new service;
+    test case should run it then make sure that the generated config file is
+    readable; auto-generate frontend.conf and backend.conf with random
+    passwords.
   - Make sure that install directory is on a local disk.
+  - Add the 'service_module' argument back to the Environment constructor, so
+    the implementer can choose a longer name for the service but use a shorter
+    form for the module.
