@@ -147,9 +147,9 @@ the web frontend.
 
       Check whether access to the given *page_type* is allowed. *page_type*
       is one of 'index', 'submit', 'queue', 'results', 'help'. It should
-      simply return if access is allowed, or throw an :exc:`AccessDeniedError`
-      if access is not permitted. By default, it simply returns, allowing
-      all access.
+      simply return if access is allowed, or throw an
+      :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
+      permitted. By default, it simply returns, allowing all access.
 
    .. method:: allow_file_download(file)
 

@@ -78,10 +78,10 @@ WebService
 ----------
 
 The :class:`WebService` class provides high-level backend functionality.
-It provides simple methods to process pending jobs (e.g.
-:meth:`WebService.process_completed_jobs`, which looks at all jobs currently
-running on the cluster and, for each one that has completed, processes the
-job and collects the results). It is rarely necessary to subclass.
+The most commonly-used method is :meth:`WebService.do_all_processing`, which
+simply runs in an endless loop, submitting new jobs to the cluster, collecting
+the results of finished jobs, and archiving old completed jobs.
+It is rarely necessary to subclass.
 
 .. _jobstates:
 
