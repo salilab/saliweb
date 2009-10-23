@@ -53,14 +53,25 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(stderr, '')
 
         # Not OK if current user != backend user
+        env = DummyEnv('bin')  # bin user exists but hopefully is not us!
+        ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.match('\nscons must be run as the backend user, which '
+                              'is \'bin\'.*config file, test\.conf.*'
+                              'Please run again.*sudo -u bin scons"\n$',
+                              stderr, re.DOTALL),
+                              'regex match failed on ' + stderr)
+
+        # Not OK if backend user does not exist
         env = DummyEnv('#baduser')
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('scons must be run as the backend user, which '
-                               'is \'#baduser\'.*config file, test\.conf.*'
-                               'Please run again.*sudo -u #baduser', stderr,
-                               re.DOTALL), 'regex match failed on ' + stderr)
+        self.assert_(re.match('\nThe backend user is \'#baduser\' according.*'
+                              'config file, test\.conf.*user does not exist.*'
+                              'Please ask a sysadmin.*sudo\' access', stderr,
+                              re.DOTALL), 'regex match failed on ' + stderr)
 
     def test_check_permissions(self):
         """Check _check_permissions function"""

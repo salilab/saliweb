@@ -27,9 +27,6 @@ Build:
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
-  - If we are not running scons as the backend user, before recommending sudo,
-    check to make sure the user exists, and if not, prompt the user to ask a
-    sysadmin to add it. 
   - Add a script to set up a simple directory structure for a new service;
     test case should run it then make sure that the generated config file is
     readable; auto-generate frontend.conf and backend.conf with random

@@ -210,6 +210,16 @@ def _check_directory_permissions(env):
 
 def _check_user(env):
     backend_user = env['config'].backend['user']
+    try:
+        pwd.getpwnam(backend_user)
+    except KeyError:
+        print >> sys.stderr, """
+The backend user is '%s' according to the config file, %s.
+This user does not exist on the system. Please ask a sysadmin to set
+up the account for you and give you 'sudo' access to it.
+""" % (backend_user, env['configfile'])
+        env.Exit(1)
+
     current_user = pwd.getpwuid(os.getuid()).pw_name
     if backend_user != current_user:
         print >> sys.stderr, """
