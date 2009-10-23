@@ -14,15 +14,18 @@ class SetupTest(unittest.TestCase):
 
     def test_setup_service_name(self):
         """Check _setup_service_name function"""
-        def check(service_name, service_module):
+        def check(service_name, service_module, exp_service_module):
             env = {}
             config = DummyConfig()
             config.service_name = service_name
-            saliweb.build._setup_service_name(env, config)
+            saliweb.build._setup_service_name(env, config, service_module)
             self.assertEqual(env['service_name'], service_name)
-            self.assertEqual(env['service_module'], service_module)
-        check('ModFoo', 'modfoo')
-        check('MOD FOO', 'mod_foo')
+            self.assertEqual(env['service_module'], exp_service_module)
+        check('ModFoo', None, 'modfoo')
+        check('MOD FOO', None, 'mod_foo')
+        check('ModFoo', 'test', 'test')
+        self.assertRaises(ValueError, check, 'test', 'ModFoo', 'test')
+        self.assertRaises(ValueError, check, 'test', 'mod foo', 'test')
 
     def test_setup_install_directories(self):
         """Check _setup_install_directories function"""

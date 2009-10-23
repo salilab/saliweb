@@ -8,7 +8,7 @@ The :mod:`saliweb.build` Python module
 
 This module provides a simple SCons-based build infrastructure for web services.
 
-.. class:: Environment(variables, configfiles[, version])
+.. class:: Environment(variables, configfiles[, version[, service_module]])
 
    A simple class based on the standard SCons Environment class. This class
    should be instantiated in the top-level SConstruct file of a web service,
@@ -21,6 +21,12 @@ This module provides a simple SCons-based build infrastructure for web services.
    number of the service (e.g. "1.0.0"). If it is not, it is assumed that
    the web service is being deployed from an SVN checkout, and the
    ``svnversion`` program is run to attempt to determine the version number.
+
+   If *service_module* is specified, it is the name of the Python and Perl
+   modules used to implement the service (it must be lowercase and contain
+   no spaces). If not given, it is generated automatically from the service
+   name in the configuration file (the name is lowercased and spaces are
+   replaced with underscores).
 
    .. method:: InstallAdminTools([tools])
 

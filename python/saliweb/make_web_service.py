@@ -11,7 +11,7 @@ class MakeWebService(object):
         if service_module:
             self.service_module = service_module
         else:
-            self.service_module = service_name.lower().split(' ')[0]
+            self.service_module = service_name.lower().replace(' ', '_')
         self.topdir = self.service_module
         self.user = self.service_module
         self.db = self.service_module
@@ -202,8 +202,9 @@ example "ModFoo" or "Peptide Docking". It may contain spaces and mixed case.
 
 "SHORT_NAME" should give a short name containing only lowercase letters and
 no spaces. (If not given, it is generated from "SERVICE_NAME" by lowercasing
-the first word.) This name is used to name the directory containing the files,
-the generated Python and Perl modules, system and MySQL users etc.
+and replacing spaces with underscores.) This name is used to name the
+directory containing the files, the generated Python and Perl modules,
+system and MySQL users etc.
 
 e.g.
 %prog ModFoo

@@ -25,15 +25,15 @@ class MakeWebServiceTests(unittest.TestCase):
         """Check creation of MakeWebService object"""
         m = MakeWebService('Test Service')
         self.assertEqual(m.service_name, 'Test Service')
-        self.assertEqual(m.service_module, 'test')
-        self.assertEqual(m.user, 'test')
-        self.assertEqual(m.db, 'test')
-
-        m = MakeWebService('Test Service', 'test_service')
-        self.assertEqual(m.service_name, 'Test Service')
         self.assertEqual(m.service_module, 'test_service')
         self.assertEqual(m.user, 'test_service')
         self.assertEqual(m.db, 'test_service')
+
+        m = MakeWebService('Test Service', 'mytest')
+        self.assertEqual(m.service_name, 'Test Service')
+        self.assertEqual(m.service_module, 'mytest')
+        self.assertEqual(m.user, 'mytest')
+        self.assertEqual(m.db, 'mytest')
 
     def test_make_password(self):
         """Check MakeWebService._make_password method"""

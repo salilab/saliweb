@@ -41,7 +41,7 @@ def _add_build_variable(vars, configs):
                "service)""", default=default, allowed_values=buildmap.keys()))
     return buildmap
 
-def Environment(variables, configfiles, version=None):
+def Environment(variables, configfiles, version=None, service_module=None):
     buildmap = _add_build_variable(variables, configfiles)
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
@@ -49,7 +49,7 @@ def Environment(variables, configfiles, version=None):
     env['config'] = config = saliweb.backend.Config(configfile)
     _setup_sconsign(env)
     _setup_version(env, version)
-    _setup_service_name(env, config)
+    _setup_service_name(env, config, service_module)
     _setup_install_directories(env)
     if not env.GetOption('clean') and not env.GetOption('help'):
         _check(env)
@@ -133,9 +133,15 @@ def _setup_version(env, version):
             warnings.warn("Could not find 'svnversion' binary in path")
     env['version'] = version
 
-def _setup_service_name(env, config):
+def _setup_service_name(env, config, service_module):
     env['service_name'] = config.service_name
-    env['service_module'] = config.service_name.lower().replace(' ', '_')
+    if service_module:
+        if ' ' in service_module or service_module.lower() != service_module:
+            raise ValueError('service_module must be all lowercase and '
+                             'contain no spaces')
+        env['service_module'] = service_module
+    else:
+        env['service_module'] = config.service_name.lower().replace(' ', '_')
 
 def _setup_install_directories(env):
     config = env['config']
