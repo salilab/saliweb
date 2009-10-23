@@ -215,8 +215,9 @@ def _check_user(env):
     except KeyError:
         print >> sys.stderr, """
 The backend user is '%s' according to the config file, %s.
-This user does not exist on the system. Please ask a sysadmin to set
-up the account for you and give you 'sudo' access to it.
+This user does not exist on the system. Please check to make sure you have
+specified the name correctly in the config file, and if so, please ask a
+sysadmin to set up the account for you and give you 'sudo' access to it.
 """ % (backend_user, env['configfile'])
         env.Exit(1)
 
@@ -337,9 +338,7 @@ def _found_binary_in_crontab(binary):
 
 def _check_mysql(env):
     """Make sure that we can connect to the database as both the frontend and
-       backend users. todo: make sure the DB schema matches the backend;
-       make sure the backend and frontend DB users have the correct permissions.
-    """
+       backend users."""
     c = env['config']
     c._read_db_auth('back')
     backend = dict(c.database)
@@ -371,8 +370,10 @@ def _check_mysql(env):
 ** Could not query the jobs table in the %s database using both the
 ** frontend and backend users. The actual error message follows:
 ** %s
-** This generally means that the web service is not set up correctly
-** for MySQL. Please ask a sysadmin to run the commands in the file
+** This either means that you have mistyped the names or passwords of the
+** frontend or backend users in the configuration file, or that the web
+** service's MySQL accounts are not set up correctly. If the latter, please
+** ask a sysadmin to run the commands in the file
 ** %s to set this up properly.
 """ % (c.database['db'], str(detail), outfile)
         env.Exit(1)

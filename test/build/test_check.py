@@ -70,8 +70,9 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(env.exitval, 1)
         self.assert_(re.match('\nThe backend user is \'#baduser\' according.*'
                               'config file, test\.conf.*user does not exist.*'
-                              'Please ask a sysadmin.*sudo\' access', stderr,
-                              re.DOTALL), 'regex match failed on ' + stderr)
+                              'Please check.*ask a\nsysadmin.*sudo\' access',
+                              stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
 
     def test_check_permissions(self):
         """Check _check_permissions function"""
