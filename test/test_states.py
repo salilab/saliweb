@@ -16,6 +16,12 @@ class StatesTest(unittest.TestCase):
             j = _JobState(state)
             self.assertEqual(j.get(), state)
 
+    def test_str(self):
+        """Check _JobState.__str__()"""
+        for state in ('INCOMING', 'FAILED', 'RUNNING'):
+            j = _JobState(state)
+            self.assertEqual(str(j), "<_JobState %s>" % state)
+
     def test_get_valid_states(self):
         """Check _JobState.get_valid_states()"""
         states = _JobState.get_valid_states()

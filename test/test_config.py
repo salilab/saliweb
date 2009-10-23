@@ -69,6 +69,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'], None)
         # Other suffixes or non-floats should raise an error
         self.assertRaises(ValueError, get_config, expire='8s')
+        self.assertRaises(ValueError, get_config, expire='4.garbageh')
         self.assertRaises(ValueError, get_config, expire='foo')
         # archive time cannot be greater than expire
         self.assertRaises(ConfigError, get_config, expire='1y', archive='never')
