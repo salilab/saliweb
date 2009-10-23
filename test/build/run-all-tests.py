@@ -17,7 +17,7 @@ class RunAllTests(unittest.TestProgram):
         coverage.the_coverage.collect()
         coverage.use_cache(False)
         print >> sys.stderr, "\nPython coverage report\n"
-        mods = ['python/saliweb/*.py', 'python/saliweb/build/*.py']
+        mods = ['python/saliweb/__init__.py', 'python/saliweb/build/*.py']
         coverage.the_coverage.relative_dir = 'python/'
         coverage.report(mods, file=sys.stderr)
         sys.exit(not result.wasSuccessful())

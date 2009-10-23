@@ -39,6 +39,15 @@ Every service needs some basic setup:
 * It is usually a good idea to put the implementation files for a web service
   in an SVN repository.
 
+Simple setup
+============
+
+The easiest way to set up a new web service is to simply run the
+``make_web_service`` script on the `modbase` machine. Given the name of the
+web service (and, optionally, a short name) it will set up all the necessary
+files used for a basic web service. Run ``make_web_service`` with no
+arguments for further help.
+
 .. _backend_package:
 
 Backend Python package

@@ -33,9 +33,6 @@ class MakeWebService(object):
         return "".join(random.choice(string.letters + string.digits) \
                for x in range(length))
 
-    def _get_current_user(self):
-        return pwd.getpwuid(os.getuid()).pw_name
-
     def _get_install_dir(self):
         try:
             dir = pwd.getpwnam(self.user).pw_dir

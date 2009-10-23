@@ -27,10 +27,6 @@ Build:
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
-  - Add a script to set up a simple directory structure for a new service;
-    test case should run it then make sure that the generated config file is
-    readable; auto-generate frontend.conf and backend.conf with random
-    passwords.
   - Add the 'service_module' argument back to the Environment constructor, so
     the implementer can choose a longer name for the service but use a shorter
     form for the module.
