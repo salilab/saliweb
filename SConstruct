@@ -17,6 +17,7 @@ Export('env')
 test = SConscript('test/SConscript')
 SConscript('perl/saliweb/SConscript')
 SConscript('python/saliweb/SConscript')
+SConscript('bin/SConscript')
 SConscript('doc/SConscript')
 SConscript('web/SConscript')
 

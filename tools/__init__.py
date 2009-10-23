@@ -50,6 +50,8 @@ def add_common_variables(vars, package):
     """Add common variables to an SCons Variables object."""
     vars.Add(PathVariable('prefix', 'Top-level installation directory', '/usr',
                           PathVariable.PathAccept))
+    vars.Add(PathVariable('bindir', 'Binary installation directory',
+                          '${prefix}/bin', PathVariable.PathAccept))
     vars.Add(PathVariable('pythondir', 'Python module installation directory',
                           '${prefix}/lib/python%d.%d/site-packages' \
                           % sys.version_info[0:2], PathVariable.PathAccept))

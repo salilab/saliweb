@@ -1,0 +1,4 @@
+#!/usr/bin/python
+
+import saliweb.make_web_service
+saliweb.make_web_service.main()

@@ -1,0 +1,9 @@
+import os
+
+Import('env')
+
+bin_files = [ 'make_web_service' ]
+
+# Install files:
+inst = env.Install(env['bindir'], bin_files)
+env.Alias('install', inst)
