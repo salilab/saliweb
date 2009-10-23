@@ -32,8 +32,8 @@ socket
     messages to the backend.
 
 service_name
-    The name of the service. This is used in emails to the owners of jobs and
-    the server admin, and by the build system.
+    The name of the service (human-readable). This is used in emails to the
+    owners of jobs and the server admin, and as the title of web pages.
 
 urltop
     The URL under which the service's web pages live. This is used to construct
