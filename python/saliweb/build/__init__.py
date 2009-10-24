@@ -405,11 +405,11 @@ def _check_mysql_grants(env, cursor, database, user, grant, table=None):
 def _generate_admin_mysql_script(database, backend, frontend):
     d = saliweb.backend.Database(None)
     fd, outfile = tempfile.mkstemp()
-    commands = """CREATE DATABASE %(database)s
-GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s'
-CREATE TABLE %(database)s.jobs (%(schema)s)
-GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s'
-GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost'
+    commands = """CREATE DATABASE %(database)s;
+GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s';
+CREATE TABLE %(database)s.jobs (%(schema)s);
+GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s';
+GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost';
 """ % {'database': database, 'backend_user': backend['user'],
        'backend_passwd': backend['passwd'], 'frontend_user': frontend['user'],
        'frontend_passwd': frontend['passwd'],
