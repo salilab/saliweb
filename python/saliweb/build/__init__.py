@@ -384,15 +384,26 @@ def _check_mysql(env):
 """ % (c.database['db'], str(detail), outfile)
         env.Exit(1)
 
+def _get_sorted_grant(grant):
+    """Sort grant column rights alphabetically, so that we can match them
+       reliably."""
+    m = re.match('(.*?\()(.*)(\).*)$', grant)
+    if m:
+        fields = m.group(2).split(',')
+        fields = [x.strip() for x in fields]
+        fields.sort()
+        return m.group(1) + ', '.join(fields) + m.group(3)
+    return grant
+
 def _check_mysql_grants(env, cursor, database, user, grant, table=None):
     if table is None:
         table = '*'
     else:
         table = '`%s`' % table
-    grant = "GRANT %s ON `%s`.%s TO '%s'@'localhost'" % (grant, database,
-                                                         table, user)
+    grant = "GRANT %s ON `%s`.%s TO '%s'@'localhost'" \
+            % (_get_sorted_grant(grant), database, table, user)
     for row in cursor:
-        if row[0] == grant:
+        if _get_sorted_grant(row[0]) == grant:
             return
     print >> sys.stderr, """
 ** The %s user does not appear to have the necessary

@@ -318,6 +318,14 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
 
+    def test_get_sorted_grant(self):
+        """Test _get_sorted_grant function"""
+        self.assertEqual(saliweb.build._get_sorted_grant('test grant'),
+                         'test grant')
+        self.assertEqual(saliweb.build._get_sorted_grant(
+                          'INSERT (foo,bar,baz)'),
+                          'INSERT (bar, baz, foo)')
+
     def test_check_mysql_grants(self):
         """Test _check_mysql_grants function"""
         # Grant is present on all tables
@@ -326,6 +334,16 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_grants, env, grants,
                          'testdb', 'testuser', 'INSERT')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
+        # Grant column rights should match regardless of their ordering
+        grants = [("GRANT INSERT(foo,bar) ON `testdb`.* "
+                   "TO 'testuser'@'localhost'",)]
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_grants, env, grants,
+                            'testdb', 'testuser', "INSERT(bar,foo)")
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
