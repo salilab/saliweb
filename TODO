@@ -26,4 +26,3 @@ Build:
     the webserver is properly configured and there are no Perl compile errors.
   - Make sure checkout is non-backend user.
   - Make sure backend UID is 118xx.
-  - Allow for empty crontab.

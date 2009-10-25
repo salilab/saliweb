@@ -337,7 +337,7 @@ def _found_binary_in_crontab(binary):
             match = True
     err = p.stderr.read()
     ret = p.wait()
-    if ret != 0:
+    if ret != 0 and not err.startswith('no crontab for'):
         raise OSError("crontab -l exited with code %d and stderr %s" \
                       % (ret, err))
     return match
