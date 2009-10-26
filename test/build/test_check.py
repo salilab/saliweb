@@ -5,18 +5,8 @@ import os
 import pwd
 import StringIO
 import re
-import tempfile
 import shutil
-
-class RunInTempDir(object):
-    """Simple RAII-style class to run a test in a temporary directory"""
-    def __init__(self):
-        self.origdir = os.getcwd()
-        self.tmpdir = tempfile.mkdtemp()
-        os.chdir(self.tmpdir)
-    def __del__(self):
-        os.chdir(self.origdir)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+import testutil
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
@@ -76,7 +66,7 @@ class CheckTest(unittest.TestCase):
 
     def test_check_permissions(self):
         """Check _check_permissions function"""
-        tmpdir = RunInTempDir()
+        tmpdir = testutil.RunInTempDir()
         conf = 'test.conf'
         open(conf, 'w').write('test')
         os.chmod(conf, 0600)
@@ -200,7 +190,7 @@ class CheckTest(unittest.TestCase):
 
     def test_check_directory_permissions(self):
         """Check _check_directory_permissions function"""
-        tmpdir = RunInTempDir()
+        tmpdir = testutil.RunInTempDir()
         def make_env(dir):
             env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
             env['config'].directories = {'testdir': dir}

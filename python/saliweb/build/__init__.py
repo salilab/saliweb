@@ -325,9 +325,9 @@ def _check_service(env):
         print "** You will need to fix this manually before it will run again."
         print "** Refer to %s for more information" % config.state_file
 
-def _found_binary_in_crontab(binary):
+def _found_binary_in_crontab(binary, crontab='/usr/bin/crontab'):
     """See if the given binary is run from the user's crontab"""
-    p = subprocess.Popen(['/usr/bin/crontab', '-l'], stdout=subprocess.PIPE,
+    p = subprocess.Popen([crontab, '-l'], stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
 
     binre = re.compile('\s*[^#].*' + binary + ' condstart > /dev/null$')
