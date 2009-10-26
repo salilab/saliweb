@@ -22,6 +22,7 @@ import tempfile
 import re
 
 frontend_user = 'apache'
+backend_uid_range = [11800, 11900]
 
 def _add_build_variable(vars, configs):
     if not isinstance(configs, (list, tuple)):
@@ -227,7 +228,8 @@ sysadmin to set up the account for you and give you 'sudo' access to it.
 """ % (backend_user, env['configfile'])
         env.Exit(1)
 
-    current_user = pwd.getpwuid(os.getuid()).pw_name
+    uid = os.getuid()
+    current_user = pwd.getpwuid(uid).pw_name
     if backend_user != current_user:
         print >> sys.stderr, """
 scons must be run as the backend user, which is '%s' according to the
@@ -235,6 +237,13 @@ config file, %s.
 You are currently trying to run scons as the '%s' user.
 Please run again with something like \"/usr/bin/sudo -u %s scons\"
 """ % (backend_user, env['configfile'], current_user, backend_user)
+        env.Exit(1)
+
+    if uid < backend_uid_range[0] or uid > backend_uid_range[1]:
+        print >> sys.stderr, """
+The backend user (%s) has an invalid user ID (%d); it must be
+between %d and %d. Please ask a sysadmin to help you fix this problem.
+""" % (backend_user, uid, backend_uid_range[0], backend_uid_range[1])
         env.Exit(1)
 
 def _check_permissions(env):

@@ -35,12 +35,25 @@ class CheckTest(unittest.TestCase):
 
     def test_check_user(self):
         """Check _check_user function"""
+        uid = os.getuid()
         # Should be OK if current user = backend user
-        env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
+        env = DummyEnv(pwd.getpwuid(uid).pw_name)
+        saliweb.build.backend_uid_range = [uid, uid]
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
+
+        # Not OK if UID is not in correct range
+        env = DummyEnv(pwd.getpwuid(uid).pw_name)
+        saliweb.build.backend_uid_range = [uid + 10, uid + 20]
+        ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.match('\nThe backend user.*invalid user ID \(%d\).*'
+                              'between %d and %d' % (uid, uid+10, uid+20),
+                              stderr, re.DOTALL),
+                              'regex match failed on ' + stderr)
 
         # Not OK if current user != backend user
         env = DummyEnv('bin')  # bin user exists but hopefully is not us!
@@ -49,7 +62,7 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(env.exitval, 1)
         self.assert_(re.match('\nscons must be run as the backend user, which '
                               'is \'bin\'.*config file, test\.conf.*'
-                              'Please run again.*sudo -u bin scons"\n$',
+                              'Please run again.*sudo -u bin scons"\n',
                               stderr, re.DOTALL),
                               'regex match failed on ' + stderr)
 

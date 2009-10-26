@@ -25,4 +25,3 @@ Build:
   - After installing each CGI script, try to wget it using cgiroot to make sure
     the webserver is properly configured and there are no Perl compile errors.
   - Make sure checkout is non-backend user.
-  - Make sure backend UID is 118xx.
