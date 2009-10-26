@@ -157,6 +157,7 @@ def _setup_install_directories(env):
 
 def _check(env):
     _check_user(env)
+    _check_ownership(env)
     _check_permissions(env)
     _check_directories(env)
     if isinstance(MySQLdb, Exception):
@@ -214,6 +215,20 @@ def _check_directory_permissions(env):
 """ % (dir, backend_user, dir)
             env.Exit(1)
 
+
+def _check_ownership(env):
+    """The backend user should *not* own the checkout directory"""
+    backend_user = env['config'].backend['user']
+    backend_uid = pwd.getpwnam(backend_user).pw_uid
+    owner_uid = os.stat('.').st_uid
+    if backend_uid == owner_uid:
+        print >> sys.stderr, """
+The directory containing the web service checkout is owned by the %s
+user. This is also the backend user. The checkout should *not* be owned
+by the backend; please maintain these files in a regular user's
+account instead.
+""" % (backend_user)
+        env.Exit(1)
 
 def _check_user(env):
     backend_user = env['config'].backend['user']

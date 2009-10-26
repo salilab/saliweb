@@ -77,6 +77,26 @@ class CheckTest(unittest.TestCase):
                               stderr, re.DOTALL),
                      'regex match failed on ' + stderr)
 
+    def test_check_ownership(self):
+        """Check _check_ownership function"""
+        dir_owner = pwd.getpwuid(os.stat('.').st_uid).pw_name
+        # Not OK if directory owner == backend
+        env = DummyEnv(dir_owner)
+        ret, stderr = run_catch_stderr(saliweb.build._check_ownership, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.match('\nThe directory.*also the backend user.*'
+                              'please maintain these files.*regular user',
+                              stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
+        # OK if directory owner != backend
+        env = DummyEnv('bin')
+        ret, stderr = run_catch_stderr(saliweb.build._check_ownership, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
     def test_check_permissions(self):
         """Check _check_permissions function"""
         tmpdir = testutil.RunInTempDir()
