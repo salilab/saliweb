@@ -135,9 +135,9 @@ sub get_navigation_links {
     my $q = $self->cgi;
     return [
         $q->a({-href=>$self->index_url}, "%(service_name)s Home"),
-        $q->a({-href=>$self->queue_url}, "Current %(service_name)s queue"),
-        $q->a({-href=>$self->help_url}, "Help"),
-        $q->a({-href=>$self->contact_url}, "Contact")
+        $q->a({-href=>$self->queue_url}, "%(service_name)s Current queue"),
+        $q->a({-href=>$self->help_url}, "%(service_name)s Help"),
+        $q->a({-href=>$self->contact_url}, "%(service_name)s Contact")
         ];
 }
 
