@@ -192,3 +192,62 @@ essentially a dump of the database row corresponding to the job.
 
 .. literalinclude:: ../examples/customdb.py
    :language: python
+
+
+Testing
+=======
+
+The best way to test the backend is to :ref:`deploy the service <quick_start>`,
+providing an implementation for the :meth:`~saliwebfrontend.get_submit_page`
+frontend method, then either use the web interface or run the `cgi/submit.cgi`
+script (in the web service's installation directory, as the backend user) to
+submit a job. This will take care to make sure everything is done correctly.
+
+However, the backend can be tested directly without invoking the frontend, by
+manually modifying the MySQL database. Note, however, that the interface
+between the backend and frontend, as well as the details of the MySQL tables,
+are not guaranteed to be stable (future iterations of the framework may change
+some of the details for performance or additional features), so this method
+could fail in future.
+
+To manually submit a job:
+
+ #. Decide on a job name. This must be unique. Create a directory with the same
+    name, as the backend user, under the web service's incoming directory
+    (as specified in the configuration file).
+
+ #. Put all necessary input files into this directory.
+
+ #. Connect to the MySQL server using the `mysql` client on `modbase`, and the
+    username and password from the web service's configuration file. Either the
+    backend or frontend user can be used; the frontend user can only submit
+    jobs and so is recommended, while the backend user can also delete or
+    modify jobs, which is dangerous as it may break the service. For example,
+    ``mysql -u modfoo_frontend -p -D modfoo``.
+
+ #. To actually submit a job use something like::
+
+     INSERT INTO jobs (name,passwd,user,contact_email,
+                       directory,url,submit_time)
+                      VALUES (a,b,c,d..., UTC_TIMESTAMP());
+
+    a,b,c,d are the values for the columns, described below:
+
+   * 'name' is the name of the job, from above.
+   * 'passwd' is used by the frontend to protect job results. Any alphanumeric
+     string can be used here.
+   * 'user' is the user that submitted the job. NULL can be used here.
+   * 'contact_email' is the email address that the backend will notify when
+     the job completes, or NULL for no email notification.
+   * 'directory' is the filesystem directory containing the job inputs, which
+     must match that created above.
+   * 'url' is a web link that the backend will include in the email it sends
+     out, telling the user where the results can be downloaded. A dummy value
+     can be used here, since the frontend usually handles this.
+   * 'submit_time' is the time (UTC) when the job was submitted. Usually, the
+     MySQL function UTC_TIMESTAMP() is used here to put in the current time.
+
+ 5. The job will only be run if the backend is running (use the `bin/service.py`
+    script as the backend user in the installation directory). The backend
+    polls periodically for new jobs. Alternatively, `service.py` can be used
+    to restart the backend, to force it to check immediately.
