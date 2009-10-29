@@ -6,17 +6,17 @@ import sys
 import pwd
 
 class MakeWebService(object):
-    def __init__(self, service_name, service_module=None):
+    def __init__(self, service_name, short_name=None):
         self.service_name = service_name
-        if service_module:
-            self.service_module = service_module
+        if short_name:
+            self.short_name = short_name
         else:
-            self.service_module = service_name.lower().replace(' ', '_')
-        self.topdir = self.service_module
-        self.user = self.service_module
-        self.db = self.service_module
-        self.db_frontend_user = self.service_module + '_frontend'
-        self.db_backend_user = self.service_module + '_backend'
+            self.short_name = service_name.lower().replace(' ', '_')
+        self.topdir = self.short_name
+        self.user = self.short_name
+        self.db = self.short_name
+        self.db_frontend_user = self.short_name + '_frontend'
+        self.db_backend_user = self.short_name + '_backend'
         self.install = self._get_install_dir()
 
     def make(self):
@@ -44,13 +44,10 @@ class MakeWebService(object):
         os.mkdir(self.topdir)
         for subdir in ('conf', 'lib', 'python', 'txt'):
             os.mkdir(os.path.join(self.topdir, subdir))
-        os.mkdir(os.path.join(self.topdir, 'python', self.service_module))
+        os.mkdir(os.path.join(self.topdir, 'python', self.short_name))
 
     def _make_sconstruct(self):
-        envmodule = ''
-        sm = self.service_name.lower().replace(' ', '_')
-        if sm != self.service_module:
-            envmodule = ", service_module='%s'" % self.service_module
+        envmodule = ", service_module='%s'" % self.short_name
         f = open(os.path.join(self.topdir, 'SConstruct'), 'w')
         print >> f, """import saliweb.build
 
@@ -64,10 +61,10 @@ env.InstallCGIScripts()
 Export('env')
 SConscript('python/%s/SConscript')
 SConscript('lib/SConscript')
-SConscript('txt/SConscript')""" % (envmodule, self.service_module)
+SConscript('txt/SConscript')""" % (envmodule, self.short_name)
 
     def _make_sconscripts(self):
-        f = open(os.path.join(self.topdir, 'python', self.service_module,
+        f = open(os.path.join(self.topdir, 'python', self.short_name,
                               'SConscript'), 'w')
         print >> f, """Import('env')
 
@@ -76,7 +73,7 @@ env.InstallPython(['__init__.py'])"""
         f = open(os.path.join(self.topdir, 'lib', 'SConscript'), 'w')
         print >> f, """Import('env')
 
-env.InstallPerl(['%s.pm'])""" % self.service_module
+env.InstallPerl(['%s.pm'])""" % self.short_name
 
         f = open(os.path.join(self.topdir, 'txt', 'SConscript'), 'w')
         print >> f, """Import('env')
@@ -87,12 +84,12 @@ env.InstallTXT(['help.txt', 'contact.txt'])"""
         f = open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w')
         print >> f, """[general]
 admin_email: %(user)s@salilab.org
-socket: %(install)s/%(service_module)s.socket
+socket: %(install)s/%(short_name)s.socket
 service_name: %(service_name)s
-urltop: http://modbase.compbio.ucsf.edu/%(service_module)s
+urltop: http://modbase.compbio.ucsf.edu/%(short_name)s
 
 [backend]
-user: %(service_module)s
+user: %(short_name)s
 state_file: %(install)s/modloop.state
 check_minutes: 10
 
@@ -124,8 +121,8 @@ passwd: %s""" % (end, user, passwd)
 
     def _make_frontend(self):
         f = open(os.path.join(self.topdir, 'lib',
-                              '%s.pm' % self.service_module), 'w')
-        print >> f, """package %(service_module)s;
+                              '%s.pm' % self.short_name), 'w')
+        print >> f, """package %(short_name)s;
 use base qw(saliweb::frontend);
 use strict;
 
@@ -165,7 +162,7 @@ sub get_results_page {
 }""" % self.__dict__
 
     def _make_backend(self):
-        f = open(os.path.join(self.topdir, 'python', self.service_module,
+        f = open(os.path.join(self.topdir, 'python', self.short_name,
                               '__init__.py'), 'w')
         print >> f, """import saliweb.backend
 
