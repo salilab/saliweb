@@ -7,6 +7,8 @@ Sali lab web applications - that is to say, jobs that are submitted from a
 web interface but that then run on one or more cluster nodes for a possibly
 long period of time.
 
+Developers eager to get started may want to jump straight to :ref:`quick_start`.
+
 The framework is split up into four distinct parts:
 
 * The :ref:`frontend <frontend>` consists of HTML pages and Perl-CGI scripts

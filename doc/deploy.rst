@@ -20,14 +20,14 @@ Every service needs some basic setup:
   the backend and the other for the frontend. A sysadmin can set this up on
   the `modbase` machine.
 
-* Generally speaking, the service needs its own user on the `modbase` machine;
+* The service needs its own user on the `modbase` machine;
   for example, there is a `modloop` user for the ModLoop service. It is this
   user that runs `scons` (below). All of the backend also runs as this user,
-  and jobs on the SGE clusters also run under this user's account. It is
-  generally not a good idea to use a regular user for this purpose, as it will
-  use up the regular user's quota (disk and runtime) on the cluster, and bugs
+  and jobs on the SGE clusters also run under this user's account. (It is
+  not a good idea to use a regular user for this purpose, as it will
+  use up the regular user's disk and runtime quota on the cluster, and bugs
   in the service could lead to deletion of that user's files or their exposure
-  to outside attack. A sysadmin can also set up this user account.
+  to outside attack.) A sysadmin can also set up this user account.
 
 * The web service user needs a directory on the NetApp disk in order to store
   running jobs, and at least one directory on a local `modbase` disk so the
@@ -41,14 +41,76 @@ Every service needs some basic setup:
 * It is usually a good idea to put the implementation files for a web service
   in an SVN repository.
 
-Simple setup
-============
+.. _quick_start:
+
+Quick start
+===========
 
 The easiest way to set up a new web service is to simply run the
 ``make_web_service`` script on the `modbase` machine. Given the name of the
-web service (and, optionally, a short name) it will set up all the necessary
+web service it will set up all the necessary
 files used for a basic web service. Run ``make_web_service`` with no
 arguments for further help.
+
+Example usage
+-------------
+
+For example, the user 'bob' wants to set up a web service for peptide docking.
+
+ #. He first chooses a "human readable" name for his service, "Peptide Docking".
+    This name will appear on web pages and in emails, but can be changed
+    later by editing the configuration file, if desired.
+
+ #. He also chooses a "short name" for his service, "pepdock". The short name
+    should be a single lowercase word; it is used to name system and MySQL
+    users, the Perl and Python modules, etc. It is difficult to change later,
+    but is never seen by end users so is essentially arbitrary.
+
+ #. He asks a sysadmin to set up the account for the "pepdock" system user. This
+    will be created on the `modbase` machine and the cluster nodes, so it can
+    run jobs.
+
+ #. He logs in to the `modbase` machine using his own account, and uses the
+    ``make_web_service`` script to set up the web service::
+
+     $ ssh bob@modbase
+     [bob@modbase ~]$ make_web_service "Peptide Docking" pepdock
+     Web service set up in pepdock directory
+     [bob@modbase ~]$ cd pepdock
+
+ #. Bob edits the :ref:`configuration file <configfile>`
+    in :file:`conf/live.conf` to adjust install locations, etc. if necessary,
+    and fills in the template Python and Perl modules for the
+    :ref:`backend <backend>` and :ref:`frontend <frontend>`, in
+    :file:`python/pepdock/__init__.py` and :file:`lib/pepdock.pm`, respectively.
+
+ #. He deploys the web service by simply typing `scons` in the pepdock
+    directory. This will give him further instructions to complete the setup
+    (for example, providing a set of MySQL commands to give to a sysadmin to
+    set up the database).
+
+ #. Once deployment is successful, he asks a sysadmin to set up the web server
+    on `modbase` so that the URL given in `urltop` in :file:`conf/live.conf`
+    works.
+
+ #. Whenever Bob makes changes to the service in his `pepdock` directory, he
+    simply runs `scons` again to update the live copy of the service.
+    (The backend will also need to restarted when he does this, but `scons`
+    will show a suitable command line to achieve this.)
+
+.. note::
+   Development of the service should generally be done by the regular ('bob')
+   user; only the backend itself runs as the backend ('pepdock') user. Bob can
+   however run any command as the 'pepdock' user using 'sudo'
+   (e.g. ``sudo -u pepdock scons`` to run scons as the pepdock user). Note that
+   sudo will ask for the regular user's (Bob's) password, not the pepdock
+   account (which does not have a password anyway, and cannot be logged into).
+   For advanced access, a shell can be opened as the backend user by running
+   something like ``sudo -u pepdock bash``.
+
+The following sections describe the various components of a web service in more
+detail, for developers that wish to set things up themselves without using the
+convenience scripts.
 
 .. _backend_package:
 

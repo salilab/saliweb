@@ -9,7 +9,7 @@ The frontend is a set of Perl classes that displays the web interface, allowing
 a user to upload their input files, start a job, display a list of all jobs
 in the system, and get back job results. The main :class:`saliwebfrontend`
 class must be subclassed for each web service. This class is then used to
-display the web pages using a set of CGI scripts that are set up for you
+display the web pages using a set of CGI scripts that are set up
 automatically by the build system.
 
 .. note:: A method in Perl is simply a function that gets a reference to an
