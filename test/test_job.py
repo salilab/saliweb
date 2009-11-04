@@ -1,4 +1,5 @@
 import unittest
+import logging
 import datetime
 import os
 import re
@@ -52,8 +53,15 @@ expire: %s
 
 class MyJob(Job):
     def preprocess(self):
+        l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-preprocess':
             raise ValueError('Failure in preprocessing')
+        if self.name == 'log-preprocess':
+            self.logger.debug("debug message")
+            self.logger.info("info message")
+            self.logger.warning("warning message")
+            self.logger.error("error message")
+            self.logger.critical("critical message")
         if self.name == 'fatal-fail-preprocess':
             # Ensure that Job._fail() fails while trying to process the error
             self._metadata = None
@@ -64,6 +72,7 @@ class MyJob(Job):
         if self.name == 'complete-preprocess':
             self.skip_run()
     def postprocess(self):
+        l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-postprocess':
             raise ValueError('Failure in postprocessing')
         self._metadata['testfield'] = 'postprocess'
@@ -72,12 +81,14 @@ class MyJob(Job):
         if self.name == 'reschedule':
             self.reschedule_run('my-reschedule')
     def complete(self):
+        l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-complete':
             raise ValueError('Failure in completion')
         self._metadata['testfield'] = 'complete'
         f = open('complete', 'w')
         f.close()
     def run(self):
+        l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-run':
             raise ValueError('Failure in running')
         self._metadata['testfield'] = 'run'
@@ -89,12 +100,15 @@ class MyJob(Job):
         f.close()
         return Job.rerun(self, data)
     def archive(self):
+        l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-archive':
             raise ValueError('Failure in archival')
         self._metadata['testfield'] = 'archive'
         f = open('archive', 'w')
         f.close()
     def expire(self):
+        if hasattr(self, 'logger'):
+            raise RuntimeError("self.logger should not be set")
         if self.name == 'fail-expire':
             raise ValueError('Failure in expiry')
         self._metadata['testfield'] = 'expire'
@@ -348,6 +362,33 @@ class JobTest(unittest.TestCase):
                                + '.*Failure in preprocessing', mail,
                                flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
+
+    def test_preprocess_logging(self):
+        """Test logging in preprocess method"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'log-preprocess')
+        web._process_incoming_jobs()
+
+        # Job should now have moved from INCOMING to RUNNING
+        job = web.get_job_by_name('RUNNING', 'log-preprocess')
+        # Check get_log_handler method
+        hdlr = job.get_log_handler()
+        self.assert_(isinstance(hdlr, logging.Handler))
+        jobdir = os.path.join(conf.directories['RUNNING'], 'log-preprocess')
+        self.assertEqual(job.directory, jobdir)
+        # Both preprocess and run methods in MyJob should have triggered
+        os.unlink(os.path.join(jobdir, 'preproc'))
+        os.unlink(os.path.join(jobdir, 'job-output'))
+        # All logging messages above the threshold should be in framework.log
+        logs = open(os.path.join(jobdir, 'framework.log')).read()
+        self.assert_(re.match(
+                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ WARNING warning message\n'
+                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ ERROR error message\n'
+                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ CRITICAL critical message\n',
+                    logs), 'Unexpected log output: ' + logs)
+        os.unlink(os.path.join(jobdir, 'framework.log'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
 
     def test_fatal_failure(self):
         """Make sure that job failures within _fail() are handled correctly"""

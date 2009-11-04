@@ -193,6 +193,27 @@ essentially a dump of the database row corresponding to the job.
 .. literalinclude:: ../examples/customdb.py
    :language: python
 
+Logging
+=======
+
+It is often useful for debugging purposes to log progress of a job. While the
+job is running on the cluster, the only way to do this is to write output into
+a log file. For other steps in the processing, however, the standard Python
+`logging module <http://www.python.org/doc/2.3.5/lib/module-logging.html>`_
+is utilized. Each job method (such as :meth:`Job.run`, :meth:`Job.preprocess`)
+with the exception of :meth:`Job.expire` can use the :attr:`Job.logger` object
+to write out log messages. It is a standard Python Logger object, so supports
+the regular methods of a Logger, such as :meth:`~Logger.warning` and
+:meth:`~Logger.critical` to write log messages, and :meth:`~Logger.setLevel`
+to set the threshold for log output.
+
+By default, anything logged that exceeds the threshold will be written to a file
+called 'framework.log' in the job's directory. The file will only be created
+when the first log message is printed. This behavior can be modified if desired
+by overriding the :meth:`Job.get_log_handler` method.
+
+.. literalinclude:: ../examples/logging.py
+   :language: python
 
 Testing
 =======

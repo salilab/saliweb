@@ -3,23 +3,12 @@ import os
 import re
 import datetime
 import tempfile
-import shutil
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
 from saliweb.backend import WebService, Job, StateFileError, SanityError
 from StringIO import StringIO
-
-class RunInTempDir(object):
-    """Simple RAII-style class to run a test in a temporary directory"""
-    def __init__(self):
-        self.origdir = os.getcwd()
-        self.tmpdir = tempfile.mkdtemp()
-        os.chdir(self.tmpdir)
-    def __del__(self):
-        os.chdir(self.origdir)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-
+from testutil import RunInTempDir
 
 basic_config = """
 [general]

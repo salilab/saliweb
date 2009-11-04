@@ -11,6 +11,7 @@ import traceback
 import select
 import signal
 import socket
+import logging
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -141,6 +142,26 @@ class _JobMetadata(object):
         return self.__dict.values()
     def get(self, k, d=None):
         return self.__dict.get(k, d)
+
+
+class _DelayFileStream(object):
+    """A simple file-like object that writes to a file, but does not open the
+       file until the first write occurs. This is intended to be used with
+       the logging support (see :meth:`Job.get_log_handler`) and is provided for
+       older Pythons that do not have the 'delay' argument to
+       logging.FileHandler."""
+    def __init__(self, filename):
+        self.filename = os.path.abspath(filename)
+        self.stream = None
+
+    def write(self, txt):
+        if self.stream is None:
+            self.stream = open(self.filename, 'a')
+        self.stream.write(txt)
+
+    def flush(self):
+        if self.stream is not None:
+            self.stream.flush()
 
 
 class Config(object):
@@ -795,15 +816,34 @@ class Job(object):
     def _get_job_state_file(self):
         return os.path.join(self.directory, 'job-state')
 
+    def get_log_handler(self):
+        """Create and return a standard Python log Handler object. By default it
+           directs log messages to a file called 'framework.log' in the job
+           directory. This can be overridden to send log output elsewhere,
+           e.g. in an email. Do not call this method directory; instead use
+           :attr:`logger` to access the logger object."""
+        filename = os.path.join(self.directory, 'framework.log')
+        hdlr = logging.StreamHandler(_DelayFileStream(filename))
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        hdlr.setFormatter(formatter)
+        return hdlr
+
     def _run_in_job_directory(self, meth, *args, **keys):
         """Run a method with the working directory set to the job directory.
+           The method can also log by accessing :attr:`logger`.
            Restore the cwd after the method completes."""
         cwd = os.getcwd()
+        hdlr = self.get_log_handler()
+        self.logger = logging.getLogger(self.service_name)
+        self.logger.addHandler(hdlr)
         try:
             os.chdir(self.directory)
             return meth(*args, **keys)
         finally:
             os.chdir(cwd)
+            if hasattr(self, 'logger'):
+                self.logger.removeHandler(hdlr)
+                del self.logger
 
     def _frontend_sanity_check(self):
         """Make sure that the frontend set up the job correctly."""
