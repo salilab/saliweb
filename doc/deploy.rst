@@ -52,6 +52,13 @@ web service it will set up all the necessary
 files used for a basic web service. Run ``make_web_service`` with no
 arguments for further help.
 
+.. note::
+   ``make_web_service`` should be run on a local disk (**not** /netapp). Most
+   users on `modbase` have their home directories on a local disk, so this is
+   generally OK by default. Note that the home directory should be accessible
+   by the backend user in order for the build system to work; running
+   ``chmod a+rx ~`` should usually be sufficient.
+
 Example usage
 -------------
 
