@@ -7,6 +7,7 @@ class MySQLFieldTest(unittest.TestCase):
     def test_get_schema(self):
         """Check MySQLField.get_schema()"""
         field = MySQLField('name', 'VARCHAR(50)')
+        self.assertEqual(field.index, False)
         self.assertEqual(field.get_schema(), 'name VARCHAR(50)')
         field = MySQLField('name', 'VARCHAR(50)', key='PRIMARY', null=False,
                            default='TEST')
@@ -25,6 +26,9 @@ class MySQLFieldTest(unittest.TestCase):
         # default cannot be NULL if NULL is not allowed
         field = MySQLField('name', 'TEXT', null=False, default=None)
         self.assertEqual(field.get_schema(), "name TEXT NOT NULL DEFAULT ''")
+        # Check index
+        field = MySQLField('name', 'TEXT', index=True)
+        self.assertEqual(field.index, True)
 
     def test_equals(self):
         """Check MySQLField equality"""
@@ -55,6 +59,10 @@ class MySQLFieldTest(unittest.TestCase):
         self.assert_(not a == b)
         a,b = make_pair()
         a.key = None
+        self.assertNotEquals(a, b)
+        self.assert_(not a == b)
+        a,b = make_pair()
+        a.index = True
         self.assertNotEquals(a, b)
         self.assert_(not a == b)
 

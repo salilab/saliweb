@@ -463,6 +463,7 @@ def _check_mysql_schema(env, cursor):
                                                    default=row[4]))
 
     for dbfield, backfield in zip(dbfields, d._fields):
+        dbfield.index = backfield.index # Ignore differences in indexes here
         if dbfield != backfield:
             print >> sys.stderr, """
 ** The 'jobs' database table schema does not match that expected by the backend;

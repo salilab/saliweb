@@ -298,8 +298,11 @@ class MySQLField(object):
        (e.g. 'VARCHAR(15)'). `null` specifies whether the field can be NULL
        (valid values are True, False, 'YES', 'NO'). `key` if given specifies
        what kind of key it is (e.g. 'PRIMARY' or 'PRI'). `default` specifies
-       the default value of the field."""
-    def __init__(self, name, type, null=True, key=None, default=None):
+       the default value of the field. If `index` is True, create an index
+       on this field (the index gets the same name as the field, except with
+       an '_index' suffix)."""
+    def __init__(self, name, type, null=True, key=None, default=None,
+                 index=False):
         self.name = name
         self.type = type
         # Map MySQL DESCRIBE null types to Python booleans
@@ -318,11 +321,12 @@ class MySQLField(object):
         self.null = null
         self.key = key
         self.default = default
+        self.index = index
 
     def __eq__(self, other):
         return self.name == other.name and self.type == other.type \
                and self.key == other.key and self.null == other.null \
-               and self.default == other.default
+               and self.default == other.default and self.index == other.index
 
     def __ne__(self, other):
         return not self == other
@@ -361,7 +365,7 @@ class Database(object):
         self.add_field(MySQLField('directory', 'TEXT'))
         self.add_field(MySQLField('url', 'TEXT', null=False))
         self.add_field(MySQLField('state', "ENUM(%s)" % states,
-                                  null=False, default='INCOMING'))
+                                  null=False, default='INCOMING', index=True))
         self.add_field(MySQLField('submit_time', 'DATETIME', null=False))
         self.add_field(MySQLField('preprocess_time', 'DATETIME'))
         self.add_field(MySQLField('run_time', 'DATETIME'))
@@ -399,6 +403,10 @@ class Database(object):
         c = self.conn.cursor()
         schema = ', '.join(x.get_schema() for x in self._fields)
         c.execute('CREATE TABLE %s (%s)' % (self._jobtable, schema))
+        for field in self._fields:
+            if field.index:
+                c.execute('CREATE INDEX %s_index ON %s (%s)' \
+                          % (field.name, self._jobtable, field.name))
         self.conn.commit()
 
     def _count_all_jobs_in_state(self, state):

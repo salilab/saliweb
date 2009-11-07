@@ -69,11 +69,15 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(db._fields[-1].name, 'test_field')
 
     def test_create_tables(self):
-        """Make sure that Database._create_tables() makes tables"""
+        """Make sure that Database._create_tables() makes tables and indexes"""
         db = MemoryDatabase(Job)
         db._connect(None)
         db._create_tables()
         c = db.conn.cursor()
+        c.execute('DROP INDEX state_index')
+        for bad_index in ('GARBAGE', 'state', 'name_index'):
+            self.assertRaises(sqlite3.OperationalError, c.execute,
+                              'DROP INDEX ' + bad_index)
         c.execute('DROP TABLE jobs')
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE GARBAGE')
@@ -88,9 +92,11 @@ class DatabaseTest(unittest.TestCase):
         db.conn.commit()
         # Should work regardless of whether tables exist
         db._delete_tables()
-        # It should have deleted the jobs table
+        # It should have deleted the jobs table and state index
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE jobs')
+        self.assertRaises(sqlite3.OperationalError, c.execute,
+                          'DROP INDEX state_index')
 
     def test_count_jobs(self):
         """Check Database._count_all_jobs_in_state()"""
