@@ -313,7 +313,7 @@ class MySQLField(object):
         # Map MySQL DESCRIBE key type to full name
         if key == 'PRI':
             key = 'PRIMARY'
-        if key == '':
+        if key == '' or key == 'MUL':  # Ignore fields with MySQL INDEX here
             key = None
         self.null = null
         self.key = key
