@@ -4,6 +4,7 @@ import datetime
 import os
 import re
 import tempfile
+import testutil
 from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Job, InvalidStateError, Runner
 from saliweb.backend import MySQLField
@@ -371,6 +372,10 @@ class JobTest(unittest.TestCase):
 
         # Job should now have moved from INCOMING to RUNNING
         job = web.get_job_by_name('RUNNING', 'log-preprocess')
+        # Make sure that the logger file was closed
+        for f in testutil.get_open_files():
+            self.assert_('framework.log' not in f,
+                         "log file %s is still open" % f)
         # Check get_log_handler method
         hdlr = job.get_log_handler()
         self.assert_(isinstance(hdlr, logging.Handler))

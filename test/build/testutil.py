@@ -1,6 +1,7 @@
 import warnings
 import tempfile
 import os
+import glob
 import shutil
 
 def run_catch_warnings(method, *args, **keys):
@@ -29,3 +30,15 @@ class RunInTempDir(object):
     def __del__(self):
         os.chdir(self.origdir)
         shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+def get_open_files():
+    """Get a list of all files currently opened by this process"""
+    pid = os.getpid()
+    fd = os.path.join('/proc', '%s' % pid, 'fd')
+    if not os.path.exists(fd):
+        raise NotImplementedError("Needs a mounted /proc filesystem")
+    for f in glob.glob('%s/*' % fd):
+        try:
+            yield os.readlink(f)
+        except OSError:
+            pass

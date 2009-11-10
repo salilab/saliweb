@@ -848,10 +848,12 @@ class Job(object):
             os.chdir(self.directory)
             return meth(*args, **keys)
         finally:
-            os.chdir(cwd)
+            hdlr.flush()
+            hdlr.close()
             if hasattr(self, 'logger'):
                 self.logger.removeHandler(hdlr)
                 del self.logger
+            os.chdir(cwd)
 
     def _frontend_sanity_check(self):
         """Make sure that the frontend set up the job correctly."""
