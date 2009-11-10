@@ -526,6 +526,18 @@ def _install_directories(env):
                  "setfacl -d -m u:%s:rwx $TARGET" % frontend_user,
                  "setfacl -d -m u:%s:rwx $TARGET" % backend_user,
                  "setfacl -m u:%s:rwx $TARGET" % frontend_user])
+    env.Command(os.path.join(config.directories['install'], 'README'),
+                Value(env['service_name']),
+                _make_readme)
+
+def _make_readme(env, target, source):
+    service_name = source[0].get_contents()
+    f = open(target[0].path, 'w')
+    print >> f, "Do not edit files in this directory directly!"
+    print >> f, "Instead, check out the source files for the %s service," \
+                % service_name
+    print >> f, "and run 'scons' to install them here."
+    f.close()
 
 def _make_script(env, target, source):
     name = os.path.basename(str(target[0]))
