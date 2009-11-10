@@ -63,11 +63,11 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
-    check = env.Command('check', None,
-                        Action(_install_check, 'Check installation ...'))
-    env.AlwaysBuild(check)
-    env.Requires('/', check)
-    env.Default('/')
+    install = env.Command('install', None,
+                          Action(_install_check, 'Check installation ...'))
+    env.AlwaysBuild(install)
+    env.Requires(install, env['config'].directories.values())
+    env.Default(install)
     return env
 
 def _install_check(target, source, env):
@@ -515,12 +515,14 @@ def _install_directories(env):
     dirs.remove('INCOMING')
     for key in dirs:
         env.Command(config.directories[key], None,
-                    Mkdir(config.directories[key]))
+                    [Mkdir(config.directories[key]),
+                     Chmod(config.directories[key], 0755)])
     # Set permissions for incoming directory: both backend and frontend can
     # write to this directory and any newly-created subdirectories (-d)
     backend_user = env['config'].backend['user']
     env.Command(config.directories['INCOMING'], None,
                 [Mkdir(config.directories['INCOMING']),
+                 Chmod(config.directories['INCOMING'], 0755),
                  "setfacl -d -m u:%s:rwx $TARGET" % frontend_user,
                  "setfacl -d -m u:%s:rwx $TARGET" % backend_user,
                  "setfacl -m u:%s:rwx $TARGET" % frontend_user])
