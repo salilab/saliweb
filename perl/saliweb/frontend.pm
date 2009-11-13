@@ -764,7 +764,7 @@ sub get_queue_rows {
         }
     }
     if (!@rows) {
-        push @rows, $q->td({-colspan=>3}, $nojobs);
+        push @rows, $q->td({-colspan=>3, -class=>'nojobs'}, $nojobs);
     }
     return \@rows;
 }

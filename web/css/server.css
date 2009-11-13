@@ -370,3 +370,8 @@ h5 {
 .light {
         color: grey;
 }
+
+.nojobs {
+	color: red;
+	font-style: italic;
+}
