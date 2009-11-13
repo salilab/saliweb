@@ -720,11 +720,14 @@ sub get_queue_rows {
     my ($self, $q, $dbh, $completed) = @_;
     my @rows;
     my $where;
+    my $nojobs;
     if ($completed) {
       $where = "state = 'COMPLETED'";
+      $nojobs = "No completed jobs";
     } else {
       $where = "state != 'ARCHIVED' and state != 'EXPIRED' and " .
                "state != 'COMPLETED'";
+      $nojobs = "No pending or running jobs";
     }
     my $query =
          $dbh->prepare("select * from jobs where $where " .
@@ -753,6 +756,9 @@ sub get_queue_rows {
             push @rows, $q->td([$data->{name}, $data->{submit_time},
                                 $data->{state}]);
         }
+    }
+    if (!@rows) {
+        push @rows, $q->td({-colspan=>3}, $nojobs);
     }
     return \@rows;
 }
