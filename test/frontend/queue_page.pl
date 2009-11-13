@@ -46,15 +46,15 @@ BEGIN { use_ok('saliweb::frontend'); }
     ok(open(FH, "> $tmpdir/job-state"), "Open job-state");
     ok(close(FH), "Close job-state");
 
-    my @rows = $self->get_queue_rows($q, $dbh);
-    is(scalar(@rows), 6, "get_queue_rows (length)");
-    like($rows[0], qr/<td>.*job1.*<td>.*time1.*<td>.*RUNNING/s,
+    my $rows = $self->get_queue_rows($q, $dbh, 0);
+    is(scalar(@$rows), 6, "get_queue_rows (length)");
+    like($rows->[0], qr/<td>.*job1.*<td>.*time1.*<td>.*RUNNING/s,
          "               (content, row 1)");
-    like($rows[1], qr/<td>.*job2.*<td>.*time2.*<td>.*QUEUED/s,
+    like($rows->[1], qr/<td>.*job2.*<td>.*time2.*<td>.*QUEUED/s,
          "               (content, row 2)");
 
     $dbh->{failprepare} = 1;
-    throws_ok { $self->get_queue_rows($q, $dbh) }
+    throws_ok { $self->get_queue_rows($q, $dbh, 0) }
               'saliweb::frontend::DatabaseError',
               "               (prepare error)";
     like($@, qr/Couldn't prepare query: DB error/,
@@ -62,7 +62,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     $dbh->{failprepare} = 0;
 
     $dbh->{failexecute} = 1;
-    throws_ok { $self->get_queue_rows($q, $dbh) }
+    throws_ok { $self->get_queue_rows($q, $dbh, 0) }
               'saliweb::frontend::DatabaseError',
               "               (execute error)";
     like($@, qr/Couldn't execute query: DB error/,
@@ -70,16 +70,16 @@ BEGIN { use_ok('saliweb::frontend'); }
     $dbh->{failexecute} = 0;
 
     $self->{user_name} = 'testuser';
-    @rows = $self->get_queue_rows($q, $dbh);
-    is(scalar(@rows), 6, "get_queue_rows with user (length)");
+    $rows = $self->get_queue_rows($q, $dbh, 1);
+    is(scalar(@$rows), 6, "get_queue_rows with user (completed, length)");
     for (my $i = 0; $i < 6; $i++) {
         if ($i == 3) {
-            like($rows[3], '/<td><a href="testroot\/results.cgi\/job4\?' .
-                           'passwd=testpw">job4<\/a>.*<\/td>.*' .
-                           '2009\-10\-01.*COMPLETED/s',
-                   "                         (content, row 4)");
+            like($rows->[3], '/<td><a href="testroot\/results.cgi\/job4\?' .
+                             'passwd=testpw">job4<\/a>.*<\/td>.*' .
+                             '2009\-10\-01.*COMPLETED/s',
+                 "                         (content, row 4)");
         } else {
-            unlike($rows[$i], qr/<a href/,
+            unlike($rows->[$i], qr/<a href/,
                    "                         (content, row " . ($i + 1) . ")");
         }
     }
