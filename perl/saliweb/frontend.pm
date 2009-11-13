@@ -424,6 +424,11 @@ sub cgiroot {
     return $self->{'cgiroot'};
 }
 
+sub dbh {
+    my $self = shift;
+    return $self->{'dbh'};
+}
+
 sub http_status {
     my $self = shift;
     if (@_) { $self->{http_status} = shift; }

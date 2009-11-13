@@ -52,6 +52,10 @@ the web frontend.
 
       A pointer to the CGI.pm object used to display HTML (read-only).
 
+   .. attribute:: dbh
+
+      The database handle.
+
    .. attribute:: index_url
                   submit_url
                   queue_url

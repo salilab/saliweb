@@ -88,7 +88,7 @@ BEGIN {
     my $user_info = {email=>'myemail'};
     my $self = {CGI=>'mycgi', htmlroot=>'myhtmlroot', cgiroot=>'mycgiroot',
                 user_info=>$user_info, version=>'myversion',
-                http_status=>'200', user_name=>'testuser'};
+                http_status=>'200', user_name=>'testuser', dbh=>'dbhandle'};
     bless($self, 'saliweb::frontend');
     is($self->cgi, 'mycgi', 'saliweb::frontend accessors: cgi');
     is($self->htmlroot, 'myhtmlroot', '                             htmlroot');
@@ -98,6 +98,7 @@ BEGIN {
     is($self->version, 'myversion', '                             version');
     undef $self->{user_info};
     is($self->email, undef, '                             undef email');
+    is($self->dbh, 'dbhandle', '                             dbh');
     is($self->modeller_key, undef, '                             modeller_key');
     is($self->http_status, '200',
        '                             get http_status');
