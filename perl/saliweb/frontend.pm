@@ -677,7 +677,7 @@ sub get_queue_page {
     my $q = $self->{'CGI'};
     my $dbh = $self->{'dbh'};
     my $return = "<h3>Current " . $self->{'server_name'} . " Queue</h3>\n";
-    $return .= $q->p($q->a({-href=>"#",
+    $return .= $q->p($q->a({
                    -id=>'completedtoggle',
                    -onClick=>"toggle_visibility_tbody('completedjobs', " .
                              "'completedtoggle');"},
@@ -775,8 +775,7 @@ sub get_queue_key {
     my $maxjobs = $self->{config}->{limits}->{running};
     return
       $q->h3("Key") .
-      $q->p($q->a({-href=>"#",
-                   -id=>'keytoggle',
+      $q->p($q->a({-id=>'keytoggle',
                    -onClick=>"toggle_visibility('key', 'keytoggle');"},
                   "Show")) .
       $q->div({-id=>'key', -style=>'display:none'},
