@@ -677,10 +677,17 @@ sub get_queue_page {
     my $q = $self->{'CGI'};
     my $dbh = $self->{'dbh'};
     my $return = "<h3>Current " . $self->{'server_name'} . " Queue</h3>\n";
-    $return .= $q->table($q->Tr([$q->th(['Job ID', 'Submit time (UTC)',
-                                         'Status']),
-                                 $self->get_queue_rows($q, $dbh)
-                                ]));
+    $return .= $q->p($q->a({-href=>"#",
+                   -id=>'completedtoggle',
+                   -onClick=>"toggle_visibility_tbody('completedjobs', " .
+                             "'completedtoggle');"},
+                  "Show completed jobs"));
+    $return .= $q->table($q->thead($q->Tr($q->th(['Job ID', 'Submit time (UTC)',
+                                         'Status']))),
+                         $q->tbody($q->Tr($self->get_queue_rows($q, $dbh, 0))),
+                         $q->tbody({-id=>'completedjobs',
+                                    -style=>'display:none'},
+                                   $q->Tr($self->get_queue_rows($q, $dbh, 1))));
 
     return $return . $self->get_queue_key();
 }
@@ -710,11 +717,17 @@ sub get_text_file {
 }
 
 sub get_queue_rows {
-    my ($self, $q, $dbh) = @_;
+    my ($self, $q, $dbh, $completed) = @_;
     my @rows;
+    my $where;
+    if ($completed) {
+      $where = "state = 'COMPLETED'";
+    } else {
+      $where = "state != 'ARCHIVED' and state != 'EXPIRED' and " .
+               "state != 'COMPLETED'";
+    }
     my $query =
-         $dbh->prepare("select * from jobs " .
-                       "where state != 'ARCHIVED' and state != 'EXPIRED' ".
+         $dbh->prepare("select * from jobs where $where " .
                        "order by submit_time desc")
              or throw saliweb::frontend::DatabaseError(
                                  "Couldn't prepare query: " . $dbh->errstr);
@@ -741,7 +754,7 @@ sub get_queue_rows {
                                 $data->{state}]);
         }
     }
-    return @rows;
+    return \@rows;
 }
 
 sub get_queue_key {
