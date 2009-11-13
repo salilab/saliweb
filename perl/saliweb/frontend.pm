@@ -682,12 +682,18 @@ sub get_queue_page {
                    -onClick=>"toggle_visibility_tbody('completedjobs', " .
                              "'completedtoggle');"},
                   "Show completed jobs"));
-    $return .= $q->table($q->thead($q->Tr($q->th(['Job ID', 'Submit time (UTC)',
-                                         'Status']))),
-                         $q->tbody($q->Tr($self->get_queue_rows($q, $dbh, 0))),
-                         $q->tbody({-id=>'completedjobs',
-                                    -style=>'display:none'},
-                                   $q->Tr($self->get_queue_rows($q, $dbh, 1))));
+    # Generate table by hand (not using CGI.pm) since the latter causes
+    # "deep recursion" warnings in CGI.pm
+    $return .= "<table>\n<thead>\n" .
+               "<tr><th>Job ID</th> <th>Submit time (UTC)</th>" .
+               "<th>Status</th></tr>\n</thead>\n" .
+               "<tbody>\n" .
+               join("\n", map { "<tr>$_</tr>" }
+                          @{$self->get_queue_rows($q, $dbh, 0)}) .
+               "\n</tbody>\n<tbody id='completedjobs' style='display:none'>\n" .
+               join("\n", map { "<tr>$_</tr>" }
+                          @{$self->get_queue_rows($q, $dbh, 1)}) .
+               "\n</tbody>\n</table>\n";
 
     return $return . $self->get_queue_key();
 }
