@@ -750,33 +750,39 @@ sub get_queue_key {
     my $maxjobs = $self->{config}->{limits}->{running};
     return
       $q->h3("Key") .
-      $q->p($q->b("INCOMING:"),
-            " the job has been successfully submitted by the " .
-            "web interface, but has not yet started running. " .
-            sprintf("No more than %d job%s may run simultaneously on the " .
-                    "system.", $maxjobs, ($maxjobs == 1 ? '' : 's'))) .
+      $q->p($q->a({-href=>"#",
+                   -id=>'keytoggle',
+                   -onClick=>"toggle_visibility('key', 'keytoggle');"},
+                  "Show")) .
+      $q->div({-id=>'key', -style=>'display:none'},
+        $q->p($q->b("INCOMING:"),
+              " the job has been successfully submitted by the " .
+              "web interface, but has not yet started running. " .
+              sprintf("No more than %d job%s may run simultaneously on the " .
+                      "system.", $maxjobs, ($maxjobs == 1 ? '' : 's'))) .
 
-      $q->p($q->b("QUEUED:"),
-            " the job has been passed to our compute cluster, but the " .
-            "cluster is currently busy with other jobs, and so the job is " .
-            "not yet running. When the system is particularly busy, a job " .
-            "could wait for hours or days, so please be patient. " .
-            "Resubmitting your job will not help.") .
+        $q->p($q->b("QUEUED:"),
+              " the job has been passed to our compute cluster, but the " .
+              "cluster is currently busy with other jobs, and so the job is " .
+              "not yet running. When the system is particularly busy, a job " .
+              "could wait for hours or days, so please be patient. " .
+              "Resubmitting your job will not help.") .
 
-      $q->p($q->b("RUNNING:"),
-            " the job is running on our compute cluster.") .
+        $q->p($q->b("RUNNING:"),
+              " the job is running on our compute cluster.") .
 
-      $q->p($q->b("COMPLETED:"),
-            " the job has finished. You can find the job " .
-            "results at the URL given when you submitted it. If you provided " .
-            "an email address, you should also receive an email notification " .
-            "when the job finishes.") .
+        $q->p($q->b("COMPLETED:"),
+              " the job has finished. You can find the job results " .
+              "at the URL given when you submitted it. If you provided an " .
+              "email address, you should also receive an email notification " .
+              "when the job finishes.") .
 
-      $q->p($q->b("FAILED:"),
-            " a technical fault occurred. We are automatically " .
-            "notified of such jobs, and will resubmit the job for you once " .
-            "the problem has been fixed. (Typically, resubmitting it " .
-            "yourself will not help.)");
+        $q->p($q->b("FAILED:"),
+              " a technical fault occurred. We are automatically " .
+              "notified of such jobs, and will resubmit the job for you once " .
+              "the problem has been fixed. (Typically, resubmitting it " .
+              "yourself will not help.)")
+         );
 }
 
 sub _display_content {
