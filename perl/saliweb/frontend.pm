@@ -677,10 +677,10 @@ sub get_queue_page {
     my $q = $self->{'CGI'};
     my $dbh = $self->{'dbh'};
     my $return = "<h3>Current " . $self->{'server_name'} . " Queue</h3>\n";
-    $return .= $q->p($q->a({
+    $return .= $q->p($q->a({-href=>'#',
                    -id=>'completedtoggle',
                    -onClick=>"toggle_visibility_tbody('completedjobs', " .
-                             "'completedtoggle');"},
+                             "'completedtoggle'); return false;"},
                   "Show completed jobs"));
     # Generate table by hand (not using CGI.pm) since the latter causes
     # "deep recursion" warnings in CGI.pm
@@ -775,8 +775,10 @@ sub get_queue_key {
     my $maxjobs = $self->{config}->{limits}->{running};
     return
       $q->h3("Key") .
-      $q->p($q->a({-id=>'keytoggle',
-                   -onClick=>"toggle_visibility('key', 'keytoggle');"},
+      $q->p($q->a({-href=>'#',
+                   -id=>'keytoggle',
+                   -onClick=>"toggle_visibility('key', 'keytoggle'); " .
+                             "return false;"},
                   "Show")) .
       $q->div({-id=>'key', -style=>'display:none'},
         $q->p($q->b("INCOMING:"),
