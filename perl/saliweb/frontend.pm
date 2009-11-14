@@ -552,7 +552,6 @@ sub start_html {
     return $q->header(-status => $self->http_status) .
            $q->start_html(-title => $self->{page_title},
                           -style => {-src=>$style},
-                          -onload=>"opt.init(document.forms[0])",
                           -script=>[{-language => 'JavaScript',
                                      -src=>"/saliweb/js/salilab.js"}]
                           );
