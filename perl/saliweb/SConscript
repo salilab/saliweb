@@ -2,7 +2,7 @@ import os
 
 Import('env')
 
-perl_files = [ 'frontend.pm', 'server.pm' ]
+perl_files = [ 'frontend.pm', 'server.pm', 'Test.pm' ]
 
 # Install files:
 instdir = os.path.join(env['perldir'], 'saliweb')

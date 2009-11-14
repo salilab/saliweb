@@ -16,10 +16,11 @@ import os.path
 import pwd
 import saliweb.backend
 import SCons.Script
-from SCons.Script import File, Mkdir, Chmod, Value, Action
+from SCons.Script import File, Mkdir, Chmod, Value, Action, Builder
 import subprocess
 import tempfile
 import re
+import shutil
 
 frontend_user = 'apache'
 backend_uid_range = [11800, 11900]
@@ -63,12 +64,32 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
+    env.Append(BUILDERS = {'RunPerlTests': Builder(action=builder_perl_tests)})
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
     env.Requires(install, env['config'].directories.values())
     env.Default(install)
     return env
+
+def builder_perl_tests(target, source, env):
+    """Custom builder to run Perl tests"""
+    app = "prove " + " ".join(str(s) for s in source)
+    # Make a temporary copy of the Perl module, so that it works
+    tmpdir = tempfile.mkdtemp()
+    fin = open(os.path.join('lib', '%s.pm' % env['service_module']))
+    fout = open(os.path.join(tmpdir, '%s.pm' % env['service_module']), 'w')
+    for line in fin:
+        print >> fout, line.replace('@CONFIG@', '')
+    fin.close()
+    fout.close()
+    e = env.Clone()
+    e['ENV']['PERL5LIB'] = tmpdir
+    ret = e.Execute(app)
+    shutil.rmtree(tmpdir, ignore_errors=True)
+    if ret != 0:
+        print "unit tests FAILED"
+        return 1
 
 def _install_check(target, source, env):
     """Check the final installation for sanity"""

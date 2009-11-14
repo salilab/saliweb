@@ -9,3 +9,5 @@ class Chmod: pass
 class Value: pass
 
 class Action: pass
+
+class Builder: pass
