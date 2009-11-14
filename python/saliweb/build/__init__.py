@@ -177,6 +177,9 @@ def _setup_install_directories(env):
     env['perldir'] = os.path.join(env['instdir'], 'lib')
 
 def _check(env):
+    # tests run locally, so don't need the installation to work properly
+    if SCons.Script.COMMAND_LINE_TARGETS == ['test']:
+        return
     _check_user(env)
     _check_ownership(env)
     _check_permissions(env)
