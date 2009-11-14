@@ -71,7 +71,7 @@ END {
     like($out,
          "/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*" .
          "<title>test server Help</title>.*help\.css.*</head>.*" .
-         '<body onload="opt\.init\(document\.forms\[0\]\)">' . "\n" .
+         '<body>' . "\n" .
          "<div id=\"fullpart\">test news text.*" .
          "</body>.*</html>/s", 'check news page, helplink style');
     unlike($out, "/scgi\/server.cgi/",

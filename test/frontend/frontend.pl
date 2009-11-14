@@ -75,12 +75,12 @@ BEGIN {
          '.*<link rel="stylesheet" type="text\/css" ' .
          'href="\/saliweb\/css\/server.css" \/>' .
          '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
-         '.*<body onload=/s', "start_html (default style)");
+         '.*<body>/s', "start_html (default style)");
     like($self->start_html('mystyle.css'),
          '/<!DOCTYPE html.*<head>.*<title>test page title<\/title>' .
          '.*<link rel="stylesheet".*href="mystyle.css"' .
          '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
-         '.*<body onload=/s', "           (mystyle)");
+         '.*<body>/s', "           (mystyle)");
 }
 
 # Test simple accessors
