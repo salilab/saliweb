@@ -65,6 +65,8 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
     env.Append(BUILDERS = {'RunPerlTests': Builder(action=builder_perl_tests)})
+    env.Append(BUILDERS = {'RunPythonTests': \
+                           Builder(action=builder_python_tests)})
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
@@ -87,6 +89,18 @@ def builder_perl_tests(target, source, env):
     e['ENV']['PERL5LIB'] = tmpdir
     ret = e.Execute(app)
     shutil.rmtree(tmpdir, ignore_errors=True)
+    if ret != 0:
+        print "unit tests FAILED"
+        return 1
+
+def builder_python_tests(target, source, env):
+    """Custom builder to run Python tests"""
+    mod = os.path.join(os.path.dirname(saliweb.__file__), 'test',
+                       'run-tests.py')
+    app = "python " + mod + " " + " ".join(str(s) for s in source)
+    e = env.Clone()
+    e['ENV']['PYTHONPATH'] = 'python'
+    ret = e.Execute(app)
     if ret != 0:
         print "unit tests FAILED"
         return 1
@@ -178,7 +192,8 @@ def _setup_install_directories(env):
 
 def _check(env):
     # tests run locally, so don't need the installation to work properly
-    if SCons.Script.COMMAND_LINE_TARGETS == ['test']:
+    cmdtgt = SCons.Script.COMMAND_LINE_TARGETS
+    if len(cmdtgt) == 1 and cmdtgt[0].startswith('test'):
         return
     _check_user(env)
     _check_ownership(env)
