@@ -76,3 +76,11 @@ This module provides a simple SCons-based build infrastructure for web services.
       Installs a provided list of text files in the ``txt`` directory
       underneath the installation directory. The files can be installed in
       a subdirectory if desired by giving the *subdir* argument.
+
+   .. method:: RunPerlTests(tests)
+
+      Runs a set of Perl tests of the frontend implementation.
+
+   .. method:: RunPythonTests(tests)
+
+      Runs a set of Python tests of the backend implementation.

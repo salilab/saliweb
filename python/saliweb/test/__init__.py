@@ -1,3 +1,5 @@
+"""Utility classes and functions to aid in testing Sali lab web services."""
+
 import unittest
 import os
 import shutil
@@ -6,7 +8,7 @@ import saliweb.backend
 
 class RunInDir(object):
     """Change to the given directory, and change back when the object
-       goes out of scope"""
+       goes out of scope."""
     def __init__(self, dir):
         try:
             self.origdir = os.getcwd()
@@ -20,7 +22,7 @@ class RunInDir(object):
 
 
 class TempDir(object):
-    """Make a temporary directory that is deleted when the object is"""
+    """Make a temporary directory that is deleted when the object is."""
     def __init__(self):
         self.tmpdir = tempfile.mkdtemp()
     def __del__(self):
@@ -28,9 +30,9 @@ class TempDir(object):
 
 
 def RunInTempDir():
-    """Run a test in a temporary directory. When the returned object goes
-       out of scope, the directory is deleted and the current directory
-       is reset."""
+    """Run in an automatically-created temporary directory. When the
+       returned object goes out of scope, the directory is deleted and the
+       current directory is reset."""
     t = TempDir()
     d = RunInDir(t.tmpdir)
     d._tmpdir = t # Make sure that directory is deleted at the right time

@@ -241,6 +241,70 @@ expired jobs. Jobs in other states (such as **RUNNING** or **COMPLETED**) can
 also be deleted, but only if the backend service is stopped first, since that
 service actively manages jobs in these states.
 
+.. _testing:
+
+Testing
+=======
+
+Before the framework is put into production it should be tested to make sure
+it works correctly. There are two main types of tests that should be done:
+
+* **Unit tests** test individual parts of the service to make sure they work
+  in isolation.
+
+* **System tests** test the service as a whole.
+
+Unit tests
+----------
+
+To test the frontend, make a `test/frontend` subdirectory and put one or more
+Perl scripts there. Each script can use the :class:`saliwebTest` class,
+and its :meth:`~saliwebTest.make_frontend` method, to create simple instances
+of the web frontend and test various methods given different inputs, using
+the standard Perl `Test::More` and `Test::Exception` modules. For example,
+a script to test the :meth:`~saliwebfrontend.get_navigation_links` method might
+look like:
+
+.. literalinclude:: ../examples/test-navigation.pl
+   :language: perl
+
+Then write an SConscript file in the same directory to actually run the
+scripts, using the :meth:`~saliweb.build.Environment.RunPerlTests`
+method. This might look like:
+
+.. literalinclude:: ../examples/SConscript-frontend-test
+   :language: python
+
+To test the backend, make a `test/backend` subdirectory and put one or more
+Python scripts there. Each script should define a subclass of
+:class:`saliweb.test.TestCase` and define one or methods starting with *test_*
+using standard Python *unittest* methods such as *assertEquals*. A number of
+other utility classes are also provided in the :mod:`saliweb.test` module.
+
+For example, to test that the :meth:`~saliweb.backend.Job.archive` method of
+the ModFoo service (:ref:`simplejob` example) really does gzip all of the PDB
+files, a test case like that below could be used:
+
+.. literalinclude:: ../examples/test-archive.py
+   :language: python
+
+Then write an SConscript file in the same directory to actually run the
+scripts, using the :meth:`~saliweb.build.Environment.RunPythonTests`
+method. This might look like:
+
+.. literalinclude:: ../examples/SConscript-backend-test
+   :language: python
+
+System tests
+------------
+
+There is currently no rigorous way to carry out system tests other than
+:ref:`deploying the service <quick_start>`,
+providing an implementation for the :meth:`~saliwebfrontend.get_submit_page`
+frontend method, then using the web interface or runnning the `cgi/submit.cgi`
+script (in the web service's installation directory, as the backend user) to
+submit a job.
+
 .. _complete_examples:
 
 Examples

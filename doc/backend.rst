@@ -152,6 +152,8 @@ The **ARCHIVED** directory may live on long-term storage, such as a park disk.
 Examples
 ========
 
+.. _simplejob:
+
 Simple job
 ----------
 
@@ -218,11 +220,8 @@ by overriding the :meth:`Job.get_log_handler` method.
 Testing
 =======
 
-The best way to test the backend is to :ref:`deploy the service <quick_start>`,
-providing an implementation for the :meth:`~saliwebfrontend.get_submit_page`
-frontend method, then either use the web interface or run the `cgi/submit.cgi`
-script (in the web service's installation directory, as the backend user) to
-submit a job. This will take care to make sure everything is done correctly.
+The best way to test the backend is as part of the entire web service
+(see :ref:`testing`).
 
 However, the backend can be tested directly without invoking the frontend, by
 manually modifying the MySQL database. Note, however, that the interface

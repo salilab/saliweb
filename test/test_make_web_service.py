@@ -61,7 +61,9 @@ class MakeWebServiceTests(unittest.TestCase):
         for f in ('conf/live.conf', 'conf/frontend.conf', 'conf/backend.conf',
                   'lib/modfoo.pm', 'python/modfoo/__init__.py', 'txt/help.txt',
                   'txt/contact.txt', 'SConstruct', 'lib/SConscript',
-                  'python/modfoo/SConscript', 'txt/SConscript'):
+                  'python/modfoo/SConscript', 'txt/SConscript',
+                  'test/SConscript', 'test/frontend/SConscript',
+                  'test/backend/SConscript'):
             os.unlink('modfoo/' + f)
 
 if __name__ == '__main__':

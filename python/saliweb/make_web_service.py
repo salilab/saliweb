@@ -42,7 +42,8 @@ class MakeWebService(object):
 
     def _make_directories(self):
         os.mkdir(self.topdir)
-        for subdir in ('conf', 'lib', 'python', 'txt'):
+        for subdir in ('conf', 'lib', 'python', 'txt', 'test',
+                       'test/frontend', 'test/backend'):
             os.mkdir(os.path.join(self.topdir, subdir))
         os.mkdir(os.path.join(self.topdir, 'python', self.short_name))
 
@@ -61,7 +62,8 @@ env.InstallCGIScripts()
 Export('env')
 SConscript('python/%s/SConscript')
 SConscript('lib/SConscript')
-SConscript('txt/SConscript')""" % (envmodule, self.short_name)
+SConscript('txt/SConscript')
+SConscript('test/SConscript')""" % (envmodule, self.short_name)
 
     def _make_sconscripts(self):
         f = open(os.path.join(self.topdir, 'python', self.short_name,
@@ -79,6 +81,24 @@ env.InstallPerl(['%s.pm'])""" % self.short_name
         print >> f, """Import('env')
 
 env.InstallTXT(['help.txt', 'contact.txt'])"""
+
+        f = open(os.path.join(self.topdir, 'test', 'backend',
+                              'SConscript'), 'w')
+        print >> f, """Import('env')
+
+env.RunPythonTests(Glob("*.py"))"""
+
+        f = open(os.path.join(self.topdir, 'test', 'frontend',
+                              'SConscript'), 'w')
+        print >> f, """Import('env')
+
+env.RunPerlTests(Glob("*.pl"))"""
+
+        f = open(os.path.join(self.topdir, 'test',
+                              'SConscript'), 'w')
+        print >> f, """SConscript('backend/SConscript')
+SConscript('frontend/SConscript')"""
+
 
     def _make_config(self):
         f = open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w')
