@@ -91,6 +91,10 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
     :ref:`backend <backend>` and :ref:`frontend <frontend>`, in
     :file:`python/pepdock/__init__.py` and :file:`lib/pepdock.pm`, respectively.
 
+ #. He writes test cases for both the frontend and backend (see :ref:`testing`)
+    and runs them to make sure they work by typing `scons test` in the pepdock
+    directory.
+
  #. He deploys the web service by simply typing `scons` in the pepdock
     directory. This will give him further instructions to complete the setup
     (for example, providing a set of MySQL commands to give to a sysadmin to
@@ -101,7 +105,8 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
     works.
 
  #. Whenever Bob makes changes to the service in his `pepdock` directory, he
-    simply runs `scons` again to update the live copy of the service.
+    simply runs `scons test` to make sure the changes didn't break anything,
+    then `scons` to update the live copy of the service.
     (The backend will also need to restarted when he does this, but `scons`
     will show a suitable command line to achieve this.)
 
@@ -194,6 +199,9 @@ command-line admin tools in the web service's directory (see below).
 :meth:`~saliweb.build.Environment.InstallPerl` or
 :meth:`~saliweb.build.Environment.InstallPython`) to set up the rest of the
 necessary files for the web service.
+
+To test the web service, run `scons test` from the command line on the
+`modbase` machine (see :ref:`testing`).
 
 To actually install the web service, run `scons build=live`
 or `scons build=test` from the command line on the `modbase` machine, as the web
@@ -294,6 +302,8 @@ method. This might look like:
 
 .. literalinclude:: ../examples/SConscript-backend-test
    :language: python
+
+Run `scons test` to actually run the tests.
 
 System tests
 ------------
