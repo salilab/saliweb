@@ -117,7 +117,7 @@ sub make_test_frontend {
                'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                '<title>test Results<\/title>.*<body.*Link 1.*' .
                'Project menu for.*Job \'running\-job\' has not yet ' .
-               'completed.*check on your job.*queue\.cgi.*<\/html>/s',
+               'completed.*check on the status.*queue\.cgi.*<\/html>/s',
          '                     (still running job)');
 
     $cls = make_test_frontend('archived-job', 'passwd');
@@ -202,7 +202,8 @@ sub make_test_frontend {
                    'Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*' .
                    '<title>test Results<\/title>.*<body.*Link 1.*' .
                    'Project menu for.*Invalid results file.*' .
-                   'You can also check.*<a href="testcgiroot\/queue\.cgi">' .
+                   'You can check on the status of all jobs.*' .
+                   '<a href="testcgiroot\/queue\.cgi">' .
                    'queue.*page.*<\/html>/s',
              '                     (' . shift() . ')');
     }

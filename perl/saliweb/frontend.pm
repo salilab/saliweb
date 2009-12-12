@@ -651,7 +651,7 @@ sub format_results_error {
     my $q = $self->{'CGI'};
     my $msg = $exc->text;
     return $q->p("$msg.") .
-           $q->p("You can also check on your job at the " .
+           $q->p("You can check on the status of all jobs at the " .
                  $q->a({-href=>$self->queue_url}, "queue") . " page.");
 }
 
