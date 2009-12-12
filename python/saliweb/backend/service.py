@@ -5,6 +5,7 @@ import signal
 import time
 import os
 
+
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
@@ -22,6 +23,7 @@ if it is already running.
         parser.error("service state not valid")
     return args[0]
 
+
 def kill_pid(pid):
     for i in range(10):
         try:
@@ -31,6 +33,7 @@ def kill_pid(pid):
             return True
         time.sleep(0.1)
 
+
 def status(web):
     pid = web.get_running_pid()
     if pid is None:
@@ -38,6 +41,7 @@ def status(web):
         sys.exit(3)
     else:
         print "%s (pid %d) is running..." % (web.config.service_name, pid)
+
 
 def stop(web):
     sys.stdout.write("Stopping %s: " % web.config.service_name)
@@ -52,9 +56,11 @@ def stop(web):
             print "FAILED; pid %d did not terminate" % pid
             sys.exit(2)
 
+
 def start(web):
     print "Starting %s" % web.config.service_name
     web.do_all_processing(daemonize=True)
+
 
 def condstart(web):
     print "Starting %s" % web.config.service_name
@@ -63,9 +69,11 @@ def condstart(web):
     except saliweb.backend.StateFileError, detail:
         print "   not started: " + str(detail)
 
+
 def restart(web):
     stop(web)
     start(web)
+
 
 def main(webservice):
     state = get_options()

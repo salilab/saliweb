@@ -15,37 +15,45 @@ import logging
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
-if sys.version_info[0:2] < [2,4]:
+if sys.version_info[0:2] < [2, 4]:
     raise ImportError("This module requires Python 2.4 or later")
+
 
 class InvalidStateError(Exception):
     """Exception raised for invalid job states."""
     pass
 
+
 class RunnerError(Exception):
     """Exception raised if the runner (such as SGE) failed to run a job."""
     pass
+
 
 class StateFileError(Exception):
     "Exception raised if a previous run is still running or crashed."""
     pass
 
+
 class ConfigError(Exception):
     """Exception raised if a configuration file is inconsistent."""
     pass
+
 
 class SanityError(Exception):
     """Exception raised if a new job fails the sanity check, e.g. if the
        frontend added invalid or inconsistent information to the database."""
     pass
 
+
 class _SigTermError(Exception):
     """Exception raised if the daemon is killed by SIGTERM."""
     pass
 
+
 def _sigterm_handler(signum, frame):
     """Catch SIGTERM and convert it to a SigTermError exception."""
     raise _SigTermError()
+
 
 def _make_daemon():
     """Make the current process into a daemon, by forking twice and detaching
@@ -73,6 +81,7 @@ def _make_daemon():
     os.dup2(0, 1)
     os.dup2(0, 2)
 
+
 class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
@@ -87,12 +96,14 @@ class _JobState(object):
                            ['COMPLETED', 'ARCHIVED'],
                            ['ARCHIVED', 'EXPIRED'],
                            ['FAILED', 'INCOMING']]
+
     def __init__(self, state):
         if state in self.__valid_states:
             self.__state = state
         else:
             raise InvalidStateError("%s is not in %s" \
                                     % (state, str(self.__valid_states)))
+
     def __str__(self):
         return "<_JobState %s>" % self.get()
 
@@ -121,25 +132,33 @@ class _JobMetadata(object):
        Objects also keep track of whether metadata needs to be pushed back to
        the database to keep things synchronized.
        Keys cannot be removed or added."""
+
     def __init__(self, keys, values):
         self.__dict = dict(zip(keys, values))
         del self.__dict['state']
         self.mark_synced()
+
     def needs_sync(self):
         return self.__needs_sync
+
     def mark_synced(self):
         self.__needs_sync = False
+
     def __getitem__(self, key):
         return self.__dict[key]
+
     def __setitem__(self, key, value):
         old = self.__dict[key]
         if old != value:
             self.__needs_sync = True
             self.__dict[key] = value
+
     def keys(self):
         return self.__dict.keys()
+
     def values(self):
         return self.__dict.values()
+
     def get(self, k, d=None):
         return self.__dict.get(k, d)
 
@@ -147,9 +166,10 @@ class _JobMetadata(object):
 class _DelayFileStream(object):
     """A simple file-like object that writes to a file, but does not open the
        file until the first write occurs. This is intended to be used with
-       the logging support (see :meth:`Job.get_log_handler`) and is provided for
-       older Pythons that do not have the 'delay' argument to
+       the logging support (see :meth:`Job.get_log_handler`) and is provided
+       for older Pythons that do not have the 'delay' argument to
        logging.FileHandler."""
+
     def __init__(self, filename):
         self.filename = os.path.abspath(filename)
         self.stream = None
@@ -265,7 +285,8 @@ class Config(object):
             self.oldjobs[key] = self._get_time_delta(config, 'oldjobs', key)
         archive = self.oldjobs['archive']
         expire = self.oldjobs['expire']
-        # archive time must not be greater than expire (None counts as infinity)
+        # archive time must not be greater than expire (None counts as
+        # infinity)
         if expire is not None and (archive is None or archive > expire):
             raise ConfigError("archive time (%s) cannot be greater than "
                               "expire time (%s)" \
@@ -301,6 +322,7 @@ class MySQLField(object):
        the default value of the field. If `index` is True, create an index
        on this field (the index gets the same name as the field, except with
        an '_index' suffix)."""
+
     def __init__(self, name, type, null=True, key=None, default=None,
                  index=False):
         self.name = name
@@ -332,7 +354,8 @@ class MySQLField(object):
         return not self == other
 
     def get_schema(self):
-        """Get the SQL schema needed to create a table containing this field."""
+        """Get the SQL schema needed to create a table containing
+           this field."""
         schema = self.name + " " + self.type
         if self.key:
             schema += " %s KEY" % self.key
@@ -482,6 +505,7 @@ class Database(object):
 
 class _PeriodicAction(object):
     """Run **meth** no more often than every **interval** seconds"""
+
     def __init__(self, interval, meth):
         self.interval = interval
         self.meth = meth
@@ -524,10 +548,10 @@ class WebService(object):
             os.unlink(self.config.backend['state_file'])
 
     def get_running_pid(self):
-        """Return the process ID of a currently running web service, by querying
-           the state file. If no service is running, return None; if the last
-           run of the service failed with an unrecoverable error, raise a
-           :exc:`StateFileError`."""
+        """Return the process ID of a currently running web service, by
+           querying the state file. If no service is running, return None; if
+           the last run of the service failed with an unrecoverable error,
+           raise a :exc:`StateFileError`."""
         state_file = self.config.backend['state_file']
         try:
             old_state = open(state_file).read().rstrip('\r\n')
@@ -666,8 +690,8 @@ have done this, delete the state file (%s) to reenable runs.
                     jobdirs[f] = None
         if len(baddirs) > 0:
             raise SanityError("The following job directories were not found. "
-                              "The service will not function correctly without "
-                              "them: %s" % ", ".join(baddirs))
+                              "The service will not function correctly "
+                              "without them: %s" % ", ".join(baddirs))
         if len(garbage) > 0:
             raise SanityError("The following files were found in job "
                               "directories. They need to be removed, since "
@@ -681,8 +705,8 @@ have done this, delete the state file (%s) to reenable runs.
                 dir = job.directory
                 # Check to make sure directory exists
                 if not os.path.exists(dir):
-                    raise SanityError("Directory %s for job %s does not exist" \
-                                      % (dir, job.name))
+                    raise SanityError("Directory %s for job %s does not "
+                                      "exist" % (dir, job.name))
                 # Remove from list of filesystem directories
                 # Note that we don't ensure that the directory is *in* this
                 # list, since if the directories in the configuration file
@@ -799,9 +823,10 @@ class Job(object):
     _runners = {}
 
     # Note: make sure that all code paths are wrapped with try/except, so that
-    # if an exception occurs, it is caught and _fail() is called. Note that some
-    # exceptions (e.g. qstat failure) should perhaps be ignored, as they may be
-    # transient and do not directly affect the job.
+    # if an exception occurs, it is caught and _fail() is called. Note that
+    # some exceptions (e.g. qstat failure) should perhaps be ignored, as they
+    # may be transient and do not directly affect the job.
+
     def __init__(self, db, metadata, state):
         # todo: Sanity check; make sure metadata is OK (if not, call _fail)
         self._db = db
@@ -825,8 +850,8 @@ class Job(object):
         return os.path.join(self.directory, 'job-state')
 
     def get_log_handler(self):
-        """Create and return a standard Python log Handler object. By default it
-           directs log messages to a file called 'framework.log' in the job
+        """Create and return a standard Python log Handler object. By default
+           it directs log messages to a file called 'framework.log' in the job
            directory. This can be overridden to send log output elsewhere,
            e.g. in an email. Do not call this method directory; instead use
            :attr:`logger` to access the logger object."""
@@ -861,11 +886,11 @@ class Job(object):
         if self.name is None:
             raise SanityError("Frontend did not set the job name")
         if self.directory is None:
-            raise SanityError("Frontend did not set the directory field in the "
-                              "database for job %s" % self.name)
+            raise SanityError("Frontend did not set the directory field in "
+                              "the database for job %s" % self.name)
         if not os.path.isdir(self.directory):
-            # Set directory to None otherwise _fail() will itself fail, since it
-            # won't be able to move the (invalid) directory
+            # Set directory to None otherwise _fail() will itself fail, since
+            # it won't be able to move the (invalid) directory
             dir = self.directory
             self._metadata['directory'] = None
             self._sync_metadata()
@@ -916,7 +941,8 @@ class Job(object):
             self._fail(detail)
 
     def _job_state_file_done(self):
-        """Return True only if the job-state file indicates the job finished."""
+        """Return True only if the job-state file indicates the job
+           finished."""
         try:
             f = open(self._get_job_state_file())
             return f.read().rstrip('\r\n') == 'DONE'
@@ -1130,8 +1156,8 @@ class Job(object):
                                        subject, body)
 
     def complete(self):
-        """This method is called after a job completes. Does nothing by default,
-           but can be overridden by the user.
+        """This method is called after a job completes. Does nothing by
+           default, but can be overridden by the user.
         """
 
     def send_job_completed_email(self):
@@ -1208,6 +1234,7 @@ class Job(object):
     directory = property(lambda x: x._metadata['directory'],
                          doc="Current job working directory (read-only)")
 
+
 class Runner(object):
     """Base class for runners, which handle the actual running of a job,
        usually on an SGE cluster (see the :class:`SGERunner` and
@@ -1215,6 +1242,7 @@ class Runner(object):
        implement both a _run method and a _check_completed class method,
        set the _runner_name attribute to a unique name for this class,
        and call :meth:`Job.register_runner_class` passing this class."""
+
 
 class SGERunner(Runner):
     """Run a set of commands on the QB3 SGE cluster.
@@ -1293,7 +1321,8 @@ class SGERunner(Runner):
         err = p.stderr.read()
         ret = p.wait()
         if ret != 0:
-            raise OSError("qsub failed with code %d and stderr %s" % (ret, err))
+            raise OSError("qsub failed with code %d and stderr %s" \
+                          % (ret, err))
         m = re.match("Your job(\-array)? ([\d]+)(\.\d+\-\d+:\d+)? " + \
                      "\(.*\) has been submitted", out)
         if m:

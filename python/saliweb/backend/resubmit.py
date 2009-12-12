@@ -1,6 +1,7 @@
 from optparse import OptionParser
 import sys
 
+
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
@@ -12,6 +13,7 @@ Take the given failed job, JOBNAME, and put it back in the incoming queue.
     if len(args) != 1:
         parser.error("Need to specify a job name")
     return args[0]
+
 
 def main(webservice):
     name = get_options()

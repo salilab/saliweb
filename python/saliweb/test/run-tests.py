@@ -1,4 +1,8 @@
-import unittest, sys, os, re
+import unittest
+import sys
+import os
+import re
+
 
 def regressionTest():
     modobjs = []
@@ -8,7 +12,8 @@ def regressionTest():
         sys.path.insert(0, dir)
         modobjs.append(__import__(mod))
         sys.path.pop(0)
-    tests = [unittest.defaultTestLoader.loadTestsFromModule(o) for o in modobjs]
+    tests = [unittest.defaultTestLoader.loadTestsFromModule(o) \
+             for o in modobjs]
     return unittest.TestSuite(tests)
 
 if __name__ == "__main__":

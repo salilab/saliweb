@@ -6,9 +6,11 @@ import shutil
 import tempfile
 import saliweb.backend
 
+
 class RunInDir(object):
     """Change to the given directory, and change back when the object
        goes out of scope."""
+
     def __init__(self, dir):
         try:
             self.origdir = os.getcwd()
@@ -16,6 +18,7 @@ class RunInDir(object):
         except OSError:
             pass
         os.chdir(dir)
+
     def __del__(self):
         if hasattr(self, 'origdir'):
             os.chdir(self.origdir)
@@ -23,8 +26,10 @@ class RunInDir(object):
 
 class TempDir(object):
     """Make a temporary directory that is deleted when the object is."""
+
     def __init__(self):
         self.tmpdir = tempfile.mkdtemp()
+
     def __del__(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -40,6 +45,7 @@ def RunInTempDir():
 
 
 class _DummyDB(object):
+
     def _update_job(self, metadata, state):
         pass
 

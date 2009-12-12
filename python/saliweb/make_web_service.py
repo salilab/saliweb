@@ -5,7 +5,9 @@ import os
 import sys
 import pwd
 
+
 class MakeWebService(object):
+
     def __init__(self, service_name, short_name=None):
         self.service_name = service_name
         if short_name:
@@ -98,7 +100,6 @@ env.RunPerlTests(Glob("*.pl"))"""
                               'SConscript'), 'w')
         print >> f, """SConscript('backend/SConscript')
 SConscript('frontend/SConscript')"""
-
 
     def _make_config(self):
         f = open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w')
@@ -233,6 +234,7 @@ e.g.
     if len(args) == 2 and (' ' in args[1] or args[1].lower() != args[1]):
         parser.error("SHORT_NAME must be all lowercase and contain no spaces")
     return args
+
 
 def main():
     args = get_options()

@@ -2,6 +2,7 @@ import saliweb.backend
 from optparse import OptionParser
 import sys
 
+
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
@@ -20,6 +21,7 @@ Jobs in other states can only be deleted if the backend is stopped first.
         parser.error("Need to specify a state and a job name")
     return args[0], args[1], opts
 
+
 def delete_job(job, force):
     if not force:
         sys.stdout.write("Delete job %s? " % job.name)
@@ -28,6 +30,7 @@ def delete_job(job, force):
             return
     job.delete()
 
+
 def check_valid_state(web, state):
     # Check for valid state name
     jobstate = saliweb.backend._JobState(state)
@@ -35,6 +38,7 @@ def check_valid_state(web, state):
     if pid is not None and state not in ("FAILED", "EXPIRED"):
         raise ValueError("Cannot delete jobs in %s state while the backend "
                          "is running. Please stop the backend first" % state)
+
 
 def main(webservice):
     state, name, opts = get_options()

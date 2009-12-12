@@ -25,6 +25,7 @@ import shutil
 frontend_user = 'apache'
 backend_uid_range = [11800, 11900]
 
+
 def _add_build_variable(vars, configs):
     if not isinstance(configs, (list, tuple)):
         configs = [configs]
@@ -42,6 +43,7 @@ def _add_build_variable(vars, configs):
                "set up either a test version or the live version of the web "
                "service)""", default=default, allowed_values=buildmap.keys()))
     return buildmap
+
 
 def Environment(variables, configfiles, version=None, service_module=None):
     buildmap = _add_build_variable(variables, configfiles)
@@ -64,15 +66,16 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
-    env.Append(BUILDERS = {'RunPerlTests': Builder(action=builder_perl_tests)})
-    env.Append(BUILDERS = {'RunPythonTests': \
-                           Builder(action=builder_python_tests)})
+    env.Append(BUILDERS={'RunPerlTests': Builder(action=builder_perl_tests)})
+    env.Append(BUILDERS={'RunPythonTests': \
+                          Builder(action=builder_python_tests)})
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
     env.Requires(install, env['config'].directories.values())
     env.Default(install)
     return env
+
 
 def builder_perl_tests(target, source, env):
     """Custom builder to run Perl tests"""
@@ -93,6 +96,7 @@ def builder_perl_tests(target, source, env):
         print "unit tests FAILED"
         return 1
 
+
 def builder_python_tests(target, source, env):
     """Custom builder to run Python tests"""
     mod = os.path.join(os.path.dirname(saliweb.__file__), 'test',
@@ -105,11 +109,13 @@ def builder_python_tests(target, source, env):
         print "unit tests FAILED"
         return 1
 
+
 def _install_check(target, source, env):
     """Check the final installation for sanity"""
     _check_perl_import(env)
     _check_python_import(env)
     _check_filesystem_sanity(env)
+
 
 def _check_perl_import(env):
     """Check to make sure Perl import of modname will work"""
@@ -123,6 +129,7 @@ def _check_perl_import(env):
                       "and there is an InstallPerl call somewhere in the "
                       "SConscripts to install it. " % (modfile, modname))
 
+
 def _check_python_import(env):
     """Check to make sure Python import of modname will work"""
     modname = env['service_module']
@@ -133,7 +140,9 @@ def _check_python_import(env):
                       "up for installation. Thus, the backend will probably "
                       "not work. Make sure that the Python package is named "
                       "'%s' and there is an InstallPython call somewhere "
-                      "in the SConscripts to install it. " % (modfile, modname))
+                      "in the SConscripts to install it. " \
+                      % (modfile, modname))
+
 
 def _check_filesystem_sanity(env):
     """Check the filesystem for consistency with the job database"""
@@ -142,10 +151,12 @@ def _check_filesystem_sanity(env):
     ws = saliweb.backend.WebService(config, db)
     ws._filesystem_sanity_check()
 
+
 def _setup_sconsign(env):
     if not os.path.exists('.scons'):
         os.mkdir('.scons')
     env.SConsignFile('.scons/sconsign.dblite')
+
 
 def _setup_version(env, version):
     if version is None:
@@ -169,6 +180,7 @@ def _setup_version(env, version):
             warnings.warn("Could not find 'svnversion' binary in path")
     env['version'] = version
 
+
 def _setup_service_name(env, config, service_module):
     env['service_name'] = config.service_name
     if service_module:
@@ -178,6 +190,7 @@ def _setup_service_name(env, config, service_module):
         env['service_module'] = service_module
     else:
         env['service_module'] = config.service_name.lower().replace(' ', '_')
+
 
 def _setup_install_directories(env):
     config = env['config']
@@ -190,6 +203,7 @@ def _setup_install_directories(env):
     env['cgidir'] = os.path.join(env['instdir'], 'cgi')
     env['perldir'] = os.path.join(env['instdir'], 'lib')
 
+
 def _check(env):
     # tests run locally, so don't need the installation to work properly
     cmdtgt = SCons.Script.COMMAND_LINE_TARGETS
@@ -200,16 +214,19 @@ def _check(env):
     _check_permissions(env)
     _check_directories(env)
     if isinstance(MySQLdb, Exception):
-        print >> sys.stderr, "Could not import the MySQLdb module: %s" % MySQLdb
+        print >> sys.stderr, "Could not import the MySQLdb module: %s" \
+                             % MySQLdb
         print >> sys.stderr, "This module is needed by the backend."
         env.Exit(1)
     _check_mysql(env)
     _check_crontab(env)
     _check_service(env)
 
+
 def _check_directories(env):
     _check_directory_locations(env)
     _check_directory_permissions(env)
+
 
 def _check_directory_locations(env):
     for key in ('install', 'INCOMING'):
@@ -230,10 +247,12 @@ def _check_directory_locations(env):
 """ % running
         env.Exit(1)
 
+
 def _check_directory_permissions(env):
     backend_user = env['config'].backend['user']
     for dir in env['config'].directories.values():
-        if not os.path.exists(dir): continue
+        if not os.path.exists(dir):
+            continue
         out, err = subprocess.Popen(['/usr/bin/getfacl', dir],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE).communicate()
@@ -269,6 +288,7 @@ account instead.
 """ % (backend_user)
         env.Exit(1)
 
+
 def _check_user(env):
     backend_user = env['config'].backend['user']
     try:
@@ -300,6 +320,7 @@ between %d and %d. Please ask a sysadmin to help you fix this problem.
 """ % (backend_user, uid, backend_uid_range[0], backend_uid_range[1])
         env.Exit(1)
 
+
 def _check_permissions(env):
     """Make sure we can write to the .scons directory, and read the
        database configuration files"""
@@ -317,7 +338,8 @@ def _check_permissions(env):
         env.Exit(1)
     for end in ('back', 'front'):
         conf = env['config'].database['%send_config' % end]
-        if not os.path.exists(conf): continue
+        if not os.path.exists(conf):
+            continue
         out, err = subprocess.Popen(['/usr/bin/getfacl', conf],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE).communicate()
@@ -354,12 +376,14 @@ def _check_permissions(env):
 """ % (str(detail), env['config'].backend['user'], conf)
             env.Exit(1)
 
+
 def _format_shell_command(env, cmd):
     sudo_user = os.environ.get('SUDO_USER')
     if sudo_user and sudo_user != env['config'].backend['user']:
         return "/usr/bin/sudo -u %s " % env['config'].backend['user'] + cmd
     else:
         return cmd
+
 
 def _check_crontab(env):
     """Make sure that a crontab is set up to run the service."""
@@ -371,6 +395,7 @@ def _check_crontab(env):
               + " to edit it:"
         print "0 * * * * " + binary + " condstart > /dev/null"
         print
+
 
 def _check_service(env):
     config = env['config']
@@ -388,6 +413,7 @@ def _check_service(env):
         print "** You will need to fix this manually before it will run again."
         print "** Refer to %s for more information" % config.state_file
 
+
 def _found_binary_in_crontab(binary, crontab='/usr/bin/crontab'):
     """See if the given binary is run from the user's crontab"""
     p = subprocess.Popen([crontab, '-l'], stdout=subprocess.PIPE,
@@ -404,6 +430,7 @@ def _found_binary_in_crontab(binary, crontab='/usr/bin/crontab'):
         raise OSError("crontab -l exited with code %d and stderr %s" \
                       % (ret, err))
     return match
+
 
 def _check_mysql(env):
     """Make sure that we can connect to the database as both the frontend and
@@ -447,6 +474,7 @@ def _check_mysql(env):
 """ % (c.database['db'], str(detail), outfile)
         env.Exit(1)
 
+
 def _get_sorted_grant(grant):
     """Sort grant column rights alphabetically, so that we can match them
        reliably."""
@@ -457,6 +485,7 @@ def _get_sorted_grant(grant):
         fields.sort()
         return m.group(1) + ', '.join(fields) + m.group(3)
     return grant
+
 
 def _check_mysql_grants(env, cursor, database, user, grant, table=None):
     if table is None:
@@ -476,6 +505,7 @@ def _check_mysql_grants(env, cursor, database, user, grant, table=None):
 """ % (user, grant)
     env.Exit(1)
 
+
 def _generate_admin_mysql_script(database, backend, frontend):
     d = saliweb.backend.Database(None)
     fd, outfile = tempfile.mkstemp()
@@ -492,6 +522,7 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(dat
     os.close(fd)
     os.chmod(outfile, 0600)
     return outfile
+
 
 def _check_mysql_schema(env, cursor):
     d = saliweb.backend.Database(None)
@@ -530,6 +561,7 @@ def _check_mysql_schema(env, cursor):
        ',\n   '.join(x.get_schema() for x in d._fields))
         env.Exit(1)
 
+
 def _install_config(env):
     config = env['config']
     env['instconfigfile'] = os.path.join(env['confdir'],
@@ -546,6 +578,7 @@ def _install_config(env):
                 frontend,
                 ["install -m 0400 $SOURCE $TARGET",
                  "setfacl -m u:%s:r $TARGET" % frontend_user])
+
 
 def _install_directories(env):
     config = env['config']
@@ -569,6 +602,7 @@ def _install_directories(env):
                 Value(env['service_name']),
                 _make_readme)
 
+
 def _make_readme(env, target, source):
     service_name = source[0].get_contents()
     f = open(target[0].path, 'w')
@@ -577,6 +611,7 @@ def _make_readme(env, target, source):
                 % service_name
     print >> f, "and run 'scons' to install them here."
     f.close()
+
 
 def _make_script(env, target, source):
     name = os.path.basename(str(target[0]))
@@ -589,6 +624,7 @@ def _make_script(env, target, source):
     print >> f, "saliweb.backend.%s.main(webservice)" % name
     f.close()
     env.Execute(Chmod(target, 0700))
+
 
 def _make_cgi_script(env, target, source):
     name = os.path.basename(str(target[0]))
@@ -615,6 +651,7 @@ def _make_cgi_script(env, target, source):
     f.close()
     env.Execute(Chmod(target, 0755))
 
+
 def _make_web_service(env, target, source):
     f = open(target[0].path, 'w')
     config = source[0].get_contents()
@@ -635,6 +672,7 @@ def _make_web_service(env, target, source):
     print >> f, "    ws.version = %s" % version
     print >> f, "    return ws"
 
+
 def _InstallAdminTools(env, tools=None):
     if tools is None:
         # todo: this list should be auto-generated from backend
@@ -647,6 +685,7 @@ def _InstallAdminTools(env, tools=None):
                  Value(env['pythondir']), Value(env['version'])],
                 _make_web_service)
 
+
 def _InstallCGIScripts(env, scripts=None):
     if scripts is None:
         # todo: this list should be auto-generated from backend
@@ -657,11 +696,13 @@ def _InstallCGIScripts(env, scripts=None):
                     Value(env['service_module']),
                     _make_cgi_script)
 
+
 def _InstallPython(env, files, subdir=None):
     dir = os.path.join(env['pythondir'], env['service_module'])
     if subdir:
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
+
 
 def _InstallHTML(env, files, subdir=None):
     dir = env['htmldir']
@@ -669,11 +710,13 @@ def _InstallHTML(env, files, subdir=None):
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
 
+
 def _InstallTXT(env, files, subdir=None):
     dir = env['txtdir']
     if subdir:
         dir = os.path.join(dir, subdir)
     env.Install(dir, files)
+
 
 def _subst_install(env, target, source):
     fin = open(source[0].path, 'r')
@@ -693,6 +736,7 @@ def _subst_install(env, target, source):
     fout.close()
     env.Execute(Chmod(target, 0755))
 
+
 def _InstallCGI(env, files, subdir=None):
     dir = env['cgidir']
     if subdir:
@@ -703,6 +747,7 @@ def _InstallCGI(env, files, subdir=None):
                      env.Value(env['version']),
                      env.Value(env['service_name'])],
                     _subst_install)
+
 
 def _InstallPerl(env, files, subdir=None):
     dir = env['perldir']
