@@ -742,22 +742,22 @@ sub get_queue_rows {
     $query->execute()
              or throw saliweb::frontend::DatabaseError(
                                  "Couldn't execute query: " . $dbh->errstr);
+    my $user = $self->user_name;
     while (my $data = $query->fetchrow_hashref()) {
-        if ($data->{state} eq 'COMPLETED' && $self->{'user_name'}
-            && $data->{user} && $data->{user} eq $self->{'user_name'}) {
+        # If the job has been submitted to the cluster but hasn't started
+        # yet, report it in QUEUED status
+        if ($data->{state} eq 'RUNNING') {
+            my $state_file = $data->{directory} . '/job-state';
+            if (! -f $state_file) {
+                $data->{state} = 'QUEUED';
+            }
+        }
+        if ($user && $data->{user} && $data->{user} eq $user) {
             my $jobobj = new saliweb::frontend::CompletedJob($self, $data);
             push @rows, $q->td([$q->a({-href=>$jobobj->results_url},
                                       $data->{name}),
                                 $data->{submit_time}, $data->{state}]);
         } else {
-            # If the job has been submitted to the cluster but hasn't started
-            # yet, report it in QUEUED status
-            if ($data->{state} eq 'RUNNING') {
-                my $state_file = $data->{directory} . '/job-state';
-                if (! -f $state_file) {
-                    $data->{state} = 'QUEUED';
-                }
-            }
             push @rows, $q->td([$data->{name}, $data->{submit_time},
                                 $data->{state}]);
         }
