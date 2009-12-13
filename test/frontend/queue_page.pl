@@ -78,6 +78,11 @@ BEGIN { use_ok('saliweb::frontend'); }
                              'passwd=testpw">job4<\/a>.*<\/td>.*' .
                              '2009\-10\-01.*COMPLETED/s',
                  "                         (content, row 4)");
+        } elsif ($i == 2) {
+            like($rows->[2], '/<td><a href="testroot\/results.cgi\/job3\?' .
+                             'passwd=job3pw">job3<\/a>.*<\/td>.*' .
+                             '2008\-08\-03.*INCOMING/s',
+                 "                         (content, row 3)");
         } else {
             unlike($rows->[$i], qr/<a href/,
                    "                         (content, row " . ($i + 1) . ")");
@@ -101,6 +106,6 @@ BEGIN { use_ok('saliweb::frontend'); }
          '<th>.*Submit time \(UTC\).*<th>.*Status.*<\/tr>.*' .
          '<td>.*job1.*<td>.*time1.*<td>.*QUEUED.*' .
          '<td>.*job2.*<td>.*time2.*<td>.*QUEUED.*' .
-         '<td>.*job3.*<td>.*time3.*<td>.*INCOMING.*' .
+         '<td>.*job3.*<td>.*2008\-08\-03 08:30:40.*<td>.*INCOMING.*' .
          'INCOMING.*FAILED/s', 'get_queue_page');
 }

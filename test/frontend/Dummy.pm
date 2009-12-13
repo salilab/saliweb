@@ -77,8 +77,9 @@ sub fetchrow_hashref {
         return {name=>'job2', submit_time=>'time2', state=>'RUNNING',
                 user=>undef, directory=>'/not/exist'};
     } elsif ($self->{fetch_calls} == 3) {
-        return {name=>'job3', submit_time=>'time3', state=>'INCOMING',
-                user=>'testuser', directory=>'/not/exist'};
+        return {name=>'job3', submit_time=>'2008-08-03 08:30:40',
+                passwd=>'job3pw', state=>'INCOMING', user=>'testuser',
+                directory=>'/not/exist'};
     } elsif ($self->{fetch_calls} == 4) {
         return {name=>'job4', submit_time=>'2009-10-01 00:10:20',
                 state=>'COMPLETED', user=>'testuser', passwd=>'testpw',
