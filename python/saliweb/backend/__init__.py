@@ -1133,6 +1133,8 @@ class Job(object):
            create and return a suitable :class:`Runner` instance.
            For example, this could generate a simple script and pass it to
            an :class:`SGERunner` instance.
+           This method should not be called directly; to run a new job,
+           call :meth:`reschedule_run` instead.
         """
 
     def rerun(self, data):
@@ -1158,7 +1160,7 @@ class Job(object):
     def complete(self):
         """This method is called after a job completes. Does nothing by
            default, but can be overridden by the user.
-        """
+           This method should not be called directly."""
 
     def send_job_completed_email(self):
         """Email the user (if requested) to let them know job results are
@@ -1173,19 +1175,22 @@ class Job(object):
     def archive(self):
         """Do any necessary processing when an old completed job reaches its
            archive time. Does nothing by default, but can be overridden by
-           the user to compress files, etc."""
+           the user to compress files, etc.
+           This method should not be called directly."""
 
     def expire(self):
         """Do any necessary processing when an old completed job reaches its
            archive time. Does nothing by default, but can be overridden by
-           the user to mail the admin, etc."""
+           the user to mail the admin, etc.
+           This method should not be called directly."""
 
     def preprocess(self):
         """Do any necessary preprocessing before the job is actually run.
            Does nothing by default. Note that a user-defined preprocess method
            can call :meth:`skip_run` to skip running of the job on the cluster,
            if it is determined in preprocessing that a job run is not
-           necessary."""
+           necessary.
+           This method should not be called directly."""
 
     def skip_run(self):
         """Tell the backend to skip the actual running of the job, so that
@@ -1201,7 +1206,8 @@ class Job(object):
         """Do any necessary postprocessing when the job completes successfully.
            Does nothing by default. Note that a user-defined postprocess method
            can call :meth:`reschedule_run` to request that the backend runs
-           a new cluster job if necessary."""
+           a new cluster job if necessary.
+           This method should not be called directly."""
 
     def reschedule_run(self, data=None):
         """Tell the backend to schedule another job to be run on the cluster
