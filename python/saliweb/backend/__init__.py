@@ -1133,7 +1133,8 @@ class Job(object):
            create and return a suitable :class:`Runner` instance.
            For example, this could generate a simple script and pass it to
            an :class:`SGERunner` instance.
-           This method should not be called directly; to run a new job,
+           This method should never be called directly; it is automatically
+           called by the backend when needed. To run a new job,
            call :meth:`reschedule_run` instead.
         """
 
