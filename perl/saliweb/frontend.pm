@@ -2,7 +2,7 @@ package saliweb::frontend::IncomingJob;
 
 use IO::Socket;
 use Fcntl ':flock';
-use File::Path 'remove_tree';
+use File::Path 'rmtree';
 
 sub new {
     my ($invocant, $frontend, $given_name, $email) = @_;
@@ -38,7 +38,7 @@ sub results_url {
 sub _cancel {
     # Cancel a job rather than submitting it; clean up the directory
     my $self = shift;
-    if (remove_tree($self->{directory}) != 1) {
+    if (rmtree($self->{directory}) == 0) {
         die "Cannot remove directory " . $self->{directory} . ": $!";
     }
 }
