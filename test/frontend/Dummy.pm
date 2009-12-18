@@ -9,6 +9,12 @@ sub new {
 sub results_url {
     return "http://test/results.cgi?job=foo&passwd=bar";
 }
+
+sub _cancel {
+    my $self = shift;
+    ${$self->{cancel_calls}}++;
+}
+
 1;
 
 
@@ -226,6 +232,17 @@ sub get_submit_page {
         throw saliweb::frontend::InternalError("get_submit_page failure");
     } elsif ($self->{server_name} eq "accesssubmit") {
         throw saliweb::frontend::AccessDeniedError("get_submit_page access");
+    } elsif ($self->{server_name} =~ /^incomplete\-submit/) {
+        # Make sure the framework doesn't complain that we didn't
+        # submit anything
+        $self->_add_submitted_job("Dummy");
+        # Make another job but don't submit it
+        my $job = new Dummy::IncomingJob();
+        $job->{cancel_calls} = $self->{cancel_calls};
+        $self->_add_incoming_job($job);
+        if ($self->{server_name} eq "incomplete-submit-exception") {
+            throw saliweb::frontend::InputValidationError("bad submission");
+        }
     } else {
         if ($self->{server_name} ne "nosubmit") {
             $self->_add_submitted_job("Dummy");

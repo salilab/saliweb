@@ -442,6 +442,20 @@ sub test_display_page {
     };
     like($@, qr/^No job submitted by submit page/,
          '                    (exception message)');
+
+    my $cancel_calls = 0;
+    $self = make_test_frontend('incomplete-submit');
+    $self->{cancel_calls} = \$cancel_calls;
+    $out = stdout_from { $self->display_submit_page() };
+    is($cancel_calls, 1,
+       '                   cancels incomplete job submissions');
+
+    $cancel_calls = 0;
+    $self = make_test_frontend('incomplete-submit-exception');
+    $self->{cancel_calls} = \$cancel_calls;
+    $out = stdout_from { $self->display_submit_page() };
+    is($cancel_calls, 1,
+       '                   cancels incomplete jobs even after exceptions');
 }
 
 # Test display_queue_page method

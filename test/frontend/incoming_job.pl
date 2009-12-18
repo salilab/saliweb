@@ -145,6 +145,19 @@ BEGIN { use_ok('saliweb::frontend'); }
          "                       (exception message)");
 }
 
+# Test _cancel function
+{
+    my $dir = tempdir( CLEANUP => 0 );
+    my $in = {directory=>$dir};
+    bless($in, 'saliweb::frontend::IncomingJob');
+    ok(-d $dir, "Job directory exists before _cancel");
+    $in->_cancel();
+    ok(! -d $dir, "Job directory does not exist after _cancel");
+    $in->{directory} = '/not/exist';
+    dies_ok { $in->_cancel() }
+            "_cancel fails on non-existent directory";
+}
+
 # Test creation of IncomingJob objects
 {
     my $dir = tempdir( CLEANUP => 1 );
@@ -178,7 +191,13 @@ BEGIN { use_ok('saliweb::frontend'); }
     bless($frontend, 'saliweb::frontend');
     my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
     ok(defined $job, "Create IncomingJob for submit");
+    is_deeply($frontend->{incoming_jobs}, {$job=>$job},
+              "incoming_jobs hash contains key for job");
     $job->submit();
+    is_deeply($frontend->{incoming_jobs}, {},
+              "incoming_jobs hash no longer contains job key");
+    is_deeply($frontend->{submitted_jobs}, [$job],
+              "submitted_jobs array now contains job");
     is($dbh->{query}->{execute_calls}, 1,
        "IncomingJob::submit (execute calls)");
 

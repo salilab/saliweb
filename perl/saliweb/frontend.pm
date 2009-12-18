@@ -2,6 +2,7 @@ package saliweb::frontend::IncomingJob;
 
 use IO::Socket;
 use Fcntl ':flock';
+use File::Path 'remove_tree';
 
 sub new {
     my ($invocant, $frontend, $given_name, $email) = @_;
@@ -15,6 +16,7 @@ sub new {
                                                                   $given_name);
     ($self->{url}, $self->{passwd}) = _generate_results_url($frontend,
                                                             $self->{name});
+    $self->{frontend}->_add_incoming_job($self);
     return $self;
 }
 
@@ -31,6 +33,14 @@ sub directory {
 sub results_url {
     my $self = shift;
     return $self->{url};
+}
+
+sub _cancel {
+    # Cancel a job rather than submitting it; clean up the directory
+    my $self = shift;
+    if (remove_tree($self->{directory}) != 1) {
+        die "Cannot remove directory " . $self->{directory} . ": $!";
+    }
 }
 
 sub submit {
@@ -59,6 +69,7 @@ sub submit {
     $s->close();
   }
   $self->{frontend}->_add_submitted_job($self);
+  $self->{frontend}->_remove_incoming_job($self);
 }
 
 sub _sanitize_jobname {
@@ -840,6 +851,16 @@ sub display_index_page {
     };
 }
 
+sub _add_incoming_job {
+    my ($self, $job) = @_;
+    $self->{incoming_jobs}->{$job} = $job;
+}
+
+sub _remove_incoming_job {
+    my ($self, $job) = @_;
+    delete $self->{incoming_jobs}->{$job};
+}
+
 sub _add_submitted_job {
     my ($self, $job) = @_;
     push @{$self->{submitted_jobs}}, $job;
@@ -852,6 +873,7 @@ sub _internal_display_submit_page {
 
 sub display_submit_page {
     my $self = shift;
+    $self->{incoming_jobs} = {};
     try {
         my $content;
         $self->set_page_title("Submission");
@@ -873,6 +895,11 @@ sub display_submit_page {
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
+    # Clean up any incoming jobs that weren't submitted
+    for my $job (values %{$self->{incoming_jobs}}) {
+        $job->_cancel();
+    }
+    delete $self->{incoming_jobs};
 }
 
 sub display_queue_page {
