@@ -101,7 +101,11 @@ incoming, preprocessing, etc.
     Each :ref:`job state <jobstates>` except EXPIRED can be given a directory
     in which the job data are placed. Only the INCOMING and PREPROCESSING
     directories are required; others, if not specified, will default to the
-    same as the PREPROCESSING directory.
+    directory for the previous state (i.e. the RUNNING directory will default
+    to that for PREPROCESSING, that for POSTPROCESSING will default to RUNNING,
+    COMPLETED to POSTPROCESSING, and ARCHIVED to COMPLETED). If the FAILED
+    directory is not given, it will default to the same as the COMPLETED
+    directory.
 
 oldjobs
 =======

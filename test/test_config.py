@@ -22,14 +22,15 @@ backend_config: backend.conf
 install: /
 incoming: /in
 preprocessing: /preproc
+%s
 
 [oldjobs]
 archive: %s
 expire: %s
 """
 
-def get_config(archive='3h', expire='90d', extra=''):
-    return Config(StringIO(basic_config % (archive, expire) + extra))
+def get_config(archive='3h', expire='90d', extra='', extradir=''):
+    return Config(StringIO(basic_config % (extradir, archive, expire) + extra))
 
 class ConfigTest(unittest.TestCase):
     """Check Config class"""
@@ -47,6 +48,23 @@ class ConfigTest(unittest.TestCase):
 
         conf = get_config(extra='[limits]\nrunning: 10')
         self.assertEqual(conf.limits['running'], 10)
+
+    def test_directory_defaults(self):
+        """Check Config directory defaults"""
+        # FAILED and ARCHIVED default to COMPLETED
+        conf = get_config(extradir='completed: /foo')
+        self.assertEqual(conf.directories['FAILED'], '/foo')
+        self.assertEqual(conf.directories['ARCHIVED'], '/foo')
+        # COMPLETED and later default to POSTPROCESSING
+        conf = get_config(extradir='postprocessing: /postproc\narchived:/arch')
+        self.assertEqual(conf.directories['COMPLETED'], '/postproc')
+        self.assertEqual(conf.directories['FAILED'], '/postproc')
+        self.assertEqual(conf.directories['ARCHIVED'], '/arch')
+        conf = get_config(extradir='postprocessing: /postproc')
+        self.assertEqual(conf.directories['ARCHIVED'], '/postproc')
+        # POSTPROCESSING defaults to RUNNING
+        conf = get_config(extradir='running: /running')
+        self.assertEqual(conf.directories['POSTPROCESSING'], '/running')
 
     def test_time_deltas(self):
         """Check parsing of time deltas in config files"""

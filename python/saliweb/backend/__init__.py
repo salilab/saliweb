@@ -260,17 +260,28 @@ class Config(object):
         self.directories['install'] = config.get('directories', 'install')
         others = _JobState.get_valid_states()
         others.remove('EXPIRED')
+        sorted_others = ['PREPROCESSING', 'RUNNING', 'POSTPROCESSING',
+                         'COMPLETED', 'ARCHIVED']
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
             others.remove(key)
             self.directories[key] = config.get('directories', key)
+        # We should have defaults for each other directory except FAILED
+        assert(len(sorted_others) == len(others))
         # Other directories (except EXPIRED) are optional:
-        # default to PREPROCESSING
-        for key in others:
+        # default to the directory for the previous state
+        for n in range(1, len(sorted_others)):
+            key = sorted_others[n]
+            default_key = sorted_others[n - 1]
             if config.has_option('directories', key):
                 self.directories[key] = config.get('directories', key)
             else:
-                self.directories[key] = self.directories['PREPROCESSING']
+                self.directories[key] = self.directories[default_key]
+        # FAILED should default to the COMPLETED directory
+        if config.has_option('directories', 'FAILED'):
+            self.directories['FAILED'] = config.get('directories', 'FAILED')
+        else:
+            self.directories['FAILED'] = self.directories['COMPLETED']
 
     def _populate_backend(self, config):
         self.backend = {}
