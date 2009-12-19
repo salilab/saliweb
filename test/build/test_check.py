@@ -3,6 +3,7 @@ import saliweb.build
 import sys
 import os
 import pwd
+import grp
 import StringIO
 import re
 import shutil
@@ -296,7 +297,8 @@ class CheckTest(unittest.TestCase):
         os.system('setfacl -d -m u:%s:rwx test' \
                   % pwd.getpwuid(os.getuid()).pw_name)
         os.system('setfacl -m u:apache:rwx test')
-        saliweb.build.backend_group = 'sali'
+        saliweb.build.backend_group = \
+                  grp.getgrgid(pwd.getpwuid(os.getuid()).pw_gid).gr_name
         ret, stderr = run_catch_stderr(
                       saliweb.build._check_incoming_directory_permissions, env)
         self.assertEqual(stderr, '')
