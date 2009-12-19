@@ -23,6 +23,7 @@ import re
 import shutil
 
 frontend_user = 'apache'
+backend_group = None
 backend_uid_range = [11800, 11900]
 
 
@@ -226,6 +227,7 @@ def _check(env):
 def _check_directories(env):
     _check_directory_locations(env)
     _check_directory_permissions(env)
+    _check_incoming_directory_permissions(env)
 
 
 def _check_directory_locations(env):
@@ -272,6 +274,39 @@ def _check_directory_permissions(env):
    chmod 755 %s
 """ % (dir, backend_user, dir)
             env.Exit(1)
+
+def _check_incoming_directory_permissions(env):
+    """Make sure that the incoming directory, if it exists, has
+       correct permissions"""
+    global backend_group
+    backend_user = env['config'].backend['user']
+    if not backend_group:
+        backend_group = backend_user
+    incoming = env['config'].directories['INCOMING']
+    if not os.path.exists(incoming):
+        return
+    out, err = subprocess.Popen(['/usr/bin/getfacl', incoming],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE).communicate()
+    lines = [x for x in out.split('\n')[1:] if x != '']
+    expected_lines = [ '# owner: ' + backend_user,
+                       '# group: ' + backend_group,
+                       'user::rwx', 'user:%s:rwx' % frontend_user,
+                       'group::r-x', 'mask::rwx', 'other::r-x',
+                       'default:user::rwx',
+                       'default:user:%s:rwx' % frontend_user,
+                       'default:user:%s:rwx' % backend_user,
+                       'default:group::r-x', 'default:mask::rwx',
+                       'default:other::r-x' ]
+    if lines != expected_lines:
+        print >> sys.stderr, """
+** Wrong permissions on incoming directory %s!
+** Please remove this directory, then rerun scons to recreate it with
+** the correct permissions.
+** Expected permissions: %s
+** Actual permissions: %s
+""" % (incoming, expected_lines, lines)
+        env.Exit(1)
 
 
 def _check_ownership(env):

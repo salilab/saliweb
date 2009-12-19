@@ -261,6 +261,48 @@ class CheckTest(unittest.TestCase):
                                    'chmod 755 test', stderr, re.DOTALL),
                          'regex match failed on ' + stderr)
 
+    def test_check_incoming_directory_permissions(self):
+        """Check _check_incoming_directory_permissions function"""
+        tmpdir = testutil.RunInTempDir()
+        def make_env(dir):
+            env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
+            env['config'].directories = {'INCOMING': dir}
+            return env
+
+        # Test should pass if the directory doesn't exist yet
+        env = make_env('/not/exist')
+        ret, stderr = run_catch_stderr(
+                      saliweb.build._check_incoming_directory_permissions, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+        self.assertEqual(stderr, '')
+
+        # Test should fail if the directory doesn't have correct ACLs
+        os.mkdir('test')
+        env = make_env('test')
+        ret, stderr = run_catch_stderr(
+                      saliweb.build._check_incoming_directory_permissions, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('Wrong permissions on incoming directory.*'
+                               'rerun scons to recreate it.*'
+                               'Expected permissions.*Actual permissions',
+                               stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
+        # Test should pass if the ACLs are correct
+        env = make_env('test')
+        os.system('setfacl -d -m u:apache:rwx test')
+        os.system('setfacl -d -m u:%s:rwx test' \
+                  % pwd.getpwuid(os.getuid()).pw_name)
+        os.system('setfacl -m u:apache:rwx test')
+        saliweb.build.backend_group = 'sali'
+        ret, stderr = run_catch_stderr(
+                      saliweb.build._check_incoming_directory_permissions, env)
+        self.assertEqual(stderr, '')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, None)
+
     def test_generate_admin_mysql_script(self):
         """Test _generate_admin_mysql_script function"""
         frontend = {'user': 'frontuser', 'passwd': 'frontpwd'}
