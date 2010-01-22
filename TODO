@@ -24,4 +24,5 @@ Build:
   - Check to make sure MySQL indexes match those set up by the backend.
   - Add more unit tests.
   - After installing each CGI script, try to wget it using cgiroot to make sure
-    the webserver is properly configured and there are no Perl compile errors.
+    the webserver is properly configured and there are no Perl compile errors
+    (note: tricky since cgiroot may not be accessible).
