@@ -111,7 +111,7 @@ urltop: http://modbase.compbio.ucsf.edu/%(short_name)s
 
 [backend]
 user: %(short_name)s
-state_file: %(install)s/server.state
+state_file: %(install)s/%(short_name)s.state
 check_minutes: 10
 
 [database]
