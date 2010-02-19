@@ -346,6 +346,9 @@ class MySQLField(object):
         # default cannot be NULL if NULL is not allowed for this field
         if not null and default is None:
             default = ''
+        # Default cannot be '' for DATETIME fields
+        if type == 'DATETIME' and default == '':
+            default = None
         # Map MySQL DESCRIBE key type to full name
         if key == 'PRI':
             key = 'PRIMARY'
