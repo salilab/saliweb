@@ -913,7 +913,7 @@ class Job(object):
 
     def _start_runner(self, runner):
         """Start up a job using a :class:`Runner` and store the ID."""
-        runner_id = runner._runner_name + ':' + runner._run()
+        runner_id = runner._runner_name + ':' + str(runner._run())
         self._metadata['runner_id'] = runner_id
         self._sync_metadata()
 
