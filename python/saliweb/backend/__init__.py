@@ -1423,5 +1423,5 @@ class LocalRunner(Runner):
                     raise OSError("Process failed with return code %d" % ret)
                 return True
         else:
-            return not os.path.exists("/proc/%d" % pid)
+            return not os.path.exists("/proc/%s" % str(pid))
 Job.register_runner_class(LocalRunner)
