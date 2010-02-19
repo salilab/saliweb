@@ -1380,3 +1380,45 @@ class SaliSGERunner(SGERunner):
     _env = {'SGE_CELL': 'sali',
             'SGE_ROOT': '/home/sge61'}
 Job.register_runner_class(SaliSGERunner)
+
+
+class LocalRunner(Runner):
+    """Run a program (given as a list of arguments or a single string) on
+       the local machine.
+
+       The program must create a file called job-state in the working
+       directory, to contain just the simple text "STARTED" (without the
+       quotes) when the job starts and just "DONE" when it completes.
+    """
+
+    _runner_name = 'local'
+    _children = {}
+
+    def __init__(self, cmd):
+        Runner.__init__(self)
+        self._cmd = cmd
+
+    def _run(self):
+        """Run the command and return its process ID."""
+        p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
+        LocalRunner._children[p.pid] = p
+        return p.pid
+
+    @classmethod
+    def _check_completed(cls, pid):
+        """Return True if the process has finished or False if it is still
+           running."""
+        # If the process was started by us, use Popen.poll() to check it;
+        # otherwise, fall back to checking for the pid
+        if pid in cls._children:
+            ret = cls._children[pid].poll()
+            if ret is None:
+                return False
+            else:
+                del cls._children[pid]
+                if ret != 0:
+                    raise OSError("Process failed with return code %d" % ret)
+                return True
+        else:
+            return not os.path.exists("/proc/%d" % pid)
+Job.register_runner_class(LocalRunner)
