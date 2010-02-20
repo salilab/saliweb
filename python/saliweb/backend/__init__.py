@@ -1403,7 +1403,8 @@ class LocalRunner(Runner):
 
     def _run(self):
         """Run the command and return its process ID."""
-        p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
+        #p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
+        p = os.popen(self._cmd)
         LocalRunner._children[p.pid] = p
         return p.pid
 
@@ -1413,6 +1414,7 @@ class LocalRunner(Runner):
            running."""
         # If the process was started by us, use Popen.poll() to check it;
         # otherwise, fall back to checking for the pid
+        pid=int(pid)
         if pid in cls._children:
             ret = cls._children[pid].poll()
             if ret is None:
