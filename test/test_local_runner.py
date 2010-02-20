@@ -11,10 +11,10 @@ class LocalRunnerTest(unittest.TestCase):
         """Check that LocalRunner runs and polls processes successfully"""
         r = LocalRunner(['/bin/sleep', '60'])
         pid = r._run()
-        self.assert_(pid is not None)
+        self.assert_(isinstance(pid, str))
         self.assertEqual(LocalRunner._check_completed(pid), False)
         self.assertEqual(LocalRunner._children.keys(), [pid])
-        os.kill(pid, signal.SIGTERM)
+        os.kill(int(pid), signal.SIGTERM)
         time.sleep(0.1)
         # Make sure that non-zero return code causes a job failure
         self.assertRaises(OSError, LocalRunner._check_completed, pid)
@@ -37,9 +37,9 @@ class LocalRunnerTest(unittest.TestCase):
         # processes
         del LocalRunner._children[pid]
         self.assertEqual(LocalRunner._check_completed(pid), False)
-        os.kill(pid, signal.SIGTERM)
+        os.kill(int(pid), signal.SIGTERM)
         # Remove zombie process
-        os.waitpid(pid, 0)
+        os.waitpid(int(pid), 0)
         self.assertEqual(LocalRunner._check_completed(pid), True)
 
 if __name__ == '__main__':

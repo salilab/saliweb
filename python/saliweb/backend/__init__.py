@@ -913,7 +913,7 @@ class Job(object):
 
     def _start_runner(self, runner):
         """Start up a job using a :class:`Runner` and store the ID."""
-        runner_id = runner._runner_name + ':' + str(runner._run())
+        runner_id = runner._runner_name + ':' + runner._run()
         self._metadata['runner_id'] = runner_id
         self._sync_metadata()
 
@@ -1402,28 +1402,27 @@ class LocalRunner(Runner):
         self._cmd = cmd
 
     def _run(self):
-        """Run the command and return its process ID."""
-        #p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
-        p = os.popen(self._cmd)
-        LocalRunner._children[p.pid] = p
-        return p.pid
+        """Run the command and return a unique job ID."""
+        p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
+        jobid = str(p.pid)
+        LocalRunner._children[jobid] = p
+        return jobid
 
     @classmethod
-    def _check_completed(cls, pid):
+    def _check_completed(cls, jobid):
         """Return True if the process has finished or False if it is still
            running."""
         # If the process was started by us, use Popen.poll() to check it;
         # otherwise, fall back to checking for the pid
-        pid=int(pid)
-        if pid in cls._children:
-            ret = cls._children[pid].poll()
+        if jobid in cls._children:
+            ret = cls._children[jobid].poll()
             if ret is None:
                 return False
             else:
-                del cls._children[pid]
+                del cls._children[jobid]
                 if ret != 0:
                     raise OSError("Process failed with return code %d" % ret)
                 return True
         else:
-            return not os.path.exists("/proc/%s" % str(pid))
+            return not os.path.exists("/proc/%s" % jobid)
 Job.register_runner_class(LocalRunner)
