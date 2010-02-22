@@ -1045,7 +1045,7 @@ sub help_link {
     my ($self, $target) = @_;
 
     my $q = $self->{'CGI'};
-    my $url = "help.cgi?style=helplink&type=help#$target";
+    my $url=$self->help_url."&style=helplink#$target";
 
     return $q->a({-href=>"$url",
                   -class=>"helplink",
