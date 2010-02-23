@@ -34,12 +34,13 @@ BEGIN {
 # Test help_link method
 {
     my $cgi = new CGI;
-    my $cls = {CGI=>$cgi};
-    my $link = saliweb::frontend::help_link($cls, 'mytarget');
+    my $cls = {CGI=>$cgi, cgiroot=>''};
+    bless($cls, 'saliweb::frontend');
+    my $link = $cls->help_link('mytarget');
 
-    is($link, '<a class="helplink" onclick="launchHelp(\'help.cgi?style=' .
-              'helplink&amp;type=help#mytarget\'); return false;" ' .
-              'href="help.cgi?style=helplink&amp;type=help#mytarget">' .
+    is($link, '<a class="helplink" onclick="launchHelp(\'/help.cgi?type=' .
+              'help&amp;style=helplink#mytarget\'); return false;" ' .
+              'href="/help.cgi?type=help&amp;style=helplink#mytarget">' .
               '<img class="helplink" src="/saliweb/img/help.jpg" ' .
               'alt="help" /></a>' . "\n", "check help_link");
 }
