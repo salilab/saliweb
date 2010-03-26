@@ -12,6 +12,7 @@ import select
 import signal
 import socket
 import logging
+import saliweb.backend.events
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -517,30 +518,6 @@ class Database(object):
         metadata.mark_synced()
 
 
-class _PeriodicAction(object):
-    """Run **meth** no more often than every **interval** seconds"""
-
-    def __init__(self, interval, meth):
-        self.interval = interval
-        self.meth = meth
-        self.last_time = 0.0
-
-    def get_time_to_next(self, timenow):
-        "Return the time in seconds until the method should be called again."
-        return max(0.0, self.last_time + self.interval - timenow)
-
-    def try_action(self, timenow):
-        """Call the method only if the interval has been exceeded."""
-        if time.time() > self.last_time + self.interval:
-            self.meth()
-            self.reset()
-
-    def reset(self):
-        """Reset the timer so the method will not be called for at least
-           another **interval** seconds from now."""
-        self.last_time = time.time()
-
-
 class WebService(object):
     """Top-level class used by all web services. Pass in a :class:`Config`
        (or subclass) object for the `config` argument, and a :class:`Database`
@@ -773,31 +750,22 @@ have done this, delete the state file (%s) to reenable runs.
            every check_minutes); completed jobs are checked for every
            check_minutes; and archived and expired jobs are also
            checked periodically."""
-        oldjob_interval = self._get_oldjob_interval()
-        check_minutes = self.config.backend['check_minutes']
-        incoming_action = _PeriodicAction(check_minutes * 60,
-                                          self._process_incoming_jobs)
-        actions = [_PeriodicAction(check_minutes * 60,
-                                   self._process_completed_jobs),
-                   _PeriodicAction(oldjob_interval,
-                                   self._process_old_jobs), incoming_action]
+        eq = saliweb.backend.events._EventQueue()
+        saliweb.backend.events._IncomingJobs(eq, self, sock).start()
+        saliweb.backend.events._OldJobs(eq, self).start()
+
+        timeout = self.config.backend['check_minutes'] * 60
         while True:
-            # During the select, SIGTERM should cleanly terminate the daemon
+            # During the get, SIGTERM should cleanly terminate the daemon
             # (clean up state file and socket); at other times, ignore the
             # signal, hopefully so the system stays in a consistent state
             signal.signal(signal.SIGTERM, _sigterm_handler)
-            timenow = time.time()
-            timeout = min(x.get_time_to_next(timenow) for x in actions)
-            rlist, wlist, xlist = select.select([sock], [], [], timeout)
+            event = eq.get(timeout)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
-            if len(rlist) == 1:
-                conn, addr = sock.accept()
-                # Note that currently we don't do anything with the
-                # message itself coming in on the socket
-                self._process_incoming_jobs()
-                incoming_action.reset()
-            for x in actions:
-                x.try_action(timenow)
+            if event is None:
+                self._process_completed_jobs()
+            else:
+                event.process()
 
     def _process_incoming_jobs(self):
         """Check for any incoming jobs, and run each one."""

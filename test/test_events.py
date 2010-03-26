@@ -1,4 +1,7 @@
 import unittest
+import time
+import os
+import socket
 import saliweb.backend.events
 
 class EventsTest(unittest.TestCase):
@@ -13,6 +16,77 @@ class EventsTest(unittest.TestCase):
         self.assertEqual(e.get(), 'a')
         self.assertEqual(e.get(), 'b')
         self.assertEqual(e.get(0), None)
+
+    def test_incoming_jobs_event(self):
+        """Check the _IncomingJobsEvent class"""
+        class dummy:
+            def _process_incoming_jobs(self): self.processed = True
+        d = dummy()
+        e = saliweb.backend.events._IncomingJobsEvent(d)
+        e.process()
+        self.assertEqual(d.processed, True)
+
+    def test_old_jobs_event(self):
+        """Check the _OldJobsEvent class"""
+        class dummy:
+            def _process_old_jobs(self): self.processed = True
+        d = dummy()
+        e = saliweb.backend.events._OldJobsEvent(d)
+        e.process()
+        self.assertEqual(d.processed, True)
+
+    def test_old_jobs(self):
+        """Check the _OldJobs class"""
+        class dummy:
+            def _get_oldjob_interval(self): return 0.02
+        q = saliweb.backend.events._EventQueue()
+        ws = dummy()
+        t = saliweb.backend.events._OldJobs(q, ws)
+        t.start()
+        time.sleep(0.05)
+        # Should have added 2 events
+        for i in range(2):
+            x = q.get(timeout=0.)
+            self.assert_(isinstance(x, saliweb.backend.events._OldJobsEvent))
+        self.assertEqual(q.get(timeout=0.), None)
+
+    def test_incoming_jobs(self):
+        """Check the _IncomingJobs class"""
+        class dummy: pass
+        ws = dummy()
+        ws.config = dummy()
+        ws.config.backend = {'check_minutes':1}
+
+        if os.path.exists('test.sock'):
+            os.unlink('test.sock')
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.bind('test.sock')
+        sock.listen(5)
+
+        q = saliweb.backend.events._EventQueue()
+        t = saliweb.backend.events._IncomingJobs(q, ws, sock)
+        t.start()
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect('test.sock')
+        s.send("new job")
+        time.sleep(0.05)
+        # Should have added 1 event
+        x = q.get(timeout=0.)
+        self.assert_(isinstance(x, saliweb.backend.events._IncomingJobsEvent))
+        self.assertEqual(q.get(timeout=0.), None)
+
+        ws.config.backend = {'check_minutes':0.02/60.0}
+        q = saliweb.backend.events._EventQueue()
+        t = saliweb.backend.events._IncomingJobs(q, ws, sock)
+        t.start()
+        time.sleep(0.05)
+        # Should have added 2 events
+        for i in range(2):
+            x = q.get(timeout=0.)
+            self.assert_(isinstance(x,
+                                    saliweb.backend.events._IncomingJobsEvent))
+        self.assertEqual(q.get(timeout=0.), None)
+        os.unlink('test.sock')
 
 if __name__ == '__main__':
     unittest.main()
