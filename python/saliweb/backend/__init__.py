@@ -12,6 +12,7 @@ import select
 import signal
 import socket
 import logging
+import threading
 import saliweb.backend.events
 from email.MIMEText import MIMEText
 
@@ -1222,6 +1223,30 @@ class Job(object):
                             doc="Web service name (read-only)")
     directory = property(lambda x: x._metadata['directory'],
                          doc="Current job working directory (read-only)")
+
+
+class _LockedJobDict(object):
+    """A dictionary of job IDs which can be accessed by multiple threads"""
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._dict = {}
+    def __contains__(self, key):
+        self._lock.acquire()
+        ret = key in self._dict
+        self._lock.release()
+        return ret
+    def add(self, key):
+        self._lock.acquire()
+        try:
+            self._dict[key] = None
+        finally:
+            self._lock.release()
+    def remove(self, key):
+        self._lock.acquire()
+        try:
+            del self._dict[key]
+        finally:
+            self._lock.release()
 
 
 class Runner(object):
