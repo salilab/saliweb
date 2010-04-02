@@ -10,7 +10,7 @@ class LocalRunnerTest(unittest.TestCase):
     def test_run_poll(self):
         """Check that LocalRunner runs and polls processes successfully"""
         r = LocalRunner(['/bin/sleep', '60'])
-        pid = r._run()
+        pid = r._run(None)
         self.assert_(isinstance(pid, str))
         self.assertEqual(LocalRunner._check_completed(pid), False)
         self.assertEqual(LocalRunner._children.keys(), [pid])
@@ -23,7 +23,7 @@ class LocalRunnerTest(unittest.TestCase):
 
         # Check successful completion
         r = LocalRunner(['/bin/echo', 'foo'])
-        pid = r._run()
+        pid = r._run(None)
         time.sleep(0.1)
         self.assertEqual(LocalRunner._check_completed(pid), True)
         self.assertEqual(LocalRunner._children, {})
@@ -31,7 +31,7 @@ class LocalRunnerTest(unittest.TestCase):
     def test_run_proc(self):
         """Check that LocalRunner jobs from other processes are checked"""
         r = LocalRunner('/bin/sleep 60')
-        pid = r._run()
+        pid = r._run(None)
         self.assertEqual(LocalRunner._check_completed(pid), False)
         # Make the LocalRunner fall back to its behavior for checking non-child
         # processes

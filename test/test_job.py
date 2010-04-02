@@ -18,7 +18,7 @@ class DoNothingRunner(Runner):
     def __init__(self, id):
         Runner.__init__(self)
         self.id = id
-    def _run(self):
+    def _run(self, webservice):
         return self.id
     @classmethod
     def _check_completed(cls, jobid, catch_exceptions=True):

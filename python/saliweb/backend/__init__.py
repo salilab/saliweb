@@ -776,7 +776,7 @@ have done this, delete the state file (%s) to reenable runs.
         if numrunning >= maxrunning:
             return
         for job in self.db._get_all_jobs_in_state('INCOMING'):
-            job._try_run()
+            job._try_run(self)
             numrunning += 1
             if numrunning >= maxrunning:
                 return
@@ -784,7 +784,7 @@ have done this, delete the state file (%s) to reenable runs.
     def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""
         for job in self.db._get_all_jobs_in_state('RUNNING'):
-            job._try_complete()
+            job._try_complete(self)
 
     def _process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
@@ -880,13 +880,13 @@ class Job(object):
             raise SanityError("Job %s: directory %s is not a directory" \
                               % (self.name, dir))
 
-    def _start_runner(self, runner):
+    def _start_runner(self, runner, webservice):
         """Start up a job using a :class:`Runner` and store the ID."""
-        runner_id = runner._runner_name + ':' + runner._run()
+        runner_id = runner._runner_name + ':' + runner._run(webservice)
         self._metadata['runner_id'] = runner_id
         self._sync_metadata()
 
-    def _try_run(self):
+    def _try_run(self, webservice):
         """Take an incoming job and try to start running it."""
         try:
             self._frontend_sanity_check()
@@ -906,7 +906,7 @@ class Job(object):
                 self._metadata['run_time'] = datetime.datetime.utcnow()
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
-                self._start_runner(runner)
+                self._start_runner(runner, webservice)
         except Exception, detail:
             self._fail(detail)
 
@@ -968,7 +968,7 @@ class Job(object):
                  % (self._metadata['runner_id'], self._metadata['directory']))
         return False
 
-    def _try_complete(self):
+    def _try_complete(self, webservice):
         """Take a running job, see if it completed, and if so, process it."""
         try:
             self._assert_state('RUNNING')
@@ -984,7 +984,7 @@ class Job(object):
                 self._set_state('RUNNING')
                 runner = self._run_in_job_directory(self.rerun,
                                                     self.__reschedule_data)
-                self._start_runner(runner)
+                self._start_runner(runner, webservice)
             else:
                 self._mark_job_completed()
         except Exception, detail:
@@ -1296,7 +1296,7 @@ class SGERunner(Runner):
         """
         self._opts = opts
 
-    def _run(self):
+    def _run(self, webservice):
         """Generate an SGE script in the job directory and run it.
            Return the SGE job ID."""
         script = os.path.join(self._directory, 'sge-script.sh')
@@ -1394,7 +1394,7 @@ class LocalRunner(Runner):
         Runner.__init__(self)
         self._cmd = cmd
 
-    def _run(self):
+    def _run(self, webservice):
         """Run the command and return a unique job ID."""
         p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
         jobid = str(p.pid)

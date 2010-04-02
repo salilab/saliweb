@@ -41,11 +41,11 @@ class TestFatalError(Exception): pass
 job_log = []
 class LoggingJob(Job):
     """Test Job subclass that logs which methods are called"""
-    def _try_run(self):
+    def _try_run(self, webservice):
         if self.name == 'fatal-error-run':
             raise TestFatalError("fatal error in run")
         job_log.append((self.name, 'run'))
-    def _try_complete(self): job_log.append((self.name, 'complete'))
+    def _try_complete(self, webservice): job_log.append((self.name, 'complete'))
     def _try_archive(self): job_log.append((self.name, 'archive'))
     def _try_expire(self): job_log.append((self.name, 'expire'))
     def _sanity_check(self): job_log.append((self.name, 'sanity_check'))
