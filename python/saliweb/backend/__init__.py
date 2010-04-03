@@ -455,7 +455,8 @@ class Database(object):
                   % (self._jobtable, self._placeholder), (state,))
         return c.fetchone()[0]
 
-    def _get_all_jobs_in_state(self, state, name=None, after_time=None):
+    def _get_all_jobs_in_state(self, state, name=None, after_time=None,
+                               runner_id=None):
         """Get all the jobs in the given job state, as a generator of
            :class:`Job` objects (or a subclass, as given by the `jobcls`
            argument to the :class:`Database` constructor).
@@ -464,6 +465,8 @@ class Database(object):
            If `after_time` is specified, only jobs where the time (given in
            the database column of the same name) is less than the current
            system time are returned.
+           If `runner_id` is specified, only jobs which match the given
+           runner ID are returned.
         """
         fields = [x.name for x in self._fields]
         query = 'SELECT ' + ', '.join(fields) + ' FROM ' + self._jobtable
@@ -472,6 +475,9 @@ class Database(object):
         if name is not None:
             wheres.append('name=' + self._placeholder)
             params.append(name)
+        if runner_id is not None:
+            wheres.append('runner_id=' + self._placeholder)
+            params.append(runner_id)
         if after_time is not None:
             wheres.append(after_time + ' IS NOT NULL')
             wheres.append(after_time + ' < UTC_TIMESTAMP()')
@@ -616,6 +622,14 @@ have done this, delete the state file (%s) to reenable runs.
         if len(jobs) == 1:
             return jobs[0]
 
+    def _get_job_by_runner_id(self, runner, runner_id):
+        """Get the job with the given runner_id. Returns
+           a :class:`Job` object, or None if the job is not found."""
+        r = runner._runner_name + ':' + runner_id
+        jobs = list(self.db._get_all_jobs_in_state('RUNNING', runner_id=r))
+        if len(jobs) == 1:
+            return jobs[0]
+
     def delete_database_tables(self):
         """Delete all tables in the database used to hold job state."""
         self.db._delete_tables()
@@ -752,6 +766,7 @@ have done this, delete the state file (%s) to reenable runs.
            check_minutes; and archived and expired jobs are also
            checked periodically."""
         eq = saliweb.backend.events._EventQueue()
+        self._event_queue = eq
         saliweb.backend.events._IncomingJobs(eq, self, sock).start()
         saliweb.backend.events._OldJobs(eq, self).start()
 
@@ -1282,6 +1297,7 @@ class SGERunner(Runner):
             'SGE_QMASTER_PORT': '536',
             'SGE_EXECD_PORT': '537'}
     _arch = 'lx24-amd64'
+    _waited_jobs = _LockedJobDict()
 
     def __init__(self, script, interpreter='/bin/sh'):
         Runner.__init__(self)
@@ -1375,7 +1391,31 @@ class SaliSGERunner(SGERunner):
     _runner_name = 'salisge'
     _env = {'SGE_CELL': 'sali',
             'SGE_ROOT': '/home/sge61'}
+    _waited_jobs = _LockedJobDict()
 Job.register_runner_class(SaliSGERunner)
+
+
+class _LocalJobWaiter(threading.Thread):
+    """Wait for a job started by LocalRunner to finish"""
+    def __init__(self, webservice, subproc, runner, runid):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self.webservice = webservice
+        self.subproc = subproc
+        self.runner = runner
+        self.runid = runid
+
+    def run(self):
+        self.runner._waited_jobs.add(self.runid)
+        ret = self.subproc.wait()
+        if ret != 0:
+            j = OSError("Process failed with return code %d" % ret)
+        else:
+            j = self.runid
+        e = saliweb.backend.events._CompletedJobEvent(self.webservice,
+                                                      self.runner, j)
+        self.webservice._event_queue.put(e)
+        self.runner._waited_jobs.remove(self.runid)
 
 
 class LocalRunner(Runner):
@@ -1388,7 +1428,7 @@ class LocalRunner(Runner):
     """
 
     _runner_name = 'local'
-    _children = {}
+    _waited_jobs = _LockedJobDict()
 
     def __init__(self, cmd):
         Runner.__init__(self)
@@ -1397,25 +1437,17 @@ class LocalRunner(Runner):
     def _run(self, webservice):
         """Run the command and return a unique job ID."""
         p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
-        jobid = str(p.pid)
-        LocalRunner._children[jobid] = p
-        return jobid
+        runid = str(p.pid)
+        _LocalJobWaiter(webservice, p, self, runid).start()
+        return runid
 
     @classmethod
     def _check_completed(cls, jobid):
         """Return True if the process has finished or False if it is still
            running."""
-        # If the process was started by us, use Popen.poll() to check it;
-        # otherwise, fall back to checking for the pid
-        if jobid in cls._children:
-            ret = cls._children[jobid].poll()
-            if ret is None:
-                return False
-            else:
-                del cls._children[jobid]
-                if ret != 0:
-                    raise OSError("Process failed with return code %d" % ret)
-                return True
+        # If the process was not started by us, check for the pid
+        if jobid in cls._waited_jobs:
+            return None
         else:
             return not os.path.exists("/proc/%s" % jobid)
 Job.register_runner_class(LocalRunner)

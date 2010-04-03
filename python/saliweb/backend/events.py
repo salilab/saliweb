@@ -85,3 +85,18 @@ class _OldJobs(threading.Thread):
         while True:
             time.sleep(oldjob_interval)
             self.queue.put(_OldJobsEvent(self.webservice))
+
+
+class _CompletedJobEvent(object):
+    """Event to represent a job started by a Runner finishing"""
+    def __init__(self, webservice, runner, runid):
+        self.webservice = webservice
+        self.runner = runner
+        self.runid = runid
+
+    def process(self):
+        if isinstance(self.runid, Exception):
+            raise self.runid
+        job = self.webservice._get_job_by_runner_id(self.runner, self.runid)
+        if job:
+            job._try_complete(self.webservice)
