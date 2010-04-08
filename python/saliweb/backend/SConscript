@@ -2,7 +2,8 @@ import os
 
 Import('env')
 
-python_files = [ '__init__.py', 'service.py', 'resubmit.py', 'deljob.py' ]
+python_files = [ '__init__.py', 'service.py', 'resubmit.py', 'deljob.py',
+                 'events.py' ]
 
 # Install .py files:
 instdir = os.path.join(env['pythondir'], 'saliweb', 'backend')
