@@ -40,26 +40,32 @@ class _IncomingJobsEvent(object):
         self.webservice._process_incoming_jobs()
 
 
-class _IncomingJobs(threading.Thread):
-    """Wait for new incoming jobs"""
-    def __init__(self, queue, webservice, sock):
+class _JobThread(threading.Thread):
+    """Base for threads that wait for jobs"""
+    def __init__(self, webservice):
         threading.Thread.__init__(self)
         self.setDaemon(True)
-        self.queue = queue
-        self.webservice = webservice
-        self.sock = sock
+        self._webservice = webservice
+
+
+class _IncomingJobs(_JobThread):
+    """Wait for new incoming jobs"""
+    def __init__(self, webservice, sock):
+        _JobThread.__init__(self, webservice)
+        self._sock = sock
 
     def run(self):
         # Simply emit an IncomingJobsEvent whenever the listening socket is
         # connected to, or every check_minutes regardless
-        timeout = self.webservice.config.backend['check_minutes'] * 60
+        timeout = self._webservice.config.backend['check_minutes'] * 60
         while True:
-            rlist, wlist, xlist = select.select([self.sock], [], [], timeout)
+            rlist, wlist, xlist = select.select([self._sock], [], [], timeout)
             # Note that currently we don't do anything with the
             # message itself coming in on the socket
             if len(rlist) == 1:
-                conn, addr = self.sock.accept()
-            self.queue.put(_IncomingJobsEvent(self.webservice))
+                conn, addr = self._sock.accept()
+            q = self._webservice._event_queue
+            q.put(_IncomingJobsEvent(self._webservice))
 
 
 class _OldJobsEvent(object):
@@ -71,20 +77,14 @@ class _OldJobsEvent(object):
         self.webservice._process_old_jobs()
 
 
-class _OldJobs(threading.Thread):
+class _OldJobs(_JobThread):
     """Archive or expire old jobs"""
-    def __init__(self, queue, webservice):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.queue = queue
-        self.webservice = webservice
-
     def run(self):
         # Simply emit an OldJobsEvent every oldjob_interval
-        oldjob_interval = self.webservice._get_oldjob_interval()
+        oldjob_interval = self._webservice._get_oldjob_interval()
         while True:
             time.sleep(oldjob_interval)
-            self.queue.put(_OldJobsEvent(self.webservice))
+            self._webservice._event_queue.put(_OldJobsEvent(self._webservice))
 
 
 class _CompletedJobEvent(object):

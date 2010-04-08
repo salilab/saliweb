@@ -69,7 +69,8 @@ class EventsTest(unittest.TestCase):
             def _get_oldjob_interval(self): return 0.02
         q = saliweb.backend.events._EventQueue()
         ws = dummy()
-        t = saliweb.backend.events._OldJobs(q, ws)
+        ws._event_queue = q
+        t = saliweb.backend.events._OldJobs(ws)
         t.start()
         time.sleep(0.05)
         # Should have added 2 events
@@ -92,7 +93,8 @@ class EventsTest(unittest.TestCase):
         sock.listen(5)
 
         q = saliweb.backend.events._EventQueue()
-        t = saliweb.backend.events._IncomingJobs(q, ws, sock)
+        ws._event_queue = q
+        t = saliweb.backend.events._IncomingJobs(ws, sock)
         t.start()
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect('test.sock')
@@ -105,7 +107,8 @@ class EventsTest(unittest.TestCase):
 
         ws.config.backend = {'check_minutes':0.02/60.0}
         q = saliweb.backend.events._EventQueue()
-        t = saliweb.backend.events._IncomingJobs(q, ws, sock)
+        ws._event_queue = q
+        t = saliweb.backend.events._IncomingJobs(ws, sock)
         t.start()
         time.sleep(0.05)
         # Should have added 2 events

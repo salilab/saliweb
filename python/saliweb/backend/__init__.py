@@ -14,6 +14,7 @@ import socket
 import logging
 import threading
 import saliweb.backend.events
+from saliweb.backend.events import _JobThread
 from email.MIMEText import MIMEText
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
@@ -767,8 +768,8 @@ have done this, delete the state file (%s) to reenable runs.
            checked periodically."""
         eq = saliweb.backend.events._EventQueue()
         self._event_queue = eq
-        saliweb.backend.events._IncomingJobs(eq, self, sock).start()
-        saliweb.backend.events._OldJobs(eq, self).start()
+        saliweb.backend.events._IncomingJobs(self, sock).start()
+        saliweb.backend.events._OldJobs(self).start()
 
         timeout = self.config.backend['check_minutes'] * 60
         while True:
@@ -1398,28 +1399,26 @@ class SaliSGERunner(SGERunner):
 Job.register_runner_class(SaliSGERunner)
 
 
-class _LocalJobWaiter(threading.Thread):
+class _LocalJobWaiter(_JobThread):
     """Wait for a job started by LocalRunner to finish"""
     def __init__(self, webservice, subproc, runner, runid):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.webservice = webservice
-        self.subproc = subproc
-        self.runner = runner
-        self.runid = runid
+        _JobThread.__init__(self, webservice)
+        self._subproc = subproc
+        self._runner = runner
+        self._runid = runid
 
     def run(self):
-        self.runner._waited_jobs.add(self.runid)
-        ret = self.subproc.wait()
+        self._runner._waited_jobs.add(self._runid)
+        ret = self._subproc.wait()
         if ret != 0:
             result = OSError("Process failed with return code %d" % ret)
         else:
             result = None
-        e = saliweb.backend.events._CompletedJobEvent(self.webservice,
-                                                      self.runner, self.runid,
+        e = saliweb.backend.events._CompletedJobEvent(self._webservice,
+                                                      self._runner, self._runid,
                                                       result)
-        self.webservice._event_queue.put(e)
-        self.runner._waited_jobs.remove(self.runid)
+        self._webservice._event_queue.put(e)
+        self._runner._waited_jobs.remove(self._runid)
 
 
 class LocalRunner(Runner):
