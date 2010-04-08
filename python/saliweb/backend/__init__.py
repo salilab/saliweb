@@ -983,12 +983,15 @@ class Job(object):
                  % (self._metadata['runner_id'], self._metadata['directory']))
         return False
 
-    def _try_complete(self, webservice):
+    def _try_complete(self, webservice, run_exception=None):
         """Take a running job, see if it completed, and if so, process it."""
         try:
             self._assert_state('RUNNING')
             if not self._has_completed():
                 return
+            # If the Runner caught an exception, raise it here
+            if run_exception is not None:
+                raise run_exception
             # Delete job-state file; no longer needed
             os.unlink(self._get_job_state_file())
             self._metadata['postprocess_time'] = datetime.datetime.utcnow()
@@ -1409,11 +1412,12 @@ class _LocalJobWaiter(threading.Thread):
         self.runner._waited_jobs.add(self.runid)
         ret = self.subproc.wait()
         if ret != 0:
-            j = OSError("Process failed with return code %d" % ret)
+            result = OSError("Process failed with return code %d" % ret)
         else:
-            j = self.runid
+            result = None
         e = saliweb.backend.events._CompletedJobEvent(self.webservice,
-                                                      self.runner, j)
+                                                      self.runner, self.runid,
+                                                      result)
         self.webservice._event_queue.put(e)
         self.runner._waited_jobs.remove(self.runid)
 

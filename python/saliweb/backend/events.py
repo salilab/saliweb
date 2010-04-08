@@ -89,14 +89,13 @@ class _OldJobs(threading.Thread):
 
 class _CompletedJobEvent(object):
     """Event to represent a job started by a Runner finishing"""
-    def __init__(self, webservice, runner, runid):
+    def __init__(self, webservice, runner, runid, run_exception):
         self.webservice = webservice
         self.runner = runner
         self.runid = runid
+        self.run_exception = run_exception
 
     def process(self):
-        if isinstance(self.runid, Exception):
-            raise self.runid
         job = self.webservice._get_job_by_runner_id(self.runner, self.runid)
         if job:
-            job._try_complete(self.webservice)
+            job._try_complete(self.webservice, self.run_exception)

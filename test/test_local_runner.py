@@ -6,9 +6,16 @@ import subprocess
 from saliweb.backend import LocalRunner
 import saliweb.backend.events
 
+class DummyJob(object):
+    def _try_complete(self, webservice, run_exception):
+        if run_exception:
+            webservice._exception = run_exception
+
 class DummyWebService(object):
     def __init__(self):
         self._event_queue = saliweb.backend.events._EventQueue()
+    def _get_job_by_runner_id(self, runner, runid):
+        return DummyJob()
 
 class LocalRunnerTest(unittest.TestCase):
     """Check LocalRunner class"""
@@ -19,14 +26,19 @@ class LocalRunnerTest(unittest.TestCase):
         r = LocalRunner(['/bin/sleep', '60'])
         pid = r._run(ws)
         self.assert_(isinstance(pid, str))
+        # Give the waiter thread enough time to start up
+        time.sleep(0.1)
         self.assertEqual(LocalRunner._check_completed(pid), None)
         self.assertEqual(pid in LocalRunner._waited_jobs, True)
         os.kill(int(pid), signal.SIGTERM)
+        # Give the waiter thread enough time to close down
         time.sleep(0.1)
         self.assertEqual(pid in LocalRunner._waited_jobs, False)
         # Make sure that non-zero return code causes a job failure
         event = ws._event_queue.get(timeout=0)
-        self.assertRaises(OSError, event.process)
+        event.process()
+        self.assertEqual(type(ws._exception), OSError)
+        ws._exception = None
 
         # Check successful completion
         r1 = LocalRunner(['/bin/echo', 'foo'])
@@ -43,6 +55,7 @@ class LocalRunnerTest(unittest.TestCase):
             self.assertEqual(event2.runid, pid1)
         self.assertEqual(type(event1.runner), LocalRunner)
         self.assertEqual(type(event2.runner), LocalRunner)
+        self.assertEqual(ws._exception, None)
 
     def test_run_proc(self):
         """Check that LocalRunner jobs from other processes are checked"""
