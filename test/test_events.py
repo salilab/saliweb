@@ -35,6 +35,34 @@ class EventsTest(unittest.TestCase):
         e.process()
         self.assertEqual(d.processed, True)
 
+    def test_completed_job_event(self):
+        """Check the _CompletedJobEvent class"""
+        class DummyJob(object):
+            def _try_complete(self, webservice, run_exception):
+                webservice.run_exception = run_exception
+        class DummyWebService(object):
+            def _get_job_by_runner_id(self, runner, runid):
+                if runid == 'bad':
+                    return None
+                else:
+                    return DummyJob()
+
+        ws = DummyWebService()
+        ev = saliweb.backend.events._CompletedJobEvent(ws, None, 'good', None)
+        ev.process()
+        self.assertEqual(ws.run_exception, None)
+
+        ws = DummyWebService()
+        ev = saliweb.backend.events._CompletedJobEvent(ws, None, 'good', 'foo')
+        ev.process()
+        self.assertEqual(ws.run_exception, 'foo')
+
+        ws = DummyWebService()
+        ev = saliweb.backend.events._CompletedJobEvent(ws, None, 'bad', 'foo')
+        ev.process()
+        # try_complete should not be called if the job ID does not exist
+        self.assertEqual(hasattr(ws, 'run_exception'), False)
+
     def test_old_jobs(self):
         """Check the _OldJobs class"""
         class dummy:
