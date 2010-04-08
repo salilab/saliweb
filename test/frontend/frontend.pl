@@ -623,6 +623,12 @@ sub test_display_page {
          'error message.*my internal error/s', 
          '                        (data)');
 
+    # No email should be sent for CGI.pm client errors
+    $self->_email_admin_fatal_error("CGI.pm: Server closed socket during " .
+                                    "multipart read (client aborted?).");
+    is($MIME::Lite::last_email, undef,
+       '                        (client error - no email)');
+
     # Make a state file that indicates we're about to hit the rate limit
     ok(open(FH, "> $tmpfile"), '                        (make file)');
     printf FH "%d\t%d\n", time() - 20, 10;

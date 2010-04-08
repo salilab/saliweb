@@ -396,6 +396,10 @@ sub _email_admin_fatal_error {
         return;
     }
 
+    # Don't bother the admin with client errors
+    if ($exc =~ /^CGI\.pm: Server closed socket during multipart read/) {
+        return;
+    }
 
     my $subject = "Fatal error in " .  $self->{server_name} .
                   " web service frontend";
