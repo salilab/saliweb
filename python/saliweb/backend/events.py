@@ -44,7 +44,7 @@ class _IncomingJobs(threading.Thread):
     """Wait for new incoming jobs"""
     def __init__(self, queue, webservice, sock):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.setDaemon(True)
         self.queue = queue
         self.webservice = webservice
         self.sock = sock
@@ -75,7 +75,7 @@ class _OldJobs(threading.Thread):
     """Archive or expire old jobs"""
     def __init__(self, queue, webservice):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.setDaemon(True)
         self.queue = queue
         self.webservice = webservice
 

@@ -1402,7 +1402,7 @@ class _LocalJobWaiter(threading.Thread):
     """Wait for a job started by LocalRunner to finish"""
     def __init__(self, webservice, subproc, runner, runid):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.setDaemon(True)
         self.webservice = webservice
         self.subproc = subproc
         self.runner = runner
