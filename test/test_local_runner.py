@@ -37,7 +37,7 @@ class LocalRunnerTest(unittest.TestCase):
         # Make sure that non-zero return code causes a job failure
         event = ws._event_queue.get(timeout=0)
         event.process()
-        self.assertEqual(type(ws._exception), OSError)
+        self.assert_(isinstance(ws._exception, OSError))
         ws._exception = None
 
         # Check successful completion
