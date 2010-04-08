@@ -16,7 +16,7 @@ def make_test_jobs(sql):
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
-              ('job2', 'RUNNING', 'SGE-job-2', utcnow,
+              ('job2', 'RUNNING', 'salisge:job-2', utcnow,
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",

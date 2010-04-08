@@ -7,6 +7,7 @@ from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
 from saliweb.backend import WebService, Job, StateFileError, SanityError
+import saliweb.backend
 from StringIO import StringIO
 from testutil import RunInTempDir
 
@@ -77,6 +78,18 @@ class WebServiceTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'job3')
         self.assertEqual(job.name, 'job3')
         job = web.get_job_by_name('RUNNING', 'job9')
+        self.assertEqual(job, None)
+
+    def test_get_job_by_runner_id(self):
+        """Check WebService._get_job_by_runner_id()"""
+        db, conf, web = self._setup_webservice()
+        goodrunner = saliweb.backend.SaliSGERunner('foo')
+        badrunner = saliweb.backend.LocalRunner('foo')
+        job = web._get_job_by_runner_id(goodrunner, 'job-2')
+        self.assertEqual(job.name, 'job2')
+        job = web._get_job_by_runner_id(badrunner, 'job-2')
+        self.assertEqual(job, None)
+        job = web._get_job_by_runner_id(goodrunner, 'job-3')
         self.assertEqual(job, None)
 
     def test_process_incoming(self):
