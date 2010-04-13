@@ -14,6 +14,7 @@ import socket
 import logging
 import threading
 import saliweb.backend.events
+import saliweb.backend.sge
 from saliweb.backend.events import _JobThread
 from email.MIMEText import MIMEText
 
@@ -1299,7 +1300,10 @@ class SGERunner(Runner):
     _env = {'SGE_CELL': 'qb3',
             'SGE_ROOT': '/ccpr1/sge6',
             'SGE_QMASTER_PORT': '536',
-            'SGE_EXECD_PORT': '537'}
+            'SGE_EXECD_PORT': '537',
+            'DRMAA_LIBRARY_PATH':
+                    '/ccpr1/sge6/lib/lx24-amd64/libdrmaa.so.1.0'}
+
     _arch = 'lx24-amd64'
     _waited_jobs = _LockedJobDict()
 
@@ -1323,7 +1327,7 @@ class SGERunner(Runner):
         fh = open(script, 'w')
         self._write_sge_script(fh)
         fh.close()
-        return self._qsub(script, self._directory)
+        return self._qsub(script, webservice)
 
     def _write_sge_script(self, fh):
         print >> fh, "#!" + self._interpreter
@@ -1344,49 +1348,38 @@ class SGERunner(Runner):
                                  '/bin/tcsh'):
             print >> fh, 'echo "DONE" > ${_SALI_JOB_DIR}/job-state'
 
-    @classmethod
-    def _qsub(cls, script, directory=None):
-        """Submit a job script to the cluster."""
-        cmd = '%s/bin/%s/qsub' % (cls._env['SGE_ROOT'], cls._arch)
-        p = subprocess.Popen([cmd, script], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, env=cls._env,
-                             cwd=directory)
-        out = p.stdout.read()
-        err = p.stderr.read()
-        ret = p.wait()
-        if ret != 0:
-            raise OSError("qsub failed with code %d and stderr %s" \
-                          % (ret, err))
-        m = re.match("Your job(\-array)? ([\d]+)(\.\d+\-\d+:\d+)? " + \
-                     "\(.*\) has been submitted", out)
-        if m:
-            return m.group(2)
+    def _qsub(self, script, webservice):
+        """Submit a job script to the cluster using DRMAA."""
+        drmaa, s = self._get_drmaa()
+        jt = s.createJobTemplate()
+        jt.nativeSpecification = self._opts + ' -b no'
+        jt.remoteCommand = script
+        tasks = saliweb.backend.sge._SGETasks(self._opts)
+        if tasks:
+            jobids = s.runBulkJobs(jt, tasks.first, tasks.last, tasks.step)
+            runid = tasks.get_run_id(jobids)
         else:
-            raise OSError("Could not parse qsub output %s" % out)
+            runid = s.runJob(jt)
+            jobids = [runid]
+        s.deleteJobTemplate(jt)
+        saliweb.backend.sge._DRMAAJobWaiter(webservice, jobids,
+                                            self, runid).start()
+        return runid
 
     @classmethod
-    def _check_completed(cls, jobid, catch_exceptions=True):
+    def _check_completed(cls, jobid):
         """Return True if SGE reports that the given job has finished, False
            if it is still running, or None if the status cannot be determined.
-           If `catch_exceptions` is True and a problem occurs when talking to
-           SGE, None is returned; otherwise, the exception is propagated."""
-        try:
-            cmd = '%s/bin/%s/qstat' % (cls._env['SGE_ROOT'], cls._arch)
-            p = subprocess.Popen([cmd, '-j', jobid], stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, env=cls._env)
-            out = p.stdout.read()
-            err = p.stderr.read()
-            ret = p.wait()
-            if ret > 1:
-                raise OSError("qstat failed with code %d and stderr %s" \
-                              % (ret, err))
-        except Exception:
-            if catch_exceptions:
-                return None
-            else:
-                raise
-        # todo: raise an exception if job is in Eqw state, dr, etc.
-        return err.startswith("Following jobs do not exist:")
+        """
+        if jobid in cls._waited_jobs:
+            return None
+        else:
+            drmaa, s = cls._get_drmaa()
+            try:
+                x = s.jobStatus(jobid)
+                return False
+            except drmaa.InvalidJobException:
+                return True
 Job.register_runner_class(SGERunner)
 
 
@@ -1394,7 +1387,10 @@ class SaliSGERunner(SGERunner):
     """Run commands on the Sali SGE cluster instead of the QB3 cluster."""
     _runner_name = 'salisge'
     _env = {'SGE_CELL': 'sali',
-            'SGE_ROOT': '/home/sge61'}
+            'SGE_ROOT': '/home/sge61',
+            'DRMAA_LIBRARY_PATH':
+                        '/home/sge61/lib/lx24-amd64/libdrmaa.so.1.0'}
+
     _waited_jobs = _LockedJobDict()
 Job.register_runner_class(SaliSGERunner)
 
