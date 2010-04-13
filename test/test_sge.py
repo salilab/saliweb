@@ -1,8 +1,10 @@
 import unittest
 import time
+import os
+import sys
 import saliweb.backend
 import saliweb.backend.events
-from saliweb.backend.sge import _DRMAAJobWaiter, _SGETasks
+from saliweb.backend.sge import _DRMAAJobWaiter, _SGETasks, _DRMAAWrapper
 
 class SGETest(unittest.TestCase):
     """Check SGE utility classes"""
@@ -79,6 +81,29 @@ class SGETest(unittest.TestCase):
                 ['add job dict jobN.1-2:1', 'get drmaa',
                  "sync ['jobN.1', 'jobN.2'] timeout forever cleanup True",
                  'remove job dict jobN.1-2:1'])
+
+    def test_drmaa_wrapper(self):
+        """Check the _DRMAAWrapper class"""
+        events = []
+        class DummyDRMAA(object):
+            class Session(object):
+                def initialize(self):
+                    events.append('drmaa session init')
+                def exit(self):
+                    events.append('drmaa session exit')
+        sys.modules['drmaa'] = DummyDRMAA()
+        d = _DRMAAWrapper({})
+        self.assertEqual(d.module, sys.modules['drmaa'])
+        self.assert_(isinstance(d.session, DummyDRMAA.Session))
+        self.assertEqual(events, ['drmaa session init'])
+        del d
+        self.assertEqual(events, ['drmaa session init', 'drmaa session exit'])
+        # Make sure the environment is cleared of SGE stuff
+        os.environ['SGE_FOO'] = 'bar'
+        d = _DRMAAWrapper({'SGE_BAR': 'foo'})
+        self.assertEqual(os.environ['SGE_BAR'], 'foo')
+        self.assert_(not os.environ.has_key('SGE_FOO'))
+        del sys.modules['drmaa']
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,5 @@
 import re
+import os
 import saliweb.backend.events
 from saliweb.backend.events import _JobThread
 
@@ -53,3 +54,22 @@ class _SGETasks(object):
                              "was expecting %d jobs" % (str(jobids), numjobs))
         job, task = jobids[0].split('.')
         return job + '.%d-%d:%d' % (self.first, self.last, self.step)
+
+
+class _DRMAAWrapper(object):
+    """Wrapper to start up DRMAA and ensure it is closed down on exit"""
+
+    def __init__(self, env):
+        keys = [x for x in os.environ.keys() if x.startswith('SGE_')]
+        for x in keys:
+            del os.environ[x]
+        os.environ.update(env)
+        import drmaa
+        s = drmaa.Session()
+        s.initialize()
+        self.module = drmaa
+        self.session = s
+
+    def __del__(self):
+        if hasattr(self, 'session'):
+            self.session.exit()
