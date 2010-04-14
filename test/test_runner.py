@@ -3,6 +3,7 @@ from StringIO import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, Job
 import os
+import time
 import shutil
 import tempfile
 
@@ -98,6 +99,15 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -b no')
         self.assertEqual(jt.remoteCommand, 'test.sh')
         self.assertEqual(jt.workingDirectory, r._directory)
+
+        # Make sure the waiter threads get time to finish
+        time.sleep(0.1)
+        e1 = ws._event_queue.get(timeout=0.)
+        e2 = ws._event_queue.get(timeout=0.)
+        e3 = ws._event_queue.get(timeout=0.)
+        self.assertNotEqual(e1, None)
+        self.assertNotEqual(e2, None)
+        self.assertEqual(e3, None)
 
 if __name__ == '__main__':
     unittest.main()
