@@ -954,7 +954,7 @@ class Job(object):
         """Return True if the job's :class:`Runner` indicates the job finished,
            or None if that cannot be determined."""
         runner_id = self._metadata['runner_id']
-        runner_name, jobid = runner_id.split(':')
+        runner_name, jobid = runner_id.split(':', 1)
         runnercls = self._runners[runner_name]
         return runnercls._check_completed(jobid)
 

@@ -783,5 +783,27 @@ class JobTest(unittest.TestCase):
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
 
+    def test_runner_done(self):
+        """Check Job._runner_done method"""
+        checked_jobs = []
+        class DummyRunner(object):
+            def __init__(self, completed): self._completed = completed
+            def _check_completed(self, jobid):
+                checked_jobs.append(jobid)
+                return self._completed
+        class TestJob(Job):
+            _runners = {'donerunner': DummyRunner(True),
+                        'runrunner': DummyRunner(False) }
+            def __init__(self, runner_id):
+                self._metadata = {'runner_id':runner_id}
+
+        j = TestJob('donerunner:job1')
+        self.assertEqual(j._runner_done(), True)
+        j = TestJob('runrunner:job2')
+        self.assertEqual(j._runner_done(), False)
+        j = TestJob('donerunner:job:with:colons')
+        self.assertEqual(j._runner_done(), True)
+        self.assertEqual(checked_jobs, ['job1', 'job2', 'job:with:colons'])
+
 if __name__ == '__main__':
     unittest.main()
