@@ -57,13 +57,17 @@ state_file
     run again.
 
 check_minutes
-    The backend checks periodically to see if the batch system (e.g. SGE)
-    reports that any running jobs have finished, and to see if any jobs have
-    been submitted by the frontend. This is the time, in minutes, to wait
-    between these queries. A longer time reduces the load on the cluster
-    servers but increases the apparent time a job takes to run. Archived and
-    expired jobs are also checked for periodically, but this interval is
-    fixed at 10% of the shorter of the archive and expiry times.
+    Typically, when new jobs are submitted the backend is notified and they
+    start running immediately; once jobs are started the backend waits for
+    them to finish and collects the results as soon as this happens. However,
+    if a job is submitted from the frontend while the backend is not running,
+    or the backend is restarted or the machine it is on is rebooted while jobs
+    are running, the backend must fall back to a less efficient polling method
+    to look for newly submitted or completed jobs. 'check_minutes' is the
+    time, in minutes, to wait between checks for these jobs. An interval
+    of 10 minutes is recommended. Note that archived and expired jobs are
+    also checked for periodically, but this interval is fixed at 10% of the
+    shorter of the archive and expiry times.
 
 limits
 ======
