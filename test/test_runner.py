@@ -102,7 +102,7 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         jobid1 = r._qsub('test.sh', ws)
         self.assertEqual(jobid1, 'dummyJob')
         jt = DummyDRMAASession.deleted_template
-        self.assertEqual(jt.nativeSpecification, ' -b no')
+        self.assertEqual(jt.nativeSpecification, ' -w n -b no')
         self.assertEqual(jt.remoteCommand, 'test.sh')
         self.assertEqual(jt.workingDirectory, r._directory)
 
@@ -111,7 +111,7 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         jobid2 = r._qsub('test.sh', ws)
         self.assertEqual(jobid2, 'dummyJob.2-10:2')
         jt = DummyDRMAASession.deleted_template
-        self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -b no')
+        self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -w n -b no')
         self.assertEqual(jt.remoteCommand, 'test.sh')
         self.assertEqual(jt.workingDirectory, r._directory)
 

@@ -1360,7 +1360,10 @@ class SGERunner(Runner):
         """Submit a job script to the cluster using DRMAA."""
         drmaa, s = self._get_drmaa()
         jt = s.createJobTemplate()
-        jt.nativeSpecification = self._opts + ' -b no'
+        # Note that "-w n" turns off verification of -l options, since SGE 6.1
+        # always fails at this step (a bug); "-b no" parses the script for
+        # additional SGE options
+        jt.nativeSpecification = self._opts + ' -w n -b no'
         jt.remoteCommand = script
         jt.workingDirectory = self._directory
         tasks = saliweb.backend.sge._SGETasks(self._opts)
