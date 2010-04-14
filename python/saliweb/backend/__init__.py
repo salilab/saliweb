@@ -1384,7 +1384,7 @@ class SGERunner(Runner):
            if it is still running, or None if the status cannot be determined.
         """
         if jobid in cls._waited_jobs:
-            return None
+            return False
         else:
             drmaa, s = cls._get_drmaa()
             try:
@@ -1418,16 +1418,18 @@ class _LocalJobWaiter(_JobThread):
 
     def run(self):
         self._runner._waited_jobs.add(self._runid)
-        ret = self._subproc.wait()
-        if ret != 0:
-            result = OSError("Process failed with return code %d" % ret)
-        else:
-            result = None
-        e = saliweb.backend.events._CompletedJobEvent(self._webservice,
-                                                      self._runner, self._runid,
-                                                      result)
-        self._webservice._event_queue.put(e)
-        self._runner._waited_jobs.remove(self._runid)
+        try:
+            ret = self._subproc.wait()
+            if ret != 0:
+                result = OSError("Process failed with return code %d" % ret)
+            else:
+                result = None
+            e = saliweb.backend.events._CompletedJobEvent(self._webservice,
+                                                          self._runner,
+                                                          self._runid, result)
+            self._webservice._event_queue.put(e)
+        finally:
+            self._runner._waited_jobs.remove(self._runid)
 
 
 class LocalRunner(Runner):
@@ -1459,7 +1461,7 @@ class LocalRunner(Runner):
            running."""
         # If the process was not started by us, check for the pid
         if jobid in cls._waited_jobs:
-            return None
+            return False
         else:
             return not os.path.exists("/proc/%s" % jobid)
 Job.register_runner_class(LocalRunner)

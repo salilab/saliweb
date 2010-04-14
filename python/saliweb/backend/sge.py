@@ -13,14 +13,17 @@ class _DRMAAJobWaiter(_JobThread):
 
     def run(self):
         self._runner._waited_jobs.add(self._runid)
-        drmaa, s = self._runner._get_drmaa()
-        s.synchronize(self._jobids, drmaa.Session.TIMEOUT_WAIT_FOREVER, True)
-        # Note that we currently don't check the return value of the job(s)
-        e = saliweb.backend.events._CompletedJobEvent(self._webservice,
-                                                      self._runner, self._runid,
-                                                      None)
-        self._webservice._event_queue.put(e)
-        self._runner._waited_jobs.remove(self._runid)
+        try:
+            drmaa, s = self._runner._get_drmaa()
+            s.synchronize(self._jobids, drmaa.Session.TIMEOUT_WAIT_FOREVER,
+                          True)
+            # Note that we currently don't check the return value of the job(s)
+            e = saliweb.backend.events._CompletedJobEvent(self._webservice,
+                                                          self._runner,
+                                                          self._runid, None)
+            self._webservice._event_queue.put(e)
+        finally:
+            self._runner._waited_jobs.remove(self._runid)
 
 
 class _SGETasks(object):

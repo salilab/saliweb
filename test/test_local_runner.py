@@ -28,7 +28,7 @@ class LocalRunnerTest(unittest.TestCase):
         self.assert_(isinstance(pid, str))
         # Give the waiter thread enough time to start up
         time.sleep(0.1)
-        self.assertEqual(LocalRunner._check_completed(pid), None)
+        self.assertEqual(LocalRunner._check_completed(pid), False)
         self.assertEqual(pid in LocalRunner._waited_jobs, True)
         os.kill(int(pid), signal.SIGTERM)
         # Give the waiter thread enough time to close down
