@@ -85,11 +85,19 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         r = TestRunner('echo foo')
         jobid1 = r._qsub('test.sh', ws)
         self.assertEqual(jobid1, 'dummyJob')
+        jt = DummyDRMAASession.deleted_template
+        self.assertEqual(jt.nativeSpecification, ' -b no')
+        self.assertEqual(jt.remoteCommand, 'test.sh')
+        self.assertEqual(jt.workingDirectory, r._directory)
 
         r = TestRunner('echo foo')
         r.set_sge_options('-t 2-10:2')
         jobid2 = r._qsub('test.sh', ws)
         self.assertEqual(jobid2, 'dummyJob.2-10:2')
+        jt = DummyDRMAASession.deleted_template
+        self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -b no')
+        self.assertEqual(jt.remoteCommand, 'test.sh')
+        self.assertEqual(jt.workingDirectory, r._directory)
 
 if __name__ == '__main__':
     unittest.main()
