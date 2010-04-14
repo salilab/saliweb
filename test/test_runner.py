@@ -2,6 +2,7 @@ import unittest
 from StringIO import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, Job
+import sys
 import os
 import time
 import shutil
@@ -76,6 +77,20 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         self.assertEqual(TestRunner._check_completed('runningjob'), False)
         self.assertEqual(TestRunner._check_completed('queuedjob'), False)
         self.assertEqual(TestRunner._check_completed('waitedjob'), None)
+
+    def test_get_drmaa(self):
+        """Check SGERunner._get_drmaa()"""
+        class DummyDRMAA(object):
+            class Session(object):
+                def initialize(self): pass
+                def exit(self): pass
+        sys.modules['drmaa'] = DummyDRMAA()
+        r = SGERunner('test.sh')
+        d, s = r._get_drmaa()
+        self.assert_(isinstance(d, DummyDRMAA))
+        self.assert_(isinstance(s, DummyDRMAA.Session))
+        SGERunner._drmaa = None
+        del sys.modules['drmaa']
 
     def test_check_run(self):
         """Check SGERunner._qsub()"""

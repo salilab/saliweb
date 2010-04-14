@@ -782,6 +782,7 @@ have done this, delete the state file (%s) to reenable runs.
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if event is None:
                 self._process_completed_jobs()
+                self._process_incoming_jobs()
             else:
                 event.process()
 
@@ -1297,6 +1298,7 @@ class SGERunner(Runner):
     """
 
     _runner_name = 'qb3sge'
+    _drmaa = None
     _env = {'SGE_CELL': 'qb3',
             'SGE_ROOT': '/ccpr1/sge6',
             'SGE_QMASTER_PORT': '536',
@@ -1319,6 +1321,12 @@ class SGERunner(Runner):
            for example '-N foo -l mydisk=1G'
         """
         self._opts = opts
+
+    @classmethod
+    def _get_drmaa(cls):
+        if cls._drmaa is None:
+            cls._drmaa = saliweb.backend.sge._DRMAAWrapper(cls._env)
+        return cls._drmaa.module, cls._drmaa.session
 
     def _run(self, webservice):
         """Generate an SGE script in the job directory and run it.
@@ -1387,6 +1395,7 @@ Job.register_runner_class(SGERunner)
 class SaliSGERunner(SGERunner):
     """Run commands on the Sali SGE cluster instead of the QB3 cluster."""
     _runner_name = 'salisge'
+    _drmaa = None
     _env = {'SGE_CELL': 'sali',
             'SGE_ROOT': '/home/sge61',
             'DRMAA_LIBRARY_PATH':
