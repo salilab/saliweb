@@ -8,17 +8,10 @@ Frontend:
     button to toggle showing all jobs or just their own.
 
 Backend:
-  - Run/check jobs using DRMAA
-    - Build DRMAA Python extension (fix SWIG problems with newer SWIG so that
-      the example programs run).
-    - Set up for both Sali and QB3 clusters; make sure we can access both via
-      DRMAA from the same script (fix problems with environment variable
-      clashes if necessary).
-    - Make sure that DRMAA on the QB3 cluster works with users that have
-      different usernames on modbase/chef (e.g. Hao, SJ, Ursula).
-    - Use drmaa_wait or drmaa_synchronize to wake up backend daemon as soon
-      as a job finishes (may need to thread; make sure only one event client
-      per daemon); fall back to polling if the daemon is restarted.
+  - Configure DRMAA so that we can submit to both Sali and QB3 clusters from
+    the same script.
+  - Make sure that DRMAA on the QB3 cluster works with users that have
+    different usernames on modbase/chef (e.g. Hao, SJ, Ursula).
 
 Build:
   - Check to make sure MySQL indexes match those set up by the backend.
