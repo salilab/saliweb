@@ -1185,8 +1185,9 @@ class Job(object):
 
     def expire(self):
         """Do any necessary processing when an old completed job reaches its
-           archive time. Does nothing by default, but can be overridden by
-           the user to mail the admin, etc.
+           expire time; it is called just before the job directory is deleted.
+           Does nothing by default, but can be overridden by the user to mail
+           the admin, etc.
            This method should not be called directly."""
 
     def preprocess(self):
