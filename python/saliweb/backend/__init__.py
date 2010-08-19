@@ -854,7 +854,7 @@ class Job(object):
         """Create and return a standard Python log Handler object. By default
            it directs log messages to a file called 'framework.log' in the job
            directory. This can be overridden to send log output elsewhere,
-           e.g. in an email. Do not call this method directory; instead use
+           e.g. in an email. Do not call this method directly; instead use
            :attr:`logger` to access the logger object."""
         filename = os.path.join(self.directory, 'framework.log')
         hdlr = logging.StreamHandler(_DelayFileStream(filename))
