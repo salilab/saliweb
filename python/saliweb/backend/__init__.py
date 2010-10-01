@@ -427,6 +427,7 @@ class Database(object):
         """Set up the connection to the database. Usually called from the
            :class:`WebService` object."""
         import MySQLdb
+        self._OperationalError = MySQLdb.OperationalError
         self._placeholder = '%s'
         self.config = config
         self.conn = MySQLdb.connect(user=config.database['user'],
@@ -450,11 +451,31 @@ class Database(object):
                           % (field.name, self._jobtable, field.name))
         self.conn.commit()
 
+    def _execute(self, query, args=()):
+        """Open a database cursor and execute the given query. The cursor
+           object is returned. If the connection to the database has been
+           lost, try to restablish it."""
+        c = self.conn.cursor()
+        try:
+            c.execute(query, args)
+        except self._OperationalError, err:
+            # Catch a MySQLdb.OperationalError with code 2006
+            # ("server has gone away"); any other kind of error is
+            # fatal and so is passed on
+            if hasattr(err, 'args') and isinstance(err.args, tuple) \
+               and len(err.args) >= 1 and err.args[0] == 2006:
+                self._connect(self.config)
+                c = self.conn.cursor()
+                c.execute(query, args)
+            else:
+                print >> sys.stderr, err.args, type(err.args)
+                raise
+        return c
+
     def _count_all_jobs_in_state(self, state):
         """Return a count of all the jobs in the given job state."""
-        c = self.conn.cursor()
-        c.execute('SELECT COUNT(*) FROM %s WHERE state=%s' \
-                  % (self._jobtable, self._placeholder), (state,))
+        c = self._execute('SELECT COUNT(*) FROM %s WHERE state=%s' \
+                          % (self._jobtable, self._placeholder), (state,))
         return c.fetchone()[0]
 
     def _get_all_jobs_in_state(self, state, name=None, after_time=None,
@@ -488,8 +509,7 @@ class Database(object):
 
         # Use regular cursor rather than MySQLdb.cursors.DictCursor, so we stay
         # reasonably database-independent
-        c = self.conn.cursor()
-        c.execute(query, params)
+        c = self._execute(query, params)
         for row in c:
             metadata = _JobMetadata(fields, row)
             yield self._jobcls(self, metadata, _JobState(state))
@@ -505,24 +525,23 @@ class Database(object):
 
     def _update_job(self, metadata, state):
         """Update a job in the job state table."""
-        c = self.conn.cursor()
         query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
                             for x in metadata.keys()) \
                 + ' WHERE name=' + self._placeholder
-        c.execute(query, metadata.values() + [metadata['name']])
+        self._execute(query, metadata.values() + [metadata['name']])
         self.conn.commit()
         metadata.mark_synced()
 
     def _change_job_state(self, metadata, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
            updating the job (as if :meth:`_update_job` were called)."""
-        c = self.conn.cursor()
         query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
                             for x in metadata.keys() + ['state']) \
                 + ' WHERE name=' + self._placeholder
-        c.execute(query, metadata.values() + [newstate, metadata['name']])
+        c = self._execute(query,
+                          metadata.values() + [newstate, metadata['name']])
         self.conn.commit()
         metadata.mark_synced()
 

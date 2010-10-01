@@ -5,6 +5,7 @@ except:
     from pysqlite2 import dbapi2 as sqlite3
 import datetime
 from saliweb.backend import Job, MySQLField
+import saliweb.backend
 from memory_database import MemoryDatabase
 
 def make_test_jobs(sql):
@@ -82,6 +83,60 @@ class DatabaseTest(unittest.TestCase):
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE GARBAGE')
         db.conn.commit()
+
+    def test_execute(self):
+        """Test Database._execute method"""
+        class DummyError(Exception):
+            pass
+
+        class DummyCursor(object):
+            def __init__(self, conn):
+                self.conn = conn
+            def execute(self, query, args):
+                if query == 'execute exception':
+                    raise DummyError((0, 'normal error'))
+                elif query == 'reconnect fail':
+                    raise DummyError(2006, 'MySQL server has gone away')
+                elif query == 'reconnect succeeds' \
+                     and not self.conn.db.in_query:
+                    self.conn.db.in_query = True # Prevent reraise
+                    raise DummyError(2006, 'MySQL server has gone away')
+
+        class DummyConnection(object):
+            def __init__(self, db):
+                self.db = db
+            def cursor(self):
+                return DummyCursor(self)
+
+        class DummyDatabase(saliweb.backend.Database):
+            in_query = False
+            def add_field(self, field):
+                pass
+            def _connect(self, config):
+                self.config = config
+                self._OperationalError = DummyError
+                self.conn = DummyConnection(self)
+
+        db = DummyDatabase(None)
+        db._connect(None)
+        # Regular exceptions should be propagated
+        self.assertRaises(DummyError, db._execute, 'execute exception')
+        # Return value should be the cursor
+        c = db._execute('CREATE TABLE jobs (test TEXT)')
+        self.assert_(isinstance(c, DummyCursor))
+
+        # If a 'gone away' error is encountered and reraised, the connection
+        # should have been reestablished
+        oldconn = db.conn
+        self.assertRaises(DummyError, db._execute, 'reconnect fail')
+        self.assertNotEqual(id(db.conn), id(oldconn))
+
+        # A successful reconnect should not raise an exception but should
+        # reeestablish the connection
+        oldconn = db.conn
+        c = db._execute('reconnect succeeds')
+        self.assertNotEqual(id(db.conn), id(oldconn))
+        self.assert_(isinstance(c, DummyCursor))
 
     def test_delete_tables(self):
         """Check Database._delete_tables()"""
