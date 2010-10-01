@@ -468,7 +468,6 @@ class Database(object):
                 c = self.conn.cursor()
                 c.execute(query, args)
             else:
-                print >> sys.stderr, err.args, type(err.args)
                 raise
         return c
 
