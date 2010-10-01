@@ -605,7 +605,7 @@ class WebService(object):
         subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
                   % self.config.service_name
         body = """
-The %s service encounted an unrecoverable error and
+The %s service encountered an unrecoverable error and
 has been shut down.
 
 %s
