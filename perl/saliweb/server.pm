@@ -84,12 +84,13 @@ sub header {
         <h3><img src=\"http://salilab.org/img/logo_small.gif\" height=\"40\" alt=\"\" /> $title</h3>\n    </div>";
     $headertable.="\n    <div id=\"navigation_lab\">\n
             &bull;&nbsp;<a href=\"http://salilab.org\">Sali Lab Home</a>&nbsp;&bull;&nbsp;
-
         <a href=\"http://salilab.org/modweb\"> ModWeb</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/modbase/\">ModBase</a>&nbsp;&bull;&nbsp;
+        <a href=\"http://salilab.org/modeval/\">ModEval</a>&nbsp;&bull;&nbsp;
+        <a href=\"http://salilab.org/pcss/\">PCSS</a>&nbsp;&bull;&nbsp;
+        <a href=\"http://salilab.org/foxs/\">FoXS</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/imp/\">IMP</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/modpipe/\">ModPipe</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/LS-SNP/\">LS-SNP</a>&nbsp;&bull;&nbsp;
     \n</div>\n    $navigation
         <div style=\"clear:both;\"></div><div id=\"bodypart\">";
     $headertable.=" \n<div id=\"left\">
