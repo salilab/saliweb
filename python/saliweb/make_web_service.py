@@ -180,7 +180,9 @@ sub get_submit_page {
 
 sub get_results_page {
     # TODO
-}""" % self.__dict__
+}
+
+1;""" % self.__dict__
 
     def _make_backend(self):
         f = open(os.path.join(self.topdir, 'python', self.short_name,
