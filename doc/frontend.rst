@@ -121,6 +121,11 @@ To submit the job, first call the :meth:`~saliwebfrontend.make_job`
 method. This makes a job directory and returns an
 :class:`IncomingJob` object. Put all necessary input files in that
 directory, then actually run the job by calling :meth:`IncomingJob.submit`.
+(If you must have multiple pages for the job submission process, you can
+call :meth:`~saliwebfrontend.make_job` on the first submission page, and pass
+the job name to subsequent submission pages which in turn call
+:meth:`~saliwebfrontend.resume_job` to continue adding data to the
+job directory.)
 
 .. note:: 'Input files' include PDB files, parameter files, etc. but *not*
           shell scripts, Python scripts, or executables. These should never

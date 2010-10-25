@@ -171,7 +171,6 @@ BEGIN { use_ok('saliweb::frontend'); }
     # Check old-style (give email to constructor)
     my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
     ok(defined $job, 'Test creation of IncomingJob objects');
-    is($job->{given_name}, 'myjob', '   given_name');
     is($job->{email}, 'myemail', '   email');
     like($job->name, qr/^myjob_\d{0,5}0$/, '   name');
     my $jobname = $job->name;
@@ -183,6 +182,34 @@ BEGIN { use_ok('saliweb::frontend'); }
     # Check new-style (no email to constructor)
     $job = new saliweb::frontend::IncomingJob($frontend, "myjob");
     is($job->{email}, undef, '   email');
+}
+
+# Test resume of IncomingJobs
+{
+    my $dir = tempdir( CLEANUP => 1 );
+    mkdir("$dir/myjob");
+    my $dbh = new Dummy::DB;
+    my $config = {};
+    $config->{directories}->{INCOMING} = $dir;
+    my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
+    bless($frontend, 'saliweb::frontend');
+
+    my $job = new saliweb::frontend::IncomingJob($frontend, "myjob");
+    my $jobname = $job->name;
+
+    # Should be able to resume any job with an existing directory
+    my $resjob = resume saliweb::frontend::IncomingJob($frontend, $jobname);
+    is($resjob->name, $jobname);
+
+    $resjob = resume saliweb::frontend::IncomingJob($frontend, "myjob");
+    is($resjob->name, "myjob");
+
+    # Check sanitizing of job names
+    $resjob = resume saliweb::frontend::IncomingJob($frontend, "my/*%job");
+    is($resjob->name, "myjob");
+
+    throws_ok { resume saliweb::frontend::IncomingJob($frontend, "badjob") }
+              'saliweb::frontend::InputValidationError';
 }
 
 # Test submit method

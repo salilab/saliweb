@@ -10,10 +10,25 @@ sub new {
     my $self = {};
     bless($self, $class);
     $self->{frontend} = $frontend;
-    $self->{given_name} = $given_name;
     $self->{email} = $email;
     ($self->{name}, $self->{directory}) = _get_job_name_directory($frontend,
                                                                   $given_name);
+    $self->{frontend}->_add_incoming_job($self);
+    return $self;
+}
+
+sub resume {
+    my ($invocant, $frontend, $name) = @_;
+    my $class = ref($invocant) || $invocant;
+    my $self = {};
+    bless($self, $class);
+    $self->{frontend} = $frontend;
+    $name = _sanitize_jobname($name);
+    my $config = $frontend->{'config'};
+    my $dbh = $frontend->{'dbh'};
+
+    ($self->{name}, $self->{directory}) = _get_resumed_job($name, $dbh,
+                                                           $config);
     $self->{frontend}->_add_incoming_job($self);
     return $self;
 }
@@ -137,9 +152,37 @@ sub generate_random_passwd {
   return $randstr;
 }
 
+sub _get_job_directory {
+  my ($jobname, $config) = @_;
+  return $config->{directories}->{INCOMING} . "/" . $jobname;
+}
+
+sub _get_resumed_job {
+  my ($jobname, $dbh, $config) = @_;
+  my $jobdir = _get_job_directory($jobname, $config);
+
+  # Job directory must already exist and not be in the database
+  if (! -d $jobdir) {
+    throw saliweb::frontend::InputValidationError("Invalid job name provided");
+  }
+
+  my $query = $dbh->prepare('select count(name) from jobs where name=?')
+               or throw saliweb::frontend::DatabaseError(
+                           "Cannot prepare query ". $dbh->errstr);
+  $query->execute($jobname)
+       or throw saliweb::frontend::DatabaseError(
+                               "Cannot execute: " . $dbh->errstr);
+  my @data = $query->fetchrow_array();
+  if ($data[0] == 0) {
+    return ($jobname, $jobdir);
+  } else {
+    throw saliweb::frontend::InputValidationError("Invalid job name provided");
+  }
+}
+
 sub try_job_name {
   my ($jobname, $query, $dbh, $config) = @_;
-  my $jobdir = $config->{directories}->{INCOMING} . "/" . $jobname;
+  my $jobdir = _get_job_directory($jobname, $config);
   if (-d $jobdir) {
     return;
   }
@@ -1073,6 +1116,11 @@ sub help_link {
 sub make_job {
   my ($self, $user_jobname, $email) = @_;
   return new saliweb::frontend::IncomingJob($self, $user_jobname, $email);
+}
+
+sub resume_job {
+  my ($self, $jobname) = @_;
+  return resume saliweb::frontend::IncomingJob($self, $jobname);
 }
 
 sub read_ini_file {

@@ -182,6 +182,18 @@ the web frontend.
       actually submit the job. This is typically used in
       :meth:`~saliwebfrontend.get_submit_page`.
 
+   .. method:: resume_job(jobname)
+
+      This creates and returns a :class:`~saliweb::frontend.IncomingJob`
+      object that represents an incoming job. This job must have been previously
+      created using :meth:`make_job`, and jobname must match the true name
+      of that job (:attr:`saliweb::frontend.IncomingJob.name`) not the
+      original user-provided name. This is used with multiple-page submissions,
+      e.g. if the user must upload several files into the job directory
+      before the job is submitted. Once done,
+      :meth:`~saliweb::frontend.IncomingJob.submit` should be called to
+      actually submit the job.
+
    .. method:: help_link(target)
 
       Given an HTML anchor target, this returns an HTML fragment that creates
