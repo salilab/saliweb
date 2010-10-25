@@ -20,7 +20,7 @@ sub get_submit_page {
     }
 
     # Create job directory, add input files, then submit the job
-    my $job = $self->make_job($job_name, $email);
+    my $job = $self->make_job($job_name);
 
     my $input_pdb = $job->directory . "/input.pdb";
     open(INPDB, "> $input_pdb")
@@ -29,7 +29,7 @@ sub get_submit_page {
     close INPDB
        or throw saliweb::frontend::InternalError("Cannot close $input_pdb: $!");
 
-    $job->submit();
+    $job->submit($email);
 
     # Inform the user of the job name and results URL
     return $q->p("Your job " . $job->name . " has been submitted.") .
