@@ -40,6 +40,15 @@ class _IncomingJobsEvent(object):
         self.webservice._process_incoming_jobs()
 
 
+class _CleanupIncomingJobsEvent(object):
+    """Event that represents cleanup of incoming job directories"""
+    def __init__(self, webservice):
+        self.webservice = webservice
+
+    def process(self):
+        self.webservice._cleanup_incoming_jobs()
+
+
 class _JobThread(threading.Thread):
     """Base for threads that wait for jobs"""
     def __init__(self, webservice):
@@ -85,6 +94,17 @@ class _OldJobs(_JobThread):
         while True:
             time.sleep(oldjob_interval)
             self._webservice._event_queue.put(_OldJobsEvent(self._webservice))
+
+
+class _CleanupIncomingJobs(_JobThread):
+    """Cleanup of abandoned incoming job directories"""
+    def run(self):
+        # Simply periodically emit a CleanupIncomingJobsEvent
+        interval = self._webservice._get_cleanup_incoming_job_times()[0]
+        while True:
+            time.sleep(interval)
+            self._webservice._event_queue.put(
+                              _CleanupIncomingJobsEvent(self._webservice))
 
 
 class _CompletedJobEvent(object):

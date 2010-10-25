@@ -779,6 +779,12 @@ have done this, delete the state file (%s) to reenable runs.
                               self.config.oldjobs['expire']) / 10
         return oldjob_interval.seconds + oldjob_interval.days * 24 * 60 * 60
 
+    def _get_cleanup_incoming_job_times(self):
+        """Get the time in seconds between checks for abandoned
+           incoming jobs, and their maximum age before cleanup occurs."""
+        # Default check interval is one hour and max age is also one hour
+        return (3600., 3600.)
+
     def _do_periodic_actions(self, sock):
         """Do periodic actions necessary to process jobs. Incoming jobs are
            processed whenever the frontend asks us to (or, failing that,
@@ -789,6 +795,7 @@ have done this, delete the state file (%s) to reenable runs.
         self._event_queue = eq
         saliweb.backend.events._IncomingJobs(self, sock).start()
         saliweb.backend.events._OldJobs(self).start()
+        saliweb.backend.events._CleanupIncomingJobs(self).start()
 
         timeout = self.config.backend['check_minutes'] * 60
         while True:
@@ -816,6 +823,40 @@ have done this, delete the state file (%s) to reenable runs.
             numrunning += 1
             if numrunning >= maxrunning:
                 return
+
+    def _cleanup_incoming_jobs(self):
+        """Clean up any incoming job directories that have been abandoned."""
+        incoming_dir = self.config.directories['INCOMING']
+        incoming_dirs = dict.fromkeys(os.listdir(incoming_dir))
+        if len(incoming_dirs) == 0:
+            return
+        # Remove jobs that have been successfully submitted
+        for job in self.db._get_all_jobs_in_state('INCOMING'):
+            try:
+                incoming_dirs.pop(job.name)
+            except KeyError:
+                pass
+        # Remove any directories that haven't been modified
+        max_age = self._get_cleanup_incoming_job_times()[1]
+        for d in incoming_dirs.keys():
+            self._cleanup_dir(os.path.join(incoming_dir, d), max_age)
+
+    def _cleanup_dir(self, dir, age):
+        """Remove directory if it hasn't been accessed in age seconds."""
+        try:
+            s = os.stat(dir)
+        except OSError:
+            return
+        newest = s.st_mtime
+        for f in os.listdir(dir):
+            try:
+                s = os.stat(os.path.join(dir, f))
+            except OSError:
+                continue
+            newest = max(newest, s.st_mtime)
+        dir_age = time.time() - newest
+        if dir_age > age:
+            shutil.rmtree(dir, ignore_errors=True)
 
     def _process_completed_jobs(self):
         """Check for any jobs that have just completed, and process them."""

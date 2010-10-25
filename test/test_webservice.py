@@ -3,6 +3,7 @@ import os
 import re
 import datetime
 import tempfile
+import time
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
@@ -259,6 +260,59 @@ class WebServiceTest(unittest.TestCase):
                   'http://testurl'))
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
+
+    def test_cleanup_incoming_jobs(self):
+        """Test WebSerivce._cleanup_incoming_jobs() method"""
+        cleaned_dirs = []
+        def _cleanup_dir(dir, age):
+            cleaned_dirs.append((dir, age))
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        # Make directory with no corresponding job database row
+        os.mkdir('incoming/badjob')
+        # Make job with non-existing directory
+        c = db.conn.cursor()
+        utcnow = datetime.datetime.utcnow()
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+                  ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
+                  utcnow + datetime.timedelta(days=1), '/not/exist',
+                  'http://testurl'))
+        db.conn.commit()
+        web._cleanup_dir = _cleanup_dir
+        web._cleanup_incoming_jobs()
+        self.assertEqual(len(cleaned_dirs), 1)
+        self.assert_(cleaned_dirs[0][0].endswith('/incoming/badjob'))
+        self.assertEqual(cleaned_dirs[0][1], 3600.)
+        # Cleanup of zero directories should also work
+        web._cleanup_incoming_jobs()
+
+    def test_cleanup_dir(self):
+        """Test WebSerivce._cleanup_dir() method"""
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        os.mkdir('dir1')
+        os.mkdir('dir2')
+        time.sleep(0.02)
+        os.mkdir('dir2/subdir')
+        time.sleep(0.02)
+        os.mkdir('dir3')
+        time.sleep(0.02)
+        # Only dir1 should be cleaned, since dir3 is too recent, and
+        # dir2 has a recently-added child
+        web._cleanup_dir("dir1", 0.05)
+        web._cleanup_dir("dir2", 0.05)
+        web._cleanup_dir("dir3", 0.05)
+        self.assert_(not os.path.exists("dir1"))
+        self.assert_(os.path.exists("dir2"))
+        self.assert_(os.path.exists("dir3"))
+
+        # Cleanup of non-existent directory should be OK
+        web._cleanup_dir("baddir", 0.05)
 
 if __name__ == '__main__':
     unittest.main()

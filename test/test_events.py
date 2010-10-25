@@ -26,6 +26,15 @@ class EventsTest(unittest.TestCase):
         e.process()
         self.assertEqual(d.processed, True)
 
+    def test_cleanup_incoming_jobs_event(self):
+        """Check the _CleanupIncomingJobsEvent class"""
+        class dummy:
+            def _cleanup_incoming_jobs(self): self.processed = True
+        d = dummy()
+        e = saliweb.backend.events._CleanupIncomingJobsEvent(d)
+        e.process()
+        self.assertEqual(d.processed, True)
+
     def test_old_jobs_event(self):
         """Check the _OldJobsEvent class"""
         class dummy:
@@ -77,6 +86,23 @@ class EventsTest(unittest.TestCase):
         for i in range(2):
             x = q.get(timeout=0.)
             self.assert_(isinstance(x, saliweb.backend.events._OldJobsEvent))
+        self.assertEqual(q.get(timeout=0.), None)
+
+    def test_cleanup_incoming_jobs(self):
+        """Check the _CleanupIncomingJobs class"""
+        class dummy:
+            def _get_cleanup_incoming_job_times(self): return (0.02, 0.02)
+        q = saliweb.backend.events._EventQueue()
+        ws = dummy()
+        ws._event_queue = q
+        t = saliweb.backend.events._CleanupIncomingJobs(ws)
+        t.start()
+        time.sleep(0.05)
+        # Should have added 2 events
+        for i in range(2):
+            x = q.get(timeout=0.)
+            self.assert_(isinstance(x,
+                         saliweb.backend.events._CleanupIncomingJobsEvent))
         self.assertEqual(q.get(timeout=0.), None)
 
     def test_incoming_jobs(self):
