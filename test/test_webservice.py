@@ -4,6 +4,7 @@ import re
 import datetime
 import tempfile
 import time
+import sys
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
@@ -290,7 +291,11 @@ class WebServiceTest(unittest.TestCase):
         web._cleanup_incoming_jobs()
 
     def test_cleanup_dir(self):
-        """Test WebSerivce._cleanup_dir() method"""
+        """Test WebService._cleanup_dir() method"""
+        if isinstance(os.stat("/tmp").st_mtime, int):
+            sys.stderr.write("test skipped: stat does not have "
+                             "subsecond granularity: ")
+            return
         t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
