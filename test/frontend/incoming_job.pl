@@ -167,6 +167,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     $config->{directories}->{INCOMING} = $dir;
     my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
     bless($frontend, 'saliweb::frontend');
+
+    # Check old-style (give email to constructor)
     my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
     ok(defined $job, 'Test creation of IncomingJob objects');
     is($job->{given_name}, 'myjob', '   given_name');
@@ -174,9 +176,13 @@ BEGIN { use_ok('saliweb::frontend'); }
     like($job->name, qr/^myjob_\d{0,5}0$/, '   name');
     my $jobname = $job->name;
     is($job->directory, "$dir/$jobname", '   directory');
-    like($job->results_url,
-         qr/^mycgiroot\/results\.cgi\/$jobname\?passwd=.{10}$/,
-         '   results_url');
+    throws_ok { $job->results_url }
+              'saliweb::frontend::InternalError',
+              '   cannot get results URL before submit';
+
+    # Check new-style (no email to constructor)
+    $job = new saliweb::frontend::IncomingJob($frontend, "myjob");
+    is($job->{email}, undef, '   email');
 }
 
 # Test submit method
@@ -200,6 +206,9 @@ BEGIN { use_ok('saliweb::frontend'); }
               "submitted_jobs array now contains job");
     is($dbh->{query}->{execute_calls}, 1,
        "IncomingJob::submit (execute calls)");
+    like($job->results_url,
+         qr/^mycgiroot\/results\.cgi\/myjob\?passwd=.{10}$/,
+         '   results_url');
 
     $job->{name} = 'fail-job';
     throws_ok { $job->submit() }

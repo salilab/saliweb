@@ -14,8 +14,6 @@ sub new {
     $self->{email} = $email;
     ($self->{name}, $self->{directory}) = _get_job_name_directory($frontend,
                                                                   $given_name);
-    ($self->{url}, $self->{passwd}) = _generate_results_url($frontend,
-                                                            $self->{name});
     $self->{frontend}->_add_incoming_job($self);
     return $self;
 }
@@ -32,7 +30,13 @@ sub directory {
 
 sub results_url {
     my $self = shift;
-    return $self->{url};
+    my $url = $self->{url};
+    if (!defined($url)) {
+      throw saliweb::frontend::InternalError(
+                     "Cannot get results URL before job is submitted");
+    } else {
+      return $url;
+    }
 }
 
 sub _cancel {
@@ -45,8 +49,16 @@ sub _cancel {
 
 sub submit {
   my $self = shift;
+  my $email = shift;
   my $config = $self->{frontend}->{'config'};
   my $dbh = $self->{frontend}->{'dbh'};
+
+  if (defined($email)) {
+    $self->{email} = $email;
+  }
+
+  ($self->{url}, $self->{passwd}) = _generate_results_url($self->{frontend},
+                                                          $self->{name});
 
   # Insert row into database table
   my $query = "insert into jobs (name,passwd,user,contact_email,directory," .

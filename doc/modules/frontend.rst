@@ -172,12 +172,11 @@ the web frontend.
       method is called to get the correct MIME type for the file. By default,
       it always returns 'text/plain'.
 
-   .. method:: make_job(jobname, email)
+   .. method:: make_job(jobname)
 
       This creates and returns a new :class:`~saliweb::frontend.IncomingJob`
-      object that
-      represents a new job, using a user-provided job name and email address
-      (the latter may be undef). The new job has its own directory into which
+      object that represents a new job, using a user-provided job name.
+      The new job has its own directory into which
       input files can be placed, and once this is finished,
       :meth:`~saliweb::frontend.IncomingJob.submit` should be called to
       actually submit the job. This is typically used in
@@ -237,10 +236,13 @@ the web frontend.
    .. attribute:: results_url
 
       The URL where this job's results will be found when it is complete.
+      This is only filled in when :meth:`submit` is called. Attempting to
+      query this attribute before then will result in an :exc:`InternalError`.
 
-   .. method:: submit()
+   .. method:: submit(email)
 
-      Submits the job to the backend to run on the cluster.
+      Submits the job to the backend to run on the cluster. If an email
+      address is provided, it is notified when the job completes.
 
 
 .. class:: CompletedJob
