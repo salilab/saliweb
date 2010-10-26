@@ -90,6 +90,13 @@ def builder_perl_tests(target, source, env):
         fout.write(line.replace('@CONFIG@', ''))
     fin.close()
     fout.close()
+
+    # Make symlinks for everything else, so (e.g.) module imports work
+    abslib = os.path.abspath('lib')
+    for f in os.listdir('lib'):
+        if f != module:
+            os.symlink(os.path.join(abslib, f), os.path.join(tmpdir, f))
+
     e = env.Clone()
     e['ENV']['PERL5LIB'] = tmpdir
     ret = e.Execute(app)
