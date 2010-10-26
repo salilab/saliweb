@@ -83,8 +83,9 @@ def builder_perl_tests(target, source, env):
     app = "prove " + " ".join(str(s) for s in source)
     # Make a temporary copy of the Perl module, so that it works
     tmpdir = tempfile.mkdtemp()
-    fin = open(os.path.join('lib', '%s.pm' % env['service_module']))
-    fout = open(os.path.join(tmpdir, '%s.pm' % env['service_module']), 'w')
+    module = '%s.pm' % env['service_module']
+    fin = open(os.path.join('lib', module))
+    fout = open(os.path.join(tmpdir, module), 'w')
     for line in fin:
         fout.write(line.replace('@CONFIG@', ''))
     fin.close()
