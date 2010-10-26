@@ -86,7 +86,7 @@ def builder_perl_tests(target, source, env):
     fin = open(os.path.join('lib', '%s.pm' % env['service_module']))
     fout = open(os.path.join(tmpdir, '%s.pm' % env['service_module']), 'w')
     for line in fin:
-        print >> fout, line.replace('@CONFIG@', '')
+        fout.write(line.replace('@CONFIG@', ''))
     fin.close()
     fout.close()
     e = env.Clone()
