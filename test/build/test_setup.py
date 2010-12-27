@@ -6,7 +6,19 @@ import tempfile
 import shutil
 import os
 import re
+import StringIO
 from testutil import run_catch_warnings, RunInTempDir
+
+def run_catch_stderr(method, *args, **keys):
+    """Run a method and return both its own return value and stderr."""
+    sio = StringIO.StringIO()
+    oldstderr = sys.stderr
+    try:
+        sys.stderr = sio
+        ret = method(*args, **keys)
+        return ret, sio.getvalue()
+    finally:
+        sys.stderr = oldstderr
 
 class DummyConfig: pass
 
@@ -114,8 +126,11 @@ sys.exit(1)""")
 
     def test_setup_sconsign(self):
         """Test _setup_sconsign function"""
-        class DummyEnv:
+        class DummyEnv(dict):
+            def Exit(self, val): self.exitval = val
             def SConsignFile(self, file): self.file = file
+        class DummyConfig:
+            backend = {'user': 'testuser'}
         # Try with existing .scons directory
         env = DummyEnv()
         if not os.path.exists('.scons'):
@@ -128,6 +143,19 @@ sys.exit(1)""")
         saliweb.build._setup_sconsign(env)
         self.assertEqual(env.file, '.scons/sconsign.dblite')
         os.rmdir('.scons')
+        # Try with unwritable top-level directory
+        env = DummyEnv()
+        env['config'] = DummyConfig()
+        tmpdir = RunInTempDir()
+        os.chmod('.', 0555)
+        ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.search('Cannot make \.scons directory:.*'
+                               'Permission denied.*Please first make it '
+                               'manually, with a command like.*'
+                               'mkdir \.scons', stderr,
+                               re.DOTALL), 'regex match failed on ' + stderr)
 
     def test_found_binary_in_crontab(self):
         """Test _found_binary_in_crontab function"""

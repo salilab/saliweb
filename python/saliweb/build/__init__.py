@@ -52,9 +52,6 @@ def Environment(variables, configfiles, version=None, service_module=None):
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
     env['config'] = config = saliweb.backend.Config(configfile)
-    # Must check for permissions on .scons before accessing it
-    if not env.GetOption('clean') and not env.GetOption('help'):
-        _check_sconsign(env)
     _setup_sconsign(env)
     _setup_version(env, version)
     _setup_service_name(env, config, service_module)
@@ -166,7 +163,15 @@ def _check_filesystem_sanity(env):
 
 def _setup_sconsign(env):
     if not os.path.exists('.scons'):
-        os.mkdir('.scons')
+        try:
+            os.mkdir('.scons')
+        except OSError, detail:
+            print >> sys.stderr, """
+** Cannot make .scons directory: %s
+** Please first make it manually, with a command like
+   mkdir .scons
+""" % str(detail)
+            env.Exit(1)
     env.SConsignFile('.scons/sconsign.dblite')
 
 
@@ -214,26 +219,6 @@ def _setup_install_directories(env):
     env['txtdir'] = os.path.join(env['instdir'], 'txt')
     env['cgidir'] = os.path.join(env['instdir'], 'cgi')
     env['perldir'] = os.path.join(env['instdir'], 'lib')
-
-
-def _check_sconsign(env):
-    """Make sure we can write to the .scons directory"""
-    # tests run locally, so don't need the installation to work properly
-    cmdtgt = SCons.Script.COMMAND_LINE_TARGETS
-    if len(cmdtgt) == 1 and cmdtgt[0].startswith('test'):
-        return
-    try:
-        open('.scons/.test', 'w')
-        os.unlink('.scons/.test')
-    except IOError, detail:
-        print >> sys.stderr, """
-** Cannot write to .scons directory: %s
-** The backend user needs to be able to write to this directory.
-** To fix this problem, make sure that your checkout is on a local disk
-** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
-   setfacl -m u:%s:rwx .scons
-""" % (str(detail), env['config'].backend['user'])
-        env.Exit(1)
 
 
 def _check(env):
@@ -388,7 +373,20 @@ between %d and %d. Please ask a sysadmin to help you fix this problem.
 
 
 def _check_permissions(env):
-    """Make sure we can read the database configuration files"""
+    """Make sure we can write to the .scons directory, and read the
+       database configuration files"""
+    try:
+        open('.scons/.test', 'w')
+        os.unlink('.scons/.test')
+    except IOError, detail:
+        print >> sys.stderr, """
+** Cannot write to .scons directory: %s
+** The backend user needs to be able to write to this directory.
+** To fix this problem, make sure that your checkout is on a local disk
+** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
+   setfacl -m u:%s:rwx .scons
+""" % (str(detail), env['config'].backend['user'])
+        env.Exit(1)
     for end in ('back', 'front'):
         conf = env['config'].database['%send_config' % end]
         if not os.path.exists(conf):
