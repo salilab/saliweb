@@ -16,7 +16,7 @@ SVNDIR=file:///cowbell1/svn/saliweb/trunk/
 
 TMPDIR=/var/tmp/modeller-build-$$
 MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
-SWSRCTGZ=${MODINSTALL}/build/sources/saliweb.tar.gz
+SWSRCTGZ=${MODINSTALL}/build/sources/private/saliweb.tar.gz
 
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
