@@ -6,12 +6,16 @@ Frontend:
   - If number of incoming jobs exceeds some limit, throw a SystemBusyError.
   - Queue page should highlight authenticated user's own jobs, and have a JS
     button to toggle showing all jobs or just their own.
+  - Simplify addition of extra help-like pages (e.g. FAQ).
+  - Make links shorter and technology-independent (e.g. service/results/
+    rather than service/results.cgi).
 
 Backend:
   - Configure DRMAA so that we can submit to both Sali and QB3 clusters from
     the same script.
   - Make sure that DRMAA on the QB3 cluster works with users that have
     different usernames on modbase/chef (e.g. Hao, SJ, Ursula).
+  - Add method to get URL of an individual results file.
 
 Build:
   - Check to make sure MySQL indexes match those set up by the backend.
