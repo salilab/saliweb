@@ -19,8 +19,10 @@ open('%s', 'w').write(sys.stdin.read())
         os.chmod(self._mailer, 0755)
 
     def __del__(self):
-        if hasattr(self, '__tmpdir'):
+        try:
             shutil.rmtree(self.__tmpdir)
+        except AttributeError:
+            pass
 
     def get_mail_output(self):
         try:
