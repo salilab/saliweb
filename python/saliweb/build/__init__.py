@@ -462,7 +462,8 @@ def _check_service(env):
     except saliweb.backend.StateFileError, detail:
         print "** Backend daemon will not start due to a previous failure. "
         print "** You will need to fix this manually before it will run again."
-        print "** Refer to %s for more information" % config.state_file
+        print "** Refer to %s for more information" \
+              % config.backend['state_file']
 
 
 def _found_binary_in_crontab(binary, crontab='/usr/bin/crontab'):
