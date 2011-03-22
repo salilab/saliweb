@@ -17,9 +17,28 @@ class MakeWebService(object):
         self.topdir = self.short_name
         self.user = self.short_name
         self.db = self.short_name
-        self.db_frontend_user = self.short_name + '_frontend'
-        self.db_backend_user = self.short_name + '_backend'
+        self.db_frontend_user = self._make_database_name("front")
+        self.db_backend_user = self._make_database_name("back")
         self.install = self._get_install_dir()
+
+    def _make_database_name(self, typ):
+        """Generate a MySQL database username"""
+        suffix = "_" + typ + "end"
+        prefix = self.short_name
+        max_length = 16 # MySQL max username length
+        while True:
+            name = prefix + suffix
+            if len(name) <= max_length:
+                return name
+            # Trim suffix if necessary first, down to the minimum necessary
+            # to be unique ("_f" or "_b").
+            elif len(suffix) > 2:
+                suffix = suffix[:-1]
+            # Then trim too-long short_names
+            elif len(prefix) > 1:
+                prefix = prefix[:-1]
+            else:
+                raise ValueError("Cannot make database name")
 
     def make(self):
         self._make_directories()

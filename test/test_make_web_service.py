@@ -42,6 +42,15 @@ class MakeWebServiceTests(unittest.TestCase):
             pwd = m._make_password(pwlen)
             self.assertEqual(len(pwd), pwlen)
 
+    def test_sql_username(self):
+        """Check MakeWebService._make_database_name method"""
+        for (short_name, typ, expected) in (
+              ["short", "veryverylongtype", "short_veryverylo"],
+              ["veryverylongname", "back", "veryverylongna_b"] ):
+            m = MakeWebService(short_name)
+            name = m._make_database_name(typ)
+            self.assertEqual(name, expected)
+
     def test_make(self):
         """Check MakeWebService.make method"""
         d = RunInTempDir()
