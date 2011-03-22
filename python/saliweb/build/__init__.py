@@ -512,6 +512,10 @@ def _check_mysql(env):
                             'SELECT, INSERT (submit_time, contact_email, url, '
                             'passwd, user, directory, name)', table='jobs')
     except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
+        # Only complain about possible too-long DB usernames if MySQL
+        # itself first complained
+        _check_sql_username_length(env, frontend, 'front')
+        _check_sql_username_length(env, backend, 'back')
         outfile = _generate_admin_mysql_script(c.database['db'], backend,
                                                frontend)
         print >> sys.stderr, """
@@ -526,6 +530,16 @@ def _check_mysql(env):
 """ % (c.database['db'], str(detail), outfile)
         env.Exit(1)
 
+def _check_sql_username_length(env, auth, typ):
+    max_length = 16 # MySQL username length limit
+    username = auth['user']
+    if len(username) > max_length:
+        print >> sys.stderr, """
+** The database username for the %send user is too long;
+** MySQL usernames can be at most 16 characters long.
+** Please shorten the username in the configuration file.
+""" % typ
+        env.Exit(1)
 
 def _get_sorted_grant(grant):
     """Sort grant column rights alphabetically, so that we can match them

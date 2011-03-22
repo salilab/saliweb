@@ -78,6 +78,26 @@ class CheckTest(unittest.TestCase):
                               stderr, re.DOTALL),
                      'regex match failed on ' + stderr)
 
+    def test_check_sql_username_length(self):
+        """Check _check_sql_username_length function"""
+        # Names up to 16 characters are OK"
+        for name in ('short', 'ok', "1234567890123456"):
+            auth = {'user':name}
+            env = DummyEnv('foo')
+            saliweb.build._check_sql_username_length(env, auth, "back")
+            self.assertEqual(env.exitval, None)
+        # Longer names are not
+        auth = {'user':'12345678901234567'}
+        env = DummyEnv('foo')
+        ret, stderr = run_catch_stderr(saliweb.build._check_sql_username_length,
+                                       env, auth, 'mytest')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+        self.assert_(re.match('\n\*\* The database username for the '
+                              'mytestend user is too long',
+                              stderr, re.DOTALL),
+                     'regex match failed on ' + stderr)
+
     def test_check_ownership(self):
         """Check _check_ownership function"""
         dir_owner = pwd.getpwuid(os.stat('.').st_uid).pw_name
