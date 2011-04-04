@@ -454,8 +454,12 @@ def _check_service(env):
     ws = saliweb.backend.WebService(config, db)
     try:
         pid = ws.get_running_pid()
-        if pid is not None:
-            binary = os.path.join(env['bindir'], 'service.py')
+        binary = os.path.join(env['bindir'], 'service.py')
+        if pid is None:
+            print "** Backend daemon is not currently running. Run"
+            print "   " + _format_shell_command(env, "%s start" % binary)
+            print "** to have it start processing jobs."
+        else:
             print "** Backend daemon is currently running. Run"
             print "   " + _format_shell_command(env, "%s restart" % binary)
             print "** to restart it to pick up any changes."
