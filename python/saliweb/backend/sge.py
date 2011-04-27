@@ -12,15 +12,25 @@ class _DRMAAJobWaiter(_JobThread):
         self._runid = runid
 
     def run(self):
+        from saliweb.backend import RunnerError
         self._runner._waited_jobs.add(self._runid)
         try:
             drmaa, s = self._runner._get_drmaa()
+            failed_jobids = []
             s.synchronize(self._jobids, drmaa.Session.TIMEOUT_WAIT_FOREVER,
-                          True)
-            # Note that we currently don't check the return value of the job(s)
+                          False)
+            for j in self._jobids:
+                if not s.wait(j, drmaa.Session.TIMEOUT_WAIT_FOREVER):
+                    failed_jobids.append(j)
+            if len(failed_jobids) > 0:
+                failure = RunnerError("SGE jobs failed: %s. Please contact "
+                                      "the cluster sysadmin." \
+                                      % ', '.join(failed_jobids))
+            else:
+                failure = None
             e = saliweb.backend.events._CompletedJobEvent(self._webservice,
                                                           self._runner,
-                                                          self._runid, None)
+                                                          self._runid, failure)
             self._webservice._event_queue.put(e)
         finally:
             self._runner._waited_jobs.remove(self._runid)

@@ -39,6 +39,8 @@ class DummyDRMAASession(object):
         return 'dummyJob'
     def synchronize(self, jobids, timeout, cleanup):
         pass
+    def wait(self, jobids, timeout):
+        return True
 
 class TestRunner(SGERunner):
     @classmethod

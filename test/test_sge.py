@@ -61,6 +61,10 @@ class SGETest(unittest.TestCase):
             def synchronize(self, jobids, timeout, cleanup):
                 events.append('sync %s timeout %s cleanup %s' \
                               % (str(jobids), timeout, str(cleanup)))
+            def wait(self, jobid, timeout):
+                events.append('wait %s timeout %s' \
+                              % (str(jobid), timeout))
+                return jobid != 'jobN.fail'
         class DummyRunner(object):
             _waited_jobs = DummyJobList()
             @classmethod
@@ -79,7 +83,24 @@ class SGETest(unittest.TestCase):
         self.assertEqual(e.run_exception, None)
         self.assertEqual(events,
                 ['add job dict jobN.1-2:1', 'get drmaa',
-                 "sync ['jobN.1', 'jobN.2'] timeout forever cleanup True",
+                 "sync ['jobN.1', 'jobN.2'] timeout forever cleanup False",
+                 "wait jobN.1 timeout forever",
+                 "wait jobN.2 timeout forever",
+                 'remove job dict jobN.1-2:1'])
+        events[:] = []
+
+        w = _DRMAAJobWaiter(ws, ['jobN.1', 'jobN.fail'], runner, 'jobN.1-2:1')
+        w.start()
+        # Give thread time to run (should finish more or less instantly)
+        time.sleep(0.1)
+        e = ws._event_queue.get(timeout=0.)
+        self.assertEqual(e.runid, 'jobN.1-2:1')
+        self.assert_(isinstance(e.run_exception, saliweb.backend.RunnerError))
+        self.assertEqual(events,
+                ['add job dict jobN.1-2:1', 'get drmaa',
+                 "sync ['jobN.1', 'jobN.fail'] timeout forever cleanup False",
+                 "wait jobN.1 timeout forever",
+                 "wait jobN.fail timeout forever",
                  'remove job dict jobN.1-2:1'])
 
     def test_drmaa_wrapper(self):
