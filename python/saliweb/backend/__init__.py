@@ -478,7 +478,7 @@ class Database(object):
         return c.fetchone()[0]
 
     def _get_all_jobs_in_state(self, state, name=None, after_time=None,
-                               runner_id=None):
+                               runner_id=None, order_by=None):
         """Get all the jobs in the given job state, as a generator of
            :class:`Job` objects (or a subclass, as given by the `jobcls`
            argument to the :class:`Database` constructor).
@@ -489,6 +489,8 @@ class Database(object):
            system time are returned.
            If `runner_id` is specified, only jobs which match the given
            runner ID are returned.
+           If `order_by` is specified, the jobs are returned sorted by the
+           given column.
         """
         fields = [x.name for x in self._fields]
         query = 'SELECT ' + ', '.join(fields) + ' FROM ' + self._jobtable
@@ -505,6 +507,8 @@ class Database(object):
             wheres.append(after_time + ' < UTC_TIMESTAMP()')
         if wheres:
             query += ' WHERE ' + ' AND '.join(wheres)
+        if order_by:
+            query += ' ORDER BY ' + order_by
 
         # Use regular cursor rather than MySQLdb.cursors.DictCursor, so we stay
         # reasonably database-independent
@@ -818,7 +822,8 @@ have done this, delete the state file (%s) to reenable runs.
         # Save doing an extra SQL SELECT if we're already at the maximum
         if numrunning >= maxrunning:
             return
-        for job in self.db._get_all_jobs_in_state('INCOMING'):
+        for job in self.db._get_all_jobs_in_state('INCOMING',
+                                                  order_by='submit_time'):
             job._try_run(self)
             numrunning += 1
             if numrunning >= maxrunning:

@@ -17,7 +17,8 @@ def make_test_jobs(sql):
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
-              ('job2', 'RUNNING', 'salisge:job-2', utcnow,
+              ('job2', 'RUNNING', 'salisge:job-2',
+               utcnow + datetime.timedelta(hours=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
@@ -162,6 +163,21 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(db._count_all_jobs_in_state('INCOMING'), 1)
         self.assertEqual(db._count_all_jobs_in_state('RUNNING'), 2)
         self.assertEqual(db._count_all_jobs_in_state('EXPIRED'), 0)
+
+    def test_order_by(self):
+        """Test Database._get_all_jobs_in_state() order_by parameter"""
+        db = MemoryDatabase(Job)
+        db._connect(None)
+        db._create_tables()
+        make_test_jobs(db.conn)
+        jobs = list(db._get_all_jobs_in_state('RUNNING'))
+        # Jobs should come out in the same order they were inserted
+        self.assertEqual([x._metadata['name'] for x in jobs], ['job2', 'job3'])
+
+        jobs = list(db._get_all_jobs_in_state('RUNNING',
+                                              order_by='submit_time'))
+        # Jobs should be sorted by submit time
+        self.assertEqual([x._metadata['name'] for x in jobs], ['job3', 'job2'])
 
     def test_get_jobs(self):
         """Check Database._get_all_jobs_in_state()"""
