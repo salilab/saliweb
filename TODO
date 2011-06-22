@@ -16,6 +16,7 @@ Backend:
   - Make sure that DRMAA on the QB3 cluster works with users that have
     different usernames on modbase/chef (e.g. Hao, SJ, Ursula).
   - Add method to get URL of an individual results file.
+  - When moving off NetApp, force-close any open files (.nfs*)
 
 Build:
   - Check to make sure MySQL indexes match those set up by the backend.
