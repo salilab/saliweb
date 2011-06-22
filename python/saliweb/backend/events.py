@@ -31,6 +31,16 @@ class _EventQueue(object):
         return item
 
 
+class _PeriodicCheckEvent(object):
+    """Event that represents a periodic check for incoming or completed jobs"""
+    def __init__(self, webservice):
+        self.webservice = webservice
+
+    def process(self):
+        self.webservice._process_completed_jobs()
+        self.webservice._process_incoming_jobs()
+
+
 class _IncomingJobsEvent(object):
     """Event that represents new incoming job(s)"""
     def __init__(self, webservice):
@@ -57,6 +67,16 @@ class _JobThread(threading.Thread):
         self._webservice = webservice
 
 
+class _PeriodicCheck(_JobThread):
+    def run(self):
+        # Simply emit a _PeriodicCheckEvent every check_minutes
+        timeout = self._webservice.config.backend['check_minutes'] * 60
+        while True:
+            time.sleep(timeout)
+            self._webservice._event_queue.put(_PeriodicCheckEvent(
+                                                     self._webservice))
+
+
 class _IncomingJobs(_JobThread):
     """Wait for new incoming jobs"""
     def __init__(self, webservice, sock):
@@ -65,10 +85,9 @@ class _IncomingJobs(_JobThread):
 
     def run(self):
         # Simply emit an IncomingJobsEvent whenever the listening socket is
-        # connected to, or every check_minutes regardless
-        timeout = self._webservice.config.backend['check_minutes'] * 60
+        # connected to
         while True:
-            rlist, wlist, xlist = select.select([self._sock], [], [], timeout)
+            rlist, wlist, xlist = select.select([self._sock], [], [])
             # Note that currently we don't do anything with the
             # message itself coming in on the socket
             if len(rlist) == 1:

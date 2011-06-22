@@ -797,11 +797,11 @@ have done this, delete the state file (%s) to reenable runs.
            checked periodically."""
         eq = saliweb.backend.events._EventQueue()
         self._event_queue = eq
+        saliweb.backend.events._PeriodicCheck(self).start()
         saliweb.backend.events._IncomingJobs(self, sock).start()
         saliweb.backend.events._OldJobs(self).start()
         saliweb.backend.events._CleanupIncomingJobs(self).start()
 
-        timeout = self.config.backend['check_minutes'] * 60
         while True:
             # During the get, SIGTERM should cleanly terminate the daemon
             # (clean up state file and socket); at other times, ignore the
@@ -809,10 +809,7 @@ have done this, delete the state file (%s) to reenable runs.
             signal.signal(signal.SIGTERM, _sigterm_handler)
             event = eq.get(timeout)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
-            if event is None:
-                self._process_completed_jobs()
-                self._process_incoming_jobs()
-            else:
+            if event is not None:
                 event.process()
 
     def _process_incoming_jobs(self):

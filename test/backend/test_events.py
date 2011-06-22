@@ -88,6 +88,36 @@ class EventsTest(unittest.TestCase):
             self.assert_(isinstance(x, saliweb.backend.events._OldJobsEvent))
         self.assertEqual(q.get(timeout=0.), None)
 
+    def test_periodic_check(self):
+        """Check the _PeriodicCheck class"""
+        class dummy: pass
+        ws = dummy()
+        ws.config = dummy()
+        ws.config.backend = {'check_minutes':0.02/60.}
+
+        q = saliweb.backend.events._EventQueue()
+        ws._event_queue = q
+        t = saliweb.backend.events._PeriodicCheck(ws)
+        t.start()
+        time.sleep(0.05)
+        # Should have added 2 events
+        for i in range(2):
+            x = q.get(timeout=0.)
+            self.assert_(isinstance(x,
+                                 saliweb.backend.events._PeriodicCheckEvent))
+        self.assertEqual(q.get(timeout=0.), None)
+
+    def test_periodic_check_event(self):
+        """Check the _PeriodicCheckEvent class"""
+        class dummy:
+            def _process_completed_jobs(self): self.completed = True
+            def _process_incoming_jobs(self): self.incoming = True
+        d = dummy()
+        e = saliweb.backend.events._PeriodicCheckEvent(d)
+        e.process()
+        self.assertEqual(d.completed, True)
+        self.assertEqual(d.incoming, True)
+
     def test_cleanup_incoming_jobs(self):
         """Check the _CleanupIncomingJobs class"""
         class dummy:
@@ -129,19 +159,6 @@ class EventsTest(unittest.TestCase):
         # Should have added 1 event
         x = q.get(timeout=0.)
         self.assert_(isinstance(x, saliweb.backend.events._IncomingJobsEvent))
-        self.assertEqual(q.get(timeout=0.), None)
-
-        ws.config.backend = {'check_minutes':0.02/60.0}
-        q = saliweb.backend.events._EventQueue()
-        ws._event_queue = q
-        t = saliweb.backend.events._IncomingJobs(ws, sock)
-        t.start()
-        time.sleep(0.05)
-        # Should have added 2 events
-        for i in range(2):
-            x = q.get(timeout=0.)
-            self.assert_(isinstance(x,
-                                    saliweb.backend.events._IncomingJobsEvent))
         self.assertEqual(q.get(timeout=0.), None)
         os.unlink('test.sock')
 
