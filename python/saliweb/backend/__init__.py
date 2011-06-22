@@ -807,7 +807,8 @@ have done this, delete the state file (%s) to reenable runs.
             # (clean up state file and socket); at other times, ignore the
             # signal, hopefully so the system stays in a consistent state
             signal.signal(signal.SIGTERM, _sigterm_handler)
-            event = eq.get()
+            # Need to set a timeout so that SIGTERM can interrupt us here
+            event = eq.get(timeout=3600)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if event is not None:
                 event.process()
