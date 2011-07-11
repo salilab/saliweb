@@ -319,5 +319,46 @@ class WebServiceTest(unittest.TestCase):
         # Cleanup of non-existent directory should be OK
         web._cleanup_dir("baddir", 0.05)
 
+    def test_periodic_actions(self):
+        """Test WebService._do_periodic_actions() method"""
+        threads = []
+        events = []
+        class DummyEvent(object):
+            def __init__(self, name):
+                self.name = name
+            def process(self):
+                events.append(self.name)
+        queue = [None, DummyEvent('foo'), DummyEvent('bar'), None]
+        class DummyWebService(WebService):
+            def __init__(self):
+                pass
+        def make_thread(name):
+            class DummyThread(object):
+                def __init__(self, *args):
+                    pass
+                def start(self):
+                    threads.append(name)
+            return DummyThread
+        class DummyEvents(object):
+            class _EventQueue(object):
+                def get(self, timeout):
+                    return queue.pop()
+        e = DummyEvents()
+        for t in ['_PeriodicCheck', '_IncomingJobs', '_OldJobs',
+                  '_CleanupIncomingJobs']:
+            setattr(e, t, make_thread(t))
+        oldev = saliweb.backend.events
+        w = DummyWebService()
+        try:
+            saliweb.backend.events = e
+            # queue is finite, so will hit the end eventually (IndexError)
+            self.assertRaises(IndexError, w._do_periodic_actions, None)
+            self.assertEqual(threads, ['_PeriodicCheck', '_IncomingJobs',
+                                       '_OldJobs', '_CleanupIncomingJobs'])
+            self.assertEqual(events, ['bar', 'foo'])
+        finally:
+            saliweb.backend.events = oldev
+
+
 if __name__ == '__main__':
     unittest.main()
