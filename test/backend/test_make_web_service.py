@@ -3,7 +3,8 @@ import sys
 import os
 import tempfile
 import shutil
-from saliweb.make_web_service import MakeWebService
+import saliweb.make_web_service
+from saliweb.make_web_service import MakeWebService, get_options
 import saliweb.backend
 import StringIO
 
@@ -74,6 +75,49 @@ class MakeWebServiceTests(unittest.TestCase):
                   'test/SConscript', 'test/frontend/SConscript',
                   'test/backend/SConscript'):
             os.unlink('modfoo/' + f)
+
+    def test_get_options(self):
+        """Check make_web_service get_options()"""
+        def run_get_options(args):
+            old = sys.argv
+            oldstderr = sys.stderr
+            try:
+                sys.stderr = StringIO.StringIO()
+                sys.argv = ['testprogram'] + args
+                return get_options()
+            finally:
+                sys.stderr = oldstderr
+                sys.argv = old
+        for bad in [[], ['long', 'short', 'extra'],
+                    ['long', 'UPPERCASESHORT'], ['long', 'short with spaces']]:
+            self.assertRaises(SystemExit, run_get_options, bad)
+        self.assertEqual(run_get_options(['long', 'short']), ['long', 'short'])
+
+    def test_main(self):
+        """Test make_web_service main()"""
+        events = []
+        def dummy_get_options():
+            events.append('get_options')
+            return ['testlong', 'testshort']
+        class DummyMakeWebService(object):
+            def __init__(self, servicename, short):
+                events.append('MakeWebService %s %s' % (servicename, short))
+            def make(self):
+                events.append('make')
+
+        oldgetopt = saliweb.make_web_service.get_options
+        oldmake = saliweb.make_web_service.MakeWebService
+        try:
+            saliweb.make_web_service.get_options = dummy_get_options
+            saliweb.make_web_service.MakeWebService = DummyMakeWebService
+            saliweb.make_web_service.main()
+            self.assertEqual(events,
+                             ['get_options',
+                              'MakeWebService testlong testshort', 'make'])
+        finally:
+            saliweb.make_web_service.get_options = oldgetopt
+            saliweb.make_web_service.MakeWebService = oldmake
+
 
 if __name__ == '__main__':
     unittest.main()
