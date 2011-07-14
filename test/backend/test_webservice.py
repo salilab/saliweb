@@ -209,6 +209,24 @@ class WebServiceTest(unittest.TestCase):
         self.assertEqual(job_log, [('preproc', 'sanity_check'),
                                    ('postproc', 'sanity_check')])
 
+    def test_get_running_pid(self):
+        """Check WebService.get_running_pid()"""
+        t = RunInTempDir()
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        # No state file -> return None
+        self.assertEqual(web.get_running_pid(), None)
+        # FAILED state file -> raise error
+        open('state_file', 'w').write('FAILED: error\n')
+        self.assertRaises(StateFileError, web.get_running_pid)
+        # Running pid -> return it
+        ourpid = os.getpid()
+        open('state_file', 'w').write('%d' % ourpid)
+        self.assertEqual(web.get_running_pid(), ourpid)
+        # Non-running pid -> return None
+        # Unlikely to have a real pid this large!
+        open('state_file', 'w').write('99999999')
+        self.assertEqual(web.get_running_pid(), None)
+
     def test_filesystem_sanity_check(self):
         """Check WebService._filesystem_sanity_check()"""
         t = RunInTempDir()
