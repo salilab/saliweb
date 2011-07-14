@@ -62,6 +62,20 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(len(db._fields), 16)
         self.assertEqual(db._fields[0].name, 'name')
 
+    def test_connect(self):
+        """Check the Database._config() method"""
+        class DummyConfig(object):
+            database = {'user': 'testuser', 'db': 'testdb', 'passwd': 'testpwd'}
+        config = DummyConfig()
+        db = saliweb.backend.Database(Job)
+        db._connect(config)
+        self.assertEqual(db._OperationalError, 'Dummy MySQL OperationalError')
+        self.assertEqual(db._placeholder, '%s')
+        self.assertEqual(db.config, config)
+        self.assertEqual(db.conn, [(), {'user':'testuser',
+                                        'db':'testdb',
+                                        'passwd':'testpwd'}])
+
     def test_add_field(self):
         """Check Database.add_field()"""
         db = MemoryDatabase(Job)
