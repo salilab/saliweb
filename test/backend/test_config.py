@@ -1,6 +1,8 @@
 import unittest
 from saliweb.backend import Config, ConfigError
 from StringIO import StringIO
+import config
+import re
 
 basic_config = """
 [general]
@@ -29,8 +31,10 @@ archive: %s
 expire: %s
 """
 
-def get_config(archive='3h', expire='90d', extra='', extradir=''):
-    return Config(StringIO(basic_config % (extradir, archive, expire) + extra))
+def get_config(archive='3h', expire='90d', extra='', extradir='',
+               config_class=Config):
+    return config_class(StringIO(basic_config % (extradir, archive,
+                                                 expire) + extra))
 
 class ConfigTest(unittest.TestCase):
     """Check Config class"""
@@ -48,6 +52,17 @@ class ConfigTest(unittest.TestCase):
 
         conf = get_config(extra='[limits]\nrunning: 10')
         self.assertEqual(conf.limits['running'], 10)
+
+    def test_send_email(self):
+        """Check Config.send_email()"""
+        for to in ['testto', ['testto'], ('testto',)]:
+            conf = get_config(config_class=config.Config)
+            conf.send_email(to, 'testsubj', 'testbody')
+            mail = conf.get_mail_output()
+            self.assert_(re.search('Subject: testsubj.*From: '
+                                   'test@salilab\.org.*To: testto.*testbody',
+                                   mail, flags=re.DOTALL),
+                         'Unexpected mail output: ' + mail)
 
     def test_directory_defaults(self):
         """Check Config directory defaults"""
