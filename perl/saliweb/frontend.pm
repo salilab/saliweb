@@ -721,6 +721,7 @@ sub get_pdb_code {
         system("gunzip -c $in_pdb > $out_pdb") == 0 or
                 throw saliweb::frontend::InternalError(
                                  "gunzip of $in_pdb to $out_pdb failed: $?");
+        return $out_pdb;
     }
 }
 
