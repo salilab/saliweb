@@ -321,7 +321,8 @@ use saliweb::server qw(validate_user);
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(check_optional_email check_required_email check_modeller_key);
+@EXPORT = qw(check_optional_email check_required_email check_modeller_key
+             get_pdb_code);
 
 use File::Spec;
 use DBI;
@@ -694,6 +695,32 @@ sub check_modeller_key {
     if (!defined($modkey) || $modkey ne "***REMOVED***") {
         throw saliweb::frontend::InputValidationError(
                  "You have entered an invalid MODELLER key");
+    }
+}
+
+sub get_pdb_code {
+    my ($code, $outdir) = @_;
+    my $pdb_root = "/netapp/database/pdb/remediated/pdb/";
+
+    if ($code =~ m/^([A-Za-z0-9]+)$/) {
+      $code = $1;
+    } else {
+        throw saliweb::frontend::InputValidationError(
+                 "You have entered an invalid PDB code; valid codes " .
+                 "contain only letters and numbers, e.g. 1abc");
+    }
+
+    my $in_pdb = $pdb_root . substr($code, 1, 2) . "/pdb" . $code . ".ent.gz";
+    my $out_pdb = "$outdir/pdb${code}.ent";
+
+    if (! -e $in_pdb) {
+        throw saliweb::frontend::InputValidationError(
+                 "PDB code '$code' does not exist in our copy of the " .
+                 "PDB database.");
+    } else {
+        system("gunzip -c $in_pdb > $out_pdb") == 0 or
+                throw saliweb::frontend::InternalError(
+                                 "gunzip of $in_pdb to $out_pdb failed: $?");
     }
 }
 

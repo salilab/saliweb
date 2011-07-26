@@ -552,6 +552,17 @@ sub test_display_page {
               "                     (good address)";
 }
 
+# Test get_pdb_code function
+{
+    throws_ok { get_pdb_code("1\@bc", ".") }
+              'saliweb::frontend::InputValidationError',
+              "get_pdb_code (invalid code)";
+
+    throws_ok { get_pdb_code("1aaaaaa", ".") }
+              'saliweb::frontend::InputValidationError',
+              "get_pdb_code (non-existing code)";
+}
+
 # Test check_modeller_key function
 {
     throws_ok { check_modeller_key("garbage") }

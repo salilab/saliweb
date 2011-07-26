@@ -345,3 +345,11 @@ the web frontend.
 
    Check a provided MODELLER key. If the key is empty or invalid,
    throw an :exc:`InputValidationError` exception.
+
+.. function:: get_pdb_code(code, outdir)
+
+   Look up the PDB code (e.g. 1abc) in our local copy of the PDB, and 
+   copy it into the given directory (usually an incoming job directory).
+   The file will be named in standard PDB fashion, e.g. pdb1abc.ent.
+   If the code is invalid or does not exist, throw an
+   :exc:`InputValidationError` exception.
