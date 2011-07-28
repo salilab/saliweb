@@ -703,7 +703,7 @@ sub get_pdb_code {
     my $pdb_root = "/netapp/database/pdb/remediated/pdb/";
 
     if ($code =~ m/^([A-Za-z0-9]+)$/) {
-      $code = $1;
+      $code = lc $1; # PDB codes are case insensitive
     } else {
         throw saliweb::frontend::InputValidationError(
                  "You have entered an invalid PDB code; valid codes " .

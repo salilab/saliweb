@@ -13,7 +13,6 @@ Frontend:
   - Make links shorter and technology-independent (e.g. service/results/
     rather than service/results.cgi).
   - Add Dina's get_pdb_chains function.
-  - Check PDB's policy; make PDB id case-insensitive if necessary.
 
 Backend:
   - Configure DRMAA so that we can submit to both Sali and QB3 clusters from
