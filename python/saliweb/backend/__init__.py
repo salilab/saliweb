@@ -1,5 +1,6 @@
 import subprocess
 import re
+import fcntl
 import glob
 import sys
 import os.path
@@ -561,12 +562,13 @@ class WebService(object):
     def __init__(self, config, db):
         self.config = config
         self.config._read_db_auth('back')
-        self.__delete_state_file_on_exit = False
+        self.__state_file_handle = None
         self.db = db
         self.db._connect(config)
 
     def __del__(self):
-        if self.__delete_state_file_on_exit:
+        if self.__state_file_handle:
+            del self.__state_file_handle # close and unlock the file
             os.unlink(self.config.backend['state_file'])
 
     def get_running_pid(self):
@@ -596,7 +598,7 @@ class WebService(object):
     def _check_state_file(self):
         """Make sure that a previous run is not still running or encountered
            an unrecoverable error."""
-        if self.__delete_state_file_on_exit: # state file checked already
+        if self.__state_file_handle: # state file checked already
             return
         state_file = self.config.backend['state_file']
         old_pid = self.get_running_pid()
@@ -609,11 +611,25 @@ class WebService(object):
 
     def _write_state_file(self):
         """Write the current PID into the state file"""
-        f = open(self.config.backend['state_file'], 'w')
+        state_file = self.config.backend['state_file']
+        f = open(state_file, 'a+')
+        # Get lock
+        try:
+            fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            raise StateFileError("The state file %s is locked. Please make "
+                                 "sure that another instance of the daemon "
+                                 "is not already running." % state_file)
+        f.truncate(0)
         print >> f, os.getpid()
-        self.__delete_state_file_on_exit = True
+        f.flush()
+        # Keep file open so as not to lose the lock
+        self.__state_file_handle = f
 
     def _handle_fatal_error(self, detail):
+        # Don't remove state file on exit
+        self.__state_file_handle = None
+
         err = traceback.format_exc()
         if err is None:
             err = 'Error: ' + str(detail)
@@ -623,7 +639,6 @@ class WebService(object):
         f = open(self.config.backend['state_file'], 'w')
         print >> f, "FAILED: " + err
         f.close()
-        self.__delete_state_file_on_exit = False
         subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
                   % self.config.service_name
         body = """
@@ -674,8 +689,12 @@ have done this, delete the state file (%s) to reenable runs.
             self._sanity_check()
             s = self._make_socket()
             if daemonize:
+                # Drop parent's lock, as child will be denied it otherwise
+                # (potential race condition)
+                self.__state_file_handle = None
                 _make_daemon()
-                # Need to update state file with the child PID
+                # Need to update state file with the child PID and
+                # reacquire lock
                 self._write_state_file()
             try:
                 try:
