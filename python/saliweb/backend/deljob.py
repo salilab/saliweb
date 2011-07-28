@@ -6,9 +6,9 @@ import sys
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
-%prog [-h] [-f] STATE JOBNAME
+%prog [-h] [-f] STATE JOBNAME [...]
 
-Delete the job JOBNAME in the given STATE.
+Delete the job(s) JOBNAME in the given STATE.
 
 STATE must be either FAILED or EXPIRED if the backend daemon is running.
 Jobs in other states can only be deleted if the backend is stopped first.
@@ -17,9 +17,9 @@ Jobs in other states can only be deleted if the backend is stopped first.
                       default=False, dest="force",
                       help="Delete jobs without prompting")
     opts, args = parser.parse_args()
-    if len(args) != 2:
-        parser.error("Need to specify a state and a job name")
-    return args[0], args[1], opts
+    if len(args) < 2:
+        parser.error("Need to specify a state and at least one job name")
+    return args[0], args[1:], opts
 
 
 def delete_job(job, force):
@@ -41,11 +41,12 @@ def check_valid_state(web, state):
 
 
 def main(webservice):
-    state, name, opts = get_options()
+    state, job_names, opts = get_options()
     web = webservice.get_web_service(webservice.config)
     check_valid_state(web, state)
-    job = web.get_job_by_name(state, name)
-    if job:
-        delete_job(job, opts.force)
-    else:
-        print >> sys.stderr, "Could not find job", name
+    for name in job_names:
+        job = web.get_job_by_name(state, name)
+        if job:
+            delete_job(job, opts.force)
+        else:
+            print >> sys.stderr, "Could not find job", name

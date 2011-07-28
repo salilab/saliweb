@@ -1,5 +1,4 @@
 Utilities:
-  - deljob should work with a list of jobs
 
 Frontend:
   - Fix CSS to properly validate.
