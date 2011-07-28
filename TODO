@@ -1,3 +1,6 @@
+Utilities:
+  - deljob should work with a list of jobs
+
 Frontend:
   - Fix CSS to properly validate.
   - Add methods to get extra stylesheets, JavaScripts.
@@ -9,6 +12,8 @@ Frontend:
   - Simplify addition of extra help-like pages (e.g. FAQ).
   - Make links shorter and technology-independent (e.g. service/results/
     rather than service/results.cgi).
+  - Add Dina's get_pdb_chains function.
+  - Check PDB's policy; make PDB id case-insensitive if necessary.
 
 Backend:
   - Configure DRMAA so that we can submit to both Sali and QB3 clusters from
