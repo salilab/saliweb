@@ -38,11 +38,12 @@ BEGIN {
     bless($cls, 'saliweb::frontend');
     my $link = $cls->help_link('mytarget');
 
-    is($link, '<a class="helplink" onclick="launchHelp(\'/help.cgi?type=' .
-              'help&amp;style=helplink#mytarget\'); return false;" ' .
-              'href="/help.cgi?type=help&amp;style=helplink#mytarget">' .
-              '<img class="helplink" src="/saliweb/img/help.jpg" ' .
-              'alt="help" /></a>' . "\n", "check help_link");
+    like($link,
+         '/^<a class="helplink" onclick="launchHelp\(\'\/help.cgi\?type=' .
+         'help&amp;style=helplink#mytarget\'\); return false;" ' .
+         'href="\/help.cgi\?type=help&amp;style=helplink#mytarget">' .
+         '<img class="helplink" src="\/saliweb\/img\/help\.jpg" ' .
+         'alt="help" \/></a>\s*$/s', "check help_link");
 }
 
 # Test _admin_email method
