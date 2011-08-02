@@ -990,7 +990,7 @@ class Job(object):
         try:
             self._frontend_sanity_check()
             self._metadata['preprocess_time'] = datetime.datetime.utcnow()
-            self._set_state('PREPROCESSING')
+            self.__set_state('PREPROCESSING')
             # Delete job-state file, if present from a previous run
             try:
                 os.unlink(self._get_job_state_file())
@@ -1003,7 +1003,7 @@ class Job(object):
                 self._mark_job_completed()
             else:
                 self._metadata['run_time'] = datetime.datetime.utcnow()
-                self._set_state('RUNNING')
+                self.__set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 self._start_runner(runner, webservice)
         except Exception, detail:
@@ -1079,11 +1079,11 @@ class Job(object):
             # Delete job-state file; no longer needed
             os.unlink(self._get_job_state_file())
             self._metadata['postprocess_time'] = datetime.datetime.utcnow()
-            self._set_state('POSTPROCESSING')
+            self.__set_state('POSTPROCESSING')
             self.__reschedule_run = False
             self._run_in_job_directory(self.postprocess)
             if self.__reschedule_run:
-                self._set_state('RUNNING')
+                self.__set_state('RUNNING')
                 runner = self._run_in_job_directory(self.rerun,
                                                     self.__reschedule_data)
                 self._start_runner(runner, webservice)
@@ -1103,14 +1103,14 @@ class Job(object):
             expire_time = endtime + expire_time
         self._metadata['archive_time'] = archive_time
         self._metadata['expire_time'] = expire_time
-        self._set_state('COMPLETED')
+        self.__set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
         self._sync_metadata()
         self.send_job_completed_email()
 
     def _try_archive(self):
         try:
-            self._set_state('ARCHIVED')
+            self.__set_state('ARCHIVED')
             self._run_in_job_directory(self.archive)
             self._sync_metadata()
         except Exception, detail:
@@ -1118,7 +1118,7 @@ class Job(object):
 
     def _try_expire(self):
         try:
-            self._set_state('EXPIRED')
+            self.__set_state('EXPIRED')
             self.expire()
             self._sync_metadata()
         except Exception, detail:
@@ -1129,17 +1129,9 @@ class Job(object):
         if self._metadata.needs_sync():
             self._db._update_job(self._metadata, self._get_state())
 
-    def _set_state(self, state):
-        """Change the job state to `state`."""
-        try:
-            self.__internal_set_state(state)
-        except Exception, detail:
-            self._fail(detail)
-
-    def __internal_set_state(self, state):
-        """Set job state. Does not catch any exceptions. Should only be called
-           from :meth:`_fail`, which handles the exceptions itself. For all
-           other uses, call :meth:`_set_state` instead."""
+    def __set_state(self, state):
+        """Change the job state to `state`. It is the caller's responsibility
+           to catch exceptions from this method and call :meth:`_fail`."""
         oldstate = self._get_state()
         self.__state.transition(state)
         if state == 'EXPIRED':
@@ -1172,7 +1164,7 @@ class Job(object):
         reason = "Python exception:\n" + err
         try:
             self._metadata['failure'] = reason
-            self.__internal_set_state('FAILED')
+            self.__set_state('FAILED')
             subject = 'Sali lab %s service: Job %s FAILED' \
                       % (self.service_name, self.name)
             body = 'Job %s failed with the following error:\n' \
@@ -1195,15 +1187,19 @@ class Job(object):
     def resubmit(self):
         """Make a FAILED job eligible for running again."""
         self._assert_state('FAILED')
-        self._set_state('INCOMING')
-        # Wake up the web service and let it know a new incoming job is present
         try:
-            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.connect(self._db.config.socket)
-            s.send("INCOMING %s" % self.name)
-            s.close()
-        except socket.error:
-            pass
+            self.__set_state('INCOMING')
+            # Wake up the web service and let it know a new incoming
+            # job is present
+            try:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.connect(self._db.config.socket)
+                s.send("INCOMING %s" % self.name)
+                s.close()
+            except socket.error:
+                pass
+        except Exception, detail:
+            self._fail(detail)
 
     def delete(self):
         """Delete the job directory and database row."""
