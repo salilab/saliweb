@@ -1,4 +1,5 @@
 import unittest
+import socket
 import os
 import re
 import datetime
@@ -73,6 +74,37 @@ class WebServiceTest(unittest.TestCase):
         self.assertEqual(ws.version, None)
         # OK to make multiple WebService instances
         ws2 = WebService(conf, db)
+
+    def test_register(self):
+        """Check WebService._register()"""
+        db, conf, web = self._setup_webservice()
+        # Exceptions should be swallowed if the socket does not exist
+        web._system_socket_file = '/does/not/exist'
+        web._register(True)
+        web._register(False)
+
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            os.unlink('test-socket')
+        except OSError:
+            pass
+        s.bind('test-socket')
+        s.listen(5)
+
+        db, conf, web = self._setup_webservice()
+        web.config.directories['install'] = '/test/install'
+        web._system_socket_file = 'test-socket'
+        web._register(True)
+        web._register(False)
+
+        up, addr = s.accept()
+        self.assertEqual(up.recv(4096), '1/test/install/bin/service.py')
+
+        down, addr = s.accept()
+        self.assertEqual(down.recv(4096), '0/test/install/bin/service.py')
+
+        del s
+        os.unlink('test-socket')
 
     def test_get_job_by_name(self):
         """Check WebService.get_job_by_name()"""

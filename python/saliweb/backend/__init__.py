@@ -556,6 +556,8 @@ class WebService(object):
        (or subclass) object for the `db` argument.
     """
 
+    _system_socket_file = '/var/run/webservices.socket'
+
     #: Version number of the service, or None.
     version = None
 
@@ -696,6 +698,7 @@ have done this, delete the state file (%s) to reenable runs.
                 # Need to update state file with the child PID and
                 # reacquire lock
                 self._write_state_file()
+            self._register(up=True)
             try:
                 try:
                     self._do_periodic_actions(s)
@@ -703,8 +706,27 @@ have done this, delete the state file (%s) to reenable runs.
                     pass # Expected, so just swallow it
             finally:
                 self._close_socket(s)
+                self._register(up=False)
         except Exception, detail:
             self._handle_fatal_error(detail)
+
+    def _register(self, up):
+        """Let the system know whether this service is up or down.
+           The system will then automatically track the service and restart
+           it on reboot, for example."""
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        script_name = os.path.join(self.config.directories['install'],
+                                   'bin', 'service.py')
+        if up:
+            msg = '1' + script_name
+        else:
+            msg = '0' + script_name
+        try:
+            s.connect(self._system_socket_file)
+            s.send(msg)
+        except socket.error:
+            # Swallow exception
+            pass
 
     def _sanity_check(self):
         """Do basic sanity checking of the web service"""
