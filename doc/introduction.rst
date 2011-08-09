@@ -20,7 +20,7 @@ The framework is split up into four distinct parts:
   user logins.
 
 * The :ref:`backend <backend>` is a set of Python classes that manages jobs
-  after the initial submission. This typically runs from a cronjob on our
+  after the initial submission. This typically runs as a daemon on our
   `modbase` machine, picking up submitted jobs from the frontend, submitting
   jobs to the cluster and gathering results, and doing any necessary pre- or
   post-processing.

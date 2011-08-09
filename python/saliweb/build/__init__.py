@@ -236,7 +236,6 @@ def _check(env):
         print >> sys.stderr, "This module is needed by the backend."
         env.Exit(1)
     _check_mysql(env)
-    _check_crontab(env)
     _check_service(env)
 
 
@@ -436,18 +435,6 @@ def _format_shell_command(env, cmd):
         return cmd
 
 
-def _check_crontab(env):
-    """Make sure that a crontab is set up to run the service."""
-    binary = os.path.join(env['bindir'], 'service.py')
-    if not _found_binary_in_crontab(binary):
-        print "** To make your web service active, add the following to "
-        print "** the backend user's crontab;"
-        print "** use " + _format_shell_command(env, "crontab -e") \
-              + " to edit it:"
-        print "0 * * * * " + binary + " condstart > /dev/null"
-        print
-
-
 def _check_service(env):
     config = env['config']
     db = saliweb.backend.Database(saliweb.backend.Job)
@@ -468,24 +455,6 @@ def _check_service(env):
         print "** You will need to fix this manually before it will run again."
         print "** Refer to %s for more information" \
               % config.backend['state_file']
-
-
-def _found_binary_in_crontab(binary, crontab='/usr/bin/crontab'):
-    """See if the given binary is run from the user's crontab"""
-    p = subprocess.Popen([crontab, '-l'], stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-
-    binre = re.compile('\s*[^#].*' + binary + ' condstart > /dev/null$')
-    match = False
-    for line in p.stdout:
-        if binre.match(line):
-            match = True
-    err = p.stderr.read()
-    ret = p.wait()
-    if ret != 0 and not err.startswith('no crontab for'):
-        raise OSError("crontab -l exited with code %d and stderr %s" \
-                      % (ret, err))
-    return match
 
 
 def _check_mysql(env):

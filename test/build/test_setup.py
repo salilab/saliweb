@@ -157,37 +157,6 @@ sys.exit(1)""")
                                'mkdir \.scons', stderr,
                                re.DOTALL), 'regex match failed on ' + stderr)
 
-    def test_found_binary_in_crontab(self):
-        """Test _found_binary_in_crontab function"""
-        def make_crontab(exitval, out, err):
-            fname = os.path.abspath('crontab.py')
-            f = open(fname, 'w')
-            print >> f, """#!/usr/bin/python
-import sys
-print \"\"\"%s\"\"\"
-print >> sys.stderr, \"\"\"%s\"\"\"
-sys.exit(%d)
-""" % (out, err, exitval)
-            f.close()
-            os.chmod(fname, 0700)
-            return fname
-        d = RunInTempDir()
-        f = make_crontab(0, '# empty crontab', '')
-        self.assertEqual(saliweb.build._found_binary_in_crontab('mybin', f),
-                         False)
-        f = make_crontab(0, 'prefix mybin condstart > /dev/null', '')
-        self.assertEqual(saliweb.build._found_binary_in_crontab('mybin', f),
-                         True)
-        f = make_crontab(0, '# mybin condstart > /dev/null', '')
-        self.assertEqual(saliweb.build._found_binary_in_crontab('mybin', f),
-                         False)
-        f = make_crontab(1, '', 'no crontab for bob')
-        self.assertEqual(saliweb.build._found_binary_in_crontab('mybin', f),
-                         False)
-        f = make_crontab(1, '', 'some other crontab error')
-        self.assertRaises(OSError, saliweb.build._found_binary_in_crontab,
-                          'mybin', f)
-
 
 if __name__ == '__main__':
     unittest.main()

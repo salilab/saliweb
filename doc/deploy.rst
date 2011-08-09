@@ -228,9 +228,8 @@ web service. This daemon performs all functions of the web service, waiting
 for jobs submitted by the web frontend and submitting them to the cluster,
 harvesting completed cluster jobs, and expiring old job results. The tool
 also has a *condstart* option which will only start the service if it is not
-already running. This can be used by a cronjob to make sure the service is
-automatically restarted if it is terminated, for example by a reboot of the
-modbase machine.
+already running (the regular *start* option will complain if the service is
+running).
 
 resubmit.py
 -----------
