@@ -73,6 +73,9 @@ submission and results pages need to be implemented by overriding the
 :meth:`~saliwebfrontend.get_index_page`,
 :meth:`~saliwebfrontend.get_submit_page` and
 :meth:`~saliwebfrontend.get_results_page` methods respectively.
+Optionally, a download page (to get the software used by the web service to
+run locally, or to download data sets and other information) can be implemented
+by overriding the :meth:`~saliwebfrontend.get_download_page` method.
 (There are also :meth:`~saliwebfrontend.get_queue_page` and
 :meth:`~saliwebfrontend.get_help_page` methods but the default implementations
 already show all jobs in the queue and a simple help page, respectively,
@@ -182,6 +185,15 @@ The help page is used to display basic help, contact details, or news. It is
 probably unnecessary to customize this method, as by default it will simply
 display a similarly-named text file (``txt/help.txt``, ``txt/contact.txt``
 or ``txt/news.txt``). See :meth:`~saliwebfrontend.get_help_page` for more details.
+
+Download page
+-------------
+
+The download page is optional, and can be used to allow the user to download
+the software used by the web service to run locally, or to download data sets
+and other information. (This is distinct from the results page, which is used
+to download the results of a user-submitted calculation.)
+See :meth:`~saliwebfrontend.get_download_page` for more details.
 
 Controlling page access
 =======================

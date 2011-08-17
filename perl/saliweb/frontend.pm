@@ -571,6 +571,11 @@ sub results_url {
     return $self->cgiroot . "/results.cgi";
 }
 
+sub download_url {
+    my $self = shift;
+    return $self->cgiroot . "/download.cgi";
+}
+
 sub set_page_title {
     my ($self, $title) = @_;
     $self->{page_title} = $self->{server_name} . " " . $title;
@@ -762,6 +767,10 @@ sub get_index_page {
 }
 
 sub get_submit_page {
+    return "";
+}
+
+sub get_download_page {
     return "";
 }
 
@@ -995,6 +1004,19 @@ sub display_queue_page {
         $self->set_page_title("Queue");
         $self->check_page_access('queue');
         $self->_display_web_page($self->get_queue_page());
+    } catch saliweb::frontend::UserError with {
+        $self->handle_user_error(shift);
+    } catch Error with {
+        $self->handle_fatal_error(shift);
+    };
+}
+
+sub display_download_page {
+    my $self = shift;
+    try {
+        $self->set_page_title("Download");
+        $self->check_page_access('download');
+        $self->_display_web_page($self->get_download_page());
     } catch saliweb::frontend::UserError with {
         $self->handle_user_error(shift);
     } catch Error with {

@@ -729,7 +729,7 @@ def _InstallCGIScripts(env, scripts=None):
     if scripts is None:
         # todo: this list should be auto-generated from backend
         scripts = ['help.cgi', 'index.cgi', 'queue.cgi', 'results.cgi',
-                   'submit.cgi', 'job']
+                   'submit.cgi', 'download.cgi', 'job']
     for bin in scripts:
         env.Command(os.path.join(env['cgidir'], bin),
                     Value(env['service_module']),

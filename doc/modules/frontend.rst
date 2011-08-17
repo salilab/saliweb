@@ -63,6 +63,7 @@ the web frontend.
                   news_url
                   contact_url
                   results_url
+                  download_url
 
       Absolute URLs to each web page (read-only).
 
@@ -85,6 +86,7 @@ the web frontend.
                display_queue_page()
                display_help_page()
                display_results_page()
+               display_download_page()
 
       Convenience methods designed to be called from CGI scripts. Each displays
       a complete web page by calling :meth:`~saliwebfrontend.start_html`,
@@ -147,11 +149,14 @@ the web frontend.
       service in the ``txt`` directory, named ``help.txt``, ``contact.txt`` or
       ``news.txt`` respectively.
 
+   .. method:: get_download_page()
+
+      Return the HTML content of the download page. This is empty by default.
    .. method:: check_page_access(page_type)
 
       Check whether access to the given *page_type* is allowed. *page_type*
-      is one of 'index', 'submit', 'queue', 'results', 'help'. It should
-      simply return if access is allowed, or throw an
+      is one of 'index', 'submit', 'queue', 'results', 'help', 'download'.
+      It should simply return if access is allowed, or throw an
       :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
       permitted. By default, it simply returns, allowing all access.
 
