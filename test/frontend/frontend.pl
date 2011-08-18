@@ -121,6 +121,8 @@ BEGIN {
        '                      (help)');
     is($self->news_url, 'testroot/help.cgi?type=news',
        '                      (news)');
+    is($self->faq_url, 'testroot/help.cgi?type=faq',
+       '                      (FAQ)');
     is($self->contact_url, 'testroot/help.cgi?type=contact',
        '                      (contact)');
     is($self->results_url, 'testroot/results.cgi',

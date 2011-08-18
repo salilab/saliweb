@@ -561,6 +561,11 @@ sub news_url {
     return $self->cgiroot . "/help.cgi?type=news";
 }
 
+sub faq_url {
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=faq";
+}
+
 sub contact_url {
     my $self = shift;
     return $self->cgiroot . "/help.cgi?type=contact";
@@ -811,6 +816,8 @@ sub get_help_page {
         $file = "contact.txt";
     } elsif ($display_type eq "news") {
         $file = "news.txt";
+    } elsif ($display_type eq "faq") {
+        $file = "faq.txt";
     } else {
         $file = "help.txt";
     }

@@ -42,7 +42,7 @@ END {
 {
     my $cls = {};
     bless($cls, 'saliweb::frontend');
-    for my $page_type ('contact', 'news', 'help') {
+    for my $page_type ('contact', 'news', 'faq', 'help') {
         my $testfile = "../txt/${page_type}.txt";
         ok(open(FH, "> $testfile"), "Open $testfile");
         print FH "test $page_type text\n";
