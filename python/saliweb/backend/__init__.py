@@ -679,17 +679,20 @@ have done this, delete the state file (%s) to reenable runs.
         """Create all tables in the database used to hold job state."""
         self.db._create_tables()
 
-    def do_all_processing(self, daemonize=False):
+    def do_all_processing(self, daemonize=False, status_fh=None):
         """Process incoming jobs, completed jobs, and old jobs. This method
            will run forever, looping over the available jobs, until the
            web service is killed. If `daemonize` is True, this loop will be
            run as a daemon (subprocess), so that the main program can
-           continue."""
+           continue. If `status_fh` is specified, it is a file handle to
+           which "OK" is printed on successful startup."""
         # Check state file before overwriting the socket
         self._check_state_file()
         try:
             self._sanity_check()
             s = self._make_socket()
+            if status_fh:
+                status_fh.write("OK\n")
             if daemonize:
                 # Drop parent's lock, as child will be denied it otherwise
                 # (potential race condition)

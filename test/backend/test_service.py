@@ -14,7 +14,7 @@ class DummyService(object):
         self.pid = pid
     def get_running_pid(self):
         return self.pid
-    def do_all_processing(self, daemonize=False):
+    def do_all_processing(self, daemonize=False, status_fh=None):
         if self.pid == 'bad_state':
             raise StateFileError('bad state')
         elif self.pid == 'other_error':
@@ -115,21 +115,20 @@ class ServiceTest(unittest.TestCase):
             w = DummyService('bad_state')
             sys.stdout = sio = StringIO.StringIO()
             self.assertRaises(StateFileError, start, w)
-            self.assertEqual(sio.getvalue(), 'Starting testservice\n')
+            self.assertEqual(sio.getvalue(), 'Starting testservice: ')
 
             # condstart should swallow, but report, the exception
             sys.stdout = sio = StringIO.StringIO()
             condstart(w)
             self.assertEqual(sio.getvalue(),
-                             'Starting testservice\n'
-                             '   not started: bad state\n')
+                             'Starting testservice: not started: bad state\n')
 
             # other exceptions should not be swallowed
             w = DummyService('other_error')
             for meth in start, condstart:
                 sys.stdout = sio = StringIO.StringIO()
                 self.assertRaises(ValueError, meth, w)
-                self.assertEqual(sio.getvalue(), 'Starting testservice\n')
+                self.assertEqual(sio.getvalue(), 'Starting testservice: ')
         finally:
             sys.stdout = old
 
