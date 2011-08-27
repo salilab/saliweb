@@ -568,11 +568,6 @@ class WebService(object):
         self.db = db
         self.db._connect(config)
 
-    def __del__(self):
-        if self.__state_file_handle:
-            del self.__state_file_handle # close and unlock the file
-            os.unlink(self.config.backend['state_file'])
-
     def get_running_pid(self):
         """Return the process ID of a currently running web service, by
            querying the state file. If no service is running, return None; if
@@ -708,6 +703,9 @@ have done this, delete the state file (%s) to reenable runs.
                 except _SigTermError:
                     pass # Expected, so just swallow it
             finally:
+                if self.__state_file_handle:
+                    del self.__state_file_handle # close and unlock the file
+                    os.unlink(self.config.backend['state_file'])
                 self._close_socket(s)
                 self._register(up=False)
         except Exception, detail:
