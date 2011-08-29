@@ -686,6 +686,12 @@ have done this, delete the state file (%s) to reenable runs.
         try:
             self._sanity_check()
             s = self._make_socket()
+            # Note that at this point startup is *likely* successful; we
+            # checked the state file, socket etc. and did a sanity check.
+            # However, it is possible that future operations might fail. But
+            # because these are done in a child process, we can't catch them.
+            # If this is becomes a problem, pass a pipe to the child and
+            # use it to pass status back to the parent.
             if status_fh:
                 status_fh.write("OK\n")
             if daemonize:
