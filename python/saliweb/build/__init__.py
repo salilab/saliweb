@@ -715,7 +715,7 @@ def _make_web_service(env, target, source):
 def _InstallAdminTools(env, tools=None):
     if tools is None:
         # todo: this list should be auto-generated from backend
-        tools = ['resubmit', 'service', 'deljob']
+        tools = ['resubmit', 'service', 'deljob', 'failjob']
     for bin in tools:
         env.Command(os.path.join(env['bindir'], bin + '.py'), None,
                     _make_script)
