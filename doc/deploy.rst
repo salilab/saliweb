@@ -248,6 +248,14 @@ expired jobs. Jobs in other states (such as **RUNNING** or **COMPLETED**) can
 also be deleted, but only if the backend service is stopped first, since that
 service actively manages jobs in these states.
 
+failjob.py
+---------
+
+This tool will force one or more jobs into the **FAILED** state. This is useful
+if, for example, due to a bug in the backend, a job didn't work properly but
+went into the **COMPLETED** state. The backend service must first be
+stopped in order to use this tool.
+
 .. _testing:
 
 Testing

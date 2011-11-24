@@ -261,6 +261,20 @@ class JobTest(unittest.TestCase):
                                flags=re.DOTALL),
                      'Unexpected failure message: ' + job._metadata['failure'])
 
+    def test_admin_fail(self):
+        """Check admin_fail method"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'job1')
+        job = web.get_job_by_name('INCOMING', 'job1')
+        job.admin_fail(False)
+
+        # Job should have moved to FAILED state
+        job = web.get_job_by_name('FAILED', 'job1')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'job1')
+        self.assertEqual(job.directory, failjobdir)
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
     def test_ok_startup(self):
         """Check successful startup of incoming jobs"""
         db, conf, web, tmpdir = setup_webservice()

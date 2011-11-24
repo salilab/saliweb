@@ -55,6 +55,12 @@ class _SigTermError(Exception):
     pass
 
 
+class _AdminFailError(Exception):
+    """Exception for a job marked as FAILED by the administrator"""
+    def __str__(self):
+        return 'Job forced into FAILED state by administrator'
+
+
 def _sigterm_handler(signum, frame):
     """Catch SIGTERM and convert it to a SigTermError exception."""
     raise _SigTermError()
@@ -1180,10 +1186,11 @@ class Job(object):
         """Get the job state as a string."""
         return self.__state.get()
 
-    def _fail(self, reason):
+    def _fail(self, reason, email=True):
         """Mark a job as FAILED. Generally, it should not be necessary to call
            this method directly - instead, simply raise an exception.
            `reason` should be an exception object.
+           If `email` is True, the server admin is notified of the failure.
            If an exception in turn occurs in this method, it is considered an
            unrecoverable error (and is usually handled by :class:`WebService`.
         """
@@ -1194,11 +1201,12 @@ class Job(object):
         try:
             self._metadata['failure'] = reason
             self.__set_state('FAILED')
-            subject = 'Sali lab %s service: Job %s FAILED' \
-                      % (self.service_name, self.name)
-            body = 'Job %s failed with the following error:\n' \
-                   % self.name + reason
-            self._db.config.send_admin_email(subject, body)
+            if email:
+                subject = 'Sali lab %s service: Job %s FAILED' \
+                          % (self.service_name, self.name)
+                body = 'Job %s failed with the following error:\n' \
+                       % self.name + reason
+                self._db.config.send_admin_email(subject, body)
         except Exception, detail:
             # Ensure we can extract the original error
             detail.original_error = reason
@@ -1229,6 +1237,12 @@ class Job(object):
                 pass
         except Exception, detail:
             self._fail(detail)
+
+    def admin_fail(self, email):
+        """Force a job into the FAILED state. This is intended to be used
+           by the server administrator (via the failjob.py utility) to fail
+           jobs which have erroneously completed."""
+        self._fail(_AdminFailError(), email=email)
 
     def delete(self):
         """Delete the job directory and database row."""
