@@ -249,7 +249,7 @@ also be deleted, but only if the backend service is stopped first, since that
 service actively manages jobs in these states.
 
 failjob.py
----------
+----------
 
 This tool will force one or more jobs into the **FAILED** state. This is useful
 if, for example, due to a bug in the backend, a job didn't work properly but
