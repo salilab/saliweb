@@ -1195,7 +1195,7 @@ class Job(object):
            unrecoverable error (and is usually handled by :class:`WebService`.
         """
         err = traceback.format_exc()
-        if err is None:
+        if err is None or err == 'None\n':
             err = str(reason)
         reason = "Python exception:\n" + err
         try:
