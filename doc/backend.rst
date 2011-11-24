@@ -45,10 +45,12 @@ exceptions should be used only to indicate a technical error in the web
 service, not something wrong with the user's input (in the latter case, the
 job output should simply indicate what the problem is).
 
-.. note:: Each of these methods is automatically run by the backend at the
-          correct time; they should not be run manually by any method
-          in the subclass. For example, to run a new job, call
-          :meth:`Job.reschedule_run`, not the :meth:`Job.run` method directly.
+.. note::
+
+   Each of these methods is automatically run by the backend at the
+   correct time; they should not be run manually by any method
+   in the subclass. For example, to run a new job, call
+   :meth:`Job.reschedule_run`, not the :meth:`Job.run` method directly.
 
 As mentioned above, an :class:`SGERunner` class is provided that takes care of
 the details of running a script on the cluster and checking if it has
