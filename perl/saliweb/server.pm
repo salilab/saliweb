@@ -90,6 +90,7 @@ sub header {
         <a href=\"http://salilab.org/pcss/\">PCSS</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/foxs/\">FoXS</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/imp/\">IMP</a>&nbsp;&bull;&nbsp;
+        <a href=\"http://salilab.org/multifit/\">MultiFit</a>&nbsp;&bull;&nbsp;
         <a href=\"http://salilab.org/modpipe/\">ModPipe</a>&nbsp;&bull;&nbsp;
     \n</div>\n    $navigation
         <div style=\"clear:both;\"></div><div id=\"bodypart\">";
