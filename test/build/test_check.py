@@ -262,6 +262,8 @@ class CheckTest(unittest.TestCase):
 
         # Backend *does* own this directory
         os.mkdir('test')
+        os.chmod('test', 493) # 493 = 0755
+
         env = make_env('test')
         ret, stderr = run_catch_stderr(
                            saliweb.build._check_directory_permissions, env)
@@ -300,6 +302,8 @@ class CheckTest(unittest.TestCase):
 
         # Test should fail if the directory doesn't have correct ACLs
         os.mkdir('test')
+        os.chmod('test', 493) # 493 = 0755
+
         env = make_env('test')
         ret, stderr = run_catch_stderr(
                       saliweb.build._check_incoming_directory_permissions, env)
