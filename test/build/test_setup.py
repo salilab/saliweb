@@ -25,6 +25,33 @@ class DummyConfig: pass
 class SetupTest(unittest.TestCase):
     """Check setup functions"""
 
+    def test_add_build_variable(self):
+        """Test _add_build_variable function"""
+        class Vars(object):
+            def __init__(self):
+                self.vars = []
+            def Add(self, var):
+                self.vars.append(var)
+
+        v = Vars()
+        b = saliweb.build._add_build_variable(v, "foo/bar/test.conf")
+        self.assertEqual(len(v.vars), 1)
+        self.assertEqual(v.vars[0].key, 'build')
+        self.assertEqual(v.vars[0].default, 'test')
+        self.assertEqual(v.vars[0].allowed_values, ['test'])
+        self.assertEqual(b, {'test': 'foo/bar/test.conf'})
+
+        v = Vars()
+        b = saliweb.build._add_build_variable(v, ["foo/bar/test.conf",
+                                                  "test/live"])
+        self.assertEqual(len(v.vars), 1)
+        self.assertEqual(v.vars[0].key, 'build')
+        self.assertEqual(v.vars[0].default, 'test')
+        v.vars[0].allowed_values.sort()
+        self.assertEqual(v.vars[0].allowed_values, ['live', 'test'])
+        self.assertEqual(b['test'], 'foo/bar/test.conf')
+        self.assertEqual(b['live'], 'test/live')
+
     def test_setup_service_name(self):
         """Check _setup_service_name function"""
         def check(service_name, service_module, exp_service_module):
