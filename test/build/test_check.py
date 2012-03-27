@@ -317,17 +317,23 @@ class CheckTest(unittest.TestCase):
 
         # Test should pass if the ACLs are correct
         env = make_env('test')
-        os.system('setfacl -d -m u:apache:rwx test')
-        os.system('setfacl -d -m u:%s:rwx test' \
-                  % pwd.getpwuid(os.getuid()).pw_name)
-        os.system('setfacl -m u:apache:rwx test')
-        saliweb.build.backend_group = \
+        old_frontend_user = saliweb.build.frontend_user
+        # 'apache' user not present on all systems; use 'nobody' instead
+        try:
+            saliweb.build.frontend_user = 'nobody'
+            os.system('setfacl -d -m u:nobody:rwx test')
+            os.system('setfacl -d -m u:%s:rwx test' \
+                      % pwd.getpwuid(os.getuid()).pw_name)
+            os.system('setfacl -m u:nobody:rwx test')
+            saliweb.build.backend_group = \
                   grp.getgrgid(pwd.getpwuid(os.getuid()).pw_gid).gr_name
-        ret, stderr = run_catch_stderr(
+            ret, stderr = run_catch_stderr(
                       saliweb.build._check_incoming_directory_permissions, env)
-        self.assertEqual(stderr, '')
-        self.assertEqual(ret, None)
-        self.assertEqual(env.exitval, None)
+            self.assertEqual(stderr, '')
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, None)
+        finally:
+            saliweb.build.frontend_user = old_frontend_user
 
     def test_generate_admin_mysql_script(self):
         """Test _generate_admin_mysql_script function"""
