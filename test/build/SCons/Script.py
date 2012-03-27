@@ -4,7 +4,10 @@ class File: pass
 
 class Mkdir: pass
 
-class Chmod: pass
+class Chmod(object):
+    def __init__(self, target, mode):
+        self.target = target
+        self.mode = mode
 
 class Value: pass
 
