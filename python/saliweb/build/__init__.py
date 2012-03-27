@@ -773,7 +773,7 @@ def _subst_install(env, target, source):
         fout.write(line)
     fin.close()
     fout.close()
-    env.Execute(Chmod(target, 0755))
+    env.Execute(Chmod(target[0], 0755))
 
 
 def _InstallCGI(env, files, subdir=None):
