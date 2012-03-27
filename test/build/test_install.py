@@ -64,6 +64,40 @@ class InstallTest(unittest.TestCase):
         ret, warns = run_catch_warnings(saliweb.build._check_python_import, env)
         self.assertEqual(len(warns), 0)
 
+    def test_install_directories(self):
+        """Check _install_directories function"""
+        class DummyConfig:
+            directories = {'install':'testinst', 'INCOMING':'testinc',
+                           'test':'foo'}
+            backend = {'user': 'testback'}
+        e = DummyEnv()
+        e['config'] = DummyConfig()
+        e['service_name'] = 'testser'
+        saliweb.build._install_directories(e)
+        self.assertEqual(len(e.command_target), 3)
+        self.assertEqual(e.command_target[0][0], 'foo')
+        self.assertEqual(e.command_target[1][0], 'testinc')
+        self.assertEqual(e.command_target[2][0], 'testinst/README')
+
+    def test_install_config(self):
+        """Check _install_config function"""
+        class DummyConfig:
+            database = {'backend_config': 'backend.conf',
+                        'frontend_config' : 'frontend.conf'}
+        class DummyNode:
+            path = 'test.conf'
+        e = DummyEnv()
+        e['config'] = DummyConfig()
+        e['confdir'] = 'testcfg'
+        e['configfile'] = DummyNode()
+        saliweb.build._install_config(e)
+        self.assertEqual(e['instconfigfile'], 'testcfg/test.conf')
+        self.assertEqual(e.install_target, 'testcfg')
+        self.assertEqual(e.install_files.path, 'test.conf')
+        self.assertEqual(len(e.command_target), 2)
+        self.assertEqual(e.command_target[0][0], 'testcfg/backend.conf')
+        self.assertEqual(e.command_target[1][0], 'testcfg/frontend.conf')
+
     def test_install_admin_tools(self):
         """Check _InstallAdminTools function"""
         def make_env():

@@ -2,7 +2,9 @@
 
 class File: pass
 
-class Mkdir: pass
+class Mkdir(object):
+    def __init__(self, target):
+        self.target = target
 
 class Chmod(object):
     def __init__(self, target, mode):
