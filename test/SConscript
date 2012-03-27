@@ -1,8 +1,12 @@
 Import('env')
+from tools import html_coverage
 
 test = (env.SConscript('backend/SConscript'),
         env.SConscript('frontend/SConscript'),
         env.SConscript('build/SConscript'))
 env.Alias("test", test)
+
+env.Append(BUILDERS = {'HTMLCoverage': Builder(action=html_coverage.action)})
+cov = env.HTMLCoverage("html_coverage/index.html", test)
 
 Return('test')
