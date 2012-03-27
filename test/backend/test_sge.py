@@ -119,6 +119,14 @@ class SGETest(unittest.TestCase):
         self.assertEqual(events, ['drmaa session init'])
         del d
         self.assertEqual(events, ['drmaa session init', 'drmaa session exit'])
+
+        # Destructor should not clean up session if the pointer is lost
+        events[:] = []
+        d = _DRMAAWrapper({})
+        del d.session
+        del d
+        self.assertEqual(events, ['drmaa session init'])
+
         # Make sure the environment is cleared of SGE stuff
         os.environ['SGE_FOO'] = 'bar'
         d = _DRMAAWrapper({'SGE_BAR': 'foo'})
