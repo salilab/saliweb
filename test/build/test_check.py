@@ -9,6 +9,27 @@ import re
 import shutil
 import testutil
 
+class MockEnvFunctions(object):
+    class DummyFunc(object):
+        def __init__(self, name):
+            self.name = name
+        def __call__(self, env):
+            env.append(self.name)
+
+    def __init__(self, module, funcs):
+        self._module = module
+        self._funcs = funcs
+        self._old = []
+        for f in funcs:
+            self._old.append(getattr(module, f))
+        for f in funcs:
+            setattr(module, f, self.DummyFunc(f))
+
+    def __del__(self):
+        for f, o in zip(self._funcs, self._old):
+            setattr(self._module, f, o)
+
+
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
     sio = StringIO.StringIO()
@@ -33,6 +54,81 @@ class DummyEnv(dict):
 
 class CheckTest(unittest.TestCase):
     """Check check functions"""
+
+    def test_check_filesystem_sanity(self):
+        """Check _check_filesystem_sanity function"""
+        class DummyBackend:
+            class Database:
+                def __init__(self, jobcls): pass
+            class WebService:
+                def __init__(self, config, db): pass
+                def _filesystem_sanity_check(self): pass
+            class Job: pass
+        e = {'config': None}
+        oldbackend = saliweb.build.saliweb.backend
+        try:
+            saliweb.build.saliweb.backend = DummyBackend
+            saliweb.build._check_filesystem_sanity(e)
+        finally:
+            saliweb.build.saliweb.backend = oldbackend
+
+    def test_install_check(self):
+        """Check _install_check function"""
+        e = []
+        m = MockEnvFunctions(saliweb.build,
+                             ('_check_perl_import', '_check_python_import',
+                              '_check_filesystem_sanity'))
+        saliweb.build._install_check(None, None, e)
+        self.assertEqual(e, ['_check_perl_import', '_check_python_import',
+                             '_check_filesystem_sanity'])
+
+    def test_check_directories(self):
+        """Check _check_directories function"""
+        e = []
+        m = MockEnvFunctions(saliweb.build,
+                             ('_check_directory_locations',
+                              '_check_directory_permissions',
+                              '_check_incoming_directory_permissions'))
+        saliweb.build._check_directories(e)
+        self.assertEqual(e, ['_check_directory_locations',
+                             '_check_directory_permissions',
+                             '_check_incoming_directory_permissions'])
+
+    def test_check(self):
+        """Check _check function"""
+        class DummyEnv(list):
+            def Exit(self, exitval):
+                self.exitval = exitval
+                raise SystemExit(exitval)
+        import SCons.Script
+        m = MockEnvFunctions(saliweb.build,
+                             ('_check_user', '_check_ownership',
+                              '_check_permissions', '_check_directories',
+                              '_check_mysql', '_check_service'))
+
+        # 'scons test' should skip checks
+        SCons.Script.COMMAND_LINE_TARGETS = ['test']
+        e = []
+        saliweb.build._check(e)
+        self.assertEqual(e, [])
+
+        # Check missing MySQLdb dependency
+        saliweb.build.MySQLdb = ImportError('foo')
+        SCons.Script.COMMAND_LINE_TARGETS = []
+        e = DummyEnv()
+        self.assertRaises(SystemExit, saliweb.build._check, e)
+        self.assertEqual(e.exitval, 1)
+        self.assertEqual(e, ['_check_user', '_check_ownership',
+                              '_check_permissions', '_check_directories'])
+
+        # Normal operation
+        saliweb.build.MySQLdb = None
+        SCons.Script.COMMAND_LINE_TARGETS = []
+        e = []
+        saliweb.build._check(e)
+        self.assertEqual(e, ['_check_user', '_check_ownership',
+                              '_check_permissions', '_check_directories',
+                              '_check_mysql', '_check_service'])
 
     def test_check_user(self):
         """Check _check_user function"""
