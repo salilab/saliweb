@@ -9,7 +9,9 @@ class Chmod(object):
         self.target = target
         self.mode = mode
 
-class Value: pass
+class Value(object):
+    def __init__(self, contents):
+        self.contents = contents
 
 class Action: pass
 
