@@ -1,11 +1,26 @@
 import unittest, sys, os, re
-import coverage
+import glob
+
+# Only use coverage if it's new enough
+try:
+    import coverage
+    if not hasattr(coverage.coverage, 'combine'):
+        coverage = None
+except ImportError:
+    coverage = None
 
 class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, *args, **keys):
-        # Start coverage testing now before we import any modules
-        coverage.start()
+        if coverage:
+            # Start coverage testing now before we import any modules
+            self.topdir = 'python'
+            self.mods = ["%s/saliweb/__init__.py" % self.topdir] \
+                        + glob.glob("%s/saliweb/build/*.py" % self.topdir)
+
+            self.cov = coverage.coverage(branch=True, include=self.mods,
+                                         data_file='.coverage.build')
+            self.cov.start()
 
         # Run the tests
         unittest.TestProgram.__init__(self, *args, **keys)
@@ -13,13 +28,17 @@ class RunAllTests(unittest.TestProgram):
     def runTests(self):
         self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
         result = self.testRunner.run(self.test)
-        coverage.stop()
-        coverage.the_coverage.collect()
-        coverage.use_cache(False)
-        print >> sys.stderr, "\nPython coverage report\n"
-        mods = ['python/saliweb/__init__.py', 'python/saliweb/build/*.py']
-        coverage.the_coverage.relative_dir = 'python/'
-        coverage.report(mods, file=sys.stderr)
+
+        if coverage:
+            self.cov.stop()
+            self.cov.combine()
+            self.cov.use_cache(True)
+            print >> sys.stderr, "\nPython coverage report\n"
+
+            self.cov.file_locator.relative_dir = self.topdir + '/'
+            self.cov.report(self.mods, file=sys.stderr)
+            self.cov.save()
+
         sys.exit(not result.wasSuccessful())
 
 def regressionTest():
