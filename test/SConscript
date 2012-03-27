@@ -8,5 +8,6 @@ env.Alias("test", test)
 
 env.Append(BUILDERS = {'HTMLCoverage': Builder(action=html_coverage.action)})
 cov = env.HTMLCoverage("html_coverage/index.html", test)
+env.AlwaysBuild(cov)
 
 Return('test')
