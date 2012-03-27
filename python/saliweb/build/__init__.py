@@ -662,7 +662,7 @@ def _make_script(env, target, source):
     print >> f, "import saliweb.backend." + name
     print >> f, "saliweb.backend.%s.main(webservice)" % name
     f.close()
-    env.Execute(Chmod(target, 0700))
+    env.Execute(Chmod(target[0], 0700))
 
 
 def _make_cgi_script(env, target, source):
@@ -688,7 +688,7 @@ def _make_cgi_script(env, target, source):
         print >> f, "my $m = new %s;" % modname
         print >> f, "$m->display_%s_page();" % name
     f.close()
-    env.Execute(Chmod(target, 0755))
+    env.Execute(Chmod(target[0], 0755))
 
 
 def _make_web_service(env, target, source):
