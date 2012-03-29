@@ -15,6 +15,8 @@ class DummyEnv(object):
     def Execute(self, exe):
         self.exec_str = exe
         return self.exit_val
+    def get(self, key, default):
+        return default
 
 
 class BuilderTest(unittest.TestCase):
