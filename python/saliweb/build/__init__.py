@@ -543,9 +543,9 @@ def _check_sql_username_length(env, auth, typ):
     if len(username) > max_length:
         print >> sys.stderr, """
 ** The database username for the %send user is too long;
-** MySQL usernames can be at most 16 characters long.
+** MySQL usernames can be at most %d characters long.
 ** Please shorten the username in the configuration file.
-""" % typ
+""" % (typ, max_length)
         env.Exit(1)
 
 def _get_sorted_grant(grant):
