@@ -12,28 +12,31 @@
 # access to the repositories.
 
 VER=SVN
-SVNDIR=file:///cowbell1/svn/saliweb/trunk/
-
 TMPDIR=/var/tmp/modeller-build-$$
 MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
-SWSRCTGZ=${MODINSTALL}/build/sources/private/saliweb.tar.gz
 
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR}
 
-# Get top-most revision number (must be a nicer way of doing this?)
-rev=$(svn log -q --limit 1 ${SVNDIR} |grep '^r' | cut -f 1 -d' ')
+for REPO in saliweb modloop multifit_web; do
+  SVNDIR=file:///cowbell1/svn/${REPO}/trunk/
+  SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
-# Get code from SVN
-svn export -q -${rev} ${SVNDIR} saliweb
+  # Get top-most revision number (must be a nicer way of doing this?)
+  rev=$(svn log -q --limit 1 ${SVNDIR} |grep '^r' | cut -f 1 -d' ')
 
-# Write out a version file
-verfile="${MODINSTALL}/build/saliweb-version"
-echo "${rev}" > $verfile
+  # Get code from SVN
+  svn export -q -${rev} ${SVNDIR} ${REPO}
 
-# Write out a tarball:
-tar -czf ${SWSRCTGZ} saliweb
+  # Write out a version file
+  verfile="${MODINSTALL}/build/${REPO}-version"
+  echo "${rev}" > $verfile
+
+  # Write out a tarball:
+  tar -czf ${SWSRCTGZ} ${REPO}
+  rm -rf ${REPO}
+done
 
 # Cleanup
 cd /
