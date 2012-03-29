@@ -3,6 +3,8 @@ import sys
 import re
 import os
 import saliweb.build
+import tempfile
+import shutil
 
 class DummyEnv(object):
     def __init__(self, exit_val):
@@ -49,8 +51,26 @@ class BuilderTest(unittest.TestCase):
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
 
+    def test_fixup_perl(self):
+        """Test _fixup_perl_html_coverage function"""
+        tmpdir = tempfile.mkdtemp()
+        prefix = '/foo/bar/'
+        mangled = '-foo-bar-'
+        f = open(os.path.join(tmpdir, 'coverage.html'), 'w')
+        f.write('%sbaz/foo.html\n%sbaz-foo.html\n' % (prefix, mangled))
+        f.close()
+        open(os.path.join(tmpdir, '%sbaz-foo.html' % mangled), 'w')
+        saliweb.build._fixup_perl_html_coverage(prefix, tmpdir)
+
+        f = open(os.path.join(tmpdir, 'index.html'))
+        self.assertEqual(f.read(), 'baz/foo.html\nbaz-foo.html\n')
+        os.unlink(os.path.join(tmpdir, 'index.html'))
+        os.unlink(os.path.join(tmpdir, 'baz-foo.html'))
+        os.rmdir(tmpdir)
+
     def test_builder_perl_tests(self):
         """Test builder_perl_tests function"""
+        shutil.rmtree('lib', ignore_errors=True)
         os.mkdir('lib')
         open('lib/testser.pm', 'w').write('line1\n@CONFIG@\nline2\n')
         open('lib/other.pm', 'w')
@@ -65,6 +85,20 @@ class BuilderTest(unittest.TestCase):
         self.assert_('PERL5LIB' in e.env['ENV'])
         self.assertEqual(e.exec_str, "prove foo.pl bar.pl")
         self.assertEqual(t, 1)
+
+        e = DummyEnv(0)
+        e.env['html_coverage'] = 'testcov'
+        old = saliweb.build._fixup_perl_html_coverage
+        try:
+            def dummy_func(prefix, outdir): pass
+            saliweb.build._fixup_perl_html_coverage = dummy_func
+            t = saliweb.build.builder_perl_tests('dummytgt',
+                                                 ['foo.pl', 'bar.pl'], e)
+        finally:
+            saliweb.build._fixup_perl_html_coverage = old
+        self.assert_('PERL5LIB' in e.env['ENV'])
+        self.assert_('HARNESS_PERL_SWITCHES' in e.env['ENV'])
+
         os.unlink('lib/other.pm')
         os.unlink('lib/testser.pm')
         os.rmdir('lib')
