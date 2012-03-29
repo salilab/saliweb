@@ -19,8 +19,7 @@ class RunAllTests(unittest.TestProgram):
         self.opts = opts
         if coverage:
             # Start coverage testing now before we import any modules
-            cwd = os.path.dirname(sys.argv[0])
-            self.topdir = os.path.abspath(os.path.join(cwd, 'python'))
+            self.topdir = os.path.abspath(os.path.join(os.getcwd(), 'python'))
             self.mods = glob.glob("%s/*/*.py" % self.topdir)
 
             self.cov = coverage.coverage(branch=True, include=self.mods)
@@ -71,5 +70,5 @@ def parse_options():
 
 if __name__ == "__main__":
     opts, args = parse_options()
-    sys.argv = [sys.argv[0], '-v'] + args
-    RunAllTests(opts, defaultTest="regressionTest")
+    sys.argv = [sys.argv[0]] + args
+    RunAllTests(opts, defaultTest="regressionTest", argv=[sys.argv[0], '-v'])
