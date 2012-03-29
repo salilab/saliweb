@@ -48,6 +48,10 @@ def _add_build_variable(vars, configs):
 
 def Environment(variables, configfiles, version=None, service_module=None):
     buildmap = _add_build_variable(variables, configfiles)
+    variables.Add(PathVariable('html_coverage',
+                               'Directory to output HTML coverage reports into',
+                               None, PathVariable.PathIsDirCreate))
+
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
@@ -110,6 +114,8 @@ def builder_python_tests(target, source, env):
     """Custom builder to run Python tests"""
     mod = os.path.join(os.path.dirname(saliweb.__file__), 'test',
                        'run-tests.py')
+    if env.get('html_coverage', None):
+        mod += ' --html_coverage=%s' % env['html_coverage']
     app = "python " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'python'
