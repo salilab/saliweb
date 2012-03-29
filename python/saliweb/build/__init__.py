@@ -48,9 +48,9 @@ def _add_build_variable(vars, configs):
 
 def Environment(variables, configfiles, version=None, service_module=None):
     buildmap = _add_build_variable(variables, configfiles)
-    variables.Add(PathVariable('html_coverage',
+    variables.Add(SCons.Script.PathVariable('html_coverage',
                                'Directory to output HTML coverage reports into',
-                               None, PathVariable.PathIsDirCreate))
+                               None, SCons.Script.PathVariable.PathIsDirCreate))
 
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
