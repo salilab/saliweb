@@ -1,4 +1,5 @@
 import glob
+import os
 
 # Only use coverage if it's new enough
 try:
@@ -7,6 +8,25 @@ try:
         coverage = None
 except ImportError:
     coverage = None
+
+def fixup_perl_html_coverage(subdir):
+    prefix = os.path.abspath('perl') + '/'
+    urlprefix=prefix.replace('/', '-')
+    os.rename(os.path.join(subdir, 'coverage.html'),
+              os.path.join(subdir, 'index.html'))
+    # Remove prefixes from file coverage pages
+    for f in glob.glob(os.path.join(subdir, '%s*.html' % urlprefix)):
+        b = os.path.basename(f)
+        os.rename(f, os.path.join(subdir, b[len(urlprefix):]))
+    # Remove file and URL prefixes from text in all HTML files
+    for f in glob.glob(os.path.join(subdir, '*.html')):
+        fin = open(f)
+        fout = open(f + '.new', 'w')
+        for line in fin:
+            fout.write(line.replace(prefix, '').replace(urlprefix, ''))
+        fin.close()
+        fout.close()
+        os.rename(f + '.new', f)
 
 def action(target, source, env):
     if coverage:
@@ -18,7 +38,10 @@ def action(target, source, env):
         cov = coverage.coverage(branch=True)
         cov.combine()
         cov.file_locator.relative_dir = topdir + '/'
-        cov.html_report(mods, directory='test/html_coverage')
+        cov.html_report(mods, directory='test/html_coverage/python')
     else:
         print "Could not find new enough coverage module"
         return 1
+    env.Execute("cover -outputdir test/html_coverage/perl "
+                "test/frontend/cover_db")
+    fixup_perl_html_coverage('test/html_coverage/perl')

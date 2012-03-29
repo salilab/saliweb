@@ -1,0 +1,11 @@
+#!/bin/sh
+
+HAVE_COVERAGE=1
+cover -delete || HAVE_COVERAGE=0
+
+if [ "${HAVE_COVERAGE}" = "1" ]; then
+  HARNESS_PERL_SWITCHES=-MDevel::Cover=+select,/perl/saliweb/,+ignore,. \
+      exec prove $@
+else
+  exec prove $@
+fi
