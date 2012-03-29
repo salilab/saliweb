@@ -38,10 +38,10 @@ def action(target, source, env):
         cov = coverage.coverage(branch=True)
         cov.combine()
         cov.file_locator.relative_dir = topdir + '/'
-        cov.html_report(mods, directory='test/html_coverage/python')
+        cov.html_report(mods, directory='html_coverage/python')
     else:
         print "Could not find new enough coverage module"
         return 1
-    env.Execute("cover -outputdir test/html_coverage/perl "
+    env.Execute("cover -outputdir html_coverage/perl "
                 "test/frontend/cover_db")
-    fixup_perl_html_coverage('test/html_coverage/perl')
+    fixup_perl_html_coverage('html_coverage/perl')

@@ -7,8 +7,8 @@ test = (env.SConscript('backend/SConscript'),
 env.Alias("test", test)
 
 env.Append(BUILDERS = {'HTMLCoverage': Builder(action=html_coverage.action)})
-cov = env.HTMLCoverage(["html_coverage/perl/index.html",
-                        "html_coverage/python/index.html"], test)
+cov = env.HTMLCoverage(["#/html_coverage/perl/index.html",
+                        "#/html_coverage/python/index.html"], test)
 env.AlwaysBuild(cov)
 
 Return('test')
