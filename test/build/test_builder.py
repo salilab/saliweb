@@ -10,13 +10,13 @@ class DummyEnv(object):
         self.env = {'ENV': {}, 'service_module': 'testser'}
     def __getitem__(self, key):
         return self.env[key]
+    def get(self, key, default):
+        return self.env.get(key, default)
     def Clone(self):
         return self
     def Execute(self, exe):
         self.exec_str = exe
         return self.exit_val
-    def get(self, key, default):
-        return default
 
 
 class BuilderTest(unittest.TestCase):
@@ -38,6 +38,16 @@ class BuilderTest(unittest.TestCase):
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
         self.assertEqual(t, 1)
+
+        e = DummyEnv(0)
+        e.env['html_coverage'] = 'testcov'
+        t = saliweb.build.builder_python_tests('dummytgt',
+                                               ['foo.py', 'bar.py'], e)
+        regex = 'python .*/run\-tests\.py --html_coverage=testcov foo\.py ' \
+                + 'bar\.py$'
+        m = re.match(regex, e.exec_str)
+        self.assertNotEqual(m, None, 'String %s does not match regex %s' \
+                            % (e.exec_str, regex))
 
     def test_builder_perl_tests(self):
         """Test builder_perl_tests function"""
