@@ -48,10 +48,43 @@ class RunAllTests(unittest.TestProgram):
                 os.unlink(cov)
         sys.exit(not result.wasSuccessful())
 
+def get_boilerplate_test_case(module_name):
+    service = __import__(module_name)
+    import saliweb.backend
+    import saliweb.test
+
+    class BoilerplateTests(saliweb.test.TestCase):
+        """Check required web service 'boilerplate' functions"""
+
+        def test_get_web_service(self):
+            """Check get_web_service function"""
+            class DummyBackend:
+                class Database(object):
+                    def __init__(self, jobobj):
+                        self.jobobj = jobobj
+                class Config(object):
+                    def __init__(self, configfile):
+                        self.configfile = configfile
+                class WebService(object):
+                    def __init__(self, config, db):
+                        self.config = config
+                        self.db = db
+            config = 'testconfig'
+            old_backend = service.saliweb.backend
+            try:
+                service.saliweb.backend = DummyBackend
+                w = service.get_web_service(config)
+            finally:
+                service.saliweb.backend = old_backend
+            self.assertEqual(w.config.configfile, 'testconfig')
+            self.assert_(issubclass(w.db.jobobj, saliweb.backend.Job),
+                         "%s is not a Job subclass" % w.db.jobobj)
+    return BoilerplateTests(methodName='test_get_web_service')
 
 def regressionTest():
+    module_name = sys.argv[1]
     modobjs = []
-    for f in sys.argv[1:]:
+    for f in sys.argv[2:]:
         dir, mod = os.path.split(f)
         mod = os.path.splitext(mod)[0]
         sys.path.insert(0, dir)
@@ -59,6 +92,7 @@ def regressionTest():
         sys.path.pop(0)
     tests = [unittest.defaultTestLoader.loadTestsFromModule(o) \
              for o in modobjs]
+    tests.append(get_boilerplate_test_case(module_name))
     return unittest.TestSuite(tests)
 
 def parse_options():

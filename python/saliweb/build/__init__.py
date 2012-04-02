@@ -144,6 +144,7 @@ def builder_python_tests(target, source, env):
                        'run-tests.py')
     if env.get('html_coverage', None):
         mod += ' --html_coverage=%s' % env['html_coverage']
+    mod += " " + env['service_module']
     app = "python " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'python'
