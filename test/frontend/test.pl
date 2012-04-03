@@ -30,3 +30,6 @@ BEGIN {
        'frontend htmlroot member');
     is($frontend->{version}, 'testversion', 'frontend version member');
 }
+
+package foo;
+1;
