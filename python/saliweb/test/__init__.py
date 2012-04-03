@@ -59,7 +59,8 @@ class TestCase(unittest.TestCase):
         t = TempDir()
         s = saliweb.backend._JobState(state)
         db = _DummyDB()
-        metadata = {'directory': t.tmpdir, 'name': 'testjob'}
+        metadata = {'directory': t.tmpdir, 'name': 'testjob',
+                    'url': 'http://server/test/path/testjob?passwd=abc'}
         j = jobcls(db, metadata, s)
         # Make sure the directory is deleted when the job is, and not before
         j._tmpdir = t
