@@ -210,6 +210,13 @@ class Config(object):
         else:
             self._config_dir = None
             config.readfp(fh)
+        self.populate(config)
+
+    def populate(self, config):
+        """Populate data structures using the passed config, which is a
+           :class:`ConfigParser.SafeConfigParser` object.
+           This can be overridden in subclasses to read additional
+           service-specific information from the configuration file."""
         self._populate_database(config)
         self._populate_directories(config)
         self._populate_oldjobs(config)

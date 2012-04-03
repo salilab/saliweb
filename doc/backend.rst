@@ -78,7 +78,8 @@ Config
 
 The :class:`Config` class parses the configuration file for the web service
 and stores all of the configuration information. It can be subclassed if
-desired to read extra service-specific information from the configuration file.
+desired to read extra service-specific information from the configuration file,
+usually by extending the :meth:`Config.populate` method.
 
 
 WebService
