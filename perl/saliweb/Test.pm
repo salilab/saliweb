@@ -1,3 +1,43 @@
+package saliweb::DummyIncomingJob;
+
+our @ISA = qw/saliweb::frontend::IncomingJob/;
+
+sub new {
+    my ($invocant, $frontend, $given_name, $email) = @_;
+    my $class = ref($invocant) || $invocant;
+    my $self = {};
+    bless($self, $class);
+    $self->{frontend} = $frontend;
+    $self->{email} = $email;
+    $self->{directory} = "incoming";
+    $self->{name} = "testjob";
+    return $self;
+}
+
+sub submit {
+}
+
+sub results_url {
+    return "dummyURL";
+}
+
+1;
+
+package saliweb::DummyFrontend;
+our @ISA;
+
+sub set_base_class {
+    my ($self, $base) = @_;
+    our @ISA = ($base);
+}
+
+sub make_job {
+    my ($self, $user_jobname, $email) = @_;
+    return new saliweb::DummyIncomingJob($self, $user_jobname, $email);
+}
+
+1;
+
 package saliweb::Test;
 
 sub new {
@@ -13,7 +53,8 @@ sub make_frontend {
     my $cgi = new CGI;
     my $frontend = {CGI=>$cgi, cgiroot=>'http://modbase/top',
                     htmlroot=>'http://modbase/html', version=>'testversion'};
-    bless($frontend, $self->{module_name});
+    bless($frontend, 'saliweb::DummyFrontend');
+    $frontend->set_base_class($self->{module_name});
     return $frontend;
 }
 
