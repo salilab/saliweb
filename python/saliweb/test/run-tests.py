@@ -58,24 +58,27 @@ def get_boilerplate_test_case(module_name):
 
         def test_get_web_service(self):
             """Check get_web_service function"""
-            class DummyBackend:
-                class Database(object):
-                    def __init__(self, jobobj):
-                        self.jobobj = jobobj
-                class Config(object):
-                    def __init__(self, configfile):
-                        self.configfile = configfile
-                class WebService(object):
-                    def __init__(self, config, db):
-                        self.config = config
-                        self.db = db
+            import saliweb.backend
+            def db_init(self, jobobj):
+                self.jobobj = jobobj
+            def config_init(self, configfile):
+                self.configfile = configfile
+            def ws_init(self, config, db):
+                self.config = config
+                self.db = db
             config = 'testconfig'
-            old_backend = service.saliweb.backend
+            old_db = saliweb.backend.Database.__init__
+            old_config = saliweb.backend.Config.__init__
+            old_ws = saliweb.backend.WebService.__init__
             try:
-                service.saliweb.backend = DummyBackend
+                saliweb.backend.Database.__init__ = db_init
+                saliweb.backend.Config.__init__ = config_init
+                saliweb.backend.WebService.__init__ = ws_init
                 w = service.get_web_service(config)
             finally:
-                service.saliweb.backend = old_backend
+                saliweb.backend.Database.__init__ = old_db
+                saliweb.backend.Config.__init__ = old_config
+                saliweb.backend.WebService.__init__ = old_ws
             self.assertEqual(w.config.configfile, 'testconfig')
             self.assert_(issubclass(w.db.jobobj, saliweb.backend.Job),
                          "%s is not a Job subclass" % w.db.jobobj)
