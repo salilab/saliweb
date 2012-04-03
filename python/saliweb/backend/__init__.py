@@ -1372,6 +1372,8 @@ class Job(object):
                             doc="Web service name (read-only)")
     directory = property(lambda x: x._metadata['directory'],
                          doc="Current job working directory (read-only)")
+    config = property(lambda x: x._db.config,
+                      doc=":class:`Config` object (read-only)")
 
 
 class _LockedJobDict(object):
