@@ -213,7 +213,7 @@ class Config(object):
         self.populate(config)
 
     def populate(self, config):
-        """Populate data structures using the passed config, which is a
+        """Populate data structures using the passed `config`, which is a
            :class:`ConfigParser.SafeConfigParser` object.
            This can be overridden in subclasses to read additional
            service-specific information from the configuration file."""
