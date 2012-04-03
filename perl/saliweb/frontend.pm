@@ -649,10 +649,20 @@ sub get_projects {
     return \%projects;
 }
 
+=item get_project_menu
+Return an HTML fragment which will be displayed in a project menu, used by
+get_header(). This can contain general information about the service, links,
+etc., and should be overridden for each service.
+=cut
 sub get_project_menu {
     return "";
 }
 
+=item get_navigation_links
+Return a reference to a list of navigation links, used by get_header().
+This should be overridden for each service to add links to pages to submit
+jobs, show help, list jobs in the queue, etc.
+=cut
 sub get_navigation_links {
     return [];
 }
@@ -763,26 +773,66 @@ sub format_results_error {
                  $q->a({-href=>$self->queue_url}, "queue") . " page.");
 }
 
+=item get_footer
+Return the footer of each web page. By default, this is empty, but it can be
+subclassed to display references, contact addresses etc.
+=cut
 sub get_footer {
     return "";
 }
 
+=item get_index_page
+Return the HTML content of the index page. This is empty by default, and must
+be overridden for each web service. Typically this will display a form for
+user input (multi-page input can be supported if intermediate values are
+passed between pages).
+=cut
 sub get_index_page {
     return "";
 }
 
+=item get_submit_page
+Return the HTML content of the submit page (that shown when a job is submitted
+to the backend). This is empty by default, and must be overridden for each
+web service. Typically this method will perform checks on the input data
+(throwing an InputValidationError to report any problems), then call
+make_job() and its own submit() method to actually submit the job to the
+cluster, then point the user to the URL where job results can be obtained.
+=cut
 sub get_submit_page {
     return "";
 }
 
+=item get_download_page
+Return the HTML content of the download page. This is empty by default.
+=cut
 sub get_download_page {
     return "";
 }
 
+=item get_results_page
+Return the HTML content of the results page (that shown when the user tries
+to view job results). It is passed a CompletedJob object that contains
+information such as the name of the job and the time at which job results
+will be removed, and is run in the job’s directory. This method is empty
+by default, and must be overridden for each web service. Typically this
+method will display any job failures (e.g. log files), display the job
+results directly, or provide a set of links to allow result files to be
+downloaded. In the last case, these URLs are simply the main results URL
+with an additional ‘file’ parameter that gives the file name; see
+allow_file_download() and get_file_mime_type().
+=cut
 sub get_results_page {
     return "";
 }
 
+=item get_queue_page
+Return the HTML content of the queue page. By default this simply shows all
+jobs in the queue in date order, plus some basic help text. (Note that there
+is currently no interface defined to do this any differently. If you need
+to customize the queue page, please talk to Ben so we can design a suitable
+interface.)
+=cut
 sub get_queue_page {
     my $self = shift;
     my $q = $self->{'CGI'};
@@ -809,6 +859,12 @@ sub get_queue_page {
     return $return . $self->get_queue_key();
 }
 
+=item get_help_page
+Return the HTML content of help, contact, FAQ or news pages; the passed
+type parameter will be help, contact, faq, or news. By default this simply
+displays a suitable text file installed as part of the web service in the
+txt directory, named help.txt, contact.txt, faq.txt, or news.txt respectively.
+=cut
 sub get_help_page {
     my ($self, $display_type) = @_;
     my $file;
@@ -1137,6 +1193,13 @@ sub _display_results_page_index {
     $self->_display_web_page($contents);
 }
 
+=item allow_file_download
+When downloading a results file (see get_results_page()) this method is
+called to check whether the file is allowed to be downloaded, and should
+return true if it is. (For example, the job results directory may contain
+intermediate output files that should not be downloaded for efficiency or
+security reasons.) By default, this method always returns true.
+=cut
 sub allow_file_download {
     my ($self, $file) = @_;
     return 1;
