@@ -44,6 +44,9 @@ def RunInTempDir():
     return d
 
 
+class _DummyConfig(object):
+    pass
+
 class _DummyDB(object):
 
     def _update_job(self, metadata, state):
@@ -59,6 +62,7 @@ class TestCase(unittest.TestCase):
         t = TempDir()
         s = saliweb.backend._JobState(state)
         db = _DummyDB()
+        db.config = _DummyConfig()
         metadata = {'directory': t.tmpdir, 'name': 'testjob',
                     'url': 'http://server/test/path/testjob?passwd=abc'}
         j = jobcls(db, metadata, s)
