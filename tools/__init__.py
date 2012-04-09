@@ -66,3 +66,4 @@ def add_common_variables(vars, package):
     vars.Add(BoolVariable('wine',
                           'Build using MS Windows tools via Wine emulation',
                           False))
+    vars.Add('http_proxy', 'Proxy for sphinx to use to get Python doc links')
