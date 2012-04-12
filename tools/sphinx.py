@@ -22,9 +22,12 @@ def generate(env):
     install = SCons.Builder.Builder(action="install -d ${TARGET.dir} && " + \
               "install -d ${TARGET.dir}/_static && " + \
               "install -d ${TARGET.dir}/_sources && " + \
+              "install -d ${TARGET.dir}/modules && " + \
               "install -d ${TARGET.dir}/_sources/modules && " + \
               "install ${SOURCE.dir}/*.html ${TARGET.dir} && " + \
               "install ${SOURCE.dir}/*.js ${TARGET.dir} && " + \
+              "install ${SOURCE.dir}/modules/*.html " + \
+                       "${TARGET.dir}/modules && " + \
               "install ${SOURCE.dir}/_sources/*.txt " + \
                        "${TARGET.dir}/_sources && " + \
               "install ${SOURCE.dir}/_sources/modules/* " + \
