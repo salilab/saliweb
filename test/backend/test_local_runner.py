@@ -27,12 +27,18 @@ class LocalRunnerTest(unittest.TestCase):
         pid = r._run(ws)
         self.assert_(isinstance(pid, str))
         # Give the waiter thread enough time to start up
-        time.sleep(0.1)
+        for i in range(20):
+            if pid in LocalRunner._waited_jobs:
+                break
+            time.sleep(0.05)
         self.assertEqual(LocalRunner._check_completed(pid), False)
         self.assertEqual(pid in LocalRunner._waited_jobs, True)
         os.kill(int(pid), signal.SIGTERM)
         # Give the waiter thread enough time to close down
-        time.sleep(0.1)
+        for i in range(20):
+            if pid not in LocalRunner._waited_jobs:
+                break
+            time.sleep(0.05)
         self.assertEqual(pid in LocalRunner._waited_jobs, False)
         # Make sure that non-zero return code causes a job failure
         event = ws._event_queue.get(timeout=0)
