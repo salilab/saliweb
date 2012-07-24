@@ -207,12 +207,16 @@ class InstallTest(unittest.TestCase):
 
     def test_install_perl(self):
         """Check _InstallPerl function"""
+        class DummyConfig:
+            frontends = {}
+
         def make_env():
             e = DummyEnv()
             e['instconfigfile'] = 'testcfg'
             e['version'] = 'testver'
             e['service_name'] = 'testser'
             e['perldir'] = 'testperl'
+            e['config'] = DummyConfig()
             return e
         e = make_env()
         saliweb.build._InstallPerl(e, ['foo', 'bar'])
@@ -241,12 +245,13 @@ class InstallTest(unittest.TestCase):
                                          [DummyNode(path='dummysrc'),
                                           DummyNode(contents='mycfg'),
                                           DummyNode(contents=ver),
-                                          DummyNode(contents='myser')])
+                                          DummyNode(contents='myser'),
+                                          DummyNode(contents='')])
             self.assertEqual(e.execute_target.target.path, 'dummytgt')
             self.assertEqual(e.execute_target.mode, 0755)
             f = open('dummytgt').read()
-            self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser'bar\nline2\n" \
-                                % expver)
+            self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser', undefbar\n"
+                                "line2\n" % expver)
             os.unlink('dummytgt')
         os.unlink('dummysrc')
 

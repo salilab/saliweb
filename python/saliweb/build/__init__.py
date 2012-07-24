@@ -805,9 +805,14 @@ def _subst_install(env, target, source):
     else:
         version = 'undef'
     service_name = source[3].get_contents()
+    frontend = source[4].get_contents()
+    if frontend == '':
+        frontend = 'undef'
+    else:
+        frontend = "'" + frontend + "'"
     for line in fin:
-        line = line.replace('@CONFIG@', "'%s', %s, '%s'" \
-                               % (configfile, version, service_name))
+        line = line.replace('@CONFIG@', "'%s', %s, '%s', %s" \
+                               % (configfile, version, service_name, frontend))
         fout.write(line)
     fin.close()
     fout.close()
@@ -822,7 +827,8 @@ def _InstallCGI(env, files, subdir=None):
         env.Command(os.path.join(dir, f),
                     [f, env.Value(env['instconfigfile']),
                      env.Value(env['version']),
-                     env.Value(env['service_name'])],
+                     env.Value(env['service_name']),
+                     env.Value('')],
                     _subst_install)
 
 
@@ -831,10 +837,15 @@ def _InstallPerl(env, files, subdir=None):
     if subdir:
         dir = os.path.join(dir, subdir)
     for f in files:
+        modname = os.path.splitext(f)
+        if modname in env['config'].frontends:
+            frontend = env.Value(modname)
+        else:
+            frontend = env.Value('')
         env.Command(os.path.join(dir, f),
                     [f, env.Value(env['instconfigfile']),
                      env.Value(env['version']),
-                     env.Value(env['service_name'])],
+                     env.Value(env['service_name']), frontend],
                     _subst_install)
 
 class _Frontend(object):

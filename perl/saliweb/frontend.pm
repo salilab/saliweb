@@ -334,7 +334,7 @@ use Fcntl ':flock';
 our $web_server = 'modbase.compbio.ucsf.edu';
 
 sub new {
-    my ($invocant, $config_file, $version, $server_name) = @_;
+    my ($invocant, $config_file, $version, $server_name, $frontend) = @_;
     my $class = ref($invocant) || $invocant;
     my $self = {};
     bless($self, $class);
@@ -346,7 +346,7 @@ sub new {
         $self->{'CGI'} = $self->_setup_cgi();
         $self->{page_title} = $server_name;
         # Read configuration file
-        $self->{'config'} = my $config = read_config($config_file);
+        $self->{'config'} = my $config = read_config($config_file, $frontend);
         my $urltop = $config->{general}->{urltop};
         # Make sure any links we generate are also secure if we are secure
         if ($self->cgi->https) {
@@ -1268,8 +1268,14 @@ sub read_ini_file {
 }
 
 sub read_config {
-  my ($filename) = @_;
+  my ($filename, $frontend) = @_;
   my $contents = read_ini_file($filename);
+  if (defined($frontend)) {
+    # Overwrite variables with those of the alternate frontend selected
+    my $sec = "frontend:$frontend";
+    $contents->{general}->{service_name} = $contents->{$sec}->{service_name};
+    $contents->{general}->{urltop} = $contents->{$sec}->{urltop};
+  }
   my ($vol, $dirs, $file) = File::Spec->splitpath($filename);
   my $frontend_file = File::Spec->rel2abs(
                              $contents->{database}->{frontend_config}, $dirs);
