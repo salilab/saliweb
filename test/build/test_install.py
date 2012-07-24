@@ -208,7 +208,7 @@ class InstallTest(unittest.TestCase):
     def test_install_perl(self):
         """Check _InstallPerl function"""
         class DummyConfig:
-            frontends = {}
+            frontends = {'foo': {'service_name': 'Foo'} }
 
         def make_env():
             e = DummyEnv()
@@ -219,9 +219,9 @@ class InstallTest(unittest.TestCase):
             e['config'] = DummyConfig()
             return e
         e = make_env()
-        saliweb.build._InstallPerl(e, ['foo', 'bar'])
+        saliweb.build._InstallPerl(e, ['foo.pm', 'bar'])
         self.assertEqual(len(e.command_target), 2)
-        self.assertEqual(e.command_target[0][0], 'testperl/foo')
+        self.assertEqual(e.command_target[0][0], 'testperl/foo.pm')
         self.assertEqual(e.command_target[1][0], 'testperl/bar')
 
         e = make_env()
@@ -240,19 +240,21 @@ class InstallTest(unittest.TestCase):
                 return self.contents
         open('dummysrc', 'w').write('line1\nfoo@CONFIG@bar\nline2\n')
         for ver, expver in (('None', "undef"), ('r345', "'r345'")):
-            e = DummyEnv()
-            saliweb.build._subst_install(e, [DummyNode(path='dummytgt')],
-                                         [DummyNode(path='dummysrc'),
-                                          DummyNode(contents='mycfg'),
-                                          DummyNode(contents=ver),
-                                          DummyNode(contents='myser'),
-                                          DummyNode(contents='')])
-            self.assertEqual(e.execute_target.target.path, 'dummytgt')
-            self.assertEqual(e.execute_target.mode, 0755)
-            f = open('dummytgt').read()
-            self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser', undefbar\n"
-                                "line2\n" % expver)
-            os.unlink('dummytgt')
+            for frontend, expfrontend in (('', 'undef'),
+                                          ('dummyfront', "'dummyfront'")):
+                e = DummyEnv()
+                saliweb.build._subst_install(e, [DummyNode(path='dummytgt')],
+                                             [DummyNode(path='dummysrc'),
+                                              DummyNode(contents='mycfg'),
+                                              DummyNode(contents=ver),
+                                              DummyNode(contents='myser'),
+                                              DummyNode(contents=frontend)])
+                self.assertEqual(e.execute_target.target.path, 'dummytgt')
+                self.assertEqual(e.execute_target.mode, 0755)
+                f = open('dummytgt').read()
+                self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser', %sbar\n"
+                                    "line2\n" % (expver, expfrontend))
+                os.unlink('dummytgt')
         os.unlink('dummysrc')
 
 
