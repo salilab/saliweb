@@ -15,6 +15,12 @@ user: test
 state_file: state_file
 check_minutes: 10
 
+[frontend:foo]
+service_name: Foo
+
+[frontend:bar]
+service_name: Bar
+
 [database]
 db: testdb
 frontend_config: frontend.conf
@@ -49,6 +55,9 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].days, 90)
         self.assertEqual(conf.admin_email, 'test@salilab.org')
         self.assertEqual(conf.limits['running'], 5)
+        self.assertEqual(len(conf.frontends.keys()), 2)
+        self.assertEqual(conf.frontends['foo']['service_name'], 'Foo')
+        self.assertEqual(conf.frontends['bar']['service_name'], 'Bar')
 
         conf = get_config(extra='[limits]\nrunning: 10')
         self.assertEqual(conf.limits['running'], 10)
