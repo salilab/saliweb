@@ -161,6 +161,8 @@ contents; for full implementations of the methods see the :ref:`frontend` page.
 .. literalinclude:: ../examples/frontend-complete.pm
    :language: perl
 
+.. _deploy_config:
+
 Configuration file
 ==================
 
@@ -174,6 +176,8 @@ to access the MySQL database. Since these files contain sensitive information
 (passwords), they should **not** be group- or world-readable
 (`chmod 0600 backend.conf`), and if using SVN, **do not** put these database
 configuration files into the repository. 
+
+.. _deploy_build:
 
 Using the build system
 ======================

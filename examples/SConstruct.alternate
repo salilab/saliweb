@@ -1,0 +1,16 @@
+import saliweb.build
+
+v = Variables('config.py')
+env = saliweb.build.Environment(v, ['conf/live.conf', 'conf/test.conf'])
+Help(v.GenerateHelpText(env))
+
+env.InstallAdminTools()
+env.InstallCGIScripts()
+
+m = env.Frontend('modalt')
+m.InstallCGIScripts()
+m.InstallTXT(['modalt/contact.txt'])
+
+Export('env')
+SConscript('python/modfoo/SConscript')
+SConscript('lib/SConscript')

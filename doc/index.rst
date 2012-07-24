@@ -18,6 +18,7 @@ Contents
    configfile
    frontend
    deploy
+   altfrontend
    using
 
 Reference:

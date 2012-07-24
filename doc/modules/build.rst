@@ -84,3 +84,19 @@ This module provides a simple SCons-based build infrastructure for web services.
    .. method:: RunPythonTests(tests)
 
       Runs a set of Python tests of the backend implementation.
+
+   .. class:: Frontend(name)
+
+      This class is used to install an alternate frontend called *name*.
+      There must be a corresponding section in the configuration file, and
+      a Perl module, for this frontend (for example, a frontend called ``foo``
+      needs a section in the configuration file called ``[frontend:foo]``
+      and a Perl module (installed with :meth:`Environment.InstallPerl`)
+      called ``foo.pm``). Methods are provided to install files for the
+      frontend. They function identically to the methods in the
+      :class:`Environment` class, but install the files in a subdirectory
+      of the web service called *name*.
+
+      .. method:: InstallHTML(files[, subdir])
+      .. method:: InstallTXT(files[, subdir])
+      .. method:: InstallCGIScripts([scripts])
