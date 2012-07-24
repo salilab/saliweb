@@ -837,15 +837,17 @@ def _InstallPerl(env, files, subdir=None):
     if subdir:
         dir = os.path.join(dir, subdir)
     for f in files:
-        modname = os.path.splitext(f)
+        modname = os.path.splitext(f)[0]
         if modname in env['config'].frontends:
+            service_name = env['config'].frontends[modname]['service_name']
             frontend = env.Value(modname)
         else:
+            service_name = env['service_name']
             frontend = env.Value('')
         env.Command(os.path.join(dir, f),
                     [f, env.Value(env['instconfigfile']),
                      env.Value(env['version']),
-                     env.Value(env['service_name']), frontend],
+                     env.Value(service_name), frontend],
                     _subst_install)
 
 class _Frontend(object):
