@@ -704,11 +704,12 @@ def _make_script(env, target, source):
 def _make_cgi_script(env, target, source):
     name = os.path.basename(str(target[0]))
     modname = source[0].get_contents()
+    perldir = source[1].get_contents()
     if name.endswith('.cgi'):
         name = name[:-4]
     f = open(target[0].path, 'w')
     print >> f, "#!/usr/bin/perl -w"
-    print >> f, 'BEGIN { @INC = ("../lib/",@INC); }'
+    print >> f, 'BEGIN { @INC = ("%s",@INC); }' % perldir
     print >> f, "use %s;" % modname
     if name == 'job':  # Set up REST interface
         print >> f, "use saliweb::frontend::RESTService;"
@@ -768,7 +769,8 @@ def _InstallCGIScripts(env, scripts=None):
                    'submit.cgi', 'download.cgi', 'job']
     for bin in scripts:
         env.Command(os.path.join(env['cgidir'], bin),
-                    Value(env['service_module']),
+                    [Value(env['service_module']),
+                     Value(env['perldir'])],
                     _make_cgi_script)
 
 

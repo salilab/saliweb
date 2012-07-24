@@ -123,6 +123,7 @@ class InstallTest(unittest.TestCase):
         def make_env():
             e = DummyEnv()
             e['cgidir'] = 'testcgi'
+            e['perldir'] = 'testperl'
             e['service_module'] = 'testser'
             return e
         e = make_env()

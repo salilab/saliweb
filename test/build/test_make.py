@@ -63,7 +63,8 @@ class MakeTest(unittest.TestCase):
                 def __str__(self):
                     return self.path
             e = DummyEnv()
-            saliweb.build._make_cgi_script(e, [DummyTarget()], [DummySource()])
+            saliweb.build._make_cgi_script(e, [DummyTarget()],
+                                           [DummySource(), DummySource()])
             self.assertEqual(e.cmd.target.path, t)
             self.assertEqual(e.cmd.mode, 0755)
 
