@@ -224,6 +224,9 @@ BEGIN {
 db=testdb
 frontend_config=frontend.ini
 
+[frontend:foo]
+urltop: http://foo.com/myfootop
+
 [general]
 urltop: http://foo.com/mytop
 END
@@ -257,6 +260,13 @@ END
        '                  user_info');
     ok(exists($self->{user_name}),
        '                  user_name');
+
+    # Check creation of alternate frontend
+    $self = new saliweb::frontend($main, '1.0', 'test_foo', 'foo');
+    is($self->{server_name}, 'test_foo',
+       'saliweb::frontend alternate server_name');
+    is($self->{config}->{general}->{urltop}, 'http://foo.com/myfootop',
+       '                            urltop');
 
     # Make sure roots are modified to use https: if we are SSL secured
     $ENV{HTTPS} = 'on';
