@@ -315,7 +315,6 @@ class Config(object):
         for s in secnames:
             self.frontends[s[9:]] = frontend = {}
             frontend['service_name'] = config.get(s, 'service_name')
-            frontend['urltop'] = config.get(s, 'urltop')
 
     def _populate_oldjobs(self, config):
         self.oldjobs = {}
