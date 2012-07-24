@@ -222,6 +222,7 @@ class Config(object):
         self._populate_oldjobs(config)
         self._populate_backend(config)
         self._populate_limits(config)
+        self._populate_frontends(config)
         self.socket = config.get('general', 'socket')
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
@@ -307,6 +308,15 @@ class Config(object):
         self.backend['check_minutes'] = config.getint('backend',
                                                       'check_minutes')
         self.backend['user'] = config.get('backend', 'user')
+
+    def _populate_frontends(self, config):
+        self.frontends = {}
+        secnames = [x for x in config.sections() if x.startswith('frontend:')]
+        for s in secnames:
+            self.frontends[s[9:]] = frontend = {}
+            frontend['service_name'] = config.get(s, 'service_name')
+            frontend['urltop'] = config.get(s, 'urltop')
+            frontend['module'] = config.get(s, 'module')
 
     def _populate_oldjobs(self, config):
         self.oldjobs = {}

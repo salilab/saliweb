@@ -72,6 +72,7 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
+    env.AddMethod(_make_frontend, 'Frontend')
     env.Append(BUILDERS={'RunPerlTests': Builder(action=builder_perl_tests)})
     env.Append(BUILDERS={'RunPythonTests': \
                           Builder(action=builder_python_tests)})
@@ -833,3 +834,30 @@ def _InstallPerl(env, files, subdir=None):
                      env.Value(env['version']),
                      env.Value(env['service_name'])],
                     _subst_install)
+
+class _Frontend(object):
+    def __init__(self, env, name):
+        if name not in env['config'].frontends:
+            raise ValueError("No frontend:%s section found in config file" \
+                             % name)
+        module = env['config'].frontends[name]['module']
+        self._env = e = env.Clone()
+        self._name = name
+
+        e['cgidir'] = os.path.join(env['instdir'], module, 'cgi')
+        e['htmldir'] = os.path.join(env['instdir'], module, 'html')
+        e['txtdir'] = os.path.join(env['instdir'], module, 'txt')
+        e['service_module'] = module
+
+    def InstallCGIScripts(self, scripts=None):
+        return _InstallCGIScripts(self._env, scripts)
+
+    def InstallHTML(self, files, subdir=None):
+        return _InstallHTML(self._env, files, subdir)
+
+    def InstallTXT(self, files, subdir=None):
+        return _InstallTXT(self._env, files, subdir)
+
+
+def _make_frontend(env, name):
+    return _Frontend(env, name)
