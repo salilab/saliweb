@@ -853,14 +853,13 @@ class _Frontend(object):
         if name not in env['config'].frontends:
             raise ValueError("No frontend:%s section found in config file" \
                              % name)
-        module = env['config'].frontends[name]['module']
         self._env = e = env.Clone()
         self._name = name
 
-        e['cgidir'] = os.path.join(env['instdir'], module, 'cgi')
-        e['htmldir'] = os.path.join(env['instdir'], module, 'html')
-        e['txtdir'] = os.path.join(env['instdir'], module, 'txt')
-        e['service_module'] = module
+        e['cgidir'] = os.path.join(env['instdir'], name, 'cgi')
+        e['htmldir'] = os.path.join(env['instdir'], name, 'html')
+        e['txtdir'] = os.path.join(env['instdir'], name, 'txt')
+        e['service_module'] = name
 
     def InstallCGIScripts(self, scripts=None):
         return _InstallCGIScripts(self._env, scripts)
