@@ -1273,7 +1273,6 @@ sub read_config {
   if (defined($frontend)) {
     # Overwrite variables with those of the alternate frontend selected
     my $sec = "frontend:$frontend";
-    $contents->{general}->{service_name} = $contents->{$sec}->{service_name};
     $contents->{general}->{urltop} = $contents->{$sec}->{urltop};
   }
   my ($vol, $dirs, $file) = File::Spec->splitpath($filename);
