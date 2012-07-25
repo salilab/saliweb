@@ -1274,7 +1274,7 @@ sub read_config {
   my ($filename, $frontend) = @_;
   my $contents = read_ini_file($filename);
   if (defined($frontend)) {
-    # Overwrite variables with those of the alternate frontend selected
+    # Overwrite variables with those of the alternative frontend selected
     my $sec = "frontend:$frontend";
     $contents->{general}->{urltop} = $contents->{$sec}->{urltop};
   }

@@ -87,7 +87,7 @@ This module provides a simple SCons-based build infrastructure for web services.
 
    .. class:: Frontend(name)
 
-      This class is used to install an alternate frontend called *name*.
+      This class is used to install an alternative frontend called *name*.
       There must be a corresponding section in the configuration file, and
       a Perl module, for this frontend (for example, a frontend called ``foo``
       needs a section in the configuration file called ``[frontend:foo]``
