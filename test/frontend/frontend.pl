@@ -12,7 +12,6 @@ use File::Temp qw(tempdir);
 use strict;
 use CGI;
 use DBI;
-use Dummy;
 
 # Miscellaneous tests of the saliweb::frontend class
 
