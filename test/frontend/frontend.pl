@@ -90,10 +90,10 @@ BEGIN {
     my $self = {CGI=>new CGI, page_title=>'test page title'};
     bless($self, 'Dummy::StartHTMLFrontend');
     like($self->start_html(),
-         '/type="text/css" href="/saliweb/css/server.css".*' .
-         'type="text/css" href="dummy.css".*' .
-         'src="/saliweb/js/salilab.js" type="text/JavaScript".*' .
-         'src="dummy.js" type="text/JavaScript"/s',
+         '/type="text\/css" href="\/saliweb\/css\/server\.css".*' .
+         'type="text\/css" href="dummy\.css".*' .
+         'script src="\/saliweb\/js\/salilab\.js".*' .
+         'script src="dummy\.js"/s',
          "start_html (modified header)");
 }
 
