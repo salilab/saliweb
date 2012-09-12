@@ -631,11 +631,21 @@ sub start_html {
     my $q = $self->{'CGI'};
     $style = $style || "/saliweb/css/server.css";
     return $q->header(-status => $self->http_status) .
-           $q->start_html(-title => $self->{page_title},
-                          -style => {-src=>$style},
-                          -script=>[{-language => 'JavaScript',
-                                     -src=>"/saliweb/js/salilab.js"}]
-                          );
+           $q->start_html($self->get_start_html_parameters($style));
+}
+
+=item get_start_html_parameters
+Get parameters to be used to call CGI.pm's start_html() method.
+Can be customized in a derived class to add extra stylesheets or scripts,
+for example.
+=cut
+sub get_start_html_parameters {
+    my ($self, $style) = @_;
+
+    return (-title => $self->{page_title},
+            -style => {-src=>[$style]},
+            -script=>[{-language => 'JavaScript',
+                       -src=>"/saliweb/js/salilab.js"}]);
 }
 
 sub end_html {

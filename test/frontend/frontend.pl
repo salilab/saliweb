@@ -12,6 +12,7 @@ use File::Temp qw(tempdir);
 use strict;
 use CGI;
 use DBI;
+use Dummy;
 
 # Miscellaneous tests of the saliweb::frontend class
 
@@ -83,6 +84,18 @@ BEGIN {
          '.*<link rel="stylesheet".*href="mystyle.css"' .
          '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
          '.*<body>/s', "           (mystyle)");
+}
+
+# Test start_html method with modified header
+{
+    my $self = {CGI=>new CGI, page_title=>'test page title'};
+    bless($self, 'Dummy::StartHTMLFrontend');
+    like($self->start_html(),
+         '/type="text/css" href="/saliweb/css/server.css".*' .
+         'type="text/css" href="dummy.css".*' .
+         'src="/saliweb/js/salilab.js" type="text/JavaScript".*' .
+         'src="dummy.js" type="text/JavaScript"/s',
+         "start_html (modified header)");
 }
 
 # Test simple accessors

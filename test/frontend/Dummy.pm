@@ -301,6 +301,21 @@ sub get_footer {
 1;
 
 
+package Dummy::StartHTMLFrontend;
+our @ISA = qw/saliweb::frontend/;
+
+sub get_start_html_parameters {
+  my ($self, $style) = @_;
+  my %param = $self->SUPER::get_start_html_parameters($style);
+  push @{$param{-script}}, {-language => 'JavaScript',
+                            -src => 'dummy.js' };
+  push @{$param{-style}->{'-src'}}, 'dummy.css';
+  return %param;
+}
+
+1;
+
+
 package Dummy::NoThrowError;
 use base qw(Error::Simple);
 

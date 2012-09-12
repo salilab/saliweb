@@ -210,7 +210,15 @@ the web frontend.
       Return the content of the head section of the web page, containing
       scripts, style sheets, and the title. If *style* is provided, this is
       the URL for a CSS style sheet; if not provided, a default Sali lab
-      style is used.
+      style is used. It usually does not make sense to override this method
+      in derived classes (instead, override
+      :meth:`~saliwebfrontend.get_start_html_parameters`).
+
+   .. method:: get_start_html_parameters(style)
+
+      Return a hash of arguments suitable for passing to CGI.pm's start_html()
+      method. This can be overridden in derived classes, for example to add
+      additional scripts or CSS style sheets.
 
    .. method:: end_html()
 
