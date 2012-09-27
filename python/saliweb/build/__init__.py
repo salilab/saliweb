@@ -101,12 +101,7 @@ def _fixup_perl_html_coverage(prefix, subdir):
         fout.close()
         os.rename(f + '.new', f)
 
-def builder_perl_tests(target, source, env):
-    """Custom builder to run Perl tests"""
-    app = "prove " + " ".join(str(s) for s in source)
-    # Make a temporary copy of the Perl module, so that it works
-    tmpdir = tempfile.mkdtemp()
-    module = '%s.pm' % env['service_module']
+def subst_install(module, tmpdir):
     fin = open(os.path.join('lib', module))
     fout = open(os.path.join(tmpdir, module), 'w')
     for line in fin:
@@ -114,11 +109,23 @@ def builder_perl_tests(target, source, env):
     fin.close()
     fout.close()
 
-    # Make symlinks for everything else, so (e.g.) module imports work
+def builder_perl_tests(target, source, env):
+    """Custom builder to run Perl tests"""
+    app = "prove " + " ".join(str(s) for s in source)
+    # Make a temporary copy of the Perl module, so that it works
+    tmpdir = tempfile.mkdtemp()
+    module = '%s.pm' % env['service_module']
+    subst_install(module, tmpdir)
+
+    # Do the same for all alternative frontends; make symlinks for everything
+    # else, so (e.g.) module imports work
     abslib = os.path.abspath('lib')
     for f in os.listdir('lib'):
         if f != module:
-            os.symlink(os.path.join(abslib, f), os.path.join(tmpdir, f))
+            if f in env['config'].frontends:
+                subst_install(f, tmpdir)
+            else:
+                os.symlink(os.path.join(abslib, f), os.path.join(tmpdir, f))
 
     e = env.Clone()
     e['ENV']['PERL5LIB'] = tmpdir

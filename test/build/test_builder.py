@@ -70,16 +70,20 @@ class BuilderTest(unittest.TestCase):
 
     def test_builder_perl_tests(self):
         """Test builder_perl_tests function"""
+        class DummyConfig:
+            frontends = []
         shutil.rmtree('lib', ignore_errors=True)
         os.mkdir('lib')
         open('lib/testser.pm', 'w').write('line1\n@CONFIG@\nline2\n')
         open('lib/other.pm', 'w')
         e = DummyEnv(0)
+        e.env['config'] = DummyConfig()
         t = saliweb.build.builder_perl_tests('dummytgt',
                                              ['foo.pl', 'bar.pl'], e)
         self.assertEqual(t, None)
 
         e = DummyEnv(1)
+        e.env['config'] = DummyConfig()
         t = saliweb.build.builder_perl_tests('dummytgt',
                                              ['foo.pl', 'bar.pl'], e)
         self.assert_('PERL5LIB' in e.env['ENV'])
@@ -87,6 +91,7 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(t, 1)
 
         e = DummyEnv(0)
+        e.env['config'] = DummyConfig()
         e.env['html_coverage'] = 'testcov'
         old = saliweb.build._fixup_perl_html_coverage
         try:
