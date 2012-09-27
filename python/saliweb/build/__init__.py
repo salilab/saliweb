@@ -122,7 +122,7 @@ def builder_perl_tests(target, source, env):
     abslib = os.path.abspath('lib')
     for f in os.listdir('lib'):
         if f != module:
-            if f in env['config'].frontends:
+            if os.path.splitext(f)[0] in env['config'].frontends:
                 subst_install(f, tmpdir)
             else:
                 os.symlink(os.path.join(abslib, f), os.path.join(tmpdir, f))
