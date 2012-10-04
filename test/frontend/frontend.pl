@@ -503,6 +503,17 @@ sub test_display_page {
     is($self->get_footer, "", 'get_footer returns an empty string');
 }
 
+# Test default get_*_page methods
+{
+    my $self = {CGI=>new CGI};
+    bless($self, 'saliweb::frontend');
+    is($self->get_index_page, "", 'get_index_page returns an empty string');
+    is($self->get_submit_page, "", 'get_submit_page returns an empty string');
+    is($self->get_download_page, "",
+       'get_download_page returns an empty string');
+    is($self->get_results_page, "", 'get_results_page returns an empty string');
+}
+
 # Test format_user_error method
 {
     my $self = {CGI=>new CGI};
