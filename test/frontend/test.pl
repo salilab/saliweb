@@ -10,6 +10,7 @@ use strict;
 
 BEGIN {
     use_ok('saliweb::Test');
+    use_ok('saliweb::frontend');
 }
 
 # Test new method
@@ -29,6 +30,15 @@ BEGIN {
     is($frontend->{htmlroot}, 'http://modbase/html',
        'frontend htmlroot member');
     is($frontend->{version}, 'testversion', 'frontend version member');
+}
+
+# Test DummyIncomingJob
+{
+    my $t = new saliweb::Test('foo');
+    my $frontend = $t->make_frontend();
+    my $job = $frontend->make_job("testjobname", "testemail");
+    is($job->results_url, 'dummyURL', 'DummyIncomingJob results URL method');
+    is($job->submit, undef, 'DummyIncomingJob submit method');
 }
 
 package foo;
