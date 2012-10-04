@@ -27,4 +27,18 @@ BEGIN {
          '<body>.*' .
          "<div id=\"fullpart\">test_download_page</div>.*" .
          "</body>.*</html>/s", 'check download page');
+
+    # Check handling of user errors (e.g. permission denied)
+    $cls->{server_name} = 'checkaccess';
+    $out = stdout_from { $cls->display_download_page() };
+    like($out, '/access to download denied/',
+         '                     (user error)');
+
+    # Check handling of fatal errors
+    $cls->{server_name} = 'faildownload';
+    stdout_from {
+        throws_ok { $cls->display_download_page() }
+                  'saliweb::frontend::InternalError',
+                  '                     (caught get_download_page exception)';
+    };
 }

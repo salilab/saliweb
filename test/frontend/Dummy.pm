@@ -228,7 +228,11 @@ sub get_index_page {
 
 sub get_download_page {
     my $self = shift;
-    return "test_download_page";
+    if ($self->{server_name} eq "faildownload") {
+        throw saliweb::frontend::InternalError("get_download_page failure");
+    } else {
+        return "test_download_page";
+    }
 }
 
 sub get_submit_page {

@@ -159,6 +159,13 @@ sub make_test_frontend {
        '                     (exception triggered handle_fatal error)');
     like($MIME::Lite::last_email->{Data}, "/get_results_page failure/",
          '                     (exception sent failure email)');
+
+    # Check handling of user errors (e.g. permission denied)
+    $cls = make_test_frontend('testjob', 'testpasswd');
+    $cls->{server_name} = 'checkaccess';
+    $out = stdout_from { $cls->display_results_page() };
+    like($out, '/access to results denied/',
+         '                     (user error)');
 }
 
 # Check file downloads
