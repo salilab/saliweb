@@ -224,6 +224,8 @@ BEGIN { use_ok('saliweb::frontend'); }
     bless($frontend, 'saliweb::frontend');
     my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
     ok(defined $job, "Create IncomingJob for submit");
+    is ($job->{email}, 'myemail',
+        'IncomingJob email member');
     is_deeply($frontend->{incoming_jobs}, {$job=>$job},
               "incoming_jobs hash contains key for job");
     $job->submit();
@@ -243,9 +245,11 @@ BEGIN { use_ok('saliweb::frontend'); }
               "                    (failure at execute)";
     like($@, qr/Cannot execute query DB error/,
          "                    (exception message)");
-    # Make sure it works with a correct job name
+    # Make sure it works with a correct job name and email address
     $job->{name} = 'ok-job';
-    $job->submit();
+    $job->submit('otheremail');
+    is ($job->{email}, 'otheremail',
+        'IncomingJob email in submit');
     # Now check for failure in prepare
     $dbh->{failprepare} = 1;
     throws_ok { $job->submit() }
