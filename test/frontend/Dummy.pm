@@ -76,7 +76,9 @@ sub execute {
 sub fetchrow_hashref {
     my $self = shift;
     $self->{fetch_calls}++;
-    if ($self->{fetch_calls} == 1) {
+    if ($self->{jobdir} eq 'no-jobs-dir') {
+        return;
+    } elsif ($self->{fetch_calls} == 1) {
         return {name=>'job1', submit_time=>'time1', state=>'RUNNING',
                 user=>undef, directory=>$self->{jobdir}};
     } elsif ($self->{fetch_calls} == 2) {

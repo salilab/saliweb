@@ -88,6 +88,12 @@ BEGIN { use_ok('saliweb::frontend'); }
                    "                         (content, row " . ($i + 1) . ")");
         }
     }
+    # Test output with no jobs in the queue
+    $dbh->{jobdir} = 'no-jobs-dir';
+    $rows = $self->get_queue_rows($q, $dbh, 1);
+    is(scalar(@$rows), 1, "get_queue_rows (no jobs, length)");
+    like($rows->[0], qr/<td.*>.*No completed jobs.*<\/td>/s,
+         "               (content, row 1)");
 }
 
 # Test get_queue_page
