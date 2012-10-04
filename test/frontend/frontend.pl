@@ -139,6 +139,8 @@ BEGIN {
        '                      (contact)');
     is($self->results_url, 'testroot/results.cgi',
        '                      (results)');
+    is($self->download_url, 'testroot/download.cgi',
+       '                      (download)');
 }
 
 
