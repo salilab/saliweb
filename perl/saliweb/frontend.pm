@@ -1248,6 +1248,8 @@ sub help_link {
 
 sub make_job {
   my ($self, $user_jobname, $email) = @_;
+  # Note that the email argument is deprecated (should be passed in submit()
+  # instead) since it will be forgotten by resumed jobs
   return new saliweb::frontend::IncomingJob($self, $user_jobname, $email);
 }
 
