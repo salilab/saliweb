@@ -23,6 +23,8 @@ BEGIN {
 # Test make_frontend
 {
     my $t = new saliweb::Test('foo');
+    # Test constructing from existing object
+    my $t2 = $t->new('foo');
     my $frontend = $t->make_frontend();
     isa_ok($frontend, 'foo', 'frontend object');
     isa_ok($frontend->{CGI}, 'CGI', 'frontend CGI');
@@ -37,6 +39,8 @@ BEGIN {
     my $t = new saliweb::Test('foo');
     my $frontend = $t->make_frontend();
     my $job = $frontend->make_job("testjobname", "testemail");
+    # Test constructing from existing object
+    my $job2 = $job->new('name', 'email');
     is($job->results_url, 'dummyURL', 'DummyIncomingJob results URL method');
     is($job->submit, undef, 'DummyIncomingJob submit method');
 }
