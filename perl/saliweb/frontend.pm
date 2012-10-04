@@ -1126,6 +1126,7 @@ sub display_help_page {
 sub display_results_page {
     my $self = shift;
     try {
+        $self->set_page_title("Results");
         $self->check_page_access('results');
         $self->_internal_display_results_page();
     } catch saliweb::frontend::UserError with {
@@ -1155,7 +1156,6 @@ sub _internal_display_results_page {
     }
 
     my $passwd = $q->param('passwd');
-    $self->set_page_title("Results");
 
     if (!defined($job) || !defined($passwd)) {
         throw saliweb::frontend::ResultsBadURLError(
