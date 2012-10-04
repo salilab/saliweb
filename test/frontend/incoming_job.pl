@@ -205,6 +205,10 @@ BEGIN { use_ok('saliweb::frontend'); }
     $resjob = resume saliweb::frontend::IncomingJob($frontend, "myjob");
     is($resjob->name, "myjob");
 
+    # Check resume_job method
+    $resjob = $frontend->resume_job("myjob");
+    is($resjob->name, "myjob");
+
     # Check sanitizing of job names
     $resjob = resume saliweb::frontend::IncomingJob($frontend, "my/*%job");
     is($resjob->name, "myjob");
@@ -237,7 +241,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     my $frontend = {cgiroot=>'mycgiroot', config=>$config, dbh=>$dbh};
     bless($frontend, 'saliweb::frontend');
     my $job = new saliweb::frontend::IncomingJob($frontend, "myjob", "myemail");
-    ok(defined $job, "Create IncomingJob for submit");
+    ok(defined $job, "Create IncomingJob for submit via constructor");
     is ($job->{email}, 'myemail',
         'IncomingJob email member');
     is_deeply($frontend->{incoming_jobs}, {$job=>$job},
@@ -264,6 +268,11 @@ BEGIN { use_ok('saliweb::frontend'); }
     $job->submit('otheremail');
     is ($job->{email}, 'otheremail',
         'IncomingJob email in submit');
+
+    # Check make_job method
+    my $job2 = $frontend->make_job('myjob', 'myemail');
+    ok(defined $job2, "Create IncomingJob for submit via make_job");
+
     # Now check for failure in prepare
     $dbh->{failprepare} = 1;
     throws_ok { $job->submit() }
