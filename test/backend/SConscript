@@ -2,6 +2,8 @@ Import('env')
 
 e = env.Clone()
 e['ENV']['PYTHONPATH'] = Dir('#/python').abspath
+if e.get('coverage', False):
+    e['ENV']['SALIWEB_COVERAGE'] = True
 
 # Custom builder to run unit tests:
 def builder_unit_test(target, source, env):

@@ -1,12 +1,14 @@
 import unittest, sys, os, re
 import glob
 
-# Only use coverage if it's new enough
+# Only use coverage if it's new enough and is requested
 try:
     import coverage
     if not hasattr(coverage.coverage, 'combine'):
         coverage = None
 except ImportError:
+    coverage = None
+if 'SALIWEB_COVERAGE' not in os.environ:
     coverage = None
 
 class RunAllTests(unittest.TestProgram):

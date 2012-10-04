@@ -7,7 +7,10 @@ e = env.Clone()
 # Custom builder to run unit tests:
 def builder_unit_test(target, source, env):
     dir = os.path.dirname(str(source[0]))
-    app = "cd %s && ./covprove *.pl" % dir
+    if env.get('coverage', False):
+        app = "cd %s && ./covprove *.pl" % dir
+    else:
+        app = "cd %s && prove *.pl" % dir
     if e.Execute(app) == 0:
         file(str(target[0]), 'w').write('PASSED\n')
     else:
