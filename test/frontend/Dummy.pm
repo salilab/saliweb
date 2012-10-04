@@ -38,7 +38,7 @@ sub execute {
     $self->{jobname} = $jobname;
     $self->{execute_calls}++;
     my $calls = $self->{execute_calls};
-    if ($jobname eq "fail-$calls") {
+    if ($jobname eq "fail-$calls" || $self->{failexecute}) {
         return undef;
     }
     return $jobname ne "fail-job";

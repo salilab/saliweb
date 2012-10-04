@@ -188,6 +188,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 {
     my $dir = tempdir( CLEANUP => 1 );
     mkdir("$dir/myjob");
+    mkdir("$dir/existing-job");
     my $dbh = new Dummy::DB;
     my $config = {};
     $config->{directories}->{INCOMING} = $dir;
@@ -208,7 +209,20 @@ BEGIN { use_ok('saliweb::frontend'); }
     $resjob = resume saliweb::frontend::IncomingJob($frontend, "my/*%job");
     is($resjob->name, "myjob");
 
+    # Check handling of database errors
+    $dbh->{failprepare} = 1;
+    throws_ok { resume saliweb::frontend::IncomingJob($frontend, "myjob") }
+              'saliweb::frontend::DatabaseError';
+    $dbh->{failprepare} = 0;
+    $dbh->{failexecute} = 1;
+    throws_ok { resume saliweb::frontend::IncomingJob($frontend, "myjob") }
+              'saliweb::frontend::DatabaseError';
+    $dbh->{failexecute} = 0;
+
     throws_ok { resume saliweb::frontend::IncomingJob($frontend, "badjob") }
+              'saliweb::frontend::InputValidationError';
+    throws_ok { resume saliweb::frontend::IncomingJob($frontend,
+                                                      "existing-job") }
               'saliweb::frontend::InputValidationError';
 }
 
