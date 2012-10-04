@@ -265,7 +265,7 @@ the web frontend.
       This is only filled in when :meth:`submit` is called. Attempting to
       query this attribute before then will result in an :exc:`InternalError`.
 
-   .. method:: submit(email)
+   .. method:: submit([email])
 
       Submits the job to the backend to run on the cluster. If an email
       address is provided, it is notified when the job completes.
