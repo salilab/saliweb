@@ -6,6 +6,7 @@ from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
 import urllib2
+import time
 
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
@@ -108,6 +109,7 @@ def get_results(url):
     except urllib2.HTTPError, detail:
         if detail.code == 503:
             print "Job not done yet"
+            return
         else:
             raise
     dom = parseString(u.read())
@@ -120,6 +122,14 @@ def get_results(url):
         print "   " + url
     dom.unlink()
     return urls
+
+def run_job(url, args):
+    results_url = submit_job(url, args)
+    while True:
+        results = get_results(results_url)
+        if results is not None:
+            return results
+        time.sleep(60)
 
 class _Command(object):
     def __init__(self, usage_prefix):
@@ -158,6 +168,16 @@ class _ResultsCommand(_Command):
         else:
             self.usage()
 
+class _RunCommand(_Command):
+    short_help = "Run a web service job."
+    usage_args = '<url> [ARGS ...]'
+    long_help = short_help
+    def main(self, args):
+        if len(args) >= 1:
+            run_job(args[0], args[1:])
+        else:
+            self.usage()
+
 
 class WebService(object):
     def __init__(self):
@@ -165,7 +185,8 @@ class WebService(object):
         self._progname = os.path.basename(sys.argv[0])
         self._all_commands = {'info':_InfoCommand,
                               'submit':_SubmitCommand,
-                              'results':_ResultsCommand}
+                              'results':_ResultsCommand,
+                              'run':_RunCommand}
 
     def main(self):
         if len(sys.argv) <= 1:
