@@ -819,7 +819,7 @@ get_submit_parameter_help().
 =cut
 sub parameter {
     my ($self, $key, $help, $optional) = @_;
-    $optional = ($optional ? " optional" : "");
+    $optional = ($optional ? " optional=\"1\"" : "");
     return "      <string name=\"$key\"$optional>$help</string>"
 }
 
@@ -829,7 +829,7 @@ get_submit_parameter_help().
 =cut
 sub file_parameter {
     my ($self, $key, $help, $optional) = @_;
-    $optional = ($optional ? " optional" : "");
+    $optional = ($optional ? " optional=\"1\"" : "");
     return "      <file name=\"$key\"$optional>$help</file>"
 }
 

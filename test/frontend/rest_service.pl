@@ -121,7 +121,7 @@ sub test_display_page {
          'parameter (not optional)');
 
     $p = $t->parameter("foo", "foohelp", 1);
-    like($p, qr#<string name="foo" optional>foohelp</string>#,
+    like($p, qr#<string name="foo" optional="1">foohelp</string>#,
          'parameter (optional)');
 
     $p = $t->file_parameter("foo", "foohelp");
@@ -132,6 +132,6 @@ sub test_display_page {
          'file_parameter (not optional)');
 
     $p = $t->file_parameter("foo", "foohelp", 1);
-    like($p, qr#<file name="foo" optional>foohelp</file>#,
+    like($p, qr#<file name="foo" optional="1">foohelp</file>#,
          'file_parameter (optional)');
 }
