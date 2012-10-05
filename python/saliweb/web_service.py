@@ -25,7 +25,7 @@ def _curl_rest_page(url, curl_args):
     if len(top) == 0:
         raise ValueError("Invalid XML: web service did not return "
                          "XML containing a 'saliweb' tag")
-    return top[0]
+    return top[0], out
 
 class _Parameter(object):
     def __init__(self, name, help, optional):
@@ -68,7 +68,7 @@ def get_progname():
     return os.path.basename(sys.argv[0])
 
 def show_info(url):
-    p = _curl_rest_page(url, [])
+    p, out = _curl_rest_page(url, [])
     parameters = _get_parameters_from_xml(p)
     if parameters:
         pstr = " ".join(x.get_full_arg() for x in parameters)
@@ -89,6 +89,18 @@ service page and look at the names of the HTML form elements. Alternatively,
 ask the developer of the web service to implement the
 get_submit_parameters_help() method!"""
 
+def submit_job(url, args):
+    curl_args = []
+    for a in args:
+        curl_args.append('-F')
+        curl_args.append(a)
+    p, out = _curl_rest_page(url, curl_args)
+    for results in p.getElementsByTagName('job'):
+        url = results.getAttribute('xlink:href')
+        print "Job submitted: results will be found at " + url
+        return url
+    raise IOError("Could not submit job: " + out)
+
 class _Command(object):
     pass
 
@@ -98,12 +110,19 @@ class _InfoCommand(_Command):
         if len(args) == 1:
             show_info(args[0])
 
+class _SubmitCommand(_Command):
+    shorthelp = "Submit a job to a web service."
+    def main(self, args):
+        if len(args) >= 1:
+            submit_job(args[0], args[1:])
+
 
 class WebService(object):
     def __init__(self):
         self.short_help = "Run jobs using Sali lab REST web services."
         self._progname = os.path.basename(sys.argv[0])
-        self._all_commands = {'info':_InfoCommand}
+        self._all_commands = {'info':_InfoCommand,
+                              'submit':_SubmitCommand}
 
     def main(self):
         if len(sys.argv) <= 1:
