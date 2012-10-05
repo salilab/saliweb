@@ -102,19 +102,31 @@ def submit_job(url, args):
     raise IOError("Could not submit job: " + out)
 
 class _Command(object):
-    pass
+    def __init__(self, usage_prefix):
+        self.usage_prefix = usage_prefix
+    def usage(self):
+        print "\nUsage: %s " % self.usage_prefix + self.usage_args \
+              + '\n\n' + self.long_help
 
 class _InfoCommand(_Command):
     short_help = "Get basic information about a web service."
+    usage_args = '<url>'
+    long_help = short_help
     def main(self, args):
         if len(args) == 1:
             show_info(args[0])
+        else:
+            self.usage()
 
 class _SubmitCommand(_Command):
     short_help = "Submit a job to a web service."
+    usage_args = '<url> [ARGS ...]'
+    long_help = short_help
     def main(self, args):
         if len(args) >= 1:
             submit_job(args[0], args[1:])
+        else:
+            self.usage()
 
 
 class WebService(object):
@@ -130,9 +142,14 @@ class WebService(object):
         else:
             command = sys.argv[1]
             if command == 'help':
-                self.show_help()
+                if len(sys.argv) == 3:
+                    self.show_command_help(sys.argv[2])
+                else:
+                    self.show_help()
             elif command in self._all_commands:
                 self.do_command(command)
+            else:
+                self.unknown_command(command)
 
     def show_help(self):
         print self.short_help + """
@@ -143,11 +160,26 @@ Commands:""" % self._progname
         print "    %-8s  Get help on using %s." % ('help', self._progname)
         for (key, val) in self._all_commands.items():
             print "    %-8s  %s" % (key, val.short_help)
+        print """
+Use "%s help <command>" for detailed help on any command.""" % self._progname
+
+    def show_command_help(self, command):
+        if command == 'help':
+            self.show_help()
+        elif command in self._all_commands:
+            c = self._all_commands[command](self._progname + ' ' + command)
+            c.usage()
+        else:
+            self.unknown_command(command)
 
     def do_command(self, command):
-        c = self._all_commands[command]()
+        c = self._all_commands[command](self._progname + ' ' + command)
         c.main(sys.argv[2:])
 
+    def unknown_command(self, command):
+        print "Unknown command: '%s'" % command
+        print "Use '%s help' for help." % self._progname
+        sys.exit(1)
 
 def main():
     ws = WebService()
