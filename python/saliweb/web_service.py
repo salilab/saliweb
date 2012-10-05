@@ -5,6 +5,7 @@ import os
 from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
+import urllib2
 
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
@@ -101,6 +102,25 @@ def submit_job(url, args):
         return url
     raise IOError("Could not submit job: " + out)
 
+def get_results(url):
+    try:
+        u = urllib2.urlopen(url)
+    except urllib2.HTTPError, detail:
+        if detail.code == 503:
+            print "Job not done yet"
+        else:
+            raise
+    dom = parseString(u.read())
+    print "Got results:"
+    urls = []
+    top = dom.getElementsByTagName('saliweb')[0]
+    for results in top.getElementsByTagName('results_file'):
+        urls.append(url)
+        url = results.getAttribute('xlink:href')
+        print "   " + url
+    dom.unlink()
+    return urls
+
 class _Command(object):
     def __init__(self, usage_prefix):
         self.usage_prefix = usage_prefix
@@ -128,13 +148,24 @@ class _SubmitCommand(_Command):
         else:
             self.usage()
 
+class _ResultsCommand(_Command):
+    short_help = "Check for web service results."
+    usage_args = '<url>'
+    long_help = short_help
+    def main(self, args):
+        if len(args) == 1:
+            get_results(args[0])
+        else:
+            self.usage()
+
 
 class WebService(object):
     def __init__(self):
         self.short_help = "Run jobs using Sali lab REST web services."
         self._progname = os.path.basename(sys.argv[0])
         self._all_commands = {'info':_InfoCommand,
-                              'submit':_SubmitCommand}
+                              'submit':_SubmitCommand,
+                              'results':_ResultsCommand}
 
     def main(self):
         if len(sys.argv) <= 1:
