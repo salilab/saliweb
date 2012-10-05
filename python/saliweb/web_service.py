@@ -105,13 +105,13 @@ class _Command(object):
     pass
 
 class _InfoCommand(_Command):
-    shorthelp = "Get basic information about a web service."
+    short_help = "Get basic information about a web service."
     def main(self, args):
         if len(args) == 1:
             show_info(args[0])
 
 class _SubmitCommand(_Command):
-    shorthelp = "Submit a job to a web service."
+    short_help = "Submit a job to a web service."
     def main(self, args):
         if len(args) >= 1:
             submit_job(args[0], args[1:])
@@ -129,8 +129,20 @@ class WebService(object):
             print self.short_help + " Use '%s help' for help." % self._progname
         else:
             command = sys.argv[1]
-            if command in self._all_commands:
+            if command == 'help':
+                self.show_help()
+            elif command in self._all_commands:
                 self.do_command(command)
+
+    def show_help(self):
+        print self.short_help + """
+
+Usage: %s <command> [args]
+
+Commands:""" % self._progname
+        print "    %-8s  Get help on using %s." % ('help', self._progname)
+        for (key, val) in self._all_commands.items():
+            print "    %-8s  %s" % (key, val.short_help)
 
     def do_command(self, command):
         c = self._all_commands[command]()
