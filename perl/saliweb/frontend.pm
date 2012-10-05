@@ -804,6 +804,35 @@ sub get_index_page {
     return "";
 }
 
+=item get_submit_parameter_help
+Return a list of parameters that the submit page will expect, with help for
+each. This is used by the REST interface to document the API. Each item in the
+list can be the result of parameter() or file_parameter().
+=cut
+sub get_submit_parameter_help {
+    return [];
+}
+
+=item parameter
+Represent a single parameter (with help), used as input to
+get_submit_parameter_help().
+=cut
+sub parameter {
+    my ($self, $key, $help, $optional) = @_;
+    $optional = ($optional ? " optional" : "");
+    return "      <string name=\"$key\"$optional>$help</string>"
+}
+
+=item file_parameter
+Represent a single file upload parameter (with help), used as input to
+get_submit_parameter_help().
+=cut
+sub file_parameter {
+    my ($self, $key, $help, $optional) = @_;
+    $optional = ($optional ? " optional" : "");
+    return "      <file name=\"$key\"$optional>$help</file>"
+}
+
 =item get_submit_page
 Return the HTML content of the submit page (that shown when a job is submitted
 to the backend). This is empty by default, and must be overridden for each

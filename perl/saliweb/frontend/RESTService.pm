@@ -67,7 +67,7 @@ sub get_help {
     my $service = $self->{server_name};
     my $cgiroot = $self->cgiroot;
     my $rest_url = $self->rest_url;
-    return <<END;
+    my $help = <<END;
    <help>
 This URL provides a REST-style interface to the Sali Lab's $service
 web service. It is designed to be used for automated job submission
@@ -94,6 +94,10 @@ $rest_url/jobname/outputfile
 and the file itself can be obtained by a GET request to that URL.
    </help>
 END
+    my $parameters = $self->get_submit_parameter_help();
+    $help .= "\n   <parameters>\n" . join("\n", @$parameters)
+             . "\n   </parameters>\n";
+    return $help;
 }
 
 sub _internal_display_submit_page {

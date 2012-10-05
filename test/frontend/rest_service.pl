@@ -106,3 +106,32 @@ sub test_display_page {
     like($@, qr/^No job submitted by submit page/,
          '                   (exception message)');
 }
+
+# Test get_submit_parameter_help, parameter, file_parameter
+{
+    my $t = make_test_frontend('test');
+    my $help = $t->get_submit_parameter_help();
+    is(@$help, 0, 'get_submit_parameter_help returns an empty arrayref');
+
+    my $p = $t->parameter("foo", "foohelp");
+    like($p, qr#<string name="foo">foohelp</string>#,
+         'parameter (default not optional)');
+    $p = $t->parameter("foo", "foohelp", 0);
+    like($p, qr#<string name="foo">foohelp</string>#,
+         'parameter (not optional)');
+
+    $p = $t->parameter("foo", "foohelp", 1);
+    like($p, qr#<string name="foo" optional>foohelp</string>#,
+         'parameter (optional)');
+
+    $p = $t->file_parameter("foo", "foohelp");
+    like($p, qr#<file name="foo">foohelp</file>#,
+         'file_parameter (default not optional)');
+    $p = $t->file_parameter("foo", "foohelp", 0);
+    like($p, qr#<file name="foo">foohelp</file>#,
+         'file_parameter (not optional)');
+
+    $p = $t->file_parameter("foo", "foohelp", 1);
+    like($p, qr#<file name="foo" optional>foohelp</file>#,
+         'file_parameter (optional)');
+}
