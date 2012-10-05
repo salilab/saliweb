@@ -10,7 +10,8 @@ import subprocess
 def submit_job(pdb, job_name):
     # Sadly Python currently has no method to POST multipart forms, so we
     # use curl instead
-    p = subprocess.Popen(['/usr/bin/curl', '-F', 'input_pdb=@' + pdb,
+    p = subprocess.Popen(['/usr/bin/curl', '-s', '-L', '-F',
+                          'input_pdb=@' + pdb,
                           '-F', 'job_name=' + job_name, rest_url],
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = p.communicate()
