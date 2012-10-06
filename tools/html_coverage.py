@@ -31,7 +31,7 @@ def fixup_perl_html_coverage(subdir):
 def action(target, source, env):
     if coverage:
         topdir = 'python'
-        mods = ["%s/saliweb/__init__.py" % topdir] \
+        mods = glob.glob("%s/saliweb/*.py" % topdir) \
                + glob.glob("%s/saliweb/build/*.py" % topdir) \
                + glob.glob("%s/saliweb/backend/*.py" % topdir)
 
