@@ -153,11 +153,14 @@ def run_job(url, args):
        periodically running get_results() until results become available.
     """
     results_url = submit_job(url, args)
+    interval = 10
     while True:
+        time.sleep(interval)
+        if interval < 1200:
+            interval = interval * 3 / 2
         results = get_results(results_url)
         if results is not None:
             return results
-        time.sleep(60)
 
 class _Command(object):
     def __init__(self, progname, usage_prefix):
