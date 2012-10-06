@@ -71,11 +71,13 @@ def get_progname():
 
 def show_info(url):
     p, out = _curl_rest_page(url, [])
+    service = p.getElementsByTagName('service')[0].getAttribute('name')
     parameters = _get_parameters_from_xml(p)
     if parameters:
         pstr = " ".join(x.get_full_arg() for x in parameters)
     else:
         pstr = "[name1=ARG] [name2=@FILENAME] ..."
+    print "\nSali Lab %s web service." % service
     print "\nTo submit a job to this web service, run:\n"
     print "%s submit %s " % (get_progname(), url) + pstr
     print
