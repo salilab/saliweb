@@ -134,16 +134,25 @@ def run_job(url, args):
         time.sleep(60)
 
 class _Command(object):
-    def __init__(self, usage_prefix):
+    def __init__(self, progname, usage_prefix):
+        self.progname = progname
         self.usage_prefix = usage_prefix
     def usage(self):
         print "\nUsage: %s " % self.usage_prefix + self.usage_args \
-              + '\n\n' + self.long_help
+              + '\n\n' + self.long_help.replace('%prog', self.progname)
 
 class _InfoCommand(_Command):
     short_help = "Get basic information about a web service."
     usage_args = '<url>'
-    long_help = short_help
+    long_help = short_help + """
+<url> should be the REST URL for a Sali Lab web service. This is generally
+the same as the main web page, with /job appended. For example, to access the
+ModLoop server, use http://salilab.org/modloop/job (the main web page is
+at http://salilab.org/modloop/).
+
+If the URL is valid and the web service is working properly, this will show
+a sample usage for submitting jobs to the service.
+"""
     def main(self, args):
         if len(args) == 1:
             show_info(args[0])
@@ -151,9 +160,17 @@ class _InfoCommand(_Command):
             self.usage()
 
 class _SubmitCommand(_Command):
-    short_help = "Submit a job to a web service."
+    short_help = "Submit a job to a web service (don't wait for it to finish)."
     usage_args = '<url> [ARGS ...]'
-    long_help = short_help
+    long_help = short_help + """
+<url> identifies the web service to submit to (see '%prog help info'
+for more information). The additional arguments depend on the service;
+the output of '%prog info <url>' suggests suitable arguments.
+
+This only submits the job; on successful completion, a new URL is returned,
+at which the results will become available when the job completes. Use
+'%prog results' to check for these results.
+"""
     def main(self, args):
         if len(args) >= 1:
             submit_job(args[0], args[1:])
@@ -163,7 +180,10 @@ class _SubmitCommand(_Command):
 class _ResultsCommand(_Command):
     short_help = "Check for web service results."
     usage_args = '<url>'
-    long_help = short_help
+    long_help = short_help + """
+<url> should be the URL returned by a previous call to '%prog submit'.
+If the job has finished, a list of URLs of job outputs will be returned.
+"""
     def main(self, args):
         if len(args) == 1:
             get_results(args[0])
@@ -171,9 +191,15 @@ class _ResultsCommand(_Command):
             self.usage()
 
 class _RunCommand(_Command):
-    short_help = "Run a web service job."
+    short_help = "Run a web service job to completion."
     usage_args = '<url> [ARGS ...]'
-    long_help = short_help
+    long_help = short_help + """
+This starts a job and then waits until it has completed, finally returning the
+results. It is basically the equivalent of calling '%prog submit',
+followed by calling '%prog results' periodically until the
+job finishes. See '%prog submit' for more information on
+the parameters.
+"""
     def main(self, args):
         if len(args) >= 1:
             run_job(args[0], args[1:])
@@ -221,13 +247,15 @@ Use "%s help <command>" for detailed help on any command.""" % self._progname
         if command == 'help':
             self.show_help()
         elif command in self._all_commands:
-            c = self._all_commands[command](self._progname + ' ' + command)
+            c = self._all_commands[command](self._progname,
+                                            self._progname + ' ' + command)
             c.usage()
         else:
             self.unknown_command(command)
 
     def do_command(self, command):
-        c = self._all_commands[command](self._progname + ' ' + command)
+        c = self._all_commands[command](self._progname,
+                                        self._progname + ' ' + command)
         c.main(sys.argv[2:])
 
     def unknown_command(self, command):
