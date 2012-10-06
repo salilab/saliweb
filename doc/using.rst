@@ -43,8 +43,24 @@ This URL can be queried by an HTTP GET to see if the job has finished.
 If it has, a list of URLs for job results files is returned; if it has not,
 an HTTP error is returned and the request can be retried later.
 Finally, the job results files can be downloaded using the provided URLs.
-A simple example Python script to automatically submit a job, and then
-wait for and gather the results, is shown below.
+
+There is a simple Python interface to all Sali Lab services that use the
+framework, installed on `modbase`, that takes care of XML parsing and error
+handling for you. It can be used to submit jobs and collect results either
+from the command line or from other Python scripts. For example, to run a job
+on the fictional ModFoo service and wait for results, you can run from the
+command line on `modbase` something like::
+
+    web_service.py run http://modbase.compbio.ucsf.edu/modfoo/job \
+                       input_pdb=@input.pdb job_name=testjob
+
+Use ``web_service.py help`` for full details on using this utility.
+
+Alternatively, you can do the same thing from Python with a script like:
 
 .. literalinclude:: ../examples/modfoo_rest.py
    :language: python
+
+Although `/usr/bin/web_service.py` is only installed on `modbase`, you can
+copy it and run it on any machine that has network access and has Python and
+curl installed.
