@@ -20,7 +20,7 @@ import time
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
     # use curl instead
-    p = subprocess.Popen(['curl', '-s', '-L'] + curl_args \
+    p = subprocess.Popen(['curl', '-s'] + curl_args \
                           + [url], stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
     (out, err) = p.communicate()
