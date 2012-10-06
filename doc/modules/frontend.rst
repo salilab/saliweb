@@ -178,6 +178,25 @@ the web frontend.
       method is called to get the correct MIME type for the file. By default,
       it always returns 'text/plain'.
 
+   .. method:: get_submit_parameter_help()
+
+      Return a reference to a list of parameters accepted by the submit page.
+      This is used to document the REST web service, and should be overridden
+      for each service. Each parameter should be the result of calling
+      :meth:`~saliwebfrontend.parameter` or
+      :meth:`~saliwebfrontend.file_parameter`.
+
+   .. method:: parameter(key, help[, optional])
+
+      Represent a single parameter (with help), used as input to
+      :meth:`~saliwebfrontend.get_submit_parameter_help`. 'key' should match
+      the name of the parameter used in the HTML form on the index page.
+
+   .. method:: file_parameter(key, help[, optional])
+
+      Represent a single file upload parameter (with help), used as input to
+      :meth:`~saliwebfrontend.get_submit_parameter_help`.
+
    .. method:: make_job(jobname)
 
       This creates and returns a new :class:`~saliweb::frontend.IncomingJob`
