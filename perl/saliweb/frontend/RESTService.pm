@@ -68,6 +68,7 @@ sub get_help {
     my $cgiroot = $self->cgiroot;
     my $rest_url = $self->rest_url;
     my $help = <<END;
+   <service name="$service" />
    <help>
 This URL provides a REST-style interface to the Sali Lab's $service
 web service. It is designed to be used for automated job submission
