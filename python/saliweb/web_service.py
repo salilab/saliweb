@@ -99,7 +99,7 @@ def show_info(url):
 To determine name1, name2 etc., view the HTML source of the regular web
 service page and look at the names of the HTML form elements. Alternatively,
 ask the developer of the web service to implement the
-get_submit_parameters_help() method!"""
+get_submit_parameter_help() method!"""
 
 def submit_job(url, args):
     """Submit a job to a Sali Lab web service (but don't wait for it to end).
