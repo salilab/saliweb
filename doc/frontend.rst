@@ -147,6 +147,12 @@ job directory.)
 Finally, the submission page should inform the user of the results URL, so
 that they can obtain the results when the job finishes.
 
+You should also override the
+:meth:`~saliwebfrontend.get_submit_parameter_help` method. This is used to
+document the parameters that your submit page accepts (generally, these are
+the same as the names of the form elements on the index page) for automated
+use of the service (see :ref:`automated`).
+
 The example below reads in the PDB file provided by the user on the index page,
 checks to make sure it contains at least one ATOM record, then writes it into
 the job directory and finally submits the job:

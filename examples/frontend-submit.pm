@@ -36,3 +36,12 @@ sub get_submit_page {
            $q->p("Results will be found at <a href=\"" .
                  $job->results_url . "\">this link</a>.");
 }
+
+sub get_submit_parameter_help {
+    my $self = shift;
+    return [
+        $self->parameter("job_name", "Job name", 1),
+        $self->parameter("email", "Email address", 1),
+        $self->file_parameter("input_pdb", "PDB file")
+    ];
+}

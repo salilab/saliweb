@@ -26,6 +26,8 @@ web services. Unauthenticated (anonymous) users can still use lab web services,
 however, unless the service is experimental or very expensive in terms of
 computer time.
 
+.. _automated:
+
 Automated use
 =============
 
