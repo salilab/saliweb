@@ -141,8 +141,8 @@ def get_results(url):
     urls = []
     top = dom.getElementsByTagName('saliweb')[0]
     for results in top.getElementsByTagName('results_file'):
-        urls.append(url)
         url = results.getAttribute('xlink:href')
+        urls.append(url)
         print "   " + url
     dom.unlink()
     return urls
