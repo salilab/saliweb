@@ -16,6 +16,7 @@ class WebServiceTests(unittest.TestCase):
         open(curl, 'w').write("""#!/usr/bin/python
 import sys
 url = sys.argv[-1]
+ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
 if 'badcurl' in url:
     print >> sys.stderr, "some curl error"
     sys.exit(1)
@@ -25,6 +26,10 @@ elif 'wrongxml' in url:
     print "<wrongtag />"
 elif 'noparam' in url:
     print '<saliweb><service name="modfoo"/></saliweb>'
+elif 'badsubmit' in url:
+    print '<saliweb><error>invalid job submission</error></saliweb>'
+elif 'oksubmit' in url:
+    print '<saliweb %s><job xlink:href="http://jobresults/" /></saliweb>' % ns
 else:
     print '<saliweb><service name="modfoo"/>' \
           '<parameters><string name="foo">bar</string>' \
@@ -86,6 +91,12 @@ else:
         o = web_service.show_info('http://noparam/')
         o = web_service.show_info('http://ok/')
 
+    def test_submit_job(self):
+        """Test submit_job"""
+        self.assertRaises(IOError, web_service.submit_job,
+                          'http://badsubmit/', [])
+        url = web_service.submit_job('http://oksubmit/', ['foo=bar'])
+        self.assertEqual(url, "http://jobresults/")
 
 if __name__ == '__main__':
     unittest.main()
