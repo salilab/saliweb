@@ -1,4 +1,6 @@
 import unittest, sys, os, re
+import tempfile
+import shutil
 import glob
 
 # Only use coverage if it's new enough and is requested
@@ -23,15 +25,32 @@ class RunAllTests(unittest.TestProgram):
             self.cov = coverage.coverage(branch=True, include=self.mods,
                                          data_file='.coverage.backend')
             self.cov.start()
+            self.make_site_customize()
 
         # Run the tests
         unittest.TestProgram.__init__(self, *args, **keys)
+
+    def make_site_customize(self):
+        """Get coverage information on Python subprocesses"""
+        self.tmpdir = tempfile.mkdtemp()
+        open(os.path.join(self.tmpdir, 'sitecustomize.py'), 'w').write("""
+import coverage
+import atexit
+_cov = coverage.coverage(branch=True, data_suffix=True, auto_data=True,
+                         data_file='%s')
+_cov.start()
+def _coverage_cleanup(c):
+    c.stop()
+atexit.register(_coverage_cleanup, _cov)
+""" % os.path.abspath('.coverage.backend'))
+        os.environ['PYTHONPATH'] = self.tmpdir + ':' + os.environ['PYTHONPATH']
 
     def runTests(self):
         self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
         result = self.testRunner.run(self.test)
 
         if coverage:
+            shutil.rmtree(self.tmpdir)
             self.cov.stop()
             self.cov.combine()
             self.cov.use_cache(True)
