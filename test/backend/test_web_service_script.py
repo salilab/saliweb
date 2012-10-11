@@ -3,9 +3,12 @@ import tempfile
 import shutil
 import urllib2
 import os
+import sys
+import time
 from saliweb import web_service
 from xml.dom.minidom import parseString
 import xml.parsers.expat
+import subprocess
 
 class MockURLOpen(object):
     ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
@@ -18,6 +21,9 @@ class MockURLOpen(object):
 <results_file xlink:href="http://results2/" />
 </saliweb>
 """ % self.ns
+
+def mock_sleep(interval):
+    pass
 
 def mock_urlopen(url):
     if 'notdone' in url:
@@ -60,11 +66,14 @@ else:
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']
         self.orig_urlopen = urllib2.urlopen
         urllib2.urlopen = mock_urlopen
+        self.orig_sleep = time.sleep
+        time.sleep = mock_sleep
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         shutil.rmtree(self.tmpdir)
         urllib2.urlopen = self.orig_urlopen
+        time.sleep = self.orig_sleep
 
     def test_curl_rest_page(self):
         """Check _curl_rest_page function"""
@@ -129,6 +138,34 @@ else:
                           'http://badurl/')
         urls = web_service.get_results('http://jobresults/')
         self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
+
+    def test_run_job(self):
+        """Test run_job()"""
+        urls = web_service.run_job('http://oksubmit/', ['foo=bar'])
+        self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
+
+    def run_web_service(self, args):
+        # Find path to web_service.py (can't use python -m with older Python)
+        mp = __import__('saliweb.web_service', {}, {}, ['']).__file__
+        if mp.endswith('.pyc'):
+            mp = mp[:-1]
+        p = subprocess.Popen([sys.executable, mp] + args,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        return out, err, p.wait()
+
+    def test_run(self):
+        """Check running web_service.py from the command line"""
+        out, err, exit = self.run_web_service([])
+        self.assertEqual(exit, 0)
+        self.assertTrue("Use 'web_service.py help' for help" in out, msg=out)
+
+    def test_help(self):
+        """Check running web_service.py help"""
+        out, err, exit = self.run_web_service(['help'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("for detailed help on any command" in out, msg=out)
 
 if __name__ == '__main__':
     unittest.main()
