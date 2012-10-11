@@ -187,6 +187,7 @@ a sample usage for submitting jobs to the service.
             show_info(args[0])
         else:
             self.usage()
+            sys.exit(1)
 
 class _SubmitCommand(_Command):
     short_help = "Submit a job to a web service (don't wait for it to finish)."
@@ -205,6 +206,7 @@ at which the results will become available when the job completes. Use
             submit_job(args[0], args[1:])
         else:
             self.usage()
+            sys.exit(1)
 
 class _ResultsCommand(_Command):
     short_help = "Check for web service results."
@@ -218,6 +220,7 @@ If the job has finished, a list of URLs of job outputs will be returned.
             get_results(args[0])
         else:
             self.usage()
+            sys.exit(1)
 
 class _RunCommand(_Command):
     short_help = "Run a web service job to completion."
@@ -234,6 +237,7 @@ the parameters.
             run_job(args[0], args[1:])
         else:
             self.usage()
+            sys.exit(1)
 
 
 class _WebService(object):
