@@ -1,10 +1,31 @@
 import unittest
 import tempfile
 import shutil
+import urllib2
 import os
 from saliweb import web_service
 from xml.dom.minidom import parseString
 import xml.parsers.expat
+
+class MockURLOpen(object):
+    ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
+    def __init__(self, url):
+        self.url = url
+    def read(self):
+        return """
+<saliweb %s>
+<results_file xlink:href="http://results1/" />
+<results_file xlink:href="http://results2/" />
+</saliweb>
+""" % self.ns
+
+def mock_urlopen(url):
+    if 'notdone' in url:
+        raise urllib2.HTTPError('url', 503, 'msg', [], None)
+    elif 'badurl' in url:
+        raise urllib2.HTTPError('url', 404, 'msg', [], None)
+    else:
+        return MockURLOpen(url)
 
 class WebServiceTests(unittest.TestCase):
     """Test the web_service script."""
@@ -37,10 +58,13 @@ else:
 """)
         os.chmod(curl, 0700)
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']
+        self.orig_urlopen = urllib2.urlopen
+        urllib2.urlopen = mock_urlopen
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         shutil.rmtree(self.tmpdir)
+        urllib2.urlopen = self.orig_urlopen
 
     def test_curl_rest_page(self):
         """Check _curl_rest_page function"""
@@ -92,11 +116,19 @@ else:
         o = web_service.show_info('http://ok/')
 
     def test_submit_job(self):
-        """Test submit_job"""
+        """Test submit_job()"""
         self.assertRaises(IOError, web_service.submit_job,
                           'http://badsubmit/', [])
         url = web_service.submit_job('http://oksubmit/', ['foo=bar'])
         self.assertEqual(url, "http://jobresults/")
+
+    def test_get_results(self):
+        """Test get_results()"""
+        self.assertEqual(web_service.get_results('http://notdone/'), None)
+        self.assertRaises(urllib2.HTTPError, web_service.get_results,
+                          'http://badurl/')
+        urls = web_service.get_results('http://jobresults/')
+        self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
 
 if __name__ == '__main__':
     unittest.main()
