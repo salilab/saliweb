@@ -9,6 +9,7 @@ from saliweb import web_service
 from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
+from cStringIO import StringIO
 
 class MockURLOpen(object):
     ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
@@ -144,7 +145,8 @@ else:
         urls = web_service.run_job('http://oksubmit/', ['foo=bar'])
         self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
 
-    def run_web_service(self, args):
+    def run_web_service_subprocess(self, args):
+        """Run web_service.py in a subprocess"""
         # Find path to web_service.py (can't use python -m with older Python)
         mp = __import__('saliweb.web_service', {}, {}, ['']).__file__
         if mp.endswith('.pyc'):
@@ -155,17 +157,100 @@ else:
         out, err = p.communicate()
         return out, err, p.wait()
 
+    def run_web_service(self, args):
+        """Run web-service.py in the current process, but as if it were
+           run from the command line"""
+        orig_stdout = sys.stdout
+        orig_stderr = sys.stderr
+        orig_argv = sys.argv
+        out = StringIO()
+        err = StringIO()
+        exitval = 0
+        try:
+            sys.stdout = out
+            sys.stderr = err
+            sys.argv = ['web_service.py'] + args
+            try:
+                web_service.main()
+            except SystemExit, detail:
+                exitval = detail.code
+        finally:
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+            sys.argv = orig_argv
+        return out.getvalue(), err.getvalue(), exitval
+
     def test_run(self):
         """Check running web_service.py from the command line"""
-        out, err, exit = self.run_web_service([])
+        out, err, exit = self.run_web_service_subprocess([])
         self.assertEqual(exit, 0)
         self.assertTrue("Use 'web_service.py help' for help" in out, msg=out)
 
     def test_help(self):
         """Check running web_service.py help"""
-        out, err, exit = self.run_web_service(['help'])
+        for args in [['help'], ['help', 'help']]:
+            out, err, exit = self.run_web_service(args)
+            self.assertEqual(exit, 0)
+            self.assertTrue("for detailed help on any command" in out, msg=out)
+
+        out, err, exit = self.run_web_service(['help', 'info'])
         self.assertEqual(exit, 0)
-        self.assertTrue("for detailed help on any command" in out, msg=out)
+        self.assertTrue("Get basic information about a web service" in out,
+                        msg=out)
+
+        out, err, exit = self.run_web_service(['help', 'badcmd'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("Unknown command: 'badcmd'" in out, msg=out)
+
+    def test_unknown_command(self):
+        """Check running unknown web_service.py command"""
+        out, err, exit = self.run_web_service(['badcmd'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("Unknown command: 'badcmd'" in out, msg=out)
+
+    def test_info_command(self):
+        """Check running web_service.py info command"""
+        out, err, exit = self.run_web_service(['info'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("sample usage for submitting jobs" in out, msg=out)
+        out, err, exit = self.run_web_service(['info', 'http://noparam/'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("web_service.py submit http://noparam/ "
+                        "[name1=ARG] [name2=@FILENAME] ..." in out, msg=out)
+        out, err, exit = self.run_web_service(['info', 'http://ok/'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("web_service.py submit http://ok/ foo=ARG" in out,
+                        msg=out)
+
+    def test_submit_command(self):
+        """Check running web_service.py submit command"""
+        out, err, exit = self.run_web_service(['submit'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("This only submits the job" in out, msg=out)
+        out, err, exit = self.run_web_service(['submit', 'http://oksubmit/'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("Job submitted: results will be found at" in out,
+                        msg=out)
+
+    def test_results_command(self):
+        """Check running web_service.py results command"""
+        out, err, exit = self.run_web_service(['results'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("If the job has finished," in out, msg=out)
+
+        out, err, exit = self.run_web_service(['results', 'http://jobresults/'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("http://results1/" in out, msg=out)
+
+    def test_run_command(self):
+        """Check running web_service.py run command"""
+        out, err, exit = self.run_web_service(['run'])
+        self.assertEqual(exit, 1)
+        self.assertTrue("basically the equivalent" in out, msg=out)
+
+        out, err, exit = self.run_web_service(['run', 'http://oksubmit/'])
+        self.assertEqual(exit, 0)
+        self.assertTrue("http://results1/" in out, msg=out)
 
 if __name__ == '__main__':
     unittest.main()
