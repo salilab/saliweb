@@ -1026,7 +1026,7 @@ sub _display_content {
     my ($content) = @_;
     print "<div id=\"fullpart\">";
     print $content;
-    print "</div></div><div style=\"clear:both;\"></div>";
+    print "</div></div></div><div style=\"clear:both;\"></div>";
 }
 
 sub _display_web_page {
@@ -1140,6 +1140,7 @@ sub display_help_page {
         my $content = $self->get_help_page($display_type);
         if ($style eq "helplink") {
             print $self->start_html("/saliweb/css/help.css");
+            print "<div><div>";
             _display_content($content);
             print $self->end_html;
         } else {

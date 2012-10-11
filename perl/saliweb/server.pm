@@ -94,8 +94,10 @@ sub header {
         <a href=\"http://salilab.org/modpipe/\">ModPipe</a>&nbsp;&bull;&nbsp;
     \n</div>\n    $navigation
         <div style=\"clear:both;\"></div><div id=\"bodypart\">";
-    $headertable.=" \n<div id=\"left\">
+    if ($current_project) {
+        $headertable.=" \n<div id=\"left\">
           $current_project";
+    }
     if ($menutitle ne "none") {
         $headertable.=
             "\n<div id=\"navigation_saliresources\">"
@@ -103,7 +105,11 @@ sub header {
               <ul> $menuentries</ul>
             \n</div>";
     }
-    $headertable.="\n</div>";
+    if ($current_project) {
+        $headertable.="\n</div><div id=\"right\">";
+    } else {
+        $headertable.="<div>";
+    }
 
     return $headertable;
     

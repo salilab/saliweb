@@ -231,12 +231,15 @@ h5 {
         margin-top: 0.37em;
 }
 
-#fullpart {
-        background: #FFFFFF;
+#right {
         position: relative;
+        top: 20px;
         float: right;
         width: 740px;
-        top: 20px;
+}
+
+#fullpart {
+        background: #FFFFFF;
         bottom: auto;
         right: 5px;
         padding-left: 20px;
