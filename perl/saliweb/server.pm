@@ -62,6 +62,7 @@ sub header {
     my $menuentries_ref=shift@_;
     my $current_project=shift@_;
     my $navigation=shift@_;
+    my $lab_navigation=shift@_;
     my %menuentries;
     if ($menuentries_ref) {
         %menuentries=%$menuentries_ref;
@@ -82,17 +83,7 @@ sub header {
               
     $headertable="<div id=\"container\">\n    <div id=\"header1\"> 
         <h3><img src=\"http://salilab.org/img/logo_small.gif\" height=\"40\" alt=\"\" /> $title</h3>\n    </div>";
-    $headertable.="\n    <div id=\"navigation_lab\">\n
-            &bull;&nbsp;<a href=\"http://salilab.org\">Sali Lab Home</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/modweb\"> ModWeb</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/modbase/\">ModBase</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/modeval/\">ModEval</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/pcss/\">PCSS</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/foxs/\">FoXS</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/imp/\">IMP</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/multifit/\">MultiFit</a>&nbsp;&bull;&nbsp;
-        <a href=\"http://salilab.org/modpipe/\">ModPipe</a>&nbsp;&bull;&nbsp;
-    \n</div>\n    $navigation
+    $headertable.="\n    $lab_navigation\n    $navigation
         <div style=\"clear:both;\"></div><div id=\"bodypart\">";
     if ($current_project) {
         $headertable.=" \n<div id=\"left\">
