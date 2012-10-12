@@ -35,10 +35,8 @@ class MakeWebService(object):
             elif len(suffix) > 2:
                 suffix = suffix[:-1]
             # Then trim too-long short_names
-            elif len(prefix) > 1:
-                prefix = prefix[:-1]
             else:
-                raise ValueError("Cannot make database name")
+                prefix = prefix[:-1]
 
     def make(self):
         self._make_directories()
