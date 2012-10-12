@@ -82,7 +82,7 @@ sub header {
     }
               
     $headertable="<div id=\"container\">\n    <div id=\"header1\"> 
-        <h3><img src=\"http://salilab.org/img/logo_small.gif\" height=\"40\" alt=\"\" /> $title</h3>\n    </div>";
+        $title\n    </div>";
     $headertable.="\n    $lab_navigation\n    $navigation
         <div style=\"clear:both;\"></div><div id=\"bodypart\">";
     if ($current_project) {

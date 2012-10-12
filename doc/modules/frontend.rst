@@ -68,6 +68,12 @@ the web frontend.
 
       Absolute URLs to each web page (read-only).
 
+   .. method:: get_header_page_title()
+
+      Return the HTML fragment used to display the page title inside a div in
+      the page header. By default, this just displays the lab logo and the page
+      title, but can be overridden if desired.
+
    .. method:: get_lab_navigation_links()
 
       Return a reference to a list of lab resources and services, used by

@@ -362,6 +362,15 @@ END
          'get_lab_navigation_links');
 }
 
+# Test get_header_page_title method
+{
+    my $self = {page_title=>'test page title'};
+    bless($self, 'saliweb::frontend');
+    my $header = $self->get_header_page_title();
+    like($header, qr#logo_small\.gif.*test page title</h3>#,
+         'get_header_page_title');
+}
+
 # Test get_header method
 {
     my $self = {CGI=>new CGI, page_title=>'header test'};

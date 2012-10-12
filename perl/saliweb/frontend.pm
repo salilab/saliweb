@@ -668,6 +668,17 @@ sub get_project_menu {
     return "";
 }
 
+=item get_header_page_title
+Return the HTML fragment used to display the page title inside a div in
+the page header. By default, this just displays the lab logo and the page
+title, but can be overridden if desired.
+=cut
+sub get_header_page_title {
+    my $self = shift;
+    return '<h3><img src="http://salilab.org/img/logo_small.gif" height="40" ' .
+           'alt="" />' . $self->{page_title} . '</h3>';
+}
+
 =item get_lab_navigation_links
 Return a reference to a list of links to other lab resources and services,
 used by get_header(). This can be overridden in subclasses to add additional
@@ -726,7 +737,8 @@ sub get_header {
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";
-    return saliweb::server::header($self->{'cgiroot'}, $self->{page_title},
+    return saliweb::server::header($self->{'cgiroot'},
+                                   $self->get_header_page_title(),
                                    "none", $projects, $project_menu,
                                    $navigation, $lab_navigation);
 }
