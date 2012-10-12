@@ -324,6 +324,9 @@ require Exporter;
 @EXPORT = qw(check_optional_email check_required_email check_modeller_key
              get_pdb_code);
 
+# Location of our PDB mirror.
+our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
+
 use File::Spec;
 use DBI;
 use CGI;
@@ -782,7 +785,6 @@ sub check_modeller_key {
 
 sub get_pdb_code {
     my ($code, $outdir) = @_;
-    my $pdb_root = "/netapp/database/pdb/remediated/pdb/";
 
     if ($code =~ m/^([A-Za-z0-9]+)$/) {
       $code = lc $1; # PDB codes are case insensitive

@@ -612,8 +612,26 @@ sub test_display_page {
               "                     (good address)";
 }
 
+sub make_test_pdb {
+    my $tmpdir = shift;
+    mkdir("$tmpdir/xy");
+    my $testpdb = "$tmpdir/xy/pdb1xyz.ent";
+    ok(open(FH, "> $testpdb"), "open test pdb");
+    print FH "ATOM      1  N   ALA C   1      27.932  14.488   4.257  " .
+             "1.00 23.91           N\n";
+    print FH "ATOM      1  N   ALA D   1      27.932  14.488   4.257  " .
+             "1.00 23.91           N\n";
+    ok(close(FH), "close test pdb");
+    ok(system("gzip $testpdb") == 0, "compress test pdb");
+}
+
 # Test get_pdb_code function
 {
+    my $tmpdir = tempdir( CLEANUP => 1 );
+    my $oldroot = $saliweb::frontend::pdb_root;
+    $saliweb::frontend::pdb_root = $tmpdir . "/";
+    make_test_pdb($tmpdir);
+
     throws_ok { get_pdb_code("1\@bc", ".") }
               'saliweb::frontend::InputValidationError',
               "get_pdb_code (invalid code)";
@@ -621,6 +639,12 @@ sub test_display_page {
     throws_ok { get_pdb_code("1aaaaaa", ".") }
               'saliweb::frontend::InputValidationError',
               "get_pdb_code (non-existing code)";
+
+    my $code = get_pdb_code("1xyz", ".");
+    is($code, "./pdb1xyz.ent", "get_pdb_code (valid code)");
+    ok(unlink('pdb1xyz.ent'),  "                          (unlink)");
+
+    $saliweb::frontend::pdb_root = $oldroot;
 }
 
 # Test check_modeller_key function
