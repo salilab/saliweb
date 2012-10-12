@@ -3,6 +3,7 @@ import sys
 import os
 import tempfile
 import shutil
+import subprocess
 import saliweb.make_web_service
 from saliweb.make_web_service import MakeWebService, get_options
 import saliweb.backend
@@ -21,6 +22,20 @@ class RunInTempDir(object):
 
 class MakeWebServiceTests(unittest.TestCase):
     """Test the make_web_service module."""
+
+    def test_run(self):
+        """Check run of make_web_service script"""
+        # Find path to make_web_service.py (can't use python -m with
+        # older Python)
+        mp = __import__('saliweb.make_web_service', {}, {}, ['']).__file__
+        if mp.endswith('.pyc'):
+            mp = mp[:-1]
+        p = subprocess.Popen([sys.executable, mp],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        self.assertNotEqual(p.wait(), 0)
+        self.assertTrue('for a new web service' in err, msg=err)
 
     def test_init(self):
         """Check creation of MakeWebService object"""
