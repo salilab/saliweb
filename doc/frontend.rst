@@ -37,7 +37,10 @@ Web page layout
 ===============
 
 Each web page has a similar layout. Firstly, it contains a standard header
-that is shared between all lab services. Secondly, it contains a list of links
+that is very similar between all lab services. This header contains a set of
+links to lab resources and web services, which can be added to by overriding
+the :meth:`~saliwebfrontend.get_lab_navigation_links` method.
+Secondly, it contains a list of links
 to other pages in the web service, such as help pages and a display of jobs in
 the queue. This list can be customized by overriding the
 :meth:`~saliwebfrontend.get_navigation_links` method, which returns

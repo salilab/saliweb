@@ -353,6 +353,15 @@ END
     is(@$links, 0, 'get_navigation_links returns an empty arrayref');
 }
 
+# Test get_lab_navigation_links method
+{
+    my $self = {CGI=>new CGI};
+    bless($self, 'saliweb::frontend');
+    my $links = $self->get_lab_navigation_links();
+    like($links->[0], qr#<a href=.*>Sali Lab Home</a>#,
+         'get_lab_navigation_links');
+}
+
 # Test get_header method
 {
     my $self = {CGI=>new CGI, page_title=>'header test'};

@@ -68,6 +68,12 @@ the web frontend.
 
       Absolute URLs to each web page (read-only).
 
+   .. method:: get_lab_navigation_links()
+
+      Return a reference to a list of lab resources and services, used by
+      :meth:`~saliwebfrontend.get_header`. This can be overridden in
+      subclasses to add additional links.
+
    .. method:: get_navigation_links()
 
       Return a reference to a list of navigation links, used by

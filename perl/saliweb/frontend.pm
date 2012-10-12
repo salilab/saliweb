@@ -668,6 +668,27 @@ sub get_project_menu {
     return "";
 }
 
+=item get_lab_navigation_links
+Return a reference to a list of links to other lab resources and services,
+used by get_header(). This can be overridden in subclasses to add additional
+links.
+=cut
+sub get_lab_navigation_links {
+    my $self = shift;
+    my $q = $self->cgi;
+    return [
+        $q->a({-href=>'http://salilab.org/'}, "Sali Lab Home"),
+        $q->a({-href=>'http://salilab.org/modweb/'}, "ModWeb"),
+        $q->a({-href=>'http://salilab.org/modbase/'}, "ModBase"),
+        $q->a({-href=>'http://salilab.org/modeval/'}, "ModEval"),
+        $q->a({-href=>'http://salilab.org/pcss/'}, "PCSS"),
+        $q->a({-href=>'http://salilab.org/foxs/'}, "FoXS"),
+        $q->a({-href=>'http://salilab.org/imp/'}, "IMP"),
+        $q->a({-href=>'http://salilab.org/multifit/'}, "MultiFit"),
+        $q->a({-href=>'http://salilab.org/modpipe/'}, "ModPipe")
+    ];
+}
+
 =item get_navigation_links
 Return a reference to a list of navigation links, used by get_header().
 This should be overridden for each service to add links to pages to submit
@@ -682,6 +703,7 @@ sub get_header {
     my $q = $self->{'CGI'};
     my $projects = $self->get_projects();
     my $project_menu = $self->get_project_menu();
+    my $lab_navigation_links = $self->get_lab_navigation_links();
     my $navigation_links = $self->get_navigation_links();
     if ($self->{'user_info'}) {
         my $user_name = $self->{'user_name'};
@@ -696,12 +718,17 @@ sub get_header {
                 $q->a({-href=>"https://$web_server/scgi/server.cgi"},
                       "Login");
     }
+    my $lab_navigation = "<div id=\"navigation_lab\">" .
+                         "&bull;&nbsp;" .
+                         join("&nbsp;&bull;&nbsp;\n", @$lab_navigation_links) .
+                         "&nbsp;&bull;&nbsp;&nbsp;" .
+                         "</div>";
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";
     return saliweb::server::header($self->{'cgiroot'}, $self->{page_title},
                                    "none", $projects, $project_menu,
-                                   $navigation);
+                                   $navigation, $lab_navigation);
 }
 
 sub check_optional_email {
