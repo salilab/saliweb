@@ -11,7 +11,7 @@ import xml.parsers.expat
 import subprocess
 from cStringIO import StringIO
 
-class MockURLOpen(object):
+class MockURL(object):
     ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
     def __init__(self, url):
         self.url = url
@@ -26,13 +26,19 @@ class MockURLOpen(object):
 def mock_sleep(interval):
     pass
 
-def mock_urlopen(url):
-    if 'notdone' in url:
-        raise urllib2.HTTPError('url', 503, 'msg', [], None)
-    elif 'badurl' in url:
-        raise urllib2.HTTPError('url', 404, 'msg', [], None)
-    else:
-        return MockURLOpen(url)
+class MockURLOpen(object):
+    def __init__(self):
+        self.numcalls = 0
+    def __call__(self, url):
+        if 'longjob' in url and self.numcalls < 100:
+            self.numcalls += 1
+            raise urllib2.HTTPError('url', 503, 'msg', [], None)
+        elif 'notdone' in url:
+            raise urllib2.HTTPError('url', 503, 'msg', [], None)
+        elif 'badurl' in url:
+            raise urllib2.HTTPError('url', 404, 'msg', [], None)
+        else:
+            return MockURL(url)
 
 class WebServiceTests(unittest.TestCase):
     """Test the web_service script."""
@@ -58,6 +64,8 @@ elif 'badsubmit' in url:
     print '<saliweb><error>invalid job submission</error></saliweb>'
 elif 'oksubmit' in url:
     print '<saliweb %s><job xlink:href="http://jobresults/" /></saliweb>' % ns
+elif 'longsubmit' in url:
+    print '<saliweb %s><job xlink:href="http://longjob/" /></saliweb>' % ns
 else:
     print '<saliweb><service name="modfoo"/>' \
           '<parameters><string name="foo">bar</string>' \
@@ -66,7 +74,7 @@ else:
         os.chmod(curl, 0700)
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']
         self.orig_urlopen = urllib2.urlopen
-        urllib2.urlopen = mock_urlopen
+        urllib2.urlopen = MockURLOpen()
         self.orig_sleep = time.sleep
         time.sleep = mock_sleep
 
@@ -142,7 +150,7 @@ else:
 
     def test_run_job(self):
         """Test run_job()"""
-        urls = web_service.run_job('http://oksubmit/', ['foo=bar'])
+        urls = web_service.run_job('http://longsubmit/', ['foo=bar'])
         self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
 
     def run_web_service_subprocess(self, args):
