@@ -61,6 +61,8 @@ the web frontend.
                   queue_url
                   help_url
                   faq_url
+                  links_url
+                  about_url
                   news_url
                   contact_url
                   results_url
@@ -156,11 +158,12 @@ the web frontend.
 
    .. method:: get_help_page(type)
 
-      Return the HTML content of help, contact, FAQ or news pages; the passed
-      *type* parameter will be *help*, *contact*, *faq*, or *news*. By default
+      Return the HTML content of help, contact, FAQ, links, about, or news
+      pages; the passed *type* parameter will be *help*, *contact*, *faq*,
+      *links*, *about*, or *news*. By default
       this simply displays a suitable text file installed as part of the web
       service in the ``txt`` directory, named ``help.txt``, ``contact.txt``,
-      ``faq.txt``, or ``news.txt`` respectively.
+      ``faq.txt``, ``links.txt``, ``about.txt``, or ``news.txt`` respectively.
 
    .. method:: get_download_page()
 

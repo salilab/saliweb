@@ -195,9 +195,10 @@ Help page
 ---------
 
 The help page is used to display basic help, contact details, frequently-asked
-questions, or news. It is probably unnecessary to customize this method, as
-by default it will simply display a similarly-named text file
-(``txt/help.txt``, ``txt/contact.txt``, ``txt/faq.txt`` or ``txt/news.txt``).
+questions, links, an about page, or news. It is probably unnecessary to
+customize this method, as by default it will simply display a similarly-named
+text file (``txt/help.txt``, ``txt/contact.txt``, ``txt/faq.txt``,
+``txt/links.txt``, ``txt/about.txt``, or ``txt/news.txt``).
 See :meth:`~saliwebfrontend.get_help_page` for more details.
 
 Download page

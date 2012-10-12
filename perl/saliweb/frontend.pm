@@ -571,6 +571,16 @@ sub contact_url {
     return $self->cgiroot . "/help.cgi?type=contact";
 }
 
+sub links_url {
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=links";
+}
+
+sub about_url {
+    my $self = shift;
+    return $self->cgiroot . "/help.cgi?type=about";
+}
+
 sub results_url {
     my $self = shift;
     return $self->cgiroot . "/results.cgi";
@@ -942,9 +952,10 @@ sub get_queue_page {
 
 =item get_help_page
 Return the HTML content of help, contact, FAQ or news pages; the passed
-type parameter will be help, contact, faq, or news. By default this simply
-displays a suitable text file installed as part of the web service in the
-txt directory, named help.txt, contact.txt, faq.txt, or news.txt respectively.
+type parameter will be help, contact, faq, links, about, or news. By default
+this simply displays a suitable text file installed as part of the web service
+in the txt directory, named help.txt, contact.txt, faq.txt, links.txt,
+about.txt, or news.txt respectively.
 =cut
 sub get_help_page {
     my ($self, $display_type) = @_;
@@ -955,6 +966,10 @@ sub get_help_page {
         $file = "news.txt";
     } elsif ($display_type eq "faq") {
         $file = "faq.txt";
+    } elsif ($display_type eq "links") {
+        $file = "links.txt";
+    } elsif ($display_type eq "about") {
+        $file = "about.txt";
     } else {
         $file = "help.txt";
     }

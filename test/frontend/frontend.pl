@@ -135,6 +135,10 @@ BEGIN {
        '                      (news)');
     is($self->faq_url, 'testroot/help.cgi?type=faq',
        '                      (FAQ)');
+    is($self->links_url, 'testroot/help.cgi?type=links',
+       '                      (links)');
+    is($self->about_url, 'testroot/help.cgi?type=about',
+       '                      (about)');
     is($self->contact_url, 'testroot/help.cgi?type=contact',
        '                      (contact)');
     is($self->results_url, 'testroot/results.cgi',
