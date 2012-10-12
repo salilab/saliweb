@@ -113,8 +113,8 @@ sub test_display_page {
     my $help = $t->get_submit_parameter_help();
     is(@$help, 0, 'get_submit_parameter_help returns an empty arrayref');
 
-    my $p = $t->parameter("foo", "foohelp");
-    like($p, qr#<string name="foo">foohelp</string>#,
+    my $p = $t->parameter("foo", "foo&help");
+    like($p, qr#<string name="foo">foo&amp;help</string>#,
          'parameter (default not optional)');
     $p = $t->parameter("foo", "foohelp", 0);
     like($p, qr#<string name="foo">foohelp</string>#,

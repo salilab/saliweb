@@ -869,6 +869,7 @@ get_submit_parameter_help().
 sub parameter {
     my ($self, $key, $help, $optional) = @_;
     $optional = ($optional ? " optional=\"1\"" : "");
+    $help =~ s/&/&amp;/g;
     return "      <string name=\"$key\"$optional>$help</string>"
 }
 
@@ -879,6 +880,7 @@ get_submit_parameter_help().
 sub file_parameter {
     my ($self, $key, $help, $optional) = @_;
     $optional = ($optional ? " optional=\"1\"" : "");
+    $help =~ s/&/&amp;/g;
     return "      <file name=\"$key\"$optional>$help</file>"
 }
 

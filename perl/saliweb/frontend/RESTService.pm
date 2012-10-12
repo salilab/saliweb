@@ -65,6 +65,7 @@ sub format_results_error {
 sub get_help {
     my $self = shift;
     my $service = $self->{server_name};
+    $service =~ s/&/&amp;/g;
     my $cgiroot = $self->cgiroot;
     my $rest_url = $self->rest_url;
     my $help = <<END;
