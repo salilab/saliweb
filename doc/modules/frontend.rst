@@ -401,3 +401,15 @@ the web frontend.
    The file will be named in standard PDB fashion, e.g. pdb1abc.ent.
    The full path to the file is returned. If the code is invalid or does
    not exist, throw an :exc:`InputValidationError` exception.
+
+.. function:: get_pdb_chains(code_and_chains, outdir)
+
+   Similar to :func:`get_pdb_code`, find a PDB in our database, and make a
+   new PDB containing just the requested one-letter chains (if any) in the given
+   directory. The PDB code and the chains are separated by a colon. (If there
+   is no colon, no chains, or the chains are just '-', this does the same thing
+   as :func:`get_pdb_code`.) For example, '1xyz:AC' would make a new PDB file
+   containing just the A and C chains from the 1xyz PDB.
+   The full path to the file is returned. If the code is invalid or does
+   not exist, or at least one chain is specified that is not in the PDB
+   file, throw an :exc:`InputValidationError` exception.

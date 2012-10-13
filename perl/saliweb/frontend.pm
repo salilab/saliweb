@@ -322,7 +322,7 @@ use saliweb::server qw(validate_user);
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(check_optional_email check_required_email check_modeller_key
-             get_pdb_code);
+             get_pdb_code get_pdb_chains);
 
 # Location of our PDB mirror.
 our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
@@ -807,6 +807,80 @@ sub get_pdb_code {
                                  "gunzip of $in_pdb to $out_pdb failed: $?");
         return $out_pdb;
     }
+}
+
+# Get chains in PDB file
+sub _get_chains_hash_from_pdb {
+    my $pdb_file = shift;
+    my %chains;
+    open FILE, $pdb_file or throw saliweb::frontend::InternalError(
+                                      "Cannot open $pdb_file: $!");
+    while (my $line = <FILE>) {
+       if ($line =~ /^(HETATM|ATOM)/) {
+           my $chain = substr($line, 21, 1);
+           if ($chain ne ' ') {
+               $chains{$chain} = 1;
+           }
+       }
+    }
+    close FILE or throw saliweb::frontend::InternalError(
+                                      "Cannot close $pdb_file: $!");
+    return %chains;
+}
+
+# Make a new PDB file containing only the given chains from the input
+sub _filter_pdb_chains {
+    my ($pdb_file, $out_pdb_file, $chain_ids) = @_;
+    open IN, $pdb_file or throw saliweb::frontend::InternalError(
+                               "Cannot open $pdb_file: $!");
+    open OUT, ">$out_pdb_file" or throw saliweb::frontend::InternalError(
+                               "Cannot open $out_pdb_file: $!");
+    while (my $line=<IN>) {
+       if ($line =~ /^(HETATM|ATOM)/) {
+           my $curr_chain_id = substr($line,21,1);
+           if ($chain_ids =~ m/$curr_chain_id/) {
+               print OUT $line;
+           }
+       }
+    }
+    close IN or throw saliweb::frontend::InternalError(
+                                      "Cannot close $pdb_file: $!");
+    close OUT or throw saliweb::frontend::InternalError(
+                                      "Cannot close $out_pdb_file: $!");
+}
+
+sub get_pdb_chains {
+    my ($pdb_chain, $outdir) = @_;
+    my @input = split(':', $pdb_chain);
+
+    my $pdb_file = get_pdb_code($input[0], $outdir);
+    if ($#input == 0 or $input[1] eq "-") { # no chains given
+        return $pdb_file;
+    }
+
+    my $chain_ids = uc $input[1];
+    if ($chain_ids !~ /^\w*$/) {
+        unlink $pdb_file;
+        throw saliweb::frontend::InputValidationError(
+                                         "Invalid chain ids $chain_ids");
+    }
+
+    # check user-specified chains exist in PDB
+    my @user_chains = split(//, $chain_ids);
+    my %pdb_chains = _get_chains_hash_from_pdb($pdb_file);
+    foreach my $user_chain (@user_chains) {
+        if (not exists $pdb_chains{$user_chain}) {
+            unlink $pdb_file;
+            throw saliweb::frontend::InputValidationError(
+                  "The given chain $user_chain does not exist in the PDB file");
+        }
+    }
+
+    my $out_pdb_file = $outdir . "/" . $input[0] . $chain_ids . ".pdb";
+    _filter_pdb_chains($pdb_file, $out_pdb_file, $chain_ids);
+    unlink($pdb_file) or throw saliweb::frontend::InternalError(
+                        "Cannot unlink $pdb_file: $!");
+    return $out_pdb_file;
 }
 
 sub check_page_access {

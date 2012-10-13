@@ -647,6 +647,40 @@ sub make_test_pdb {
     $saliweb::frontend::pdb_root = $oldroot;
 }
 
+# Test get_pdb_chains function
+{
+    my $tmpdir = tempdir( CLEANUP => 1 );
+    my $oldroot = $saliweb::frontend::pdb_root;
+    $saliweb::frontend::pdb_root = $tmpdir . "/";
+    make_test_pdb($tmpdir);
+
+    my $code = get_pdb_chains("1xyz", ".");
+    is($code, "./pdb1xyz.ent", "get_pdb_chains (no chains specified)");
+    ok(unlink('pdb1xyz.ent'),  "(unlink)");
+
+    $code = get_pdb_chains("1xyz:-", ".");
+    is($code, "./pdb1xyz.ent", "get_pdb_chains (all chains requested)");
+    ok(unlink('pdb1xyz.ent'),  "(unlink)");
+
+    throws_ok { get_pdb_chains("1xyz:\t", ".") }
+              'saliweb::frontend::InputValidationError',
+              "get_pdb_chains (invalid chains)";
+
+    throws_ok { get_pdb_chains("1xyz:CDE", ".") }
+              'saliweb::frontend::InputValidationError',
+              "get_pdb_chains (chain not in PDB)";
+
+    $code = get_pdb_chains("1xyz:C", ".");
+    is($code, "./1xyzC.pdb", "get_pdb_chains (C chain)");
+    ok(unlink('1xyzC.pdb'),  "(unlink)");
+
+    $code = get_pdb_chains("1xyz:Cd", ".");
+    is($code, "./1xyzCD.pdb", "get_pdb_chains (C and D chains)");
+    ok(unlink('1xyzCD.pdb'),  "(unlink)");
+
+    $saliweb::frontend::pdb_root = $oldroot;
+}
+
 # Test check_modeller_key function
 {
     throws_ok { check_modeller_key("garbage") }
