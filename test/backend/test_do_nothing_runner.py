@@ -1,4 +1,5 @@
 import unittest
+import os
 from saliweb.backend import DoNothingRunner
 import saliweb.backend.events
 
@@ -24,6 +25,7 @@ class DoNothingRunnerTest(unittest.TestCase):
         event = ws._event_queue.get()
         event.process()
         self.assertEqual(ws._exception, None)
+        os.unlink('job-state')
 
 if __name__ == '__main__':
     unittest.main()
