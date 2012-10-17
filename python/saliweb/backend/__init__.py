@@ -1605,3 +1605,31 @@ class LocalRunner(Runner):
         else:
             return not os.path.exists("/proc/%s" % jobid)
 Job.register_runner_class(LocalRunner)
+
+
+class DoNothingRunner(Runner):
+    """Do nothing, i.e. have the job complete immediately."""
+
+    _runner_name = 'donothing'
+
+    def __init__(self):
+        Runner.__init__(self)
+        self._directory = os.getcwd()
+
+    def _run(self, webservice):
+        """Run and complete immediately"""
+        # Make job-state file
+        open(os.path.join(self._directory, 'job-state'), 'w').write('DONE\n')
+        runid = 'none'
+        e = saliweb.backend.events._CompletedJobEvent(webservice,
+                                                      self, runid, None)
+        webservice._event_queue.put(e)
+        return runid
+
+    @classmethod
+    def _check_completed(cls, jobid):
+        """Return True if the process has finished or False if it is still
+           running."""
+        # Jobs complete immediately
+        return True
+Job.register_runner_class(DoNothingRunner)
