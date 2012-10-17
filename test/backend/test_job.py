@@ -13,8 +13,8 @@ from StringIO import StringIO
 
 Job._state_file_wait_time = 0.01
 
-class DoNothingRunner(Runner):
-    _runner_name = 'donothing'
+class MockRunner(Runner):
+    _runner_name = 'mock'
     def __init__(self, id):
         Runner.__init__(self)
         self.id = id
@@ -23,7 +23,7 @@ class DoNothingRunner(Runner):
     @classmethod
     def _check_completed(cls, jobid, catch_exceptions=True):
         return True
-Job.register_runner_class(DoNothingRunner)
+Job.register_runner_class(MockRunner)
 
 basic_config = """
 [general]
@@ -95,7 +95,7 @@ class MyJob(Job):
         self._metadata['testfield'] = 'run'
         f = open('job-output', 'w')
         f.close()
-        return DoNothingRunner('MyJob ID')
+        return MockRunner('MyJob ID')
     def rerun(self, data):
         f = open(data, 'w')
         f.close()
@@ -147,7 +147,7 @@ def add_running_job(db, name, completed):
     utcnow = datetime.datetime.utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,runner_id,directory, " \
               + "contact_email,url) VALUES(?,?,?,?,?,?,?)",
-              (name, 'RUNNING', utcnow, 'donothing:SGE-'+name, jobdir,
+              (name, 'RUNNING', utcnow, 'mock:SGE-'+name, jobdir,
               'testuser@salilab.org', 'http://testurl'))
     db.conn.commit()
     f = open(os.path.join(jobdir, 'job-state'), 'w')
@@ -287,7 +287,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, runjobdir)
         # New fields should have been populated in the database
         self.assertEqual(job._metadata['testfield'], 'run')
-        self.assertEqual(job._metadata['runner_id'], 'donothing:MyJob ID')
+        self.assertEqual(job._metadata['runner_id'], 'mock:MyJob ID')
         self.assertNotEqual(job._metadata['preprocess_time'], None)
         self.assertNotEqual(job._metadata['run_time'], None)
         # Both preprocess and run methods in MyJob should have triggered
@@ -578,7 +578,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         self.assert_fail_msg('Python exception:.*Traceback.*'
                              'RunnerError: Runner claims job '
-                             'donothing:SGE-fail-batch-complete is complete, '
+                             'mock:SGE-fail-batch-complete is complete, '
                              'but job-state file in job directory', job)
         os.unlink(os.path.join(failjobdir, 'job-state'))
         # Should have checked for batch completion

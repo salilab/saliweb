@@ -1585,10 +1585,12 @@ class LocalRunner(Runner):
     def __init__(self, cmd):
         Runner.__init__(self)
         self._cmd = cmd
+        self._directory = os.getcwd()
 
     def _run(self, webservice):
         """Run the command and return a unique job ID."""
-        p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list))
+        p = subprocess.Popen(self._cmd, shell=not isinstance(self._cmd, list),
+                             cwd=self._directory)
         runid = str(p.pid)
         _LocalJobWaiter(webservice, p, self, runid).start()
         return runid
