@@ -951,7 +951,7 @@ class Job(object):
        object.
     """
 
-    _state_file_wait_time = 5.0
+    _state_file_wait_time = 8.0
     _runners = {}
 
     # Note: make sure that all code paths are wrapped with try/except, so that
@@ -1104,7 +1104,7 @@ class Job(object):
             # since the batch job may have just finished, after the first
             # check above; we may have to wait a little while for
             # NFS caching, etc.
-            for tries in range(5):
+            for tries in range(8):
                 state_file_done = self._job_state_file_done()
                 if state_file_done:
                     return True
