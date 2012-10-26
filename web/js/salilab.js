@@ -355,3 +355,27 @@ function toggle_visibility(id, linkid) {
     lnk.innerHTML = lnk.innerHTML.replace('Show', 'Hide');
   }
 }
+
+function convert_utc_dates_to_local() {
+  var e = document.getElementById('queue');
+  var nrows = e.rows.length;
+  var first = true;
+  var d = new Date();
+  for (var i = 0; i < nrows; i++) {
+    if (e.rows[i].cells.length == 3) {
+      if (first) {
+        first = false;
+        e.rows[i].cells[1].innerHTML = "Submit time";
+      } else {
+        var inner = e.rows[i].cells[1].innerHTML;
+        d.setUTCFullYear(inner.substr(0, 4));
+        d.setUTCMonth(inner.substr(5, 2) - 1);
+        d.setUTCDate(inner.substr(8, 2));
+        d.setUTCHours(inner.substr(11, 2));
+        d.setUTCMinutes(inner.substr(14, 2));
+        d.setUTCSeconds(inner.substr(17, 2));
+        e.rows[i].cells[1].innerHTML = d.toString();
+      }
+    }
+  }
+}

@@ -1025,6 +1025,11 @@ sub get_queue_page {
                           @{$self->get_queue_rows($q, $dbh, 1)}) .
                "\n</tbody>\n</table>\n";
 
+    # Add JavaScript to convert table dates to local time
+    $return .= "<script type=\"text/javascript\">\n" .
+               "  convert_utc_dates_to_local();\n" .
+               "</script>\n";
+
     return $return . $self->get_queue_key();
 }
 
