@@ -1014,7 +1014,7 @@ sub get_queue_page {
                   "Show completed jobs"));
     # Generate table by hand (not using CGI.pm) since the latter causes
     # "deep recursion" warnings in CGI.pm
-    $return .= "<table>\n<thead>\n" .
+    $return .= "<table id=\"queue\">\n<thead>\n" .
                "<tr><th>Job ID</th> <th>Submit time (UTC)</th>" .
                "<th>Status</th></tr>\n</thead>\n" .
                "<tbody>\n" .

@@ -108,7 +108,7 @@ BEGIN { use_ok('saliweb::frontend'); }
 
     like($self->get_queue_page,
          '/<h3>.*Current test server Queue.*<\/h3>.*' .
-         '<table>.*<tr>.*<th>.*Job ID.*' .
+         '<table id="queue">.*<tr>.*<th>.*Job ID.*' .
          '<th>.*Submit time \(UTC\).*<th>.*Status.*<\/tr>.*' .
          '<td>.*job1.*<td>.*time1.*<td>.*QUEUED.*' .
          '<td>.*job2.*<td>.*time2.*<td>.*QUEUED.*' .
