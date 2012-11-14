@@ -1435,16 +1435,15 @@ class SGERunner(Runner):
        options.
     """
 
-    _runner_name = 'qb3sge'
+    _runner_name = 'qb3ogs'
     _drmaa = None
-    _env = {'SGE_CELL': 'qb3',
-            'SGE_ROOT': '/ccpr1/sge6',
-            'SGE_QMASTER_PORT': '536',
-            'SGE_EXECD_PORT': '537',
+    _env = {'SGE_CELL': 'qb3cell',
+            'SGE_ROOT': '/usr/local/sge',
+            'SGE_QMASTER_PORT': '6444',
+            'SGE_EXECD_PORT': '6445',
             'DRMAA_LIBRARY_PATH':
-                    '/ccpr1/sge6/lib/lx24-amd64/libdrmaa.so.1.0'}
+                    '/usr/local/sge/lib/linux-x64/libdrmaa.so.1.0'}
 
-    _arch = 'lx24-amd64'
     _waited_jobs = _LockedJobDict()
 
     def __init__(self, script, interpreter='/bin/sh'):
@@ -1531,6 +1530,20 @@ class SGERunner(Runner):
             except drmaa.InvalidJobException:
                 return True
 Job.register_runner_class(SGERunner)
+
+
+class _OldSGERunner(SGERunner):
+    """Track jobs running on the old SGE."""
+    _runner_name = 'qb3sge'
+    _drmaa = None
+    _env = {'SGE_CELL': 'qb3',
+            'SGE_ROOT': '/ccpr1/sge6',
+            'SGE_QMASTER_PORT': '536',
+            'SGE_EXECD_PORT': '537',
+            'DRMAA_LIBRARY_PATH':
+                    '/ccpr1/sge6/lib/lx24-amd64/libdrmaa.so.1.0'}
+    _waited_jobs = _LockedJobDict()
+Job.register_runner_class(_OldSGERunner)
 
 
 class SaliSGERunner(SGERunner):
