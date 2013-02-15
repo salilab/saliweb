@@ -688,7 +688,7 @@ title, but can be overridden if desired.
 =cut
 sub get_header_page_title {
     my $self = shift;
-    return '<h3><img src="http://salilab.org/img/logo_small.gif" height="40" ' .
+    return '<h3><img src="//salilab.org/img/logo_small.gif" height="40" ' .
            'alt="" />' . $self->{page_title} . '</h3>';
 }
 
