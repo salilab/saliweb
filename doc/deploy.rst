@@ -85,6 +85,19 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
      Web service set up in pepdock directory
      [bob@modbase ~]$ cd pepdock
 
+ #. At this point it is strongly recommended to put the web service under
+    Subversion control. Bob does this by asking a sysadmin to create the
+    "pepdock" repository, then adding the files to that repository (note that
+    some of the configuration files should be excluded from SVN)::
+
+     $ svn co https://svn.salilab.org/pepdock/trunk .
+     $ svn add test txt SConstruct python lib
+     $ svn add -N conf
+     $ svn propset svn:ignore .scons .
+     $ svn propset svn:ignore "frontend.conf"$'\n'"backend.conf" conf/
+     $ svn add conf/live.conf
+     $ svn ci
+
  #. Bob edits the :ref:`configuration file <configfile>`
     in :file:`conf/live.conf` to adjust install locations, etc. if necessary,
     and fills in the template Python and Perl modules for the
@@ -106,9 +119,20 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
 
  #. Whenever Bob makes changes to the service in his `pepdock` directory, he
     simply runs `scons test` to make sure the changes didn't break anything,
-    then `scons` to update the live copy of the service.
+    then `scons` to update the live copy of the service, then `svn up` and
+    `svn ci` to store his changes in the Subversion repository.
     (The backend will also need to restarted when he does this, but `scons`
     will show a suitable command line to achieve this.)
+
+ #. If Bob wants to share development of the service with another user, Joe,
+    they should ask a sysadmin to give Joe `sudo` access to the `pepdock`
+    account. Joe can then set up his own `pepdock` directory (and then develop
+    in the same way as Bob, above) by running::
+
+     $ svn co https://svn.salilab.org/pepdock/trunk pepdock
+     $ cd pepdock/conf
+     $ sudo -u pepdock cat ~pepdock/service/conf/backend.conf > backend.conf
+     $ sudo -u pepdock cat ~pepdock/service/conf/frontend.conf > frontend.conf
 
 .. note::
    Development of the service should generally be done by the regular ('bob')
