@@ -1,4 +1,5 @@
 import unittest
+import glob
 import logging
 import datetime
 import os
@@ -705,6 +706,25 @@ class JobTest(unittest.TestCase):
         injobdir = os.path.join(conf.directories['INCOMING'], 'job1')
         self.assertEqual(job.directory, injobdir)
         os.rmdir(injobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_delete_all(self):
+        """Check deletion of all jobs"""
+        db, conf, web, tmpdir = setup_webservice()
+        failjobdir = add_failed_job(db, 'job1')
+        injobdir = add_incoming_job(db, 'job2')
+        add_expired_job(db, 'job3')
+        runjobdir = add_running_job(db, 'job4', completed=False)
+        open(os.path.join(db.config.directories['PREPROCESSING'],
+                          'tempfile'), 'w').write('foo')
+        web._delete_all_jobs()
+        self.assertEqual(web.get_job_by_name('FAILED', 'job1'), None)
+        self.assertEqual(web.get_job_by_name('INCOMING', 'job2'), None)
+        self.assertEqual(web.get_job_by_name('EXPIRED', 'job3'), None)
+        self.assertEqual(web.get_job_by_name('RUNNING', 'job4'), None)
+        for typ in ('INCOMING', 'FAILED', 'RUNNING'):
+            g = glob.glob(os.path.join(db.config.directories['INCOMING'], '*'))
+            self.assertEqual(g, [])
         cleanup_webservice(conf, tmpdir)
 
     def test_delete(self):

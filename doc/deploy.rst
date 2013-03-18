@@ -284,6 +284,14 @@ if, for example, due to a bug in the backend, a job didn't work properly but
 went into the **COMPLETED** state. The backend service must first be
 stopped in order to use this tool.
 
+delete_all_jobs.py
+------------------
+
+This tool will delete all of the jobs from the web service, so can be used to
+'restore to factory settings'. It deletes the database table, and all the files
+in all the job directories (even extraneous files that do not correspond to
+jobs in the database). It should be used with caution, as this cannot be undone.
+
 .. _testing:
 
 Testing

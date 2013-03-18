@@ -462,6 +462,12 @@ class Database(object):
         c.execute('DROP TABLE IF EXISTS ' + self._jobtable)
         self.conn.commit()
 
+    def _delete_tables(self):
+        """Delete all tables in the database used to hold job state."""
+        c = self.conn.cursor()
+        c.execute('DELETE FROM ' + self._jobtable)
+        self.conn.commit()
+
     def _create_tables(self):
         """Create all tables in the database to hold job state."""
         c = self.conn.cursor()
@@ -694,6 +700,20 @@ have done this, delete the state file (%s) to reenable runs.
     def create_database_tables(self):
         """Create all tables in the database used to hold job state."""
         self.db._create_tables()
+
+    def _delete_all_jobs(self):
+        """Delete all jobs, both in the database and on the filesystem."""
+        print "Deleting database table"
+        self.db._delete_tables()
+        job_states = _JobState.get_valid_states()
+        job_states.remove('EXPIRED')
+        for s in job_states:
+            print "Deleting all jobs in %s state"
+            for g in glob.glob(os.path.join(self.config.directories[s], '*')):
+                if os.path.isdir(g):
+                    shutil.rmtree(g)
+                else:
+                    os.unlink(g)
 
     def do_all_processing(self, daemonize=False, status_fh=None):
         """Process incoming jobs, completed jobs, and old jobs. This method
