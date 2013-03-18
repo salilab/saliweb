@@ -53,9 +53,10 @@ This module provides a simple SCons-based build infrastructure for web services.
 
    .. method:: InstallHTML(files[, subdir])
 
-      Installs a provided list of HTML files in the ``html`` directory
-      underneath the installation directory. The files can be installed in
-      a subdirectory if desired by giving the *subdir* argument.
+      Installs a provided list of static files (usually HTML, although any
+      static resource, such as images, can be installed) in the ``html``
+      directory underneath the installation directory. The files can be
+      installed in a subdirectory if desired by giving the *subdir* argument.
 
    .. method:: InstallCGI(files[, subdir])
 
