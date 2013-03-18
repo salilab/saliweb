@@ -153,15 +153,15 @@ class DatabaseTest(unittest.TestCase):
         self.assertNotEqual(id(db.conn), id(oldconn))
         self.assert_(isinstance(c, DummyCursor))
 
-    def test_delete_tables(self):
-        """Check Database._delete_tables()"""
+    def test_drop_tables(self):
+        """Check Database._drop_tables()"""
         db = MemoryDatabase(Job)
         db._connect(None)
         c = db.conn.cursor()
         c.execute('CREATE TABLE jobs (test TEXT)')
         db.conn.commit()
         # Should work regardless of whether tables exist
-        db._delete_tables()
+        db._drop_tables()
         # It should have deleted the jobs table and state index
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE jobs')

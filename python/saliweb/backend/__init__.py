@@ -456,8 +456,8 @@ class Database(object):
                                     db=config.database['db'],
                                     passwd=config.database['passwd'])
 
-    def _delete_tables(self):
-        """Delete all tables in the database used to hold job state."""
+    def _drop_tables(self):
+        """Drop all tables in the database used to hold job state."""
         c = self.conn.cursor()
         c.execute('DROP TABLE IF EXISTS ' + self._jobtable)
         self.conn.commit()
@@ -687,9 +687,9 @@ have done this, delete the state file (%s) to reenable runs.
         if len(jobs) == 1:
             return jobs[0]
 
-    def delete_database_tables(self):
-        """Delete all tables in the database used to hold job state."""
-        self.db._delete_tables()
+    def drop_database_tables(self):
+        """Drop all tables in the database used to hold job state."""
+        self.db._drop_tables()
 
     def create_database_tables(self):
         """Create all tables in the database used to hold job state."""
