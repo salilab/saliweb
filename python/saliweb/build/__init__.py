@@ -329,8 +329,9 @@ def _check_directory_permissions(env):
 ** Install directory %s appears to be group- or world-writable!
 ** It should only be writable by the backend user, %s.
 ** To fix this, run
-   chmod 755 %s
-""" % (dir, backend_user, dir)
+   /usr/bin/sudo -u %s chmod 755 %s
+** or delete the directory and then rerun scons to recreate it.
+""" % (dir, backend_user, backend_user, dir)
             env.Exit(1)
 
 def _check_incoming_directory_permissions(env):
