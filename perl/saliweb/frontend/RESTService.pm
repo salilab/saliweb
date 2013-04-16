@@ -78,7 +78,10 @@ and collection of job results.
 If you want to use the web interface for this service, please
 open $cgiroot in a web browser.
 
-To submit a job to the service, submit an HTTP POST request to
+To submit a job to the service, use the web_service.py tool available
+at http://modbase.compbio.ucsf.edu/web_service.py
+
+Alternatively, submit an HTTP POST request to
 $rest_url
 The POST data should be encoded as multipart/form-data and include the same
 options and uploaded files that are submitted by the web interface. The service
