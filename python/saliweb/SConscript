@@ -2,12 +2,19 @@ import os
 
 Import('env')
 
-python_files = [ '__init__.py', 'make_web_service.py', 'web_service.py' ]
+ws_script = 'web_service.py'
+python_files = [ '__init__.py', 'make_web_service.py', ws_script ]
 
 # Install .py files:
 instdir = os.path.join(env['pythondir'], 'saliweb')
 pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
+
+# Also install web_service.py in the path and make it available to download
+cmdinst = env.Install('/usr/bin', ws_script)
+dwnldinst = env.Install('/modbase1/home/modbase/www/modbase-new/html',
+                        ws_script)
+env.Alias('install', (cmdinst, dwnldinst))
 
 SConscript('backend/SConscript')
 SConscript('build/SConscript')
