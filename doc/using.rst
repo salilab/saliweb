@@ -64,5 +64,6 @@ Alternatively, you can do the same thing from Python with a script like:
    :language: python
 
 Although `/usr/bin/web_service.py` is only installed on `modbase`, you can
-copy it and run it on any machine that has network access and has Python and
+`download a copy <http://modbase.compbio.ucsf.edu/web_service.py>`_ and
+run it on any machine that has network access and has Python and
 curl installed.
