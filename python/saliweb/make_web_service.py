@@ -4,16 +4,15 @@ import random
 import os
 import sys
 import pwd
-
+import subprocess
 
 class MakeWebService(object):
 
-    def __init__(self, service_name, short_name=None):
+    def __init__(self, short_name, service_name):
+        self.short_name = short_name
+        self.svn_url = 'https://svn.salilab.org/' + short_name
+        self.svn_trunk_url = self.svn_url + '/trunk'
         self.service_name = service_name
-        if short_name:
-            self.short_name = short_name
-        else:
-            self.short_name = service_name.lower().replace(' ', '_')
         self.topdir = self.short_name
         self.user = self.short_name
         self.db = self.short_name
@@ -39,6 +38,7 @@ class MakeWebService(object):
                 prefix = prefix[:-1]
 
     def make(self):
+        self._set_up_svn()
         self._make_directories()
         self._make_sconstruct()
         self._make_sconscripts()
@@ -46,7 +46,52 @@ class MakeWebService(object):
         self._make_frontend()
         self._make_backend()
         self._make_txt()
+        self._commit_svn()
+        self._print_completion()
+
+    def _print_completion(self):
+        uid = pwd.getpwnam(self.user).pw_uid
         print >> sys.stderr, "Web service set up in %s directory" % self.topdir
+        print >> sys.stderr, """Still need to:
+1. Add access to the %(user)s account to users by running
+/usr/bin/sudo /usr/sbin/visudo
+and adding lines such as
+ben     modbase=(%(user)s) ALL
+
+4. Make accounts for %(user)s on the cluster(s) if it's going
+to run cluster jobs.
+
+5. Make the /netapp/sali/%(user)s directory by running on sortinghat:
+/usr/bin/sudo mkdir /netapp/sali/%(user)s
+/usr/bin/sudo chown %(uid)d:%(uid)d /netapp/sali/%(user)s
+
+6. Change into the %(topdir)s directory and run
+/usr/bin/sudo -u %(user)s scons
+until it works.
+""" % {'user': self.user, 'topdir': self.topdir, 'uid': uid}
+
+    def _run_svn_command(self, cmd, cwd=None):
+        print "svn " + " ".join(cmd)
+        ret = subprocess.call(['svn'] + cmd, cwd=cwd)
+        if ret != 0:
+            raise OSError("subprocess failed with code %d" % ret)
+
+    def _set_up_svn(self):
+        self._run_svn_command(['mkdir', self.svn_trunk_url,
+                               '-m', 'Make trunk directory'])
+        self._run_svn_command(['co', self.svn_trunk_url, self.short_name])
+
+    def _commit_svn(self):
+        self._run_svn_command(['add', 'test', 'txt', 'SConstruct', 'python',
+                               'lib'], cwd=self.topdir)
+        self._run_svn_command(['add', '-N', 'conf'], cwd=self.topdir)
+        self._run_svn_command(['add', 'conf/live.conf'], cwd=self.topdir)
+        self._run_svn_command(['propset', 'svn:ignore', '.scons', '.'],
+                              cwd=self.topdir)
+        self._run_svn_command(['propset', 'svn:ignore',
+                               'frontend.conf\nbackend.conf', 'conf'],
+                              cwd=self.topdir)
+        self._run_svn_command(['ci', '-m', 'Initial setup'], cwd=self.topdir)
 
     def _make_password(self, length):
         return "".join(random.choice(string.letters + string.digits) \
@@ -56,11 +101,20 @@ class MakeWebService(object):
         try:
             dir = pwd.getpwnam(self.user).pw_dir
         except KeyError:
-            dir = '/modbase5/home/%s' % self.user
+            print """The %(user)s user doesn't exist. Please create it first:
+
+1. Determine the UID for the new user and add it to the wiki page:
+https://salilab.org/internal/wiki/SysAdmin/UID
+
+2. Set up the %(user)s user and group by running
+/usr/bin/sudo /usr/sbin/groupadd -g <UID> %(user)s
+/usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' -d %(dir)s %(user)s
+/usr/bin/sudo chmod a+rx ~%(user)s
+""" % {'user': self.user, 'dir': '/modbase5/home/%s' % self.user}
+            sys.exit(1)
         return os.path.join(dir, 'service')
 
     def _make_directories(self):
-        os.mkdir(self.topdir)
         for subdir in ('conf', 'lib', 'python', 'txt', 'test',
                        'test/frontend', 'test/backend'):
             os.mkdir(os.path.join(self.topdir, subdir))
@@ -231,26 +285,29 @@ def get_web_service(config_file):
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
-%prog [-h] SERVICE_NAME [SHORT_NAME]
+%prog [-h] SHORT_NAME SERVICE_NAME
 
 Set up a directory structure for a new web service called "SERVICE_NAME".
 "SERVICE_NAME" should be the human-readable name of the web service, for
 example "ModFoo" or "Peptide Docking". It may contain spaces and mixed case.
 
-"SHORT_NAME" should give a short name containing only lowercase letters and
-no spaces. (If not given, it is generated from "SERVICE_NAME" by lowercasing
-and replacing spaces with underscores.) This name is used to name the
-directory containing the files, the generated Python and Perl modules,
-system and MySQL users etc.
+"SHORT_NAME" should be a short name containing only lowercase letters and
+no spaces. This name is used to name the directory containing the files,
+the generated Python and Perl modules, system and MySQL users etc.
+An SVN repository with the same name is assumed to already exist, but to be
+empty (e.g. if SHORT_NAME is 'modfoo' the repository should exist at
+https://svn.salilab.org/modfoo). A working directory with the same name is
+set up, and the files checked in to the trunk of the SVN repository.
+Users can then work on the service by checking out
+the trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo").
 
 e.g.
-%prog ModFoo
-%prog "Peptide Docking" pepdock
+%prog pepdock "Peptide Docking"
 """)
     opts, args = parser.parse_args()
-    if len(args) < 1 or len(args) > 2:
+    if len(args) != 2:
         parser.error("Wrong number of arguments given")
-    if len(args) == 2 and (' ' in args[1] or args[1].lower() != args[1]):
+    if ' ' in args[0] or args[0].lower() != args[0]:
         parser.error("SHORT_NAME must be all lowercase and contain no spaces")
     return args
 

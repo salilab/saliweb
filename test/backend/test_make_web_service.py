@@ -39,38 +39,49 @@ class MakeWebServiceTests(unittest.TestCase):
 
     def test_init(self):
         """Check creation of MakeWebService object"""
-        m = MakeWebService('Test Service')
+        m = MakeWebService('root', 'Test Service')
         self.assertEqual(m.service_name, 'Test Service')
-        self.assertEqual(m.short_name, 'test_service')
-        self.assertEqual(m.user, 'test_service')
-        self.assertEqual(m.db, 'test_service')
-
-        m = MakeWebService('Test Service', 'mytest')
-        self.assertEqual(m.service_name, 'Test Service')
-        self.assertEqual(m.short_name, 'mytest')
-        self.assertEqual(m.user, 'mytest')
-        self.assertEqual(m.db, 'mytest')
+        self.assertEqual(m.short_name, 'root')
+        self.assertEqual(m.user, 'root')
+        self.assertEqual(m.db, 'root')
 
     def test_make_password(self):
         """Check MakeWebService._make_password method"""
-        m = MakeWebService('x')
+        m = MakeWebService('root', 'x')
         for pwlen in (10, 20):
             pwd = m._make_password(pwlen)
             self.assertEqual(len(pwd), pwlen)
 
     def test_sql_username(self):
         """Check MakeWebService._make_database_name method"""
+        class Dummy(MakeWebService):
+            def _get_install_dir(self):
+                return "dummy"
         for (short_name, typ, expected) in (
               ["short", "veryverylongtype", "short_veryverylo"],
               ["veryverylongname", "back", "veryverylongna_b"] ):
-            m = MakeWebService(short_name)
+            m = Dummy(short_name, "service name")
             name = m._make_database_name(typ)
             self.assertEqual(name, expected)
 
+    def test_run_svn_command(self):
+        """Check MakeWebService._run_svn_command"""
+        m = MakeWebService('root', 'Test Service')
+        m._run_svn_command(['help'], cwd='/')
+        self.assertRaises(OSError, m._run_svn_command, ['garbage'])
+
     def test_make(self):
         """Check MakeWebService.make method"""
+        class Dummy(MakeWebService):
+            def _get_install_dir(self):
+                return "dummy"
+            def _run_svn_command(self, cmd, cwd=None):
+                self.cmds.append(cmd)
         d = RunInTempDir()
-        m = MakeWebService('ModFoo')
+        m = Dummy('modfoo', 'ModFoo')
+        m.user = 'root' # so that getpwnam works
+        os.mkdir(m.topdir)
+        m.cmds = []
         oldstderr = sys.stderr
         try:
             sys.stderr = StringIO.StringIO()
@@ -103,19 +114,19 @@ class MakeWebServiceTests(unittest.TestCase):
             finally:
                 sys.stderr = oldstderr
                 sys.argv = old
-        for bad in [[], ['long', 'short', 'extra'],
-                    ['long', 'UPPERCASESHORT'], ['long', 'short with spaces']]:
+        for bad in [[], ['short', 'long', 'extra'],
+                    ['UPPERCASESHORT', 'long'], ['short with spaces', 'long']]:
             self.assertRaises(SystemExit, run_get_options, bad)
-        self.assertEqual(run_get_options(['long', 'short']), ['long', 'short'])
+        self.assertEqual(run_get_options(['short', 'long']), ['short', 'long'])
 
     def test_main(self):
         """Test make_web_service main()"""
         events = []
         def dummy_get_options():
             events.append('get_options')
-            return ['testlong', 'testshort']
+            return ['testshort', 'testlong']
         class DummyMakeWebService(object):
-            def __init__(self, servicename, short):
+            def __init__(self, short, servicename):
                 events.append('MakeWebService %s %s' % (servicename, short))
             def make(self):
                 events.append('make')

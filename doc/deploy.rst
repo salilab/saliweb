@@ -73,30 +73,15 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
     users, the Perl and Python modules, etc. It is difficult to change later,
     but is never seen by end users so is essentially arbitrary.
 
- #. He asks a sysadmin to set up the account for the "pepdock" system user. This
-    will be created on the `modbase` machine and the cluster nodes, so it can
-    run jobs.
+ #. He asks a sysadmin to set up the web service, giving him or her the
+    "short name" and the human readable name. (The sysadmin will run the
+    `make_web_service` script.)
 
- #. He logs in to the `modbase` machine using his own account, and uses the
-    ``make_web_service`` script to set up the web service::
-
-     $ ssh bob@modbase
-     [bob@modbase ~]$ make_web_service "Peptide Docking" pepdock
-     Web service set up in pepdock directory
-     [bob@modbase ~]$ cd pepdock
-
- #. At this point it is strongly recommended to put the web service under
-    Subversion control. Bob does this by asking a sysadmin to create the
-    "pepdock" repository, then adding the files to that repository (note that
-    some of the configuration files should be excluded from SVN)::
-
-     $ svn co https://svn.salilab.org/pepdock/trunk .
-     $ svn add test txt SConstruct python lib
-     $ svn add -N conf
-     $ svn propset svn:ignore .scons .
-     $ svn propset svn:ignore "frontend.conf"$'\n'"backend.conf" conf/
-     $ svn add conf/live.conf
-     $ svn ci
+ #. Bob can then get the web service from Subversion by running::
+     $ svn co https://svn.salilab.org/pepdock/trunk pepdock
+     $ cd pepdock/conf
+     $ sudo -u pepdock cat ~pepdock/service/conf/backend.conf > backend.conf
+     $ sudo -u pepdock cat ~pepdock/service/conf/frontend.conf > frontend.conf
 
  #. Bob edits the :ref:`configuration file <configfile>`
     in :file:`conf/live.conf` to adjust install locations, etc. if necessary,
@@ -126,13 +111,8 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
 
  #. If Bob wants to share development of the service with another user, Joe,
     they should ask a sysadmin to give Joe `sudo` access to the `pepdock`
-    account. Joe can then set up his own `pepdock` directory (and then develop
-    in the same way as Bob, above) by running::
-
-     $ svn co https://svn.salilab.org/pepdock/trunk pepdock
-     $ cd pepdock/conf
-     $ sudo -u pepdock cat ~pepdock/service/conf/backend.conf > backend.conf
-     $ sudo -u pepdock cat ~pepdock/service/conf/frontend.conf > frontend.conf
+    account. Joe can then set up his own `pepdock` directory by checking out
+    from Subversion and then developing in the same way as Bob, above.
 
 .. note::
    Development of the service should generally be done by the regular ('bob')
