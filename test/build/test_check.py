@@ -442,7 +442,7 @@ class CheckTest(unittest.TestCase):
         self.assertEquals(contents, \
 """CREATE DATABASE testdb;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
-CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL DEFAULT '', state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(50), failure TEXT);
+CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL DEFAULT '', state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
 GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost' identified by 'frontpwd';
 GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testdb.jobs to 'frontuser'@'localhost';
 """)
@@ -502,7 +502,7 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
                     ('end_time', 'datetime', 'YES', '', None, ''),
                     ('archive_time', 'datetime', 'YES', '', None, ''),
                     ('expire_time', 'datetime', 'YES', '', None, ''),
-                    ('runner_id', 'varchar(50)', 'YES', '', None, ''),
+                    ('runner_id', 'varchar(200)', 'YES', '', None, ''),
                     ('failure', 'text', 'YES', '', None, ''),
                    ]
         ret, stderr = run_catch_stderr(

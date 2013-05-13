@@ -423,7 +423,7 @@ class Database(object):
         self._fields = []
         # Add fields used by all web services
         states = ",".join("'%s'" % x for x in _JobState.get_valid_states())
-        self.add_field(MySQLField('name', 'VARCHAR(100)', key='PRIMARY',
+        self.add_field(MySQLField('name', 'VARCHAR(40)', key='PRIMARY',
                                   null=False))
         self.add_field(MySQLField('user', 'VARCHAR(40)'))
         self.add_field(MySQLField('passwd', 'CHAR(10)'))
@@ -439,7 +439,7 @@ class Database(object):
         self.add_field(MySQLField('end_time', 'DATETIME'))
         self.add_field(MySQLField('archive_time', 'DATETIME'))
         self.add_field(MySQLField('expire_time', 'DATETIME'))
-        self.add_field(MySQLField('runner_id', 'VARCHAR(50)'))
+        self.add_field(MySQLField('runner_id', 'VARCHAR(200)'))
         self.add_field(MySQLField('failure', 'TEXT'))
 
     def add_field(self, field):
