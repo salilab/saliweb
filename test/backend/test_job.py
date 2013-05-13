@@ -22,7 +22,7 @@ class MockRunner(Runner):
     def _run(self, webservice):
         return self.id
     @classmethod
-    def _check_completed(cls, jobid, catch_exceptions=True):
+    def _check_completed(cls, jobid, directory):
         return True
 Job.register_runner_class(MockRunner)
 
@@ -116,7 +116,7 @@ class MyJob(Job):
         self._metadata['testfield'] = 'expire'
         f = open('expire', 'w')
         f.close()
-    def _runner_done(self):
+    def _get_runner_results(self):
         if self.name == 'fail-batch-exception':
             raise ValueError('Failure in batch completion')
         elif self.name == 'batch-complete-race':
@@ -749,14 +749,14 @@ class JobTest(unittest.TestCase):
         self.assertEqual(c.fetchone()[0], 1)
         cleanup_webservice(conf, tmpdir)
 
-    def test_has_completed(self):
-        """Check Job._has_completed method"""
+    def test_get_job_results(self):
+        """Check Job._get_job_results method"""
         db, conf, web, tmpdir = setup_webservice()
         runjobdir = add_running_job(db, 'batch-complete-race', completed=False)
         job = web.get_job_by_name('RUNNING', 'batch-complete-race')
         # In r62 and earlier, a race condition could cause a failure here if
         # the SGE job finished just after the state file check is done
-        self.assertEqual(job._has_completed(), True)
+        self.assertEqual(job._get_runner_results(), True)
         jobdir = os.path.join(conf.directories['RUNNING'],
                               'batch-complete-race')
         self.assertEqual(job.directory, jobdir)
@@ -817,26 +817,27 @@ class JobTest(unittest.TestCase):
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
 
-    def test_runner_done(self):
-        """Check Job._runner_done method"""
+    def test_get_runner_results(self):
+        """Check Job._get_runner_results method"""
         checked_jobs = []
         class DummyRunner(object):
             def __init__(self, completed): self._completed = completed
-            def _check_completed(self, jobid):
+            def _check_completed(self, jobid, directory):
                 checked_jobs.append(jobid)
                 return self._completed
         class TestJob(Job):
             _runners = {'donerunner': DummyRunner(True),
                         'runrunner': DummyRunner(False) }
+            directory = ''
             def __init__(self, runner_id):
                 self._metadata = {'runner_id':runner_id}
 
         j = TestJob('donerunner:job1')
-        self.assertEqual(j._runner_done(), True)
+        self.assertEqual(j._get_runner_results(), True)
         j = TestJob('runrunner:job2')
-        self.assertEqual(j._runner_done(), False)
+        self.assertEqual(j._get_runner_results(), False)
         j = TestJob('donerunner:job:with:colons')
-        self.assertEqual(j._runner_done(), True)
+        self.assertEqual(j._get_runner_results(), True)
         self.assertEqual(checked_jobs, ['job1', 'job2', 'job:with:colons'])
 
 if __name__ == '__main__':

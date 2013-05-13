@@ -32,7 +32,7 @@ class LocalRunnerTest(unittest.TestCase):
             if pid in LocalRunner._waited_jobs:
                 break
             time.sleep(0.05)
-        self.assertEqual(LocalRunner._check_completed(pid), False)
+        self.assertEqual(LocalRunner._check_completed(pid, ''), False)
         self.assertEqual(pid in LocalRunner._waited_jobs, True)
         os.kill(int(pid), signal.SIGTERM)
         # Give the waiter thread enough time to close down
@@ -80,10 +80,10 @@ class LocalRunnerTest(unittest.TestCase):
         """Check that LocalRunner jobs from other processes are checked"""
         p = subprocess.Popen('/bin/sleep 60', shell=True)
         pid = str(p.pid)
-        self.assertEqual(LocalRunner._check_completed(pid), False)
+        self.assertEqual(LocalRunner._check_completed(pid, ''), False)
         os.kill(int(pid), signal.SIGTERM)
         p.wait()
-        self.assertEqual(LocalRunner._check_completed(pid), True)
+        self.assertEqual(LocalRunner._check_completed(pid, ''), True)
 
 if __name__ == '__main__':
     unittest.main()

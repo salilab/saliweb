@@ -75,10 +75,10 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
     def test_check_completed(self):
         """Check SGERunner._check_completed()"""
         TestRunner._waited_jobs.add('waitedjob')
-        self.assertEqual(TestRunner._check_completed('donejob'), True)
-        self.assertEqual(TestRunner._check_completed('runningjob'), False)
-        self.assertEqual(TestRunner._check_completed('queuedjob'), False)
-        self.assertEqual(TestRunner._check_completed('waitedjob'), False)
+        self.assertEqual(TestRunner._check_completed('donejob', ''), True)
+        self.assertEqual(TestRunner._check_completed('runningjob', ''), False)
+        self.assertEqual(TestRunner._check_completed('queuedjob', ''), False)
+        self.assertEqual(TestRunner._check_completed('waitedjob', ''), False)
 
     def test_get_drmaa(self):
         """Check SGERunner._get_drmaa()"""

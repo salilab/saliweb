@@ -21,7 +21,7 @@ class DoNothingRunnerTest(unittest.TestCase):
         ws = DummyWebService()
         r = DoNothingRunner()
         r._run(ws)
-        self.assertEqual(DoNothingRunner._check_completed('none'), True)
+        self.assertEqual(DoNothingRunner._check_completed('none', ''), True)
         event = ws._event_queue.get()
         event.process()
         self.assertEqual(ws._exception, None)

@@ -63,6 +63,9 @@ Alternatively, you can do the same thing from Python with a script like:
 .. literalinclude:: ../examples/modfoo_rest.py
    :language: python
 
+(Note that you can also submit jobs to a web service from another one using
+the :class:`SaliWebServiceRunner` class.)
+
 Although `/usr/bin/web_service.py` is only installed on `modbase`, you can
 `download a copy <http://modbase.compbio.ucsf.edu/web_service.py>`_ and
 run it on any machine that has network access and has Python and

@@ -28,6 +28,12 @@ The :mod:`saliweb.backend` Python module
 .. autoclass:: LocalRunner
    :members:
 
+.. autoclass:: SaliWebServiceRunner
+   :members:
+
+.. autoclass:: SaliWebServiceResult
+   :members:
+
 .. autoclass:: DoNothingRunner
    :members:
 
