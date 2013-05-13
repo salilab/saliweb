@@ -1,4 +1,5 @@
 import unittest
+import time
 import os
 from saliweb.backend import SaliWebServiceRunner
 import saliweb
@@ -47,6 +48,15 @@ class Test(unittest.TestCase):
             url = r._run(ws)
             self.assertEqual(url, 'jobid')
             event1 = ws._event_queue.get()
+            self.assertEqual(event1.run_exception, None)
+            self.assertEqual(event1.runid, 'jobid')
+            self.assertEqual(event1.runner, r)
+            self.assertEqual(event1.webservice, ws)
+            # Give the waiter thread enough time to close down
+            for i in range(20):
+                if 'jobid' not in SaliWebServiceRunner._waited_jobs:
+                    break
+                time.sleep(0.05)
             res = SaliWebServiceRunner._check_completed(url, d.tmpdir)
             self.assertEqual(len(res), 2)
             d = open(os.path.join(d.tmpdir, 'job-state')).read()
