@@ -78,6 +78,7 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
     `make_web_service` script.)
 
  #. Bob can then get the web service from Subversion by running::
+
      $ svn co https://svn.salilab.org/pepdock/trunk pepdock
      $ cd pepdock/conf
      $ sudo -u pepdock cat ~pepdock/service/conf/backend.conf > backend.conf
