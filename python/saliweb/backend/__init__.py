@@ -1705,8 +1705,9 @@ class SaliWebServiceResult(object):
 class SaliWebServiceRunner(Runner):
     """Run a job on another Sali lab web service.
        When the job completes, the resulting files are passed to the
-       meth:`Job.postprocess` method, as a list of :class:`SaliWebServiceResult`
-       objects, where they can be downloaded if desired.
+       :meth:`Job.postprocess` method, as a list of
+       :class:`SaliWebServiceResult` objects, where they can be downloaded
+       if desired.
        This uses the web service's REST interface (see :ref:`automated` for
        further details). For example, to submit to the fictional ModFoo
        service, use something like::
