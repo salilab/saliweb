@@ -123,6 +123,9 @@ def submit_job(url, args):
        for passing to curl as an argument to its -F option (e.g. 'foo=bar' sets
        the 'foo' variable to 'bar'; 'foo=@bar' uploads the file 'bar' as the
        'foo' variable). Use show_info() to determine the variable names.
+       (Note that the more natural Python keyword syntax, e.g. foo='bar',
+       is not used, since it is possible for HTML names to be invalid Python
+       keywords.)
 
        On successful execution, the job is started, and a URL is returned
        at which results will appear (use get_results() to query it).
