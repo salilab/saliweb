@@ -101,8 +101,9 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
 
  #. Once deployment is successful, he asks a sysadmin to set up the web server
     on `modbase` so that the URL given in `urltop` in :file:`conf/live.conf`
-    works, and to register the service with Google Analytics. The resulting
-    UA number should also get entered into the configuration file.
+    works, and to register the service with 
+    `Google Analytics <https://salilab.org/internal/wiki/GoogleAnalytics>`_.
+    The resulting UA number should also get entered into the configuration file.
 
  #. Whenever Bob makes changes to the service in his `pepdock` directory, he
     simply runs `scons test` to make sure the changes didn't break anything,
