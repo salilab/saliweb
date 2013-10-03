@@ -374,7 +374,7 @@ sub _google_ua {
     } else {
         # If the google_ua has not been set in the configuration file
         # use the ModBase UA
-        return "UA-44577804-1";
+        return ('UA-44577804-1');
     }
 }
 
@@ -655,9 +655,8 @@ sub start_html {
     my ($self, $style) = @_;
     my $q = $self->{'CGI'};
     $style = $style || "/saliweb/css/server.css";
-    my $google_ua = $self->_google_ua;
     return $q->header(-status => $self->http_status) .
-           $q->start_html($self->get_start_html_parameters($style, $google_ua));
+           $q->start_html($self->get_start_html_parameters($style));
 }
 
 =item get_start_html_parameters
@@ -666,8 +665,9 @@ Can be customized in a derived class to add extra stylesheets or scripts,
 for example.
 =cut
 sub get_start_html_parameters {
-    my ($self, $style, $google_ua) = @_;
-    my $JS_Google_Analytics="
+    my ($self, $style) = @_;
+    my $google_ua = $self->_google_ua;
+    my $JS_Google_Analytics = "
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
