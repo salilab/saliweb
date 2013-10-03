@@ -654,11 +654,22 @@ for example.
 =cut
 sub get_start_html_parameters {
     my ($self, $style) = @_;
-
+    my $JS_Google_Analytics="
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ 
+    ga('create', 'UA-44577804-1', 'ucsf.edu');
+    ga('send', 'pageview'); ";
+ 
     return (-title => $self->{page_title},
             -style => {-src=>[$style]},
             -script=>[{-language => 'JavaScript',
-                       -src=>"/saliweb/js/salilab.js"}]);
+                       -src      => "/saliweb/js/salilab.js"},
+                      {-language => 'JavaScript',
+                       -code     => $JS_Google_Analytics}]);
+
 }
 
 sub end_html {
