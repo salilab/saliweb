@@ -11,7 +11,7 @@ frontends. Each frontend has a different human-readable service name and a
 different URL from the main frontend.
 
 To set up an alternative frontend called 'ModAlt', first add a section similar
-to the following to the configuration file (see also :ref:`deploy_config`):
+to the following to the configuration file (see also :ref:`configfile`):
 
 .. literalinclude:: ../examples/alternative.conf
 
