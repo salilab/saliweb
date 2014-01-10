@@ -312,6 +312,24 @@ class WebServiceTest(unittest.TestCase):
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
+    def test_filesystem_sanity_check_nojobdir(self):
+        """Check WebService._filesystem_sanity_check() with no job dir"""
+        t = RunInTempDir()
+        os.mkdir('incoming')
+        os.mkdir('preprocessing')
+        db, conf, web = self._setup_webservice(t.tmpdir)
+        web._filesystem_sanity_check()
+        # Make job with non-existing directory
+        c = db.conn.cursor()
+        utcnow = datetime.datetime.utcnow()
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+                  ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
+                  utcnow + datetime.timedelta(days=1), None,
+                  'http://testurl'))
+        db.conn.commit()
+        self.assertRaises(SanityError, web._filesystem_sanity_check)
+
     def test_cleanup_incoming_jobs(self):
         """Test WebSerivce._cleanup_incoming_jobs() method"""
         cleaned_dirs = []
