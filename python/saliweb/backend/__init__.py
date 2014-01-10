@@ -825,6 +825,8 @@ have done this, delete the state file (%s) to reenable runs.
         for state in states:
             for job in self.db._get_all_jobs_in_state(state):
                 dir = job.directory
+                if dir is None:
+                    raise SanityError("Job %s (in state %s) has no directory; "                                      "please delete it" % (job.name, state))
                 # Check to make sure directory exists
                 if not os.path.exists(dir):
                     raise SanityError("Directory %s for job %s does not "
