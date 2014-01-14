@@ -461,7 +461,7 @@ class Database(object):
         self.config = config
         self.conn = MySQLdb.connect(user=config.database['user'],
                                     db=config.database['db'],
-                                    socket=config.database['socket'],
+                                    unix_socket=config.database['socket'],
                                     passwd=config.database['passwd'])
 
     def _drop_tables(self):

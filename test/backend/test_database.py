@@ -75,7 +75,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(db.config, config)
         self.assertEqual(db.conn, [(), {'user':'testuser',
                                         'db':'testdb',
-                                        'socket':'foo',
+                                        'unix_socket':'foo',
                                         'passwd':'testpwd'}])
 
     def test_add_field(self):
