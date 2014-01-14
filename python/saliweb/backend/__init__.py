@@ -257,6 +257,10 @@ class Config(object):
     def _populate_database(self, config):
         self.database = {}
         self.database['db'] = config.get('database', 'db')
+        try:
+            self.database['socket'] = config.get('database', 'socket')
+        except ConfigParser.NoOptionError:
+            self.database['socket'] = '/var/lib/mysql/mysql.sock'
         for key in ('backend_config', 'frontend_config'):
             fname = config.get('database', key)
             if not os.path.isabs(fname) and self._config_dir:
@@ -457,6 +461,7 @@ class Database(object):
         self.config = config
         self.conn = MySQLdb.connect(user=config.database['user'],
                                     db=config.database['db'],
+                                    socket=config.database['socket'],
                                     passwd=config.database['passwd'])
 
     def _drop_tables(self):

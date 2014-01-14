@@ -1458,6 +1458,7 @@ sub read_ini_file {
   my $section;
   # Set defaults
   $contents->{limits}->{running} = 5;
+  $contents->{database}->{socket} = '/var/lib/mysql/mysql.sock';
   while(<FILE>) {
     if (/^\[(\S+)\]$/) {
       $section = lc $1;
@@ -1494,7 +1495,8 @@ sub read_config {
 
 sub connect_to_database {
   my ($config) = @_;
-  my $dbh = DBI->connect("DBI:mysql:" . $config->{database}->{db},
+  my $dbh = DBI->connect("DBI:mysql:" . $config->{database}->{db}
+                         . ';mysql_socket=' . $config->{database}->{socket},
                          $config->{database}->{user},
                          $config->{database}->{passwd})
             or throw saliweb::frontend::DatabaseError(

@@ -65,7 +65,8 @@ class DatabaseTest(unittest.TestCase):
     def test_connect(self):
         """Check the Database._config() method"""
         class DummyConfig(object):
-            database = {'user': 'testuser', 'db': 'testdb', 'passwd': 'testpwd'}
+            database = {'user': 'testuser', 'db': 'testdb', 'passwd': 'testpwd',
+                        'socket': 'foo'}
         config = DummyConfig()
         db = saliweb.backend.Database(Job)
         db._connect(config)
@@ -74,6 +75,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(db.config, config)
         self.assertEqual(db.conn, [(), {'user':'testuser',
                                         'db':'testdb',
+                                        'socket':'foo',
                                         'passwd':'testpwd'}])
 
     def test_add_field(self):
