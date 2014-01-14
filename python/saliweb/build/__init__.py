@@ -512,6 +512,7 @@ def _check_mysql(env):
 
     try:
         db = MySQLdb.connect(db=c.database['db'], user=backend['user'],
+                             unix_socket=c.database['socket'],
                              passwd=backend['passwd'])
         cur = db.cursor()
         cur.execute('DESCRIBE jobs')
@@ -522,6 +523,7 @@ def _check_mysql(env):
                             'INDEX')
 
         db = MySQLdb.connect(db=c.database['db'], user=frontend['user'],
+                             unix_socket=c.database['socket'],
                              passwd=frontend['passwd'])
         cur = db.cursor()
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
