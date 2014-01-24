@@ -1326,8 +1326,8 @@ class Job(object):
         return self.run()
 
     def send_user_email(self, subject, body):
-        """Email the owner of the job, if requested, with the given `subject`
-           and `body`."""
+        """Email the owner of the job with the given `subject` and `body`.
+           (If no email address was given by the user, this does nothing.)"""
         if self._metadata['contact_email']:
             self._db.config.send_email(self._metadata['contact_email'],
                                        subject, body)
