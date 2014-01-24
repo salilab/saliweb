@@ -1339,8 +1339,9 @@ class Job(object):
 
     def send_job_completed_email(self):
         """Email the user (if requested) to let them know job results are
-           available. Can be overridden to disable this behavior or to change
-           the content of the email."""
+           available. (It does this by calling :meth:`send_user_email`.)
+           Can be overridden to disable this behavior or to change the
+           content of the email."""
         subject = 'Sali lab %s service: Job %s complete' \
                   % (self.service_name, self.name)
         body = 'Your job %s has finished.\n\n' % self.name + \
