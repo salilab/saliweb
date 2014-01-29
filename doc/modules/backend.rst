@@ -10,6 +10,10 @@ The :mod:`saliweb.backend` Python module
 .. autoclass:: Config
    :members:
 
+   .. attribute:: admin_email
+
+      The email address of the admin.
+
 .. autoclass:: Database
    :members:
 
