@@ -215,8 +215,10 @@ passwd: %s""" % (end, user, passwd)
         f = open(os.path.join(self.topdir, 'lib',
                               '%s.pm' % self.short_name), 'w')
         print >> f, """package %(short_name)s;
-use base qw(saliweb::frontend);
+use saliweb::frontend;
 use strict;
+
+our @ISA = "saliweb::frontend";
 
 sub new {
     return saliweb::frontend::new(@_, @CONFIG@);
