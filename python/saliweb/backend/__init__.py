@@ -1196,7 +1196,7 @@ class Job(object):
         self.__set_state('COMPLETED')
         self._run_in_job_directory(self.complete)
         self._sync_metadata()
-        self.send_job_completed_email()
+        self._run_in_job_directory(self.send_job_completed_email)
 
     def _try_archive(self):
         try:
