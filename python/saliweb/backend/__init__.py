@@ -237,12 +237,17 @@ class Config(object):
 
     def send_email(self, to, subject, body):
         """Send an email to the given user or list of users (`to`), with
-           the given `subject` and `body`."""
+           the given `subject` and `body`. `body` can either be the text
+           itself, or an object from the Python email module (e.g. MIMEText,
+           MIMEMultipart)."""
         if not isinstance(to, (list, tuple)):
             to = [to]
         elif not isinstance(to, list):
             to = list(to)
-        msg = MIMEText(body)
+        if hasattr(body, 'as_string'):
+            msg = body
+        else:
+            msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = self.admin_email
         msg['To'] = ", ".join(to)

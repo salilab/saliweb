@@ -2,6 +2,7 @@ import unittest
 from saliweb.backend import Config, ConfigError
 from StringIO import StringIO
 import config
+from email.MIMEText import MIMEText
 import re
 
 basic_config = """
@@ -65,13 +66,14 @@ class ConfigTest(unittest.TestCase):
     def test_send_email(self):
         """Check Config.send_email()"""
         for to in ['testto', ['testto'], ('testto',)]:
-            conf = get_config(config_class=config.Config)
-            conf.send_email(to, 'testsubj', 'testbody')
-            mail = conf.get_mail_output()
-            self.assert_(re.search('Subject: testsubj.*From: '
+            for body in ('testbody', MIMEText('testbody')):
+                conf = get_config(config_class=config.Config)
+                conf.send_email(to, 'testsubj', body)
+                mail = conf.get_mail_output()
+                self.assert_(re.search('Subject: testsubj.*From: '
                                    'test@salilab\.org.*To: testto.*testbody',
                                    mail, flags=re.DOTALL),
-                         'Unexpected mail output: ' + mail)
+                             'Unexpected mail output: ' + mail)
 
     def test_directory_defaults(self):
         """Check Config directory defaults"""
