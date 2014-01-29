@@ -184,6 +184,11 @@ sub prepare {
         return $self->{query};
     }
 }
+
+sub commit {
+    return 1;
+}
+
 1;
 
 package Dummy::Frontend;
