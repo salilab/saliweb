@@ -10,6 +10,7 @@ use File::Temp qw(tempdir);
 use MIME::Lite;
 use Error;
 use CGI;
+use IO::Zlib;
 use Dummy;
 use strict;
 
@@ -53,6 +54,28 @@ BEGIN { use_ok('saliweb::frontend'); }
               'saliweb::frontend::InternalError',
               "test download_file on non-existing file";
     like($@, qr#Cannot open /not/exist: No such file or directory#,
+         "                                        (exception message)");
+}
+
+# Test download_file_gzip
+{
+    my $q = new CGI;
+    my $cls = {};
+    bless($cls, 'saliweb::frontend');
+    my $dir = File::Temp->newdir();
+    my $fh = IO::Zlib->new("$dir/test.gz", "wb") or die "Cannot open: $!";
+    print $fh "test\nfile";
+    $fh->close() or die "Cannot close $fh: $!";
+
+    stdout_is { $cls->download_file_gzip($q, "$dir/test") }
+              "Content-Type: text/plain; charset=ISO-8859-1\r\n\r\n" .
+              "test\nfile",
+              "test download_file_gzip";
+
+    throws_ok { $cls->download_file_gzip($q, "/not/exist") }
+              'saliweb::frontend::InternalError',
+              "test download_file_gzip on non-existing file";
+    like($@, qr#Cannot open /not/exist.gz: No such file or directory#,
          "                                        (exception message)");
 }
 

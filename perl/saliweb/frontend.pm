@@ -265,6 +265,14 @@ sub results_url {
     return $self->{frontend}->results_url . "/$jobname?passwd=$passwd";
 }
 
+=item get_results_file_url
+Return a URL which the user can use to download the passed file.
+The file must be in the job directory (or a subdirectory of it); absolute
+paths are not allowed.
+If files are compressed with gzip, the .gz extension can be ommitted here
+if desired. (If it is ommitted, the file will be automatically decompressed
+when the user downloads it; otherwise the original .gz file is downloaded.)
+=cut
 sub get_results_file_url {
     my ($self, $file) = @_;
     my $jobname = $self->{name};
@@ -321,6 +329,7 @@ sub _to_unix_time {
 package saliweb::frontend;
 
 use saliweb::server qw(validate_user);
+use IO::Zlib;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -1384,6 +1393,9 @@ sub _internal_display_results_page {
             if (-f $file and $file !~ /^\s*\// and $file !~ /\.\./
                 and $self->allow_file_download($file)) {
                 $self->download_file($q, $file);
+            } elsif (-f "${file}.gz" and $file !~ /^\s*\// and $file !~ /\.\./
+                and $self->allow_file_download($file)) {
+                $self->download_file_gzip($q, $file);
             } else {
                 throw saliweb::frontend::ResultsBadFileError(
                            "Invalid results file requested");
@@ -1426,6 +1438,17 @@ sub download_file {
         print;
     }
     close FILE;
+}
+
+sub download_file_gzip {
+    my ($self, $q, $file) = @_;
+    my $fh = IO::Zlib->new("${file}.gz", "rb")
+        or throw saliweb::frontend::InternalError("Cannot open ${file}.gz: $!");
+    print $q->header($self->get_file_mime_type($file));
+    while(<$fh>) {
+        print;
+    }
+    close $fh;
 }
 
 sub help_link {
