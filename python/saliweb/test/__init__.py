@@ -63,6 +63,7 @@ class TestCase(unittest.TestCase):
         s = saliweb.backend._JobState(state)
         db = _DummyDB()
         db.config = _DummyConfig()
+        db.config.admin_email = 'test_admin@example.com'
         metadata = {'directory': t.tmpdir, 'name': 'testjob',
                     'url': 'http://server/test/path/testjob?passwd=abc'}
         j = jobcls(db, metadata, s)
