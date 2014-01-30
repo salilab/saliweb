@@ -127,8 +127,8 @@ sub validate_user {
             $query="select user_name,password,first_name,last_name,email from "
             ."$database.users where user_name=? and password=? limit 1";
         }
-        $sth=$dbh->prepare($query);
-        $sth->execute($user_name, $password);
+        $sth=$dbh->prepare($query) or die "cannot prepare: " .$dbh->errstr;
+        $sth->execute($user_name, $password); # or die "cannot execute: " .$dbh->errstr;
         ($user_name,$hash,$first,$last,$email)=$sth->fetchrow_array();
         if (defined($user_name)) {
             $userinfo{'name'}="$first $last";
