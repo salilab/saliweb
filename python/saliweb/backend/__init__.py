@@ -1241,6 +1241,23 @@ class Job(object):
         """Get the job state as a string."""
         return self.__state.get()
 
+    def _close_open_files(self):
+        """Close any files that are open in the job directory.
+           If a file is open in the directory and the directory is on NFS,
+           then removing the directory will fail (due to the presence of
+           a .nfs* file). Force these files to close so we can move the job
+           to the failed directory without breaking the entire backend."""
+        if not self.directory:
+            return
+        procdir = '/proc/self/fd'
+        for fd in os.listdir(procdir):
+            try:
+                dest = os.readlink(os.path.join(procdir, fd))
+                if dest.startswith(self.directory + '/'):
+                    os.close(int(fd))
+            except OSError:
+                pass
+
     def _fail(self, reason, email=True):
         """Mark a job as FAILED. Generally, it should not be necessary to call
            this method directly - instead, simply raise an exception.
@@ -1255,6 +1272,7 @@ class Job(object):
         reason = "Python exception:\n" + err
         try:
             self._metadata['failure'] = reason
+            self._close_open_files()
             self.__set_state('FAILED')
             if email:
                 subject = 'Sali lab %s service: Job %s FAILED' \

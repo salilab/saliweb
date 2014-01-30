@@ -840,5 +840,20 @@ class JobTest(unittest.TestCase):
         self.assertEqual(j._get_runner_results(), True)
         self.assertEqual(checked_jobs, ['job1', 'job2', 'job:with:colons'])
 
+    def test_close_open_files(self):
+        """Check Job._close_open_files()"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'cof', completed=True)
+        job = web.get_job_by_name('RUNNING', 'cof')
+        jobdir = os.path.join(conf.directories['RUNNING'], 'cof')
+        f = open(os.path.join(jobdir, 'foo'), 'w')
+        job._close_open_files()
+        # f's file descriptor should now be closed, so close should fail
+        self.assertRaises(IOError, f.close)
+        os.unlink(os.path.join(jobdir, 'foo'))
+        os.unlink(os.path.join(jobdir, 'job-state'))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
 if __name__ == '__main__':
     unittest.main()
