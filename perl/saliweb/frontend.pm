@@ -370,8 +370,10 @@ sub new {
         $self->{http_status} = undef;
         $self->{'htmlroot'} = $urltop . "/html/";
         $self->{'cgiroot'} = $urltop;
-        $self->{'dbh'} = my $dbh = connect_to_database($config);
-        $self->_setup_user($dbh);
+        my ($dbh, $dbh_main) = connect_to_database($config);
+        $self->{'dbh'} = $dbh;
+        $self->{'dbh_main'} = $dbh_main;
+        $self->_setup_user($dbh_main);
     } catch Error with {
         $self->handle_fatal_error(shift);
     };
@@ -1521,13 +1523,25 @@ sub read_config {
 
 sub connect_to_database {
   my ($config) = @_;
+  my $dbh_main;
   my $dbh = DBI->connect("DBI:mysql:" . $config->{database}->{db}
                          . ';mysql_socket=' . $config->{database}->{socket},
                          $config->{database}->{user},
                          $config->{database}->{passwd})
             or throw saliweb::frontend::DatabaseError(
                        "Cannot connect to database: $!");
-  return $dbh;
+  if ($config->{database}->{socket} ne '/var/lib/mysql/mysql.sock') {
+    $dbh_main = DBI->connect("DBI:mysql:servers"
+                             . ';mysql_socket=/var/lib/mysql/mysql.sock',
+                             $config->{database}->{user},
+                             $config->{database}->{passwd})
+            or throw saliweb::frontend::DatabaseError(
+                       "Cannot connect to database: $!");
+  } else {
+    $dbh_main = $dbh;
+  }
+
+  return ($dbh, $dbh_main);
 }
 
 1;
