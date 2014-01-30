@@ -893,12 +893,18 @@ have done this, delete the state file (%s) to reenable runs.
         # Default check interval is one hour and max age is also one hour
         return (3600., 3600.)
 
+    def _log(self, msg):
+        """Log a debug message. Normally this does nothing, but can be
+           overridden to record debugging information somewhere."""
+        pass
+
     def _do_periodic_actions(self, sock):
         """Do periodic actions necessary to process jobs. Incoming jobs are
            processed whenever the frontend asks us to (or, failing that,
            every check_minutes); completed jobs are checked for every
            check_minutes; and archived and expired jobs are also
            checked periodically."""
+        self._log("Started do_periodic_actions")
         eq = saliweb.backend.events._EventQueue()
         self._event_queue = eq
         saliweb.backend.events._PeriodicCheck(self).start()
@@ -914,6 +920,7 @@ have done this, delete the state file (%s) to reenable runs.
             # Need to set a timeout so that SIGTERM can interrupt us here
             event = eq.get(timeout=3600)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            self._log("Got event %s" % str(event))
             if event is not None:
                 event.process()
 
@@ -921,15 +928,20 @@ have done this, delete the state file (%s) to reenable runs.
         """Check for any incoming jobs, and run each one."""
         numrunning = self.db._count_all_jobs_in_state('RUNNING')
         maxrunning = self.config.limits['running']
+        self._log("_process_incoming_jobs; %d jobs running out of %d" \
+                  % (numrunning, maxrunning))
         # Save doing an extra SQL SELECT if we're already at the maximum
         if numrunning >= maxrunning:
             return
         for job in self.db._get_all_jobs_in_state('INCOMING',
                                                   order_by='submit_time'):
+            self._log("_process_incoming_jobs; trying to run job %s" % job.name)
             job._try_run(self)
             numrunning += 1
             if numrunning >= maxrunning:
+                self._log("_process_incoming_jobs; job limit reached")
                 return
+        self._log("_process_incoming_jobs done")
 
     def _cleanup_incoming_jobs(self):
         """Clean up any incoming job directories that have been abandoned."""
