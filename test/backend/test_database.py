@@ -73,10 +73,13 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(db._OperationalError, 'Dummy MySQL OperationalError')
         self.assertEqual(db._placeholder, '%s')
         self.assertEqual(db.config, config)
-        self.assertEqual(db.conn, [(), {'user':'testuser',
+        self.assertEqual(db.conn.sql,
+                    ['SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'])
+        self.assertEqual(db.conn.args, ())
+        self.assertEqual(db.conn.keys, {'user':'testuser',
                                         'db':'testdb',
                                         'unix_socket':'foo',
-                                        'passwd':'testpwd'}])
+                                        'passwd':'testpwd'})
 
     def test_add_field(self):
         """Check Database.add_field()"""
