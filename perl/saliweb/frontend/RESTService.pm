@@ -134,6 +134,15 @@ sub _internal_display_submit_page {
 
 sub _display_results_page_index {
     my ($self, $contents, $jobobj) = @_;
+    for my $metadata (@{$jobobj->{metadata}}) {
+        if ($metadata->{type} eq "link") {
+            $text .= "   <$metadata->{key} xlink:href=\"" . $metadata->{value}
+                     . "\" />\n";
+        } else {
+            $text .= "   <$metadata->{key}>" . $metadata->{value}
+                     . "</$metadata->{key}>\n";
+        }
+    }
     for my $job (@{$jobobj->{results}}) {
         $text .= "   <results_file xlink:href=\"" .
                  $self->_munge_url($job->{url}) . "\">" .

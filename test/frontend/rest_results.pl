@@ -49,6 +49,8 @@ sub make_test_frontend {
     $out = stdout_from { $cls->display_results_page() };
     like($out, '/^Content\-Type: text\/xml.*' .
                '<saliweb.*' .
+               '<testkey>testval<\/testkey>.*' .
+               '<testlink xlink:href="http:\/\/test" \/>.*' .
                '<results_file xlink:href="http:\/\/test/job\/' .
                'testjob\/test\.txt\?passwd=testpw">' .
                'test\.txt<\/results_file>.*' .

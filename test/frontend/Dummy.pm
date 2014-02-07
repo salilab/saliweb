@@ -364,6 +364,8 @@ sub get_submit_page {
 
 sub get_results_page {
     my ($self, $jobobj) = @_;
+    $jobobj->add_results_metadata("testkey", "testval");
+    $jobobj->add_results_metadata_link("testlink", "http://test");
     return "test_results_page " .
            $jobobj->get_results_file_url('test.txt') . ' ' .
            $jobobj->get_results_file_url('log.out');

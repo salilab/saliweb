@@ -218,6 +218,7 @@ sub new {
     my $self = \%hash;
     $self->{frontend} = $frontend;
     $self->{results} = [];
+    $self->{metadata} = [];
     for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'end',
                       'archive', 'expire') {
         my $key = "${timename}_time";
@@ -280,6 +281,24 @@ sub get_results_file_url {
     my $url = $self->{frontend}->results_url . "/$jobname/$file?passwd=$passwd";
     push @{$self->{results}}, {name=>$file, url=>$url};
     return $url;
+}
+
+=item add_results_metadata
+Add some simple results metadata to the job, as a key/value pair.
+The metadata is added to the XML returned by the REST service.
+=cut
+sub add_results_metadata {
+    my ($self, $key, $value) = @_;
+    push @{$self->{metadata}}, {type=>'keyval', key=>$key, value=>$value};
+}
+
+=item add_results_metadata_link
+This is similar to add_results_metadata, but the value is taken to be
+a URL (link) and is formatted accordingly.
+=cut
+sub add_results_metadata_link {
+    my ($self, $key, $value) = @_;
+    push @{$self->{metadata}}, {type=>'link', key=>$key, value=>$value};
 }
 
 sub _format_timediff_unit {
