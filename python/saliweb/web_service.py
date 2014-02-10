@@ -26,6 +26,7 @@
 # Copyright (c) 2012 Sali Lab
 
 import sys
+import getopt
 import os
 from xml.dom.minidom import parseString
 import xml.parsers.expat
@@ -117,7 +118,7 @@ service page and look at the names of the HTML form elements. Alternatively,
 ask the developer of the web service to implement the
 get_submit_parameter_help() method!"""
 
-def submit_job(url, args):
+def submit_job(url, args, cookie=None):
     """Submit a job to a Sali Lab web service (but don't wait for it to end).
        'args' is a service-dependent list of arguments; each should be suitable
        for passing to curl as an argument to its -F option (e.g. 'foo=bar' sets
@@ -127,6 +128,10 @@ def submit_job(url, args):
        is not used, since it is possible for HTML names to be invalid Python
        keywords.)
 
+       If 'cookie' is given, it is passed as the --cookie argument to curl.
+       This is typically used to pass a username and password to the web
+       service. Just as for curl, it can either be a filename or key=value.
+
        On successful execution, the job is started, and a URL is returned
        at which results will appear (use get_results() to query it).
     """
@@ -134,6 +139,9 @@ def submit_job(url, args):
     for a in args:
         curl_args.append('-F')
         curl_args.append(a)
+    if cookie:
+        curl_args.append('--cookie')
+        curl_args.append(cookie)
     p, out = _curl_rest_page(url, curl_args)
     for results in p.getElementsByTagName('job'):
         url = results.getAttribute('xlink:href')
@@ -166,12 +174,12 @@ def get_results(url):
     dom.unlink()
     return urls
 
-def run_job(url, args):
+def run_job(url, args, cookie=None):
     """Run a job, wait for it to finish, and return its results.
        This is essentially the same as running submit_job(), then
        periodically running get_results() until results become available.
     """
-    results_url = submit_job(url, args)
+    results_url = submit_job(url, args, cookie)
     interval = 10
     while True:
         time.sleep(interval)
@@ -210,19 +218,33 @@ a sample usage for submitting jobs to the service.
 
 class _SubmitCommand(_Command):
     short_help = "Submit a job to a web service (don't wait for it to finish)."
-    usage_args = '<url> [ARGS ...]'
+    usage_args = '<url> [--cookie COOKIE] [ARGS ...]'
     long_help = short_help + """
 <url> identifies the web service to submit to (see '%prog help info'
 for more information). The additional arguments depend on the service;
 the output of '%prog info <url>' suggests suitable arguments.
+
+If '--cookie' is given, it is passed as the --cookie argument to curl.
+This is typically used to pass a username and password to the web
+service. Just as for curl, it can either be a filename or key=value.
 
 This only submits the job; on successful completion, a new URL is returned,
 at which the results will become available when the job completes. Use
 '%prog results' to check for these results.
 """
     def main(self, args):
+        try:
+            opts, args = getopt.getopt(args, "c:", ["cookie"])
+        except getopt.GetoptError, err:
+            print str(err)
+            self.usage()
+            sys.exit(1)
+        cookie = None
+        for o, a in opts:
+            if o in ("-c", "--cookie"):
+                cookie = a
         if len(args) >= 1:
-            submit_job(args[0], args[1:])
+            submit_job(args[0], args[1:], cookie)
         else:
             self.usage()
             sys.exit(1)

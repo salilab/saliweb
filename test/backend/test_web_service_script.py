@@ -139,6 +139,9 @@ else:
                           'http://badsubmit/', [])
         url = web_service.submit_job('http://oksubmit/', ['foo=bar'])
         self.assertEqual(url, "http://jobresults/")
+        url = web_service.submit_job('http://oksubmit/', ['foo=bar'],
+                                     cookie='foo=bar')
+        self.assertEqual(url, "http://jobresults/")
 
     def test_get_results(self):
         """Test get_results()"""
