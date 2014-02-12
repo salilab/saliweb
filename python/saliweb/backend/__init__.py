@@ -1244,8 +1244,20 @@ class Job(object):
             self._metadata['directory'] = None
         elif self._metadata['directory'] is not None:
             # move job to different directory if necessary
-            directory = os.path.join(self._db.config.directories[state],
-                                     self.name)
+            if state == 'INCOMING':
+                # The only way to go into INCOMING state is from the FAILED
+                # state (via resubmit). Since it's going to go from there back
+                # to running, and the failed/running directories are often
+                # on netapp (while incoming has to be on modbase) avoid
+                # a potentially expensive copy from netapp to modbase and
+                # then back to netapp by cheating and putting the job in
+                # the PREPROCESSING directory already.
+                directory = os.path.join(
+                                 self._db.config.directories['PREPROCESSING'],
+                                 self.name)
+            else:
+                directory = os.path.join(self._db.config.directories[state],
+                                         self.name)
             directory = os.path.normpath(directory)
             if directory != self._metadata['directory']:
                 shutil.move(self._metadata['directory'], directory)

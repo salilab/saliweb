@@ -703,9 +703,12 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('INCOMING', 'job1')
         # Can only resubmit FAILED jobs
         self.assertRaises(InvalidStateError, job.resubmit)
-        injobdir = os.path.join(conf.directories['INCOMING'], 'job1')
-        self.assertEqual(job.directory, injobdir)
-        os.rmdir(injobdir)
+        # Resubmitted FAILED jobs actually go into the PREPROCESSING directory
+        # (to avoid a potentially expensive move from netapp to modbase
+        # and back again)
+        prejobdir = os.path.join(conf.directories['PREPROCESSING'], 'job1')
+        self.assertEqual(job.directory, prejobdir)
+        os.rmdir(prejobdir)
         cleanup_webservice(conf, tmpdir)
 
     def test_delete_all(self):
