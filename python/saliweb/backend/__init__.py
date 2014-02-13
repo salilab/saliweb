@@ -1612,6 +1612,8 @@ class SGERunner(Runner):
         """
         if jobid in cls._waited_jobs:
             return False
+        elif '.' in jobid:
+            return cls._check_bulk_completed(jobid)
         else:
             drmaa, s = cls._get_drmaa()
             try:
@@ -1619,6 +1621,28 @@ class SGERunner(Runner):
                 return False
             except drmaa.InvalidJobException:
                 return True
+
+    @classmethod
+    def _check_bulk_completed(cls, jobid):
+        """Return True if SGE reports that the given bulk job has finished,
+           False if it is still running, or None if the status cannot be
+           determined.
+        """
+        # Query each task individually, and only report complete if all tasks
+        # have completed
+        drmaa, s = cls._get_drmaa()
+        m = re.match('(\S+)\.(\d+)\-(\d+):(\d+)$', jobid)
+        jobid = m.group(1)
+        start = int(m.group(2))
+        end = int(m.group(3))
+        step = int(m.group(4))
+        for i in range(start, end + 1, step):
+            try:
+                x = s.jobStatus(jobid + '.' + str(i))
+                return False
+            except drmaa.InvalidJobException:
+                pass
+        return True
 Job.register_runner_class(SGERunner)
 
 

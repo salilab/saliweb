@@ -3,6 +3,7 @@ from StringIO import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, Job
 import sys
+import re
 import os
 import time
 import shutil
@@ -20,9 +21,10 @@ class DummyDRMAAModule(object):
 
 class DummyDRMAASession(object):
     def jobStatus(self, jobid):
-        if jobid == 'donejob':
+        if jobid == 'donejob' or re.match('donebulk\.\d+', jobid) \
+           or jobid == 'runningbulk.5':
             raise DummyDRMAAModule.InvalidJobException()
-        elif jobid == 'runningjob':
+        elif jobid == 'runningjob' or re.match('runningbulk\.\d+', jobid):
             return 'running'
         elif jobid == 'queuedjob':
             return 'queued'
@@ -77,6 +79,10 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         TestRunner._waited_jobs.add('waitedjob')
         self.assertEqual(TestRunner._check_completed('donejob', ''), True)
         self.assertEqual(TestRunner._check_completed('runningjob', ''), False)
+        self.assertEqual(TestRunner._check_completed('donebulk.1-10:1', ''),
+                         True)
+        self.assertEqual(TestRunner._check_completed('runningbulk.1-10:1', ''),
+                         False)
         self.assertEqual(TestRunner._check_completed('queuedjob', ''), False)
         self.assertEqual(TestRunner._check_completed('waitedjob', ''), False)
 
