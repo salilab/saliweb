@@ -56,17 +56,29 @@ class RunnerTest(unittest.TestCase):
         """Make sure that duplicate Runner names aren't accepted"""
         self.assertRaises(TypeError, Job.register_runner_class, BrokenRunner)
 
+    def test_sge_name(self):
+        """Check SGERunner.set_sge_name()"""
+        r = SGERunner('echo foo', interpreter='/bin/csh')
+        r.set_sge_name('test\t job ')
+        self.assertEqual(r._name, 'testjob')
+        r.set_sge_name('TestJob')
+        self.assertEqual(r._name, 'TestJob')
+        r.set_sge_name('1234')
+        self.assertEqual(r._name, 'J1234')
+
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
         for runner in (SGERunner, SaliSGERunner):
             r = runner('echo foo', interpreter='/bin/csh')
             r.set_sge_options('-l diva1=1G')
+            r.set_sge_name('test\t job ')
             sio = StringIO()
             r._write_sge_script(sio)
             expected = """#!/bin/csh
 #$ -S /bin/csh
 #$ -cwd
 #$ -l diva1=1G
+#$ -N testjob
 setenv _SALI_JOB_DIR `pwd`
 echo "STARTED" > ${_SALI_JOB_DIR}/job-state
 echo foo

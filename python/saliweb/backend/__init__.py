@@ -1522,7 +1522,7 @@ class SGERunner(Runner):
        "DONE" when it completes.
 
        Once done, you can optionally call :meth:`set_sge_options` to set SGE
-       options.
+       options and/or :meth:`set_sge_name` to set the SGE job name.
     """
 
     _runner_name = 'qb3ogs'
@@ -1539,15 +1539,28 @@ class SGERunner(Runner):
     def __init__(self, script, interpreter='/bin/sh'):
         Runner.__init__(self)
         self._opts = ''
+        self._name = None
         self._script = script
         self._interpreter = interpreter
         self._directory = os.getcwd()
 
     def set_sge_options(self, opts):
         """Set the SGE options to use, as a string,
-           for example '-N foo -l mydisk=1G'
+           for example '-l mydisk=1G -p 0'.
+           Note that if you want to set the job name (-N option) it is better
+           to use :meth:`set_sge_name`.
         """
         self._opts = opts
+
+    def set_sge_name(self, name):
+        """Set the SGE job name (equivalent to qsub's -N option).
+           If the name is not a valid SGE name (e.g. names cannot start with
+           a digit) then it is mapped to one that is.
+        """
+        name = re.sub('\s*', '', name)
+        if re.match('\d', name):
+            name = 'J' + name
+        self._name = name
 
     @classmethod
     def _get_drmaa(cls):
@@ -1570,6 +1583,8 @@ class SGERunner(Runner):
         print >> fh, "#$ -cwd"
         if self._opts:
             print >> fh, '#$ ' + self._opts
+        if self._name:
+            print >> fh, '#$ -N ' + self._name
         # Update job state file at job start and end
         if self._interpreter in ('/bin/sh', '/bin/bash'):
             print >> fh, "_SALI_JOB_DIR=`pwd`"
