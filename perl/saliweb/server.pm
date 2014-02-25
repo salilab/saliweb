@@ -6,8 +6,6 @@ use strict;
 
 
 use CGI;
-use CGI::Carp qw(fatalsToBrowser);
-use CGI::Pretty;
 use Digest::MD5;
 use File::Copy;
 
