@@ -85,9 +85,7 @@ sub submit {
                $self->{email}, $self->{directory}, $self->{url})
         or throw saliweb::frontend::DatabaseError(
                                "Cannot execute query ". $dbh->errstr);
-  $dbh->commit()
-           or throw saliweb::frontend::DatabaseError(
-                               "Cannot commit; ". $dbh->errstr);
+  $dbh->commit(); # Ignore errors (we may be using a db without transactions)
 
   # Use socket to inform backend of new incoming job
   my $s = IO::Socket::UNIX->new(Peer=>$config->{general}->{'socket'},
