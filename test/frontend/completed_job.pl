@@ -75,8 +75,8 @@ sub mkjob_with_arc {
     my $job = mkjob_with_arc(0);
     $job->{frontend}->{CGI} = $q;
     is($job->get_results_available_time(),
-       "<p>\n\tJob results will be available at this URL for " .
-       "0 seconds.\n</p>\n", "get_results_available_time (0 secs)");
+       "<p>Job results will be available at this URL for " .
+       "0 seconds\.</p>", "get_results_available_time (0 secs)");
 
     $job = mkjob_with_arc(-20);
     $job->{frontend}->{CGI} = $q;
