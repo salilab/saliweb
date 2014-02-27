@@ -34,6 +34,14 @@ import subprocess
 import urllib2
 import time
 
+def _get_cookie_arg(args):
+    opts, args = getopt.getopt(args, "c:", ["cookie="])
+    cookie = None
+    for o, a in opts:
+        if o in ("-c", "--cookie"):
+            cookie = a
+    return cookie, args
+
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
     # use curl instead
@@ -92,11 +100,18 @@ def _get_parameters_from_xml(xml):
                                          c.getAttribute('optional')))
     return ps
 
-def show_info(url):
+def show_info(url, cookie=None):
     """Given the URL of a Sali lab web service, print information about it."""
     progname = os.path.basename(sys.argv[0])
-    p, out = _curl_rest_page(url, [])
-    service = p.getElementsByTagName('service')[0].getAttribute('name')
+    curl_args = []
+    if cookie:
+        curl_args.append('--cookie')
+        curl_args.append(cookie)
+    p, out = _curl_rest_page(url, curl_args)
+    try:
+        service = p.getElementsByTagName('service')[0].getAttribute('name')
+    except IndexError:
+        raise IOError("Could not get job info: " + out)
     parameters = _get_parameters_from_xml(p)
     if parameters:
         pstr = " ".join(x.get_full_arg() for x in parameters)
@@ -199,19 +214,29 @@ class _Command(object):
 
 class _InfoCommand(_Command):
     short_help = "Get basic information about a web service."
-    usage_args = '<url>'
+    usage_args = '[--cookie COOKIE] <url>'
     long_help = short_help + """
 <url> should be the REST URL for a Sali Lab web service. This is generally
 the same as the main web page, with /job appended. For example, to access the
 ModLoop server, use http://salilab.org/modloop/job (the main web page is
 at http://salilab.org/modloop/).
 
+If '--cookie' is given, it is passed as the --cookie argument to curl.
+This is typically used to pass a username and password to the web
+service. Just as for curl, it can either be a filename or key=value.
+
 If the URL is valid and the web service is working properly, this will show
 a sample usage for submitting jobs to the service.
 """
     def main(self, args):
+        try:
+            cookie, args = _get_cookie_arg(args)
+        except getopt.GetoptError, err:
+            print str(err)
+            self.usage()
+            sys.exit(1)
         if len(args) == 1:
-            show_info(args[0])
+            show_info(args[0], cookie)
         else:
             self.usage()
             sys.exit(1)
@@ -234,15 +259,11 @@ at which the results will become available when the job completes. Use
 """
     def main(self, args):
         try:
-            opts, args = getopt.getopt(args, "c:", ["cookie"])
+            cookie, args = _get_cookie_arg(args)
         except getopt.GetoptError, err:
             print str(err)
             self.usage()
             sys.exit(1)
-        cookie = None
-        for o, a in opts:
-            if o in ("-c", "--cookie"):
-                cookie = a
         if len(args) >= 1:
             submit_job(args[0], args[1:], cookie)
         else:

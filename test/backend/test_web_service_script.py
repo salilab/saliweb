@@ -132,6 +132,7 @@ else:
         """Test show_info()"""
         o = web_service.show_info('http://noparam/')
         o = web_service.show_info('http://ok/')
+        o = web_service.show_info('http://ok/', cookie='foo=bar')
 
     def test_submit_job(self):
         """Test submit_job()"""
