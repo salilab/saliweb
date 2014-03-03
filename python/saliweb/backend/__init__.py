@@ -1651,7 +1651,9 @@ class SGERunner(Runner):
         start = int(m.group(2))
         end = int(m.group(3))
         step = int(m.group(4))
-        for i in range(start, end + 1, step):
+        # Query in reverse order, since later tasks are more likely to still
+        # be running
+        for i in range(end, start - 1, -step):
             try:
                 x = s.jobStatus(jobid + '.' + str(i))
                 return False
