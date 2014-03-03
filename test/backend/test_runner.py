@@ -2,6 +2,7 @@ import unittest
 from StringIO import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, Job
+from testutil import RunInTempDir
 import sys
 import re
 import os
@@ -11,7 +12,7 @@ import tempfile
 
 class BrokenRunner(SGERunner):
     # Duplicate runner name, so it shouldn't work
-    _runner_name = 'qb3sge'
+    _runner_name = 'qb3ogs'
 
 
 class DummyDRMAAModule(object):
@@ -21,10 +22,9 @@ class DummyDRMAAModule(object):
 
 class DummyDRMAASession(object):
     def jobStatus(self, jobid):
-        if jobid == 'donejob' or re.match('donebulk\.\d+', jobid) \
-           or jobid == 'runningbulk.5':
+        if jobid == 'donejob':
             raise DummyDRMAAModule.InvalidJobException()
-        elif jobid == 'runningjob' or re.match('runningbulk\.\d+', jobid):
+        elif jobid == 'runningjob':
             return 'running'
         elif jobid == 'queuedjob':
             return 'queued'
@@ -88,11 +88,29 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
 
     def test_check_completed(self):
         """Check SGERunner._check_completed()"""
+        d = RunInTempDir()
         TestRunner._waited_jobs.add('waitedjob')
+        qstat = open('qstat', 'w')
+        qstat.write("""#!/usr/bin/python
+import sys
+if sys.argv[2].startswith('badbulk'):
+    sys.exit(1)
+elif sys.argv[2].startswith('donebulk'):
+    print "Following jobs do not exist:"
+    print sys.argv[2]
+    sys.exit(1)
+else:
+    print "job info"
+""")
+        qstat.close()
+        os.chmod('qstat', 0755)
+        TestRunner._qstat = os.path.join(os.getcwd(), 'qstat')
         self.assertEqual(TestRunner._check_completed('donejob', ''), True)
         self.assertEqual(TestRunner._check_completed('runningjob', ''), False)
         self.assertEqual(TestRunner._check_completed('donebulk.1-10:1', ''),
                          True)
+        self.assertRaises(OSError, TestRunner._check_completed,
+                          'badbulk.1-10:1', '')
         self.assertEqual(TestRunner._check_completed('runningbulk.1-10:1', ''),
                          False)
         self.assertEqual(TestRunner._check_completed('queuedjob', ''), False)

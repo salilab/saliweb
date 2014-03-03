@@ -1533,6 +1533,7 @@ class SGERunner(Runner):
             'SGE_EXECD_PORT': '6445',
             'DRMAA_LIBRARY_PATH':
                     '/usr/local/sge/lib/linux-x64/libdrmaa.so.1.0'}
+    _qstat = '/usr/local/sge/bin/linux-x64/qstat'
 
     _waited_jobs = _LockedJobDict()
 
@@ -1643,23 +1644,21 @@ class SGERunner(Runner):
            False if it is still running, or None if the status cannot be
            determined.
         """
-        # Query each task individually, and only report complete if all tasks
-        # have completed
-        drmaa, s = cls._get_drmaa()
+        # Unfortunately DRMAA1 only allows us to query individual tasks, and
+        # looping over all tasks in a large parallel job is very inefficient,
+        # so use qstat instead and parse the output.
         m = re.match('(\S+)\.(\d+)\-(\d+):(\d+)$', jobid)
         jobid = m.group(1)
-        start = int(m.group(2))
-        end = int(m.group(3))
-        step = int(m.group(4))
-        # Query in reverse order, since later tasks are more likely to still
-        # be running
-        for i in range(end, start - 1, -step):
-            try:
-                x = s.jobStatus(jobid + '.' + str(i))
-                return False
-            except drmaa.InvalidJobException:
-                pass
-        return True
+        p = subprocess.Popen([cls._qstat, '-j', jobid], stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, env=cls._env)
+        out = p.stdout.readlines()
+        ret = p.wait()
+        if ret == 0:
+            return False
+        elif len(out) > 0 and out[0].startswith('Following jobs do not exist'):
+            return True
+        else:
+            raise OSError("qstat returned %d (%s)" % (ret, "\n".join(out)))
 Job.register_runner_class(SGERunner)
 
 
@@ -1671,6 +1670,7 @@ class SaliSGERunner(SGERunner):
             'SGE_ROOT': '/home/sge61',
             'DRMAA_LIBRARY_PATH':
                         '/home/sge61/lib/lx24-amd64/libdrmaa.so.1.0'}
+    _qstat = '/home/sge61/bin/lx24-amd64/qstat'
 
     _waited_jobs = _LockedJobDict()
 Job.register_runner_class(SaliSGERunner)
