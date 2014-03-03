@@ -1663,20 +1663,6 @@ class SGERunner(Runner):
 Job.register_runner_class(SGERunner)
 
 
-class _OldSGERunner(SGERunner):
-    """Track jobs running on the old SGE."""
-    _runner_name = 'qb3sge'
-    _drmaa = None
-    _env = {'SGE_CELL': 'qb3',
-            'SGE_ROOT': '/ccpr1/sge6',
-            'SGE_QMASTER_PORT': '536',
-            'SGE_EXECD_PORT': '537',
-            'DRMAA_LIBRARY_PATH':
-                    '/ccpr1/sge6/lib/lx24-amd64/libdrmaa.so.1.0'}
-    _waited_jobs = _LockedJobDict()
-Job.register_runner_class(_OldSGERunner)
-
-
 class SaliSGERunner(SGERunner):
     """Run commands on the Sali SGE cluster instead of the QB3 cluster."""
     _runner_name = 'salisge'
