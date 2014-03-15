@@ -166,6 +166,7 @@ the web frontend.
    .. method:: get_download_page()
 
       Return the HTML content of the download page. This is empty by default.
+
    .. method:: check_page_access(page_type)
 
       Check whether access to the given *page_type* is allowed. *page_type*
@@ -174,15 +175,16 @@ the web frontend.
       :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
       permitted. By default, it simply returns, allowing all access.
 
-   .. method:: download_results_file(file)
+   .. method:: download_results_file(job, file)
 
       This method is called to download a single results file (when the user
       follows a URL provided by
       :meth:`~saliweb::frontend.CompletedJob.get_results_file_url`), provided
       that :meth:`~saliwebfrontend.allow_file_download` returns true.
-      It is called in the job directory with a relative path, and is expected
-      to print out the HTTP header and then the contents of the file. By
-      default, the method uses the MIME type returned by
+      It is called in the job directory with a
+      :class:`~saliweb::frontend.CompletedJob` object and a relative path,
+      and is expected to print out the HTTP header and then the contents
+      of the file. By default, the method uses the MIME type returned by
       :meth:`~saliwebfrontend.get_file_mime_type` in the header, then prints
       out the file if it physically exists on disk, or if it does not but a
       gzip-compressed version of it does (with .gz extension) it decompresses

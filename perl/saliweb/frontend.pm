@@ -1411,7 +1411,9 @@ sub _internal_display_results_page {
         if (defined($file)) {
             if ($file !~ /^\s*\// and $file !~ /\.\./
                 and $self->allow_file_download($file)) {
-                $self->download_results_file($file)
+                my $jobobj = new saliweb::frontend::CompletedJob($self,
+                                                                 $job_row);
+                $self->download_results_file($jobobj, $file)
             } else {
                 throw saliweb::frontend::ResultsBadFileError(
                            "Invalid results file requested");
@@ -1427,16 +1429,16 @@ sub _internal_display_results_page {
 =item download_results_file
 This method is called to download a single results file (when the user follows
 a URL provided by CompletedJob::get_results_file_url()). It is called in the
-job directory with a relative path, and is expected to print out the HTTP
-header and then the contents of the file. By default, the method uses the MIME
-type returned by get_file_mime_type() in the header, then prints out the file
-if it physically exists on disk, or if it does not but a gzip-compressed version
-of it does (with .gz extension) it will be decompressed and printed. This method
-can be overridden, for example to download other "files" which don't really
-exist on the disk.
+job directory with a CompletedJob object and a relative path, and is expected
+to print out the HTTP header and then the contents of the file. By default,
+the method uses the MIME type returned by get_file_mime_type() in the header,
+then prints out the file if it physically exists on disk, or if it does not
+but a gzip-compressed version of it does (with .gz extension) it will be
+decompressed and printed. This method can be overridden, for example to
+download other "files" which don't really exist on the disk.
 =cut
 sub download_results_file {
-    my ($self, $file) = @_;
+    my ($self, $job, $file) = @_;
     my $q = $self->cgi;
     if (-f $file) {
         $self->_download_real_file($q, $file);
