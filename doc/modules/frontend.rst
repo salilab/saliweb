@@ -143,10 +143,8 @@ the web frontend.
       must be overridden for each web service. Typically this method will
       display any job failures (e.g. log files), display the job results
       directly, or provide a set of links to allow result files to be
-      downloaded. In the last case, these URLs are simply the main results
-      URL with an additional 'file' parameter that gives the file name;
-      see :meth:`~saliwebfrontend.allow_file_download` and
-      :meth:`~saliwebfrontend.get_file_mime_type`.
+      downloaded (by calling
+      :meth:`~saliweb::frontend.CompletedJob.get_results_file_url`).
 
    .. method:: get_queue_page()
 
@@ -176,10 +174,25 @@ the web frontend.
       :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
       permitted. By default, it simply returns, allowing all access.
 
+   .. method:: download_results_file(file)
+
+      This method is called to download a single results file (when the user
+      follows a URL provided by
+      :meth:`~saliweb::frontend.CompletedJob.get_results_file_url`), provided
+      that :meth:`~saliwebfrontend.allow_file_download` returns true.
+      It is called in the job directory with a relative path, and is expected
+      to print out the HTTP header and then the contents of the file. By
+      default, the method uses the MIME type returned by
+      :meth:`~saliwebfrontend.get_file_mime_type` in the header, then prints
+      out the file if it physically exists on disk, or if it does not but a
+      gzip-compressed version of it does (with .gz extension) it decompresses
+      the file and prints that. This method can be overridden, for example
+      to download other "files" which don't really exist on the disk.
+
    .. method:: allow_file_download(file)
 
       When downloading a results file (see
-      :meth:`~saliwebfrontend.get_results_page`) this
+      :meth:`~saliwebfrontend.download_results_file`) this
       method is called to check whether the file is allowed to be downloaded,
       and should return true if it is. (For example, the job results directory
       may contain intermediate output files that should not be downloaded for
@@ -189,7 +202,7 @@ the web frontend.
    .. method:: get_file_mime_type(file)
 
       When downloading a results file (see
-      :meth:`~saliwebfrontend.get_results_page`) this
+      :meth:`~saliwebfrontend.download_results_file`) this
       method is called to get the correct
       `MIME type <http://en.wikipedia.org/wiki/Internet_media_type`_
       for the file. By default, it always returns 'text/plain'. You may need
@@ -356,7 +369,8 @@ the web frontend.
 
       Given a file which is an output file from the job, this will return
       a URL which can be used to download the file. The filename should be
-      relative to the job directory, not an absolute path.
+      relative to the job directory, not an absolute path. The actual download
+      of the file is handled by :meth:`~saliwebfrontend.download_results_file`.
 
 
 .. exception:: AccessDeniedError(message)

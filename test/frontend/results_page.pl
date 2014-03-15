@@ -36,7 +36,7 @@ BEGIN { use_ok('saliweb::frontend'); }
     }
 }
 
-# Test download_file
+# Test download_real_file
 {
     my $q = new CGI;
     my $cls = {};
@@ -45,19 +45,19 @@ BEGIN { use_ok('saliweb::frontend'); }
     print $fh "test\nfile";
     $fh->close() or die "Cannot close $fh: $!";
 
-    stdout_is { $cls->download_file($q, $fh->filename) }
+    stdout_is { $cls->_download_real_file($q, $fh->filename) }
               "Content-Type: text/plain; charset=ISO-8859-1\r\n\r\n" .
               "test\nfile",
-              "test download_file";
+              "test download_real_file";
 
-    throws_ok { $cls->download_file($q, "/not/exist") }
+    throws_ok { $cls->_download_real_file($q, "/not/exist") }
               'saliweb::frontend::InternalError',
-              "test download_file on non-existing file";
+              "test download_real_file on non-existing file";
     like($@, qr#Cannot open /not/exist: No such file or directory#,
          "                                        (exception message)");
 }
 
-# Test download_file_gzip
+# Test download_real_file_gzip
 {
     my $q = new CGI;
     my $cls = {};
@@ -67,14 +67,14 @@ BEGIN { use_ok('saliweb::frontend'); }
     print $fh "test\nfile";
     $fh->close() or die "Cannot close $fh: $!";
 
-    stdout_is { $cls->download_file_gzip($q, "$dir/test") }
+    stdout_is { $cls->_download_real_file_gzip($q, "$dir/test") }
               "Content-Type: text/plain; charset=ISO-8859-1\r\n\r\n" .
               "test\nfile",
-              "test download_file_gzip";
+              "test download_real_file_gzip";
 
-    throws_ok { $cls->download_file_gzip($q, "/not/exist") }
+    throws_ok { $cls->_download_real_file_gzip($q, "/not/exist") }
               'saliweb::frontend::InternalError',
-              "test download_file_gzip on non-existing file";
+              "test download_real_file_gzip on non-existing file";
     like($@, qr#Cannot open /not/exist.gz: No such file or directory#,
          "                                        (exception message)");
 }

@@ -1409,12 +1409,9 @@ sub _internal_display_results_page {
     } else {
         chdir($job_row->{directory});
         if (defined($file)) {
-            if (-f $file and $file !~ /^\s*\// and $file !~ /\.\./
+            if ($file !~ /^\s*\// and $file !~ /\.\./
                 and $self->allow_file_download($file)) {
-                $self->download_file($q, $file);
-            } elsif (-f "${file}.gz" and $file !~ /^\s*\// and $file !~ /\.\./
-                and $self->allow_file_download($file)) {
-                $self->download_file_gzip($q, $file);
+                $self->download_results_file($file)
             } else {
                 throw saliweb::frontend::ResultsBadFileError(
                            "Invalid results file requested");
@@ -1424,6 +1421,30 @@ sub _internal_display_results_page {
             my $contents = $self->get_results_page($jobobj);
             $self->_display_results_page_index($contents, $jobobj);
         }
+    }
+}
+
+=item download_results_file
+This method is called to download a single results file (when the user follows
+a URL provided by CompletedJob::get_results_file_url()). It is called in the
+job directory with a relative path, and is expected to print out the HTTP
+header and then the contents of the file. By default, the method uses the MIME
+type returned by get_file_mime_type() in the header, then prints out the file
+if it physically exists on disk, or if it does not but a gzip-compressed version
+of it does (with .gz extension) it will be decompressed and printed. This method
+can be overridden, for example to download other "files" which don't really
+exist on the disk.
+=cut
+sub download_results_file {
+    my ($self, $file) = @_;
+    my $q = $self->cgi;
+    if (-f $file) {
+        $self->_download_real_file($q, $file);
+    } elsif (-f "${file}.gz") {
+        $self->_download_real_file_gzip($q, $file);
+    } else {
+        throw saliweb::frontend::ResultsBadFileError(
+                           "Invalid results file requested");
     }
 }
 
@@ -1448,7 +1469,7 @@ sub get_file_mime_type {
     return 'text/plain';
 }
 
-sub download_file {
+sub _download_real_file {
     my ($self, $q, $file) = @_;
     open(FILE, "$file")
         or throw saliweb::frontend::InternalError("Cannot open $file: $!");
@@ -1459,7 +1480,7 @@ sub download_file {
     close FILE;
 }
 
-sub download_file_gzip {
+sub _download_real_file_gzip {
     my ($self, $q, $file) = @_;
     my $fh = IO::Zlib->new("${file}.gz", "rb")
         or throw saliweb::frontend::InternalError("Cannot open ${file}.gz: $!");
