@@ -659,10 +659,10 @@ sub make_test_pdb {
               'saliweb::frontend::InputValidationError',
               "get_pdb_code (non-existing code)";
 
-    my $code = get_pdb_code("1aaaaaa", ".", 1);
-    is($code, undef, "get_pdb_code (non-existing code, skipped)");
+    is(pdb_code_exists("1aaaaaa"), undef, "pdb_code_exists (false)");
+    ok(pdb_code_exists("1xyz"), "pdb_code_exists (true)");
 
-    $code = get_pdb_code("1xyz", ".");
+    my $code = get_pdb_code("1xyz", ".");
     is($code, "./pdb1xyz.ent", "get_pdb_code (valid code)");
     ok(unlink('pdb1xyz.ent'),  "                          (unlink)");
 

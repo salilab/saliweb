@@ -351,7 +351,7 @@ use IO::Zlib;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(check_optional_email check_required_email check_modeller_key
-             get_pdb_code get_pdb_chains);
+             get_pdb_code get_pdb_chains pdb_code_exists);
 
 # Location of our PDB mirror.
 our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
@@ -843,8 +843,15 @@ sub check_modeller_key {
     }
 }
 
+sub pdb_code_exists {
+    my ($code) = @_;
+    $code = lc $code; # PDB codes are case insensitive
+    my $in_pdb = $pdb_root . substr($code, 1, 2) . "/pdb" . $code . ".ent.gz";
+    return -e $in_pdb;
+}
+
 sub get_pdb_code {
-    my ($code, $outdir, $skip_missing) = @_;
+    my ($code, $outdir) = @_;
 
     if ($code =~ m/^([A-Za-z0-9]+)$/) {
       $code = lc $1; # PDB codes are case insensitive
@@ -858,13 +865,9 @@ sub get_pdb_code {
     my $out_pdb = "$outdir/pdb${code}.ent";
 
     if (! -e $in_pdb) {
-        if ($skip_missing) {
-            return undef;
-        } else {
-            throw saliweb::frontend::InputValidationError(
+        throw saliweb::frontend::InputValidationError(
                  "PDB code '$code' does not exist in our copy of the " .
                  "PDB database.");
-        }
     } else {
         system("gunzip -c $in_pdb > $out_pdb") == 0 or
                 throw saliweb::frontend::InternalError(
