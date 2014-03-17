@@ -541,6 +541,11 @@ sub cgiroot {
     return $self->{'cgiroot'};
 }
 
+sub txtdir {
+    my $self = shift;
+    return $self->{config}->{directories}->{install} . "/txt";
+}
+
 sub dbh {
     my $self = shift;
     return $self->{'dbh'};

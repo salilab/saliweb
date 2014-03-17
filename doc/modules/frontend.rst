@@ -24,6 +24,11 @@ the web frontend.
 
       The top-level URL under which all CGI scripts are found (read-only).
 
+   .. attribute:: txtdir
+
+      The absolute path to the directory containing files installed
+      with :meth:`~saliweb.build.InstallTXT`.
+
    .. attribute:: http_status
 
       The HTTP status code (e.g. 200 OK, 404 Not Found) that will be

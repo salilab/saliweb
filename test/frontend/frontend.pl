@@ -259,6 +259,9 @@ frontend_config=frontend.ini
 [frontend:foo]
 urltop: http://foo.com/myfootop
 
+[directories]
+install: /foo/bar
+
 [general]
 urltop: http://foo.com/mytop
 END
@@ -284,6 +287,8 @@ END
        '                  config.urltop');
     is($self->{htmlroot}, 'http://foo.com/mytop/html/',
        '                  htmlroot');
+    is($self->txtdir, '/foo/bar/txt',
+       '                  txtdir');
     is($self->{cgiroot}, 'http://foo.com/mytop',
        '                  cgiroot');
     is($self->{dbh}, 'dummy DB handle',
