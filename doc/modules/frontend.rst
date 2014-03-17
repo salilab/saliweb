@@ -418,13 +418,15 @@ the web frontend.
    Check a provided MODELLER key. If the key is empty or invalid,
    throw an :exc:`InputValidationError` exception.
 
-.. function:: get_pdb_code(code, outdir)
+.. function:: get_pdb_code(code, outdir[, skip_missing])
 
    Look up the PDB code (e.g. 1abc) in our local copy of the PDB, and 
    copy it into the given directory (usually an incoming job directory).
    The file will be named in standard PDB fashion, e.g. pdb1abc.ent.
-   The full path to the file is returned. If the code is invalid or does
-   not exist, throw an :exc:`InputValidationError` exception.
+   The full path to the file is returned. If the code is invalid, throw an
+   throw an :exc:`InputValidationError` exception. If the code does not exist,
+   throw an :exc:`InputValidationError` unless `skip_missing` is true, in
+   which case return undef.
 
 .. function:: get_pdb_chains(code_and_chains, outdir)
 

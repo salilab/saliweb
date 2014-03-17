@@ -844,7 +844,7 @@ sub check_modeller_key {
 }
 
 sub get_pdb_code {
-    my ($code, $outdir) = @_;
+    my ($code, $outdir, $skip_missing) = @_;
 
     if ($code =~ m/^([A-Za-z0-9]+)$/) {
       $code = lc $1; # PDB codes are case insensitive
@@ -858,9 +858,13 @@ sub get_pdb_code {
     my $out_pdb = "$outdir/pdb${code}.ent";
 
     if (! -e $in_pdb) {
-        throw saliweb::frontend::InputValidationError(
+        if ($skip_missing) {
+            return undef;
+        } else {
+            throw saliweb::frontend::InputValidationError(
                  "PDB code '$code' does not exist in our copy of the " .
                  "PDB database.");
+        }
     } else {
         system("gunzip -c $in_pdb > $out_pdb") == 0 or
                 throw saliweb::frontend::InternalError(
