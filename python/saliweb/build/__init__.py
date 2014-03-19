@@ -131,7 +131,7 @@ def builder_perl_tests(target, source, env):
     e['ENV']['PERL5LIB'] = tmpdir
     if env.get('html_coverage', None):
         e['ENV']['HARNESS_PERL_SWITCHES'] = \
-                     "-MDevel::Cover=+select,%s,+ignore,." % tmpdir
+                     "-MDevel::Cover=+select,%s,+select,^lib,+ignore,." % tmpdir
         e.Execute('cover -delete')
     ret = e.Execute(app)
     if ret != 0:
