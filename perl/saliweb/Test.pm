@@ -36,6 +36,11 @@ sub make_job {
     return new saliweb::DummyIncomingJob($self, $user_jobname, $email);
 }
 
+sub resume_job {
+    my ($self, $user_jobname) = @_;
+    return new saliweb::DummyIncomingJob($self, $user_jobname);
+}
+
 1;
 
 package saliweb::Test;
