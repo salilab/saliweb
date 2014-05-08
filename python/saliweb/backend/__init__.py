@@ -1164,7 +1164,8 @@ class Job(object):
                  "Runner claims job %s is complete, but "
                  "job-state file in job directory (%s) claims it "
                  "is not. This usually means the underlying batch system "
-                 "(e.g. SGE) job failed - e.g. a node went down." \
+                 "(e.g. SGE) job failed - e.g. a node went down, or the job "
+                 "was killed because it ran out of time or memory." \
                  % (self._metadata['runner_id'], self._metadata['directory']))
         return False
 
