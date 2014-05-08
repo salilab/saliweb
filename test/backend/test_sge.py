@@ -17,7 +17,7 @@ class SGETest(unittest.TestCase):
 
     def test_sge_tasks_invalid(self):
         """Check the _SGETasks class with invalid input"""
-        for s in ('-t', '-t x:y', '-t FOO'):
+        for s in ('-t ', '-t x:y', '-t FOO'):
             self.assertRaises(ValueError, _SGETasks, s)
 
     def test_sge_tasks_valid(self):
