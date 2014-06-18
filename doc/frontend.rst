@@ -12,6 +12,9 @@ class must be subclassed for each web service. This class is then used to
 display the web pages using a set of CGI scripts that are set up
 automatically by the build system.
 
+It is probably a good idea to keep your Perl code tidy by using the `perltidy`
+command line tool.
+
 .. note::
 
    A method in Perl is simply a function that gets a reference to an
