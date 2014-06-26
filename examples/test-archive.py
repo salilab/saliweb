@@ -16,6 +16,7 @@ class JobTests(saliweb.test.TestCase):
         print >> open('test.pdb', 'w'), "test pdb"
         print >> open('test.txt', 'w'), "text file"
 
+        # Run the job's "archive" method
         j.archive()
 
         # Job's archive method should have gzipped every PDB file but not

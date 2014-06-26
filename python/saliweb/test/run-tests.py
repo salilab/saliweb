@@ -108,4 +108,6 @@ def parse_options():
 if __name__ == "__main__":
     opts, args = parse_options()
     sys.argv = [sys.argv[0]] + args
+    # Get directory containing test files
+    os.environ['SALIWEB_TESTDIR'] = os.path.abspath(os.path.dirname(args[-1]))
     RunAllTests(opts, defaultTest="regressionTest", argv=[sys.argv[0], '-v'])

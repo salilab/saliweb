@@ -58,7 +58,10 @@ class TestCase(unittest.TestCase):
 
     def make_test_job(self, jobcls, state):
         """Make a test job of the given class in the given state
-           (e.g. RUNNING, POSTPROCESSING)"""
+           (e.g. RUNNING, POSTPROCESSING) and return the new object.
+           A temporary directory is created for the job to use
+           (as Job.directory) and will be deleted automatically once
+           the object is destroyed."""
         t = TempDir()
         s = saliweb.backend._JobState(state)
         db = _DummyDB()
@@ -70,3 +73,9 @@ class TestCase(unittest.TestCase):
         # Make sure the directory is deleted when the job is, and not before
         j._tmpdir = t
         return j
+
+    def get_test_directory(self):
+        """Get the full path to the directory containing test scripts.
+           This can be useful for getting supplemental files needed by tests,
+           which can be stored in a subdirectory of the test directory."""
+        return os.environ['SALIWEB_TESTDIR']
