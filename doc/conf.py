@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath('../python'))
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
 
 # Link to standard Python documentation
-intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
