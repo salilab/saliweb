@@ -211,7 +211,7 @@ the web frontend.
       When downloading a results file (see
       :meth:`~saliwebfrontend.download_results_file`) this
       method is called to get the correct
-      `MIME type <http://en.wikipedia.org/wiki/Internet_media_type`_
+      `MIME type <http://en.wikipedia.org/wiki/Internet_media_type>`_
       for the file. By default, it always returns 'text/plain'. You may need
       to override this, for example, if some of your results files are tar
       files ('application/x-tar') or PNG images ('image/png').
