@@ -35,7 +35,10 @@ def generate(env):
               "install ${SOURCE.dir}/_static/* ${TARGET.dir}/_static")
     env.Append(BUILDERS = {'Sphinx': builder, 'SphinxInstall':install})
 
-    env.AppendUnique(SPHINX_BUILD='/usr/bin/sphinx-build')
+    if os.path.exists('/usr/bin/sphinx-1.0-build'):
+        env.AppendUnique(SPHINX_BUILD='/usr/bin/sphinx-1.0-build')
+    else:
+        env.AppendUnique(SPHINX_BUILD='/usr/bin/sphinx-build')
     env.AppendUnique(SPHINX_OPTS='-a -E -b html')
 
 def exists(env):
