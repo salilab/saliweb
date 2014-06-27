@@ -5,6 +5,8 @@ Import('env')
 # Set http_proxy for Sphinx if necessary
 if env.get('http_proxy', None):
     env['ENV']['http_proxy'] = env['http_proxy']
+if env.get('https_proxy', None):
+    env['ENV']['https_proxy'] = env['https_proxy']
 
 sphinx = env.Sphinx(".build/html/index.html",
                     (Glob('*.rst'), Glob('modules/*.rst'),
