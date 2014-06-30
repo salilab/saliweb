@@ -8,7 +8,7 @@ import saliweb.backend
 
 
 class RunInDir(object):
-    """Change to the given directory, and change back when the object
+    """Change to the given directory, and change back when this object
        goes out of scope."""
 
     def __init__(self, dir):
@@ -25,7 +25,7 @@ class RunInDir(object):
 
 
 class TempDir(object):
-    """Make a temporary directory that is deleted when the object is."""
+    """Make a temporary directory that is deleted when this object is."""
 
     def __init__(self):
         self.tmpdir = tempfile.mkdtemp()
