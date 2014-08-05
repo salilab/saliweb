@@ -19,7 +19,7 @@ rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR}
 
-for REPO in saliweb modloop multifit_web evaluation ligscore modweb
+for REPO in saliweb modloop multifit_web evaluation ligscore modweb \
             salign allosmod; do
   SVNDIR=file:///cowbell1/svn/${REPO}/trunk/
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
