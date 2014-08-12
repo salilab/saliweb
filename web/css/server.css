@@ -41,6 +41,7 @@ b,strong {
    color:               #003366;
 }
 p, br,  ul, ol, li, dl, dd, dt, center, blockquote {
+   font-size:           13px;
    font-family:         "Arial", "Helvetica", Sans-serif;
    color:               #003366;
 }
@@ -245,6 +246,7 @@ h5 {
         padding-right: 20px;
         padding-top: 7px;
         padding-bottom: 30px;
+        font-size: 0.8em;
         text-align: justify;
         margin-bottom: 10px;
         margin-right: 1px;
