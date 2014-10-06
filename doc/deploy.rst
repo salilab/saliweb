@@ -275,6 +275,12 @@ This tool will delete all of the jobs from the web service, so can be used to
 in all the job directories (even extraneous files that do not correspond to
 jobs in the database). It should be used with caution, as this cannot be undone.
 
+list_jobs.py
+------------
+
+This tool will show all the jobs in the given state(s). It is helpful for
+internal web services that don't have an easily accessible queue web page.
+
 .. _testing:
 
 Testing
