@@ -5,14 +5,17 @@ import sys
 
 def get_options():
     parser = OptionParser()
+    default_states = ['FAILED', 'INCOMING', 'PREPROCESSING',
+                      'POSTPROCESSING', 'RUNNING']
     parser.set_usage("""
-%prog [-h] STATE [STATE ...]
+%prog [-h] [STATE ...]
 
 Print a list of all jobs in the given STATE(s).
-""")
+If no states are given, the following are used by default:
+""" + ", ".join(default_states))
     opts, args = parser.parse_args()
     if len(args) < 1:
-        parser.error("Need to specify at least one job state")
+        args = default_states
     return args
 
 def check_valid_state(state):
@@ -25,6 +28,5 @@ def main(webservice):
         check_valid_state(state)
     web = webservice.get_web_service(webservice.config)
     for state in states:
-        print "All jobs in %s state" % state
-        for job in web.db._get_all_jobs_in_state(state):
-            print "    ", job.name
+        for job in web.db._get_all_jobs_in_state(state, order_by='submit_time'):
+            print "%-60s %s" % (job.name, state)

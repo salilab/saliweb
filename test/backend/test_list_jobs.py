@@ -25,7 +25,6 @@ class Tests(unittest.TestCase):
             finally:
                 sys.stderr = oldstderr
                 sys.argv = old
-        self.assertRaises(SystemExit, run_get_options, [])
         states = run_get_options(['FAILED', 'RUNNING'])
         self.assertEqual(states, ['FAILED', 'RUNNING'])
 
@@ -35,11 +34,15 @@ class Tests(unittest.TestCase):
             def __init__(self, name):
                 self.name = name
         class DummyDatabase(object):
-            def _get_all_jobs_in_state(self, state):
+            def _get_all_jobs_in_state(self, state, order_by):
                 if state == 'FAILED':
                     return [DummyJob('foo'), DummyJob('bar')]
-                if state == 'RUNNING':
+                elif state == 'PREPROCESSING':
+                    return [DummyJob('testpre')]
+                elif state == 'RUNNING':
                     return [DummyJob('baz')]
+                else:
+                    return []
         class DummyWebService(object):
             def __init__(self, mod):
                 self.mod = mod
@@ -59,8 +62,19 @@ class Tests(unittest.TestCase):
             sys.argv = ['testprogram', 'FAILED', 'RUNNING']
             main(mod)
             self.assertEqual(sio.getvalue(),
-                             'All jobs in FAILED state\n     foo\n     bar\n'
-                             'All jobs in RUNNING state\n     baz\n')
+'foo                                                          FAILED\n'
+'bar                                                          FAILED\n'
+'baz                                                          RUNNING\n')
+            sio = StringIO.StringIO()
+            sys.stdout = sio
+            mod = DummyModule()
+            sys.argv = ['testprogram']
+            main(mod)
+            self.assertEqual(sio.getvalue(),
+'foo                                                          FAILED\n'
+'bar                                                          FAILED\n'
+'testpre                                                      PREPROCESSING\n'
+'baz                                                          RUNNING\n')
         finally:
             sys.argv = old
             sys.stdout = oldout
