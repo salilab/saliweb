@@ -89,6 +89,14 @@ class DatabaseTest(unittest.TestCase):
         self.assertEqual(len(db._fields), numfields + 1)
         self.assertEqual(db._fields[-1].name, 'test_field')
 
+    def test_set_track_hostname(self):
+        """Test Database.set_track_hostname()"""
+        db = MemoryDatabase(Job)
+        numfields = len(db._fields)
+        db.set_track_hostname()
+        self.assertEqual(len(db._fields), numfields + 1)
+        self.assertEqual(db._fields[-1].name, 'hostname')
+
     def test_create_tables(self):
         """Make sure that Database._create_tables() makes tables and indexes"""
         db = MemoryDatabase(Job)

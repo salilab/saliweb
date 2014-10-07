@@ -229,6 +229,10 @@ class Config(object):
         self.socket = config.get('general', 'socket')
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
+        if config.has_option('general', 'track_hostname'):
+            self.track_hostname = config.getboolean('general', 'track_hostname')
+        else:
+            self.track_hostname = False
 
     def send_admin_email(self, subject, body):
         """Send an email to the admin for this web service, with the given
@@ -457,6 +461,10 @@ class Database(object):
            immediately after creating the :class:`Database` object."""
         self._fields.append(field)
 
+    def set_track_hostname(self):
+        """Add extra fields to support tracking the user's hostname"""
+        self.add_field(MySQLField('hostname', 'VARCHAR(400)'))
+
     def _connect(self, config):
         """Set up the connection to the database. Usually called from the
            :class:`WebService` object."""
@@ -609,6 +617,8 @@ class WebService(object):
         self.config._read_db_auth('back')
         self.__state_file_handle = None
         self.db = db
+        if self.config.track_hostname:
+            self.db.set_track_hostname()
         self.db._connect(config)
 
     def get_running_pid(self):

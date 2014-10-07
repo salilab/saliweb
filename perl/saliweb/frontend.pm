@@ -76,15 +76,30 @@ sub submit {
                                                           $self->{name});
 
   # Insert row into database table
-  my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
-              "url,submit_time) VALUES(?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
-  my $in = $dbh->prepare($query)
-           or throw saliweb::frontend::DatabaseError(
-                               "Cannot prepare query ". $dbh->errstr);
-  $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
-               $self->{email}, $self->{directory}, $self->{url})
+  my $query;
+  if ($config->{general}->{'track_hostname'}) {
+    my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
+                "url,submit_time,hostname) VALUES(?, ?, ?, ?, ?, ?, ?, " .
+                "UTC_TIMESTAMP())";
+    my $in = $dbh->prepare($query)
+             or throw saliweb::frontend::DatabaseError(
+                                 "Cannot prepare query ". $dbh->errstr);
+    $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
+                 $self->{email}, $self->{directory}, $self->{url},
+                 $self->cgi->remote_host())
         or throw saliweb::frontend::DatabaseError(
                                "Cannot execute query ". $dbh->errstr);
+  } else {
+    my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
+                "url,submit_time) VALUES(?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
+    my $in = $dbh->prepare($query)
+             or throw saliweb::frontend::DatabaseError(
+                                 "Cannot prepare query ". $dbh->errstr);
+    $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
+                 $self->{email}, $self->{directory}, $self->{url})
+        or throw saliweb::frontend::DatabaseError(
+                               "Cannot execute query ". $dbh->errstr);
+  }
   $dbh->commit(); # Ignore errors (we may be using a db without transactions)
 
   # Use socket to inform backend of new incoming job
