@@ -516,7 +516,7 @@ def _check_mysql(env):
                              passwd=backend['passwd'])
         cur = db.cursor()
         cur.execute('DESCRIBE jobs')
-        _check_mysql_schema(env, cur)
+        _check_mysql_schema(env, c, cur)
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
         _check_mysql_grants(env, cur, c.database['db'], backend['user'],
                             'SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, '
@@ -609,8 +609,10 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(dat
     return outfile
 
 
-def _check_mysql_schema(env, cursor):
+def _check_mysql_schema(env, config, cursor):
     d = saliweb.backend.Database(None)
+    if config.track_hostname:
+        d.set_track_hostname()
     dbfields = []
     for row in cursor:
         dbfields.append(saliweb.backend.MySQLField(row[0], row[1].upper(),

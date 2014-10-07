@@ -450,11 +450,15 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
 
     def test_check_mysql_schema(self):
         """Test _check_mysql_schema function"""
+        class DummyConf:
+            pass
         # Number of fields differs between DB and backend
         env = DummyEnv('testuser')
         dbfields = []
+        conf = DummyConf()
+        conf.track_hostname = False
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assert_(re.search("'jobs' database table schema does not match.*"
@@ -468,7 +472,7 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
         env = DummyEnv('testuser')
         dbfields = [('name', 'varchar(30)', 'NO', 'PRI', '', '')]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assert_(re.search('table schema does not match.*'
@@ -506,7 +510,7 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
                     ('failure', 'text', 'YES', '', None, ''),
                    ]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
