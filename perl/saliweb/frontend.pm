@@ -79,7 +79,7 @@ sub submit {
   my $query;
   if ($config->{general}->{'track_hostname'}) {
     my $query = "insert into jobs (name,passwd,user,contact_email,directory," .
-                "url,submit_time,hostname) VALUES(?, ?, ?, ?, ?, ?, ?, " .
+                "url,hostname,submit_time) VALUES(?, ?, ?, ?, ?, ?, ?, " .
                 "UTC_TIMESTAMP())";
     my $in = $dbh->prepare($query)
              or throw saliweb::frontend::DatabaseError(
