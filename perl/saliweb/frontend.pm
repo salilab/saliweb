@@ -86,7 +86,7 @@ sub submit {
                                  "Cannot prepare query ". $dbh->errstr);
     $in->execute($self->{name}, $self->{passwd}, $self->{frontend}->{user_name},
                  $self->{email}, $self->{directory}, $self->{url},
-                 $self->cgi->remote_host())
+                 $self->{frontend}->cgi->remote_host())
         or throw saliweb::frontend::DatabaseError(
                                "Cannot execute query ". $dbh->errstr);
   } else {
