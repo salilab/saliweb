@@ -1552,6 +1552,7 @@ sub read_ini_file {
   my $contents;
   my $section;
   # Set defaults
+  $contents->{track_hostname} = 0;
   $contents->{limits}->{running} = 5;
   $contents->{database}->{socket} = '/var/lib/mysql/mysql.sock';
   while(<FILE>) {
