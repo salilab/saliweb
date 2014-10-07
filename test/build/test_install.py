@@ -110,7 +110,7 @@ class InstallTest(unittest.TestCase):
             return e
         e = make_env()
         saliweb.build._InstallAdminTools(e)
-        self.assertEqual(len(e.command_target), 6)
+        self.assertEqual(len(e.command_target), 7)
 
         e = make_env()
         saliweb.build._InstallAdminTools(e, ['myjob'])
