@@ -527,9 +527,14 @@ def _check_mysql(env):
                              passwd=frontend['passwd'])
         cur = db.cursor()
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
+        if c.track_hostname:
+            hostname = 'hostname, '
+        else:
+            hostname = ''
         _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
                             'SELECT, INSERT (submit_time, contact_email, url, '
-                            'passwd, user, directory, name)', table='jobs')
+                            'passwd, user, directory, %sname)' % hostname,
+                            table='jobs')
     except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
         # Only complain about possible too-long DB usernames if MySQL
         # itself first complained
