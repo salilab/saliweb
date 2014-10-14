@@ -58,14 +58,14 @@ class MakeWebService(object):
 and adding lines such as
 ben     modbase=(%(user)s) ALL
 
-4. Make accounts for %(user)s on the cluster(s) if it's going
+2. Make accounts for %(user)s on the cluster(s) if it's going
 to run cluster jobs.
 
-5. Make the /netapp/sali/%(user)s directory by running on sortinghat:
+3. Make the /netapp/sali/%(user)s directory by running on sortinghat:
 /usr/bin/sudo mkdir /netapp/sali/%(user)s
 /usr/bin/sudo chown %(uid)d:%(uid)d /netapp/sali/%(user)s
 
-6. Change into the %(topdir)s directory and run
+4. Change into the %(topdir)s directory and run
 /usr/bin/sudo -u %(user)s scons
 until it works.
 """ % {'user': self.user, 'topdir': self.topdir, 'uid': uid}
