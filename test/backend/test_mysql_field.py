@@ -24,8 +24,12 @@ class MySQLFieldTest(unittest.TestCase):
         field = MySQLField('name', 'TEXT', null='NO', default='DEF')
         self.assertEqual(field.get_schema(), "name TEXT NOT NULL DEFAULT 'DEF'")
         # default cannot be NULL if NULL is not allowed
-        field = MySQLField('name', 'TEXT', null=False, default=None)
-        self.assertEqual(field.get_schema(), "name TEXT NOT NULL DEFAULT ''")
+        field = MySQLField('name', 'VARCHAR(50)', null=False, default=None)
+        self.assertEqual(field.get_schema(),
+                         "name VARCHAR(50) NOT NULL DEFAULT ''")
+        # defaults cannot be given for TEXT fields
+        field = MySQLField('name', 'text', null=False)
+        self.assertEqual(field.get_schema(), "name text NOT NULL")
         # Check index
         field = MySQLField('name', 'TEXT', index=True)
         self.assertEqual(field.index, True)
