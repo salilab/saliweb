@@ -386,7 +386,8 @@ class MySQLField(object):
         if null == 'YES':
             null = True
         # default cannot be NULL if NULL is not allowed for this field
-        if not null and default is None:
+        # (but defaults are not allowed for text fields)
+        if not null and default is None and type.upper() != 'TEXT':
             default = ''
         # Default cannot be '' for DATETIME fields
         if type == 'DATETIME' and default == '':
