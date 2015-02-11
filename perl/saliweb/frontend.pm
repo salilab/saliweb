@@ -1237,7 +1237,10 @@ sub get_queue_key {
               " a technical fault occurred. We are automatically " .
               "notified of such jobs, and will resubmit the job for you once " .
               "the problem has been fixed. (Typically, resubmitting it " .
-              "yourself will not help.)")
+              "yourself will not help.)") .
+
+        $q->p($q->b("HOLD:"),
+              " the job has been placed on hold by an administrator.")
          );
 }
 
