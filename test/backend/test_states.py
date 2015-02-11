@@ -25,7 +25,7 @@ class StatesTest(unittest.TestCase):
     def test_get_valid_states(self):
         """Check _JobState.get_valid_states()"""
         states = _JobState.get_valid_states()
-        self.assertEqual(len(states), 9)
+        self.assertEqual(len(states), 8)
         self.assertEqual(states[0], 'INCOMING')
 
     def test_transition(self):

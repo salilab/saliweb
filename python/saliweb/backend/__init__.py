@@ -100,7 +100,7 @@ class _JobState(object):
     """Simple state machine for jobs."""
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
                       'POSTPROCESSING', 'COMPLETED', 'FAILED',
-                      'EXPIRED', 'ARCHIVED', 'HOLD']
+                      'EXPIRED', 'ARCHIVED']
     __valid_transitions = [['INCOMING', 'PREPROCESSING'],
                            ['PREPROCESSING', 'RUNNING'],
                            ['PREPROCESSING', 'COMPLETED'],
@@ -295,7 +295,7 @@ class Config(object):
         self.directories['install'] = config.get('directories', 'install')
         others = _JobState.get_valid_states()
         others.remove('EXPIRED')
-        sorted_others = ['PREPROCESSING', 'HOLD', 'RUNNING', 'POSTPROCESSING',
+        sorted_others = ['PREPROCESSING', 'RUNNING', 'POSTPROCESSING',
                          'COMPLETED', 'ARCHIVED']
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
