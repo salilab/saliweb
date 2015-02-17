@@ -716,7 +716,7 @@ sub make_test_pdb {
     like($@, qr/^You have entered an invalid MODELLER key/,
          "                   (exception message)");
 
-    lives_ok { check_modeller_key("***REMOVED***") }
+    lives_ok { check_modeller_key("\@MODELLERKEY\@") }
              "                   (valid key)";
 }
 

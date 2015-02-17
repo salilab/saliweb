@@ -852,7 +852,7 @@ sub check_modeller_key {
     if (!defined($modkey)) {
         $modkey = '';
     }
-    if ($modkey ne "***REMOVED***") {
+    if ($modkey ne "\@MODELLERKEY\@") {
         throw saliweb::frontend::InputValidationError(
                  "You have entered an invalid MODELLER key: $modkey");
     }
