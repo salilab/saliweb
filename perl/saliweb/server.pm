@@ -397,17 +397,7 @@ sub navigation {
     return ($navigation_table);
 
 }
-sub validate_modeller {
-    my $key=shift @_;
-    if (uc($key) ne "***REMOVED***") {
-         &end_server("header","ModWeb Error: Please enter a valid MODELLER access "
-                    ."key. <br/> Visit the "
-                    ."<a href=\"http://salilab.org/modeller/registration.html\">"
-                    ."MODELLER Registration</a> page to get one.");
-    } else {
-        return "validated";
-    }
-}
+
 sub validate_email {
  
     my $type=shift@_;
