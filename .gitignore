@@ -1,0 +1,7 @@
+.coverage*
+.sconsign.dblite
+config.py
+config.log
+.sconf_temp
+*.pyc
+state_file
