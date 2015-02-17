@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Script to get SVN HEAD and make a .tar.gz on a shared disk, for use by
+# Script to get git or SVN HEAD and make a .tar.gz on a shared disk, for use by
 # autobuild scripts on our build machines.
 #
-# Should be run on the SVN server (or some other system that can access SVN
+# Should be run on the git/SVN server (or some other system that can access SVN
 # readonly without a password) from a crontab, e.g.
 #
 # 10 1 * * * /cowbell1/home/ben/saliweb/tools/auto-build.sh
@@ -18,9 +18,20 @@ MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR}
+SVN_REPOS="modloop multifit_web evaluation ligscore modweb salign allosmod"
+GIT_REPOS="saliweb"
 
-for REPO in saliweb modloop multifit_web evaluation ligscore modweb \
-            salign allosmod; do
+for REPO in ${GIT_REPOS}; do
+  SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
+
+  # Get branch and revision
+  (cd /cowbell1/git/${REPO} && echo "`git rev-parse --abbrev-ref HEAD` `git rev-parse --short HEAD`" > "${MODINSTALL}/build/${REPO}-version")
+
+  # Get code from git and write out a tarball
+  tar -C /cowbell1/git/ --exclude .git -czf ${SWSRCTGZ} ${REPO}
+done
+
+for REPO in ${SVN_REPOS}; do
   SVNDIR=file:///cowbell1/svn/${REPO}/trunk/
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
