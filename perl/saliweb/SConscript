@@ -2,12 +2,28 @@ import os
 
 Import('env')
 
-perl_files = [ 'frontend.pm', 'server.pm', 'Test.pm' ]
+def subst_modeller_key(target=None, source=None, env=None):
+    f = str(target[0])
+    contents = open(f).read()
+    if 'MODELLERKEY' not in env:
+        raise ValueError("Please pass MODELLERKEY=xxx to scons")
+    if '\\@MODELLERKEY\\@' not in contents:
+        raise ValueError("Could not find Modeller key")
+    else:
+        contents = contents.replace('\\@MODELLERKEY\\@', env['MODELLERKEY'])
+        open(f, 'w').write(contents)
+
+perl_files = [ 'server.pm', 'Test.pm' ]
 
 # Install files:
 instdir = os.path.join(env['perldir'], 'saliweb')
 plinst = env.Install(instdir, perl_files)
 env.Alias('install', plinst)
+
+# Get real Modeller key and substitute into frontend.pm:
+plinst = env.Install(instdir, ['frontend.pm'])
+env.Alias('install', plinst)
+env.AddPostAction(plinst, subst_modeller_key)
 
 # Subdirectories
 env.SConscript('frontend/SConscript')
