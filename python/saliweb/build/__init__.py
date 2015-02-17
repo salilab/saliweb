@@ -218,26 +218,38 @@ def _setup_sconsign(env):
     env.SConsignFile('.scons/sconsign.dblite')
 
 
+def _run_version_binary(env, cmd, args):
+    fullcmd = env.WhereIs(cmd)
+    if fullcmd:
+        try:
+            p = subprocess.Popen([fullcmd] + args, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            ret = p.communicate()
+            if p.returncode:
+                raise OSError("returned exit code %d, stdout %s, "
+                              "stderr %s" \
+                              % (p.returncode, ret[0], ret[1]))
+            return ret[0].split('\n')[0]
+        except OSError, detail:
+            warnings.warn("Could not run %s: %s" \
+                          % (fullcmd, str(detail)))
+    else:
+        warnings.warn("Could not find '%s' binary in path" % cmd)
+
+
 def _setup_version(env, version):
     if version is None:
-        svnversion = env.WhereIs('svnversion')
-        if svnversion:
-            try:
-                p = subprocess.Popen(svnversion, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
-                ret = p.communicate()
-                if p.returncode:
-                    raise OSError("returned exit code %d, stdout %s, "
-                                  "stderr %s" \
-                                  % (p.returncode, ret[0], ret[1]))
-                v = ret[0].split('\n')[0]
-                if v and v != 'exported':
-                    version = 'r' + v
-            except OSError, detail:
-                warnings.warn("Could not run %s: %s" \
-                              % (svnversion, str(detail)))
+        if os.path.exists('.git'):
+            branch = _run_version_binary(env, 'git',
+                                         ['rev-parse', '--abbrev-ref', 'HEAD'])
+            rev = _run_version_binary(env, 'git',
+                                         ['rev-parse', '--short', 'HEAD'])
+            if branch and rev:
+                version = branch + '.' + rev
         else:
-            warnings.warn("Could not find 'svnversion' binary in path")
+            v = _run_version_binary(env, 'svnversion', [])
+            if v and v != 'exported':
+                version = 'r' + v
     env['version'] = version
 
 

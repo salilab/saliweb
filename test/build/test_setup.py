@@ -100,6 +100,7 @@ class SetupTest(unittest.TestCase):
             print >> open(tmpfile, 'w'), "#!/usr/bin/python\n" + script
             os.chmod(tmpfile, 0755)
             return BrokenEnv(tmpfile)
+        curdir = RunInTempDir()
 
         # Check with provided version number
         env = {}
@@ -148,6 +149,21 @@ sys.exit(1)""")
         ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
         self.assertEqual(len(warns), 0)
         self.assertEqual(env, {'version': 'r1024'}) # Only first line used
+
+        # git repository
+        os.mkdir('.git')
+        env = get_broken_env_pyscript('gitscript', """
+import sys
+if sys.argv[1:4] == ['rev-parse', '--abbrev-ref', 'HEAD']:
+    print "master\\nfoo"
+elif sys.argv[1:4] == ['rev-parse', '--short', 'HEAD']:
+    print "abc123\\nbar"
+else:
+    raise IOError(sys.argv)
+""")
+        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
+        self.assertEqual(len(warns), 0)
+        self.assertEqual(env, {'version': 'master.abc123'})
 
         shutil.rmtree(tmpdir, ignore_errors=True)
 
