@@ -847,12 +847,16 @@ sub check_required_email {
     }
 }
 
+sub get_modeller_key {
+    return "\@MODELLERKEY\@";
+}
+
 sub check_modeller_key {
     my ($modkey) = @_;
     if (!defined($modkey)) {
         $modkey = '';
     }
-    if ($modkey ne "\@MODELLERKEY\@") {
+    if ($modkey ne get_modeller_key()) {
         throw saliweb::frontend::InputValidationError(
                  "You have entered an invalid MODELLER key: $modkey");
     }
