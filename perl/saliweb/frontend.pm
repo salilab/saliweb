@@ -366,7 +366,7 @@ use IO::Zlib;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(check_optional_email check_required_email check_modeller_key
-             get_pdb_code get_pdb_chains pdb_code_exists);
+             get_pdb_code get_pdb_chains pdb_code_exists get_modeller_key);
 
 # Location of our PDB mirror.
 our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
