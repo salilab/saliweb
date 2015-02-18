@@ -18,8 +18,8 @@ MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR}
-SVN_REPOS="multifit_web evaluation modweb salign allosmod"
-GIT_REPOS="modloop saliweb ligscore"
+SVN_REPOS="multifit_web modweb salign allosmod"
+GIT_REPOS="modloop saliweb evaluation ligscore"
 
 for REPO in ${GIT_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
