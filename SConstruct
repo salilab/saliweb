@@ -6,7 +6,6 @@ EnsureSConsVersion(0, 98)
 # Set up build environment:
 vars = Variables('config.py', ARGUMENTS)
 add_common_variables(vars, "saliweb")
-vars.Add('MODELLERKEY', 'Modeller license key')
 env = MyEnvironment(variables=vars, require_modeller=False,
                     tools=["default", "sphinx"], toolpath=["tools"])
 Help(vars.GenerateHelpText(env))
