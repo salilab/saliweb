@@ -38,6 +38,12 @@ the web frontend.
 
       The version number of this web service (read-only).
 
+   .. attribute:: version_link
+
+      An HTML fragment that shows the version as a link to the github page
+      for this web service, if `github` is set in the config file (if not,
+      returns the same content as `version`). Read-only.
+
    .. attribute:: user_name
 
       If a user is authenticated against the service, this is their user

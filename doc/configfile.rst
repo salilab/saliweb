@@ -47,6 +47,10 @@ track_hostname
     If set to "True" then the hostname or IP address of each web service
     user is stored in the database.
 
+github
+    For web services that are open source and are hosted on GitHub, this should
+    be filled in with the GitHub URL.
+
 backend
 =======
 

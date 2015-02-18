@@ -283,6 +283,10 @@ END
     isa_ok($self->{CGI}, 'CGI', '                  CGI');
     is($self->{page_title}, 'test_server', '                  page_title');
     is($self->{version}, '1.0', '                  version');
+    is($self->version_link, '1.0', '                  version link');
+    $self->{config}->{general}->{github} = "http://github.com/foo";
+    is($self->version_link, '<a href="http://github.com/foo">1.0</a>',
+       '                  version link (github)');
     is($self->{config}->{general}->{urltop}, 'http://foo.com/mytop',
        '                  config.urltop');
     is($self->{htmlroot}, 'http://foo.com/mytop/html/',

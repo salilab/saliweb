@@ -582,6 +582,18 @@ sub version {
     return $self->{version};
 }
 
+sub version_link {
+    my $self = shift;
+    my $q = $self->cgi;
+    my $version = $self->version;
+    my $github = $self->{config}->{general}->{github};
+    if ($github) {
+        return $q->a({-href=>$github}, $version);
+    } else {
+        return $version;
+    }
+}
+
 sub user_name {
     my $self = shift;
     return $self->{user_name};
@@ -1556,6 +1568,7 @@ sub read_ini_file {
   my $contents;
   my $section;
   # Set defaults
+  $contents->{general}->{github} = undef;
   $contents->{general}->{track_hostname} = 0;
   $contents->{limits}->{running} = 5;
   $contents->{database}->{socket} = '/var/lib/mysql/mysql.sock';
