@@ -354,6 +354,6 @@ Examples
 
 A simple example of a complete web service is ModLoop. The source code for
 this service can be found at
-https://svn.salilab.org/modloop/trunk/
+https://github.com/salilab/modloop/
 and the service can be seen in action at
-http://modbase.compbio.ucsf.edu/modloop/
+http://salilab.org/modloop/
