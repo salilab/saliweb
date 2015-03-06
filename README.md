@@ -1,3 +1,6 @@
+[![python coverage](https://salilab.org/coverage/stat/?s=saliweb&t=python)](http://salilab.org/coverage/saliweb/python/)
+[![perl coverage](https://salilab.org/coverage/stat/?s=saliweb&t=perl)](http://salilab.org/coverage/saliweb/perl/)
+
 Documentation on using this framework can be found at
 http://salilab.org/saliweb/
 
