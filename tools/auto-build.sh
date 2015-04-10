@@ -25,10 +25,12 @@ for REPO in ${GIT_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
   # Get branch and revision
-  (cd /cowbell1/git/${REPO} && echo "`git rev-parse --abbrev-ref HEAD` `git rev-parse --short HEAD`" > "${MODINSTALL}/build/${REPO}-version")
+  (cd /cowbell1/git/${REPO}.git && echo "`git rev-parse --abbrev-ref HEAD` `git rev-parse --short HEAD`" > "${MODINSTALL}/build/${REPO}-version")
 
   # Get code from git and write out a tarball
-  tar -C /cowbell1/git/ --exclude .git -czf ${SWSRCTGZ} ${REPO}
+  git clone -q /cowbell1/git/${REPO}.git
+  tar --exclude .git -czf ${SWSRCTGZ} ${REPO}
+  rm -rf ${REPO}
 done
 
 for REPO in ${SVN_REPOS}; do
