@@ -47,7 +47,8 @@ def _add_build_variable(vars, configs):
     return buildmap
 
 
-def Environment(variables, configfiles, version=None, service_module=None):
+def Environment(variables, configfiles, version=None, service_module=None,
+                config_class=saliweb.backend.Config):
     buildmap = _add_build_variable(variables, configfiles)
     variables.Add(SCons.Script.PathVariable('html_coverage',
                                'Directory to output HTML coverage reports into',
@@ -56,7 +57,7 @@ def Environment(variables, configfiles, version=None, service_module=None):
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
-    env['config'] = config = saliweb.backend.Config(configfile)
+    env['config'] = config = config_class(configfile)
     _setup_sconsign(env)
     _setup_version(env, version)
     _setup_service_name(env, config, service_module)
