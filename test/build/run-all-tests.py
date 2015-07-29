@@ -37,7 +37,10 @@ class RunAllTests(unittest.TestProgram):
             self.cov.use_cache(True)
             print >> sys.stderr, "\nPython coverage report\n"
 
-            self.cov.file_locator.relative_dir = self.topdir + '/'
+            if hasattr(coverage.files, 'RELATIVE_DIR'):
+                coverage.files.RELATIVE_DIR = self.topdir + '/'
+            else:
+                self.cov.file_locator.relative_dir = self.topdir + '/'
             self.cov.report(self.mods, file=sys.stderr)
             self.cov.save()
 
