@@ -37,7 +37,10 @@ def action(target, source, env):
 
         cov = coverage.coverage(branch=True)
         cov.combine()
-        cov.file_locator.relative_dir = topdir + '/'
+        if hasattr(coverage.files, 'RELATIVE_DIR'):
+            coverage.files.RELATIVE_DIR = topdir + '/'
+        else:
+            cov.file_locator.relative_dir = topdir + '/'
         cov.html_report(mods, directory='html_coverage/python')
     else:
         print "Could not find new enough coverage module"
