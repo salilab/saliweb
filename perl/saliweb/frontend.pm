@@ -788,15 +788,15 @@ sub get_lab_navigation_links {
     my $self = shift;
     my $q = $self->cgi;
     return [
-        $q->a({-href=>'http://salilab.org/'}, "Sali Lab Home"),
-        $q->a({-href=>'http://salilab.org/modweb/'}, "ModWeb"),
-        $q->a({-href=>'http://salilab.org/modbase/'}, "ModBase"),
-        $q->a({-href=>'http://salilab.org/modeval/'}, "ModEval"),
-        $q->a({-href=>'http://salilab.org/pcss/'}, "PCSS"),
-        $q->a({-href=>'http://salilab.org/foxs/'}, "FoXS"),
-        $q->a({-href=>'http://salilab.org/imp/'}, "IMP"),
-        $q->a({-href=>'http://salilab.org/multifit/'}, "MultiFit"),
-        $q->a({-href=>'http://salilab.org/modpipe/'}, "ModPipe")
+        $q->a({-href=>'//salilab.org/'}, "Sali Lab Home"),
+        $q->a({-href=>'//salilab.org/modweb/'}, "ModWeb"),
+        $q->a({-href=>'//salilab.org/modbase/'}, "ModBase"),
+        $q->a({-href=>'//salilab.org/modeval/'}, "ModEval"),
+        $q->a({-href=>'//salilab.org/pcss/'}, "PCSS"),
+        $q->a({-href=>'//salilab.org/foxs/'}, "FoXS"),
+        $q->a({-href=>'//salilab.org/imp/'}, "IMP"),
+        $q->a({-href=>'//salilab.org/multifit/'}, "MultiFit"),
+        $q->a({-href=>'//salilab.org/modpipe/'}, "ModPipe")
     ];
 }
 
