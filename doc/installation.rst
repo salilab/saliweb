@@ -30,7 +30,11 @@ Prerequisites
 
 * SGE
 
-* `MODELLER <http://salilab.org/modeller/>`_
+* `MODELLER <http://salilab.org/modeller/>`_. The framework needs your academic MODELLER license key (in order for
+  the `check_modeller_key() function <http://salilab.org/saliweb/modules/frontend.html#saliweb::frontend.check_modeller_key>`_
+  to work). It obtains this by parsing the :file:`config.py` file in your MODELLER installation. The framework is hardcoded
+  to use the path of the Sali lab's own installation; to use outside of the Sali lab you will need to edit
+  :file:`perl/saliweb/SConscript` and change the path to :file:`config.py`.
 
 * DRMAA Python bindings
 
