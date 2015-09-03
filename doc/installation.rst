@@ -52,7 +52,7 @@ Prerequisites
 
 * Web server. The frontend consists of Perl CGI scripts which need to be hosted by a web server. Apache is used in the
   Sali lab, but other web servers would probably work too (the only assumption made in the code is that files uploaded
-  to the web server end up owned by the `httpd` user, but this would be easy to change). The web server does not have
+  to the web server end up owned by the `apache` user, but this would be easy to change). The web server does not have
   to run on the same machine as the framework, but it does need access to the same filesystems (see below).
 
 * MySQL database. Both the frontend and backend need access to a MySQL database in which the jobs are stored. This requires
@@ -66,7 +66,7 @@ Prerequisites
 * Filesystems. Each web service that uses the framework needs access to a local filesystem on the SGE submit host. This will
   be used by the web server to deposit newly-submitted jobs (the 'incoming' directory). The filesystem needs to support
   `POSIX ACLs <http://www.vanemery.com/Linux/ACL/POSIX_ACL_on_Linux.html>`_ (this generally rules out NFS) since the directory
-  will be owned by a Unix user unique to that web service, but will have a POSIX ACL applied to allow the Apache httpd user
+  will be owned by a Unix user unique to that web service, but will have a POSIX ACL applied to allow the Apache user
   to write files into it. Each web service will also need a directory on a shared volume, visible to the cluster nodes,
   where the files for jobs that run on the cluster are placed (the 'running' directory). (If space is limited on the network
   storage, web services can also be configured to move the files back to the cheaper local filesystem - the 'completed'
