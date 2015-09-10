@@ -1,6 +1,7 @@
 [![docs](https://readthedocs.org/projects/saliweb/badge/)](http://salilab.org/saliweb/)
-[![python coverage](https://salilab.org/coverage/stat/?s=saliweb&t=python)](http://salilab.org/coverage/saliweb/python/)
-[![perl coverage](https://salilab.org/coverage/stat/?s=saliweb&t=perl)](http://salilab.org/coverage/saliweb/perl/)
+[![nightly build](https://salilab.org/nightly/stat/?s=saliweb&t=build)](https://salilab.org/nightly/saliweb/)
+[![python coverage](https://salilab.org/nightly/stat/?s=saliweb&t=python)](https://salilab.org/nightly/saliweb/logs/coverage/python/)
+[![perl coverage](https://salilab.org/nightly/stat/?s=saliweb&t=perl)](https://salilab.org/nightly/saliweb/logs/coverage/perl/)
 
 This framework provides a simple set of classes and modules to simplify the process of deploying, in the Sali lab, a web service (a web-based front end to jobs that run on the lab cluster). It is designed specifically for the Sali lab environment, but can probably be adapted to run elsewhere if desired.
 
