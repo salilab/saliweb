@@ -395,6 +395,7 @@ sub new {
         # Read configuration file
         $self->{'config'} = my $config = read_config($config_file, $frontend);
         my $urltop = $config->{general}->{urltop};
+        $urltop =~ s/\/+$//;
         # Make sure any links we generate are also secure if we are secure
         if ($self->cgi->https) {
             $urltop =~ s/^http:/https:/;
