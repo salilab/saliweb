@@ -750,7 +750,8 @@ sub get_start_html_parameters {
                             -code     => $JS_Google_Analytics}]);
     my $canon = $self->{canonical_url};
     if (defined $canon) {
-        $canon =~ s/^https:/http:/;
+        # Prefer https for canonical URLs
+        $canon =~ s/^http:/https:/;
         $param{-head} = $q->Link({-rel=>'canonical', -href=>$canon});
     }
     return %param;

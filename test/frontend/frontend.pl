@@ -429,8 +429,8 @@ END
 
 sub make_test_frontend {
     my $self = {CGI=>new CGI, page_title=>'test title',
-                rate_limit_checked=>0, server_name=>shift, cgiroot=>'/foo',
-                canonical_url=>'/foo'};
+                rate_limit_checked=>0, server_name=>shift,
+                cgiroot=>'http://foo/bar'};
     bless($self, 'Dummy::Frontend');
     return $self;
 }
@@ -451,6 +451,11 @@ sub test_display_page {
                "<title>$title<\/title>.*<body.*Link 1.*Project menu for.*" .
                "test_${page_type}_page.*<\/html>/s",
          "$sub generates valid complete HTML page");
+    if ($page_type eq "index") {
+        like($out, "/<head>.*<link rel=\"canonical\" " .
+                   "href=\"https://foo/bar/\" />.*</head>/s",
+             "$sub adds canonical link");
+    }
 
     $self = make_test_frontend("access${page_type}");
     $out = stdout_from { $self->$sub() };
