@@ -84,7 +84,8 @@ BEGIN {
 
 # Test start_html method
 {
-    my $self = {CGI=>new CGI, page_title=>'test page title'};
+    my $self = {CGI=>new CGI, page_title=>'test page title',
+                canonical_url=>'/foo'};
     bless($self, 'saliweb::frontend');
     like($self->start_html(),
          '/<!DOCTYPE html.*<head>.*<title>test page title<\/title>' .
@@ -101,7 +102,8 @@ BEGIN {
 
 # Test start_html method with modified header
 {
-    my $self = {CGI=>new CGI, page_title=>'test page title'};
+    my $self = {CGI=>new CGI, page_title=>'test page title',
+                canonical_url=>'/foo'};
     bless($self, 'Dummy::StartHTMLFrontend');
     like($self->start_html(),
          '/type="text\/css" href="\/saliweb\/css\/server\.css".*' .
@@ -427,7 +429,8 @@ END
 
 sub make_test_frontend {
     my $self = {CGI=>new CGI, page_title=>'test title',
-                rate_limit_checked=>0, server_name=>shift, cgiroot=>'/foo'};
+                rate_limit_checked=>0, server_name=>shift, cgiroot=>'/foo',
+                canonical_url=>'/foo'};
     bless($self, 'Dummy::Frontend');
     return $self;
 }
@@ -562,7 +565,7 @@ sub test_display_page {
 
 # Test format_user_error method
 {
-    my $self = {CGI=>new CGI};
+    my $self = {CGI=>new CGI, canonical_url=>'/foo'};
     bless($self, 'saliweb::frontend');
     my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
     like($self->format_user_error($exc),
@@ -574,7 +577,7 @@ sub test_display_page {
 
 # Test handle_user_error method
 {
-    my $self = {CGI=>new CGI, page_title=>'testtitle'};
+    my $self = {CGI=>new CGI, page_title=>'testtitle', canonical_url=>'/foo'};
     bless($self, 'saliweb::frontend');
     my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
     my $out = stdout_from { $self->handle_user_error($exc) };
