@@ -741,10 +741,11 @@ sub get_start_html_parameters {
     ga('create', '$google_ua', 'ucsf.edu');
     ga('send', 'pageview'); ";
  
+    my $canon = $self->{canonical_url};
+    $canon =~ s/^https:/http:/;
     return (-title => $self->{page_title},
             -style => {-src=>[$style]},
-            -head => $q->Link({-rel=>'canonical',
-                               -href=>$self->{canonical_url}}),
+            -head => $q->Link({-rel=>'canonical', -href=>$canon}),
             -script=>[{-language => 'JavaScript',
                        -src      => "/saliweb/js/salilab.js"},
                       {-language => 'JavaScript',
