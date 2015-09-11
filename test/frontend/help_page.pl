@@ -62,7 +62,8 @@ END {
         my $q = new CGI;
         $q->param('type', shift);
         $q->param('style', shift);
-        my $cls = {CGI=>$q, server_name=>'test server'};
+        my $cls = {CGI=>$q, server_name=>'test server',
+                   cgiroot=>'/foo'};
         bless($cls, 'saliweb::frontend');
         return $cls;
     }

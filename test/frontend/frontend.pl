@@ -416,7 +416,8 @@ END
          'server\.cgi\?logout=true">Logout<\/a>/s',
          '       with logged-in user');
 
-    $self = {CGI=>new CGI, page_title=>'header test', server_name=>'foo'};
+    $self = {CGI=>new CGI, page_title=>'header test', server_name=>'foo',
+             cgiroot=>'/foo'};
     bless($self, 'Dummy::Frontend');
     like($self->get_header,
          '/header test.*Link 1.*Link 2 for foo service.*' .
@@ -426,7 +427,7 @@ END
 
 sub make_test_frontend {
     my $self = {CGI=>new CGI, page_title=>'test title',
-                rate_limit_checked=>0, server_name=>shift};
+                rate_limit_checked=>0, server_name=>shift, cgiroot=>'/foo'};
     bless($self, 'Dummy::Frontend');
     return $self;
 }
@@ -728,7 +729,7 @@ sub make_test_pdb {
 {
     my $tmpfile = "/tmp/unittest-server-service.state";
     my $self = {server_name=>'unittest-server', rate_limit_period=>30,
-                rate_limit=>10};
+                rate_limit=>10, cgiroot=>'/foo'};
     bless($self, 'saliweb::frontend');
     if (-f $tmpfile) {
         unlink $tmpfile;
@@ -759,7 +760,7 @@ sub make_test_pdb {
 {
     my $tmpfile = "/tmp/unittest-server-service.state";
     my $self = {server_name=>'unittest-server', rate_limit_period=>30,
-                rate_limit=>10};
+                rate_limit=>10, cgiroot=>'/foo'};
     bless($self, 'saliweb::frontend');
     if (-f $tmpfile) {
         unlink $tmpfile;
@@ -818,7 +819,7 @@ sub make_test_pdb {
 {
     my $tmpfile = "/tmp/unittest2-server-service.state";
     my $self = {server_name=>'unittest2-server', rate_limit_period=>30,
-                rate_limit=>10};
+                rate_limit=>10, cgiroot=>'/foo'};
     bless($self, 'saliweb::frontend');
     if (-f $tmpfile) {
         unlink $tmpfile;

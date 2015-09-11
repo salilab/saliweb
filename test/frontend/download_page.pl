@@ -17,13 +17,15 @@ BEGIN {
 
 # Test display_download_page
 {
-    my $cls = {CGI=>new CGI, page_title=>'test title',
+    my $cls = {CGI=>new CGI, page_title=>'test title', cgiroot=>'/foo',
                rate_limit_checked=>0, server_name=>'dummy server'};
     bless($cls, 'Dummy::Frontend');
     my $out = stdout_from { $cls->display_download_page() };
     like($out,
          "/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*" .
-         "<title>dummy server Download</title>.*</head>.*" .
+         "<title>dummy server Download</title>.*" .
+         "<link rel=\"canonical\" href=\"\/foo\/download\.cgi\".*" .
+         "</head>.*" .
          '<body>.*' .
          "<div id=\"fullpart\">test_download_page</div>.*" .
          "</body>.*</html>/s", 'check download page');
