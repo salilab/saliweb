@@ -37,7 +37,10 @@ service_name
 
 urltop
     The URL under which the service's web pages live. This is used to construct
-    URLs containing job results, for example.
+    URLs containing job results, for example. This is the 'canonical' URL,
+    which is usually something like http://salilab.org/modfoo/, as opposed
+    to the 'real' URL, something like http://modbase.compbio.ucsf.edu/modfoo/.
+    The former is preferred as it gives cleaner results in search engines.
 
 google_ua
     The Google Analytics UA for tracking traffic. Please ask a sysadmin to 
