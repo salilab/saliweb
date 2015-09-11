@@ -39,7 +39,7 @@ Every service needs some basic setup:
   page if it is not yet ready for a full release.
 
 * It is usually a good idea to put the implementation files for a web service
-  in an SVN repository.
+  on GitHub, or in an SVN repository.
 
 .. _quick_start:
 
@@ -181,8 +181,8 @@ etc. This directory will also contain the supplementary configuration files
 that contain the usernames and passwords that the backend and frontend need
 to access the MySQL database. Since these files contain sensitive information
 (passwords), they should **not** be group- or world-readable
-(`chmod 0600 backend.conf`), and if using SVN, **do not** put these database
-configuration files into the repository. 
+(`chmod 0600 backend.conf`), and if using SVN or git, **do not** put
+these database configuration files into the repository.
 
 .. _deploy_build:
 
