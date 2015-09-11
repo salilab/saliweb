@@ -798,9 +798,9 @@ sub get_lab_navigation_links {
         $q->a({-href=>'//salilab.org/modweb/'}, "ModWeb"),
         $q->a({-href=>'//salilab.org/modbase/'}, "ModBase"),
         $q->a({-href=>'//salilab.org/modeval/'}, "ModEval"),
-        $q->a({-href=>'//salilab.org/pcss/'}, "PCSS"),
+        $q->a({-href=>'//salilab.org/peptide/'}, "PCSS"),
         $q->a({-href=>'//salilab.org/foxs/'}, "FoXS"),
-        $q->a({-href=>'//salilab.org/imp/'}, "IMP"),
+        $q->a({-href=>'//integrativemodeling.org/'}, "IMP"),
         $q->a({-href=>'//salilab.org/multifit/'}, "MultiFit"),
         $q->a({-href=>'//salilab.org/modpipe/'}, "ModPipe")
     ];
