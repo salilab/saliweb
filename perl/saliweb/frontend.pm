@@ -403,7 +403,7 @@ sub new {
         $self->{http_status} = undef;
         $self->{'htmlroot'} = $urltop . "/html/";
         $self->{'cgiroot'} = $urltop;
-        $self->{canonical_url} = $self->index_url;
+        $self->{canonical_url} = undef;
         my ($dbh, $dbh_main) = connect_to_database($config);
         $self->{'dbh'} = $dbh;
         $self->{'dbh_main'} = $dbh_main;
@@ -742,16 +742,18 @@ sub get_start_html_parameters {
     ga('create', '$google_ua', 'ucsf.edu');
     ga('send', 'pageview'); ";
  
+    my %param = (-title => $self->{page_title},
+                 -style => {-src=>[$style]},
+                 -script=>[{-language => 'JavaScript',
+                            -src      => "/saliweb/js/salilab.js"},
+                           {-language => 'JavaScript',
+                            -code     => $JS_Google_Analytics}]);
     my $canon = $self->{canonical_url};
-    $canon =~ s/^https:/http:/;
-    return (-title => $self->{page_title},
-            -style => {-src=>[$style]},
-            -head => $q->Link({-rel=>'canonical', -href=>$canon}),
-            -script=>[{-language => 'JavaScript',
-                       -src      => "/saliweb/js/salilab.js"},
-                      {-language => 'JavaScript',
-                       -code     => $JS_Google_Analytics}]);
-
+    if (defined $canon) {
+        $canon =~ s/^https:/http:/;
+        $param{-head} = $q->Link({-rel=>'canonical', -href=>$canon});
+    }
+    return %param;
 }
 
 sub end_html {
@@ -1320,7 +1322,6 @@ sub display_submit_page {
     try {
         my $content;
         $self->set_page_title("Submission");
-        $self->{canonical_url} = $self->submit_url;
         try {
             $self->check_page_access('submit');
             $self->{submitted_jobs} = [];
@@ -1364,7 +1365,6 @@ sub display_download_page {
     my $self = shift;
     try {
         $self->set_page_title("Download");
-        $self->{canonical_url} = $self->download_url;
         $self->check_page_access('download');
         $self->_display_web_page($self->get_download_page());
     } catch saliweb::frontend::UserError with {
@@ -1382,7 +1382,6 @@ sub display_help_page {
         my $display_type = $q->param('type') || 'help';
         my $style = $q->param('style') || '';
         $self->set_page_title("Help");
-        $self->{canonical_url} = $self->cgiroot . "/help.cgi";
         $self->check_page_access('help');
         my $content = $self->get_help_page($display_type);
         if ($style eq "helplink") {
@@ -1404,7 +1403,6 @@ sub display_results_page {
     my $self = shift;
     try {
         $self->set_page_title("Results");
-        $self->{canonical_url} = $self->results_url;
         $self->check_page_access('results');
         $self->_internal_display_results_page();
     } catch saliweb::frontend::UserError with {
