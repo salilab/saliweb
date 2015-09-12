@@ -451,11 +451,6 @@ sub test_display_page {
                "<title>$title<\/title>.*<body.*Link 1.*Project menu for.*" .
                "test_${page_type}_page.*<\/html>/s",
          "$sub generates valid complete HTML page");
-    if ($page_type eq "index") {
-        like($out, "/<head>.*<link rel=\"canonical\" " .
-                   "href=\"https://foo/bar/\" />.*</head>/s",
-             "$sub adds canonical link");
-    }
 
     $self = make_test_frontend("access${page_type}");
     $out = stdout_from { $self->$sub() };
