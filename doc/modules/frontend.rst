@@ -184,7 +184,8 @@ the web frontend.
       is one of 'index', 'submit', 'queue', 'results', 'help', 'download'.
       It should simply return if access is allowed, or throw an
       :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
-      permitted. By default, it simply returns, allowing all access.
+      permitted. By default, it simply returns, allowing all access, for all
+      pages except the submit page, from which certain IPs are blocked.
 
    .. method:: download_results_file(job, file)
 

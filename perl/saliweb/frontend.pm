@@ -992,6 +992,11 @@ sub get_pdb_chains {
 
 sub check_page_access {
     my ($self, $page_name) = @_;
+    if ($page_name eq "submit"
+        && $self->cgi->remote_addr() eq '64.54.136.144') {
+        throw saliweb::frontend::AccessDeniedError(
+                    "Submission of jobs by this IP address is not allowed");
+    }
 }
 
 sub format_user_error {
