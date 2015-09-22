@@ -1002,7 +1002,7 @@ sub check_page_access {
 sub format_user_error {
     my ($self, $exc) = @_;
     my $q = $self->{'CGI'};
-    my $msg = $exc->text;
+    my $msg = $q->escapeHTML($exc->text);
     my $ret = $q->h2("Invalid input") .
               $q->p("&nbsp;") .
               $q->p($q->b("An error occurred during your request:")) .

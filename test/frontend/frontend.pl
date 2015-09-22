@@ -567,10 +567,12 @@ sub test_display_page {
 {
     my $self = {CGI=>new CGI, canonical_url=>'/foo'};
     bless($self, 'saliweb::frontend');
-    my $exc = new saliweb::frontend::InputValidationError("my inpvalid error");
+    my $exc = new saliweb::frontend::InputValidationError(
+                    "my inpvalid <script>error</script>");
     like($self->format_user_error($exc),
          '/^<h2>.*Invalid input.*<\/h2>.*<b>.*' .
-         'An error occurred during your request:.*<\/b>.*my inpvalid error.*' .
+         'An error occurred during your request:.*<\/b>.*' .
+         'my inpvalid &lt;script&gt;error&lt;\/script&gt;.*' .
          'browser.*BACK/s',
          'format_user_error');
 }
