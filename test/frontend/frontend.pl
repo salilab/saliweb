@@ -410,10 +410,10 @@ END
          'header with anonymous user');
 
     $self->{'user_info'} = 'foo';
-    $self->{'user_name'} = 'testuser';
+    $self->{'user_name'} = '<foo>testuser';
     like($self->get_header,
          '/<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
-         'server\.cgi">Current User:testuser<\/a>.*' .
+         'server\.cgi">Current User: &lt;foo&gt;testuser<\/a>.*' .
          '<a href="https:\/\/modbase\.compbio\.ucsf\.edu\/scgi\/' .
          'server\.cgi\?logout=true">Logout<\/a>/s',
          '       with logged-in user');

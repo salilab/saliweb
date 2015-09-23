@@ -832,7 +832,7 @@ sub get_header {
                     "Logout");
         unshift @$navigation_links,
                 $q->a({-href=>"https://$web_server/scgi/server.cgi"},
-                      "Current User:$user_name");
+                      "Current User: " . $q->escapeHTML($user_name));
     } else {
         unshift @$navigation_links,
                 $q->a({-href=>"https://$web_server/scgi/server.cgi"},
