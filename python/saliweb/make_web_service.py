@@ -69,7 +69,8 @@ class GitSourceControl(object):
         self._run_git_command(['add'] + files, cwd=self.topdir)
         self._run_git_command(['commit', '-m', 'Initial setup'],
                               cwd=self.topdir)
-        self._run_git_command(['push'], cwd=self.topdir)
+        self._run_git_command(['push', '-u', 'origin', 'master'],
+                              cwd=self.topdir)
 
 
 class MakeWebService(object):
