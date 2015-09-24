@@ -6,6 +6,8 @@ import shutil
 import subprocess
 import saliweb.make_web_service
 from saliweb.make_web_service import MakeWebService, get_options
+from saliweb.make_web_service import SVNSourceControl, _run_command
+from saliweb.make_web_service import GitSourceControl
 import saliweb.backend
 import StringIO
 
@@ -39,7 +41,7 @@ class MakeWebServiceTests(unittest.TestCase):
 
     def test_init(self):
         """Check creation of MakeWebService object"""
-        m = MakeWebService('root', 'Test Service')
+        m = MakeWebService('root', 'Test Service', git=False)
         self.assertEqual(m.service_name, 'Test Service')
         self.assertEqual(m.short_name, 'root')
         self.assertEqual(m.user, 'root')
@@ -47,7 +49,7 @@ class MakeWebServiceTests(unittest.TestCase):
 
     def test_make_password(self):
         """Check MakeWebService._make_password method"""
-        m = MakeWebService('root', 'x')
+        m = MakeWebService('root', 'x', git=False)
         for pwlen in (10, 20):
             pwd = m._make_password(pwlen)
             self.assertEqual(len(pwd), pwlen)
@@ -60,28 +62,65 @@ class MakeWebServiceTests(unittest.TestCase):
         for (short_name, typ, expected) in (
               ["short", "veryverylongtype", "short_veryverylo"],
               ["veryverylongname", "back", "veryverylongna_b"] ):
-            m = Dummy(short_name, "service name")
+            m = Dummy(short_name, "service name", git=False)
             name = m._make_database_name(typ)
             self.assertEqual(name, expected)
 
-    def test_run_svn_command(self):
-        """Check MakeWebService._run_svn_command"""
-        m = MakeWebService('root', 'Test Service')
-        m._run_svn_command(['help'], cwd='/')
-        self.assertRaises(OSError, m._run_svn_command, ['garbage'])
+    def test_run_command(self):
+        """Check _run_command"""
+        _run_command('svn', ['help'], cwd='/')
+        self.assertRaises(OSError, _run_command, 'svn', ['garbage'], '/')
 
     def test_make(self):
-        """Check MakeWebService.make method"""
+        """Check MakeWebService.make method, using SVN"""
+        class DummySourceControl(SVNSourceControl):
+            def _run_svn_command(self, cmd, cwd=None):
+                self.cmds.append(cmd)
         class Dummy(MakeWebService):
             def _get_install_dir(self):
                 return "dummy"
-            def _run_svn_command(self, cmd, cwd=None):
-                self.cmds.append(cmd)
         d = RunInTempDir()
-        m = Dummy('modfoo', 'ModFoo')
+        m = Dummy('modfoo', 'ModFoo', git=False)
+        msc = DummySourceControl('modfoo', 'modfoo')
+        m.source_control = msc
         m.user = 'root' # so that getpwnam works
         os.mkdir(m.topdir)
-        m.cmds = []
+        msc.cmds = []
+        oldstderr = sys.stderr
+        try:
+            sys.stderr = StringIO.StringIO()
+            m.make()
+        finally:
+            sys.stderr = oldstderr
+        # check config
+        config = saliweb.backend.Config('modfoo/conf/live.conf')
+        for end in ('front', 'back'):
+            config._read_db_auth(end)
+
+        # Check for generated files
+        for f in ('conf/live.conf', 'conf/frontend.conf', 'conf/backend.conf',
+                  'lib/modfoo.pm', 'python/modfoo/__init__.py', 'txt/help.txt',
+                  'txt/contact.txt', 'SConstruct', 'lib/SConscript',
+                  'python/modfoo/SConscript', 'txt/SConscript',
+                  'test/SConscript', 'test/frontend/SConscript',
+                  'test/backend/SConscript'):
+            os.unlink('modfoo/' + f)
+
+    def test_make_git(self):
+        """Check MakeWebService.make method, using git"""
+        class DummySourceControl(GitSourceControl):
+            def _run_git_command(self, cmd, cwd=None):
+                self.cmds.append(cmd)
+        class Dummy(MakeWebService):
+            def _get_install_dir(self):
+                return "dummy"
+        d = RunInTempDir()
+        m = Dummy('modfoo', 'ModFoo', git=True)
+        msc = DummySourceControl('modfoo', 'modfoo')
+        m.source_control = msc
+        m.user = 'root' # so that getpwnam works
+        os.mkdir(m.topdir)
+        msc.cmds = []
         oldstderr = sys.stderr
         try:
             sys.stderr = StringIO.StringIO()
@@ -114,19 +153,23 @@ class MakeWebServiceTests(unittest.TestCase):
             finally:
                 sys.stderr = oldstderr
                 sys.argv = old
-        for bad in [[], ['short', 'long', 'extra'],
-                    ['UPPERCASESHORT', 'long'], ['short with spaces', 'long']]:
+        for bad in [[], ['--svn', 'short', 'long', 'extra'],
+                    ['--svn', 'UPPERCASESHORT', 'long'],
+                    ['--svn', 'short with spaces', 'long'],
+                    ['short', 'long'],
+                    ['--svn', '--git', 'short', 'long']]:
             self.assertRaises(SystemExit, run_get_options, bad)
-        self.assertEqual(run_get_options(['short', 'long']), ['short', 'long'])
+        self.assertEqual(run_get_options(['--git', 'short', 'long']),
+                                         (['short', 'long'], True))
 
     def test_main(self):
         """Test make_web_service main()"""
         events = []
         def dummy_get_options():
             events.append('get_options')
-            return ['testshort', 'testlong']
+            return (['testshort', 'testlong'], False)
         class DummyMakeWebService(object):
-            def __init__(self, short, servicename):
+            def __init__(self, short, servicename, git):
                 events.append('MakeWebService %s %s' % (servicename, short))
             def make(self):
                 events.append('make')

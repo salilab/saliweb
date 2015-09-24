@@ -63,7 +63,7 @@ class GitSourceControl(object):
             return [os.path.join(subdir, f) for f in files]
         files = list_dir('test/frontend') + list_dir('test/backend') \
                 + list_dir('txt') \
-                + list_dir(os.path.join('python', self.shortname)) \
+                + list_dir(os.path.join('python', self.short_name)) \
                 + list_dir('lib') + ['SConstruct', '.gitignore',
                                      'conf/.gitignore', 'conf/live.conf']
         self._run_git_command(['add'] + files, cwd=self.topdir)
