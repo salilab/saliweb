@@ -77,9 +77,10 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
     "short name" and the human readable name. (The sysadmin will run the
     `make_web_service` script.)
 
- #. Bob can then get the web service from Subversion by running::
+ #. Bob can then get the web service from git or Subversion by running::
 
-     $ svn co https://svn.salilab.org/pepdock/trunk pepdock
+     $ git clone git@github.com:salilab/pepdock.git [git]
+     $ svn co https://svn.salilab.org/pepdock/trunk pepdock [Subversion]
      $ cd pepdock/conf
      $ sudo -u pepdock cat ~pepdock/service/conf/backend.conf > backend.conf
      $ sudo -u pepdock cat ~pepdock/service/conf/frontend.conf > frontend.conf
@@ -108,7 +109,8 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
  #. Whenever Bob makes changes to the service in his `pepdock` directory, he
     simply runs `scons test` to make sure the changes didn't break anything,
     then `scons` to update the live copy of the service, then `svn up` and
-    `svn ci` to store his changes in the Subversion repository.
+    `svn ci` to store his changes in the Subversion repository (or `git commit`
+    and `git push` if using git).
     (The backend will also need to restarted when he does this, but `scons`
     will show a suitable command line to achieve this.)
 
