@@ -6,16 +6,84 @@ import sys
 import pwd
 import subprocess
 
-class MakeWebService(object):
+def _run_command(prefix, cmd, cwd):
+    print prefix + " " + " ".join(cmd)
+    ret = subprocess.call([prefix] + cmd, cwd=cwd)
+    if ret != 0:
+        raise OSError("subprocess failed with code %d" % ret)
 
-    def __init__(self, short_name, service_name):
+class SVNSourceControl(object):
+    def __init__(self, short_name, topdir):
         self.short_name = short_name
+        self.topdir = topdir
         self.svn_url = 'https://svn.salilab.org/' + short_name
         self.svn_trunk_url = self.svn_url + '/trunk'
-        self.service_name = service_name
+
+    def _run_svn_command(self, cmd, cwd=None):
+        _run_command('svn', cmd, cwd)
+
+    def setup(self):
+        self._run_svn_command(['mkdir', self.svn_trunk_url,
+                               '-m', 'Make trunk directory'])
+        self._run_svn_command(['co', self.svn_trunk_url, self.short_name])
+
+    def commit(self):
+        self._run_svn_command(['add', 'test', 'txt', 'SConstruct', 'python',
+                               'lib'], cwd=self.topdir)
+        self._run_svn_command(['add', '-N', 'conf'], cwd=self.topdir)
+        self._run_svn_command(['add', 'conf/live.conf'], cwd=self.topdir)
+        self._run_svn_command(['propset', 'svn:ignore', '.scons', '.'],
+                              cwd=self.topdir)
+        self._run_svn_command(['propset', 'svn:ignore',
+                               'frontend.conf\nbackend.conf', 'conf'],
+                              cwd=self.topdir)
+        self._run_svn_command(['ci', '-m', 'Initial setup'], cwd=self.topdir)
+
+
+class GitSourceControl(object):
+    def __init__(self, short_name, topdir):
+        self.short_name = short_name
+        self.topdir = topdir
+        self.url = 'git@github.com:salilab/%s.git' % short_name
+
+    def _run_git_command(self, cmd, cwd=None):
+        _run_command('git', cmd, cwd)
+
+    def setup(self):
+        self._run_git_command(['clone', self.url])
+
+    def commit(self):
+        # Ignore files
+        with open(os.path.join(self.topdir, '.gitignore'), 'w') as fh:
+            fh.write(".scons\n*.pyc\n")
+        with open(os.path.join(self.topdir, 'conf', '.gitignore'), 'w') as fh:
+            fh.write("frontend.conf\nbackend.conf\n")
+        def list_dir(subdir):
+            files = os.listdir(os.path.join(self.topdir, subdir))
+            return [os.path.join(subdir, f) for f in files]
+        files = list_dir('test/frontend') + list_dir('test/backend') \
+                + list_dir('txt') \
+                + list_dir(os.path.join('python', self.shortname)) \
+                + list_dir('lib') + ['SConstruct', '.gitignore',
+                                     'conf/.gitignore', 'conf/live.conf']
+        self._run_git_command(['add'] + files, cwd=self.topdir)
+        self._run_git_command(['commit', '-m', 'Initial setup'],
+                              cwd=self.topdir)
+        self._run_git_command(['push'], cwd=self.topdir)
+
+
+class MakeWebService(object):
+
+    def __init__(self, short_name, service_name, git):
+        self.short_name = short_name
         self.topdir = self.short_name
         self.user = self.short_name
         self.db = self.short_name
+        if git:
+            self.source_control = GitSourceControl(short_name, self.topdir)
+        else:
+            self.source_control = SVNSourceControl(short_name, self.topdir)
+        self.service_name = service_name
         self.db_frontend_user = self._make_database_name("front")
         self.db_backend_user = self._make_database_name("back")
         self.install = self._get_install_dir()
@@ -38,7 +106,7 @@ class MakeWebService(object):
                 prefix = prefix[:-1]
 
     def make(self):
-        self._set_up_svn()
+        self.source_control.setup()
         self._make_directories()
         self._make_sconstruct()
         self._make_sconscripts()
@@ -46,7 +114,7 @@ class MakeWebService(object):
         self._make_frontend()
         self._make_backend()
         self._make_txt()
-        self._commit_svn()
+        self.source_control.commit()
         self._print_completion()
 
     def _print_completion(self):
@@ -69,29 +137,6 @@ to run cluster jobs.
 /usr/bin/sudo -u %(user)s scons
 until it works.
 """ % {'user': self.user, 'topdir': self.topdir, 'uid': uid}
-
-    def _run_svn_command(self, cmd, cwd=None):
-        print "svn " + " ".join(cmd)
-        ret = subprocess.call(['svn'] + cmd, cwd=cwd)
-        if ret != 0:
-            raise OSError("subprocess failed with code %d" % ret)
-
-    def _set_up_svn(self):
-        self._run_svn_command(['mkdir', self.svn_trunk_url,
-                               '-m', 'Make trunk directory'])
-        self._run_svn_command(['co', self.svn_trunk_url, self.short_name])
-
-    def _commit_svn(self):
-        self._run_svn_command(['add', 'test', 'txt', 'SConstruct', 'python',
-                               'lib'], cwd=self.topdir)
-        self._run_svn_command(['add', '-N', 'conf'], cwd=self.topdir)
-        self._run_svn_command(['add', 'conf/live.conf'], cwd=self.topdir)
-        self._run_svn_command(['propset', 'svn:ignore', '.scons', '.'],
-                              cwd=self.topdir)
-        self._run_svn_command(['propset', 'svn:ignore',
-                               'frontend.conf\nbackend.conf', 'conf'],
-                              cwd=self.topdir)
-        self._run_svn_command(['ci', '-m', 'Initial setup'], cwd=self.topdir)
 
     def _make_password(self, length):
         return "".join(random.choice(string.letters + string.digits) \
@@ -287,7 +332,7 @@ def get_web_service(config_file):
 def get_options():
     parser = OptionParser()
     parser.set_usage("""
-%prog [-h] SHORT_NAME SERVICE_NAME
+%prog [-h] [--git|--svn] SHORT_NAME SERVICE_NAME
 
 Set up a directory structure for a new web service called "SERVICE_NAME".
 "SERVICE_NAME" should be the human-readable name of the web service, for
@@ -296,27 +341,37 @@ example "ModFoo" or "Peptide Docking". It may contain spaces and mixed case.
 "SHORT_NAME" should be a short name containing only lowercase letters and
 no spaces. This name is used to name the directory containing the files,
 the generated Python and Perl modules, system and MySQL users etc.
-An SVN repository with the same name is assumed to already exist, but to be
-empty (e.g. if SHORT_NAME is 'modfoo' the repository should exist at
-https://svn.salilab.org/modfoo). A working directory with the same name is
-set up, and the files checked in to the trunk of the SVN repository.
+An SVN (--svn option) or git (--git) repository with the same name is
+assumed to already exist, but to be empty (e.g. if SHORT_NAME is 'modfoo'
+the repository should exist at https://svn.salilab.org/modfoo or
+https://github.com/salilab/modfoo). A working directory with the same name is
+set up, and the files checked in to the trunk of the SVN or git repository.
 Users can then work on the service by checking out
-the trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo").
+the SVN trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo")
+or cloning the git repository
+(e.g. "git clone https://github.com/salilab/modfoo.git").
 
 e.g.
-%prog pepdock "Peptide Docking"
+%prog --svn pepdock "Peptide Docking"
 """)
+    parser.add_option("--svn", action="store_true", dest="svn",
+                      default=False, help="Use an SVN repository")
+    parser.add_option("--git", action="store_true", dest="git",
+                      default=False, help="Use a git repository")
+
     opts, args = parser.parse_args()
     if len(args) != 2:
         parser.error("Wrong number of arguments given")
+    if not opts.svn ^ opts.git:
+        parser.error("Please specify one of --git or --svn")
     if ' ' in args[0] or args[0].lower() != args[0]:
         parser.error("SHORT_NAME must be all lowercase and contain no spaces")
-    return args
+    return args, opts.git
 
 
 def main():
-    args = get_options()
-    m = MakeWebService(*args)
+    args, git = get_options()
+    m = MakeWebService(*args, git=git)
     m.make()
 
 if __name__ == '__main__':
