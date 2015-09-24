@@ -46,7 +46,7 @@ Every service needs some basic setup:
 Quick start
 ===========
 
-The easiest way to set up a new web service is to simply run the
+The easiest way to set up a new web service is to have a sysadmin run the
 ``make_web_service`` script on the `modbase` machine. Given the name of the
 web service it will set up all the necessary
 files used for a basic web service. Run ``make_web_service`` with no
