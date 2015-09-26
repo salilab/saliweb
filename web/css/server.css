@@ -41,6 +41,7 @@ b,strong {
    color:               #003366;
 }
 p, br,  ul, ol, li, dl, dd, dt, center, blockquote {
+   max-height: 999999px;
    font-size:           13px;
    font-family:         "Arial", "Helvetica", Sans-serif;
    color:               #003366;
@@ -189,6 +190,7 @@ h5 {
 }
 
 #navigation_lab {
+	max-height: 999999px;
         position:relative;
         top: 0px;
         background-color: #596E98;
