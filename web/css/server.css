@@ -397,4 +397,8 @@ h5 {
   #container {
     width: 100%;
   }
+
+  #fullpart {
+    text-align: left;
+  }
 }
