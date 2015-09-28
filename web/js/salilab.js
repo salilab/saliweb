@@ -361,6 +361,8 @@ function convert_utc_dates_to_local() {
   var nrows = e.rows.length;
   var first = true;
   var d = new Date();
+  var style = window.getComputedStyle(document.documentElement, null);
+  var max_width = style.getPropertyValue("max-width");
   for (var i = 0; i < nrows; i++) {
     if (e.rows[i].cells.length == 3) {
       if (first) {
@@ -374,7 +376,11 @@ function convert_utc_dates_to_local() {
         d.setUTCHours(inner.substr(11, 2));
         d.setUTCMinutes(inner.substr(14, 2));
         d.setUTCSeconds(inner.substr(17, 2));
-        e.rows[i].cells[1].innerHTML = d.toString();
+        if (max_width == "970px") {
+          e.rows[i].cells[1].innerHTML = d.toDateString();
+        } else {
+          e.rows[i].cells[1].innerHTML = d.toString();
+        }
       }
     }
   }

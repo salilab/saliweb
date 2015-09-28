@@ -1360,6 +1360,7 @@ sub display_submit_page {
 sub display_queue_page {
     my $self = shift;
     try {
+        $self->{responsive} = 1;
         $self->set_page_title("Queue");
         $self->{canonical_url} = $self->queue_url;
         $self->check_page_access('queue');

@@ -376,7 +376,11 @@ h5 {
 	font-style: italic;
 }
 
-@media only screen and (max-device-width: 480px) {
+@media only screen and (max-device-width: 970px) {
+  html {
+    max-width: 970px;
+  }
+
   #left {
     display: none
   }
