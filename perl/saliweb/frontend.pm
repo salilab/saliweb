@@ -389,6 +389,7 @@ sub new {
     $self->{version} = $version;
     $self->{rate_limit_period} = 3600;
     $self->{rate_limit} = 10;
+    $self->{responsive} = 0;
     try {
         $self->{'CGI'} = $self->_setup_cgi();
         $self->{page_title} = $server_name;
@@ -748,6 +749,9 @@ sub get_start_html_parameters {
                             -src      => "/saliweb/js/salilab.js"},
                            {-language => 'JavaScript',
                             -code     => $JS_Google_Analytics}]);
+    if ($self->{responsive}) {
+        $param{-meta} = {'viewport' => 'width=device-width, initial-scale=1'};
+    }
     my $canon = $self->{canonical_url};
 #   if (defined $canon) {
         # Prefer https for canonical URLs
@@ -1383,6 +1387,7 @@ sub display_download_page {
 sub display_help_page {
     my $self = shift;
     my $google_ua = shift;
+    $self->{responsive} = 1;
     try {
         my $q = $self->{'CGI'};
         my $display_type = $q->param('type') || 'help';
