@@ -105,7 +105,9 @@ the web frontend.
       Return an HTML fragment which will be displayed in a project menu,
       used by :meth:`~saliwebfrontend.get_header`. This can contain general
       information about the service, links, etc., and should be overridden
-      for each service.
+      for each service. Usually, it is displayed on the left side of the web
+      page. On very narrow screens (e.g. smart phones in portrait mode) it is
+      omitted.
 
    .. method:: display_index_page()
                display_submit_page()
