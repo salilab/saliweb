@@ -124,7 +124,9 @@ the web frontend.
       :meth:`~saliwebfrontend.display_index_page` calls
       :meth:`~saliwebfrontend.get_index_page`.
       Each method also calls :meth:`~saliwebfrontend.check_page_access` to
-      check whether access to the page is permitted.
+      check whether access to the page is permitted, and
+      :meth:`~saliwebfrontend.get_page_is_responsive` to determine whether
+      the page is responsive (resizeable).
 
    .. method:: get_index_page()
 
@@ -188,6 +190,20 @@ the web frontend.
       :exc:`~saliweb::frontend.AccessDeniedError` exception if access is not
       permitted. By default, it simply returns, allowing all access, for all
       pages except the submit page, from which certain IPs are blocked.
+
+   .. method:: get_page_is_responsive(page_type)
+
+      Returns true iff the given page is 'responsive', that is it can be
+      safely resized to be much larger or smaller than the default size.
+      Pages that are *not* responsive will be displayed at the default size,
+      which doesn't look great on most mobile devices for example (the user
+      will typically have to resize and/or pan the screen, or read very small
+      text). A responsive page will be resized to fit the smartphone screen,
+      which could also look bad if page elements aren't designed to scale.
+
+      *page_type* is as for :meth:`~saliweb::frontend.check_page_access`. By
+      default, the queue and help pages are marked as responsive. It can be
+      overridden if other pages (such as the index page) are also resizable.
 
    .. method:: download_results_file(job, file)
 
