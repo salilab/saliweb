@@ -1003,6 +1003,11 @@ sub check_page_access {
     }
 }
 
+sub get_page_is_responsive {
+    my ($self, $page_name) = @_;
+    return $page_name eq 'queue' || $page_name eq 'help';
+}
+
 sub format_user_error {
     my ($self, $exc) = @_;
     my $q = $self->{'CGI'};
@@ -1296,6 +1301,7 @@ sub _display_web_page {
 sub display_index_page {
     my $self = shift;
     try {
+        $self->{responsive} = $self->get_page_is_responsive('index');
         $self->check_page_access('index');
         $self->{canonical_url} = $self->index_url;
         $self->_display_web_page($self->get_index_page());
@@ -1331,6 +1337,7 @@ sub display_submit_page {
     $self->{incoming_jobs} = {};
     try {
         my $content;
+        $self->{responsive} = $self->get_page_is_responsive('submit');
         $self->set_page_title("Submission");
         try {
             $self->check_page_access('submit');
@@ -1360,7 +1367,7 @@ sub display_submit_page {
 sub display_queue_page {
     my $self = shift;
     try {
-        $self->{responsive} = 1;
+        $self->{responsive} = $self->get_page_is_responsive('queue');
         $self->set_page_title("Queue");
         $self->{canonical_url} = $self->queue_url;
         $self->check_page_access('queue');
@@ -1375,6 +1382,7 @@ sub display_queue_page {
 sub display_download_page {
     my $self = shift;
     try {
+        $self->{responsive} = $self->get_page_is_responsive('download');
         $self->set_page_title("Download");
         $self->check_page_access('download');
         $self->_display_web_page($self->get_download_page());
@@ -1388,12 +1396,12 @@ sub display_download_page {
 sub display_help_page {
     my $self = shift;
     my $google_ua = shift;
-    $self->{responsive} = 1;
     try {
         my $q = $self->{'CGI'};
         my $display_type = $q->param('type') || 'help';
         my $style = $q->param('style') || '';
         $self->set_page_title("Help");
+        $self->{responsive} = $self->get_page_is_responsive('help');
         $self->check_page_access('help');
         my $content = $self->get_help_page($display_type);
         if ($style eq "helplink") {
@@ -1415,6 +1423,7 @@ sub display_results_page {
     my $self = shift;
     try {
         $self->set_page_title("Results");
+        $self->{responsive} = $self->get_page_is_responsive('results');
         $self->check_page_access('results');
         $self->_internal_display_results_page();
     } catch saliweb::frontend::UserError with {
