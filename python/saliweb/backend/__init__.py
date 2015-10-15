@@ -735,7 +735,7 @@ have done this, delete the state file (%s) to reenable runs.
         job_states = _JobState.get_valid_states()
         job_states.remove('EXPIRED')
         for s in job_states:
-            print "Deleting all jobs in %s state"
+            print "Deleting all jobs in %s state" % s
             for g in glob.glob(os.path.join(self.config.directories[s], '*')):
                 if os.path.isdir(g):
                     shutil.rmtree(g)
