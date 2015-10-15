@@ -40,7 +40,7 @@ END {
 
 # Test get_help_page 
 {
-    my $cls = {};
+    my $cls = {server_name=>'test server'};
     bless($cls, 'saliweb::frontend');
     for my $page_type ('contact', 'news', 'faq', 'help') {
         my $testfile = "../txt/${page_type}.txt";
@@ -71,7 +71,7 @@ END {
     my $out = stdout_from { $cls->display_help_page() };
     like($out,
          "/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*" .
-         "<title>test server Help</title>.*help\.css.*</head>.*" .
+         "<title>test server News</title>.*help\.css.*</head>.*" .
          '<body>.*' .
          "<div id=\"fullpart\">test news text.*" .
          "</body>.*</html>/s", 'check news page, helplink style');
@@ -82,7 +82,7 @@ END {
     $out = stdout_from { $cls->display_help_page() };
     like($out,
          "/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*" .
-         "<title>test server Help</title>.*server\.css.*</head>.*" .
+         "<title>test server Contact</title>.*server\.css.*</head>.*" .
          '<body.*scgi\/server.cgi.*' .
          "<div id=\"fullpart\">test contact text.*" .
          "</body>.*</html>/s", 'check contact page, regular style');

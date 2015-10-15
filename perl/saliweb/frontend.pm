@@ -1165,14 +1165,19 @@ sub get_help_page {
     my ($self, $display_type) = @_;
     my $file;
     if ($display_type eq "contact") {
+        $self->set_page_title("Contact");
         $file = "contact.txt";
     } elsif ($display_type eq "news") {
+        $self->set_page_title("News");
         $file = "news.txt";
     } elsif ($display_type eq "faq") {
+        $self->set_page_title("FAQ");
         $file = "faq.txt";
     } elsif ($display_type eq "links") {
+        $self->set_page_title("Links");
         $file = "links.txt";
     } elsif ($display_type eq "about") {
+        $self->set_page_title("About");
         $file = "about.txt";
     } else {
         $file = "help.txt";
