@@ -26,7 +26,7 @@ This action CANNOT be undone.
 Are you SURE you want to delete ALL jobs?
 """
     sys.stdout.write("Enter exactly YES to proceed: ")
-    reply = sys.stdin.readline()
+    reply = sys.stdin.readline().rstrip('\r\n')
     if reply == 'YES':
         web._delete_all_jobs()
     else:
