@@ -356,3 +356,39 @@ h5 {
 .light {
         color: grey;
 }
+
+@media only screen and (max-device-width: 970px) {
+  html {
+    max-width: 970px;
+  }
+
+  #left {
+    display: none
+  }
+
+  #right {
+    float: left;
+    width: 100%;
+  }
+
+  #bodypart {
+    width: 100%;
+  }
+
+  #address {
+    width: 95%;
+  }
+
+  #container {
+    width: 100%;
+  }
+
+  #fullpart {
+    text-align: left;
+    width: 95%;
+    float: none;
+    right: 0px;
+    top: 0px;
+    padding: 7px 10px 10px 7px;
+  }
+}
