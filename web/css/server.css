@@ -376,6 +376,10 @@ h5 {
 	font-style: italic;
 }
 
+.big {
+  width: 95%;
+}
+
 @media only screen and (max-device-width: 970px) {
   html {
     max-width: 970px;
