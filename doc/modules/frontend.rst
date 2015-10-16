@@ -237,9 +237,10 @@ the web frontend.
       :meth:`~saliwebfrontend.download_results_file`) this
       method is called to get the correct
       `MIME type <http://en.wikipedia.org/wiki/Internet_media_type>`_
-      for the file. By default, it always returns 'text/plain'. You may need
-      to override this, for example, if some of your results files are tar
-      files ('application/x-tar') or PNG images ('image/png').
+      for the file. By default, it handles PNG and SVG images, and for
+      all other files returns 'text/plain'. You may need to override this,
+      for example, if some of your results files are tar
+      files ('application/x-tar') or other types of image.
 
    .. method:: get_submit_parameter_help()
 

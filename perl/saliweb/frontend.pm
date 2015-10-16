@@ -377,6 +377,7 @@ use CGI;
 use Error qw(:try);
 use MIME::Lite;
 use Fcntl ':flock';
+use File::Basename;
 
 our $web_server = 'modbase.compbio.ucsf.edu';
 
@@ -1547,7 +1548,15 @@ sub allow_file_download {
 }
 
 sub get_file_mime_type {
-    return 'text/plain';
+    my ($self, $file) = @_;
+    my ($dir, $name, $ext) = fileparse($file, qr/\.[^.]*/);
+    if ($ext eq '.png') {
+        return 'image/png';
+    } elsif ($ext eq '.svg') {
+        return 'image/svg+xml';
+    } else {
+        return 'text/plain';
+    }
 }
 
 sub _download_real_file {

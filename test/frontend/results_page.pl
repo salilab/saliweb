@@ -34,6 +34,11 @@ BEGIN { use_ok('saliweb::frontend'); }
         is(saliweb::frontend::get_file_mime_type($cls, $file), 'text/plain',
            "check get_file_mime_type: $file");
     }
+    is(saliweb::frontend::get_file_mime_type($cls, "/abspath/foo.png"),
+       'image/png', "check get_file_mime_type: /abspath/foo.png");
+
+    is(saliweb::frontend::get_file_mime_type($cls, "/abspath/foo.svg"),
+       'image/svg+xml', "check get_file_mime_type: /abspath/foo.svg");
 }
 
 # Test download_real_file

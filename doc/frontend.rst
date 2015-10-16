@@ -182,7 +182,7 @@ automatically handle downloads of these files. Note that if the backend
 generates additional files in the job directory which should not be downloaded, the :meth:`~saliwebfrontend.allow_file_download` method can be overridden to
 control which files the end user is allowed to download. Note also that if
 some files are not text files, the :meth:`~saliwebfrontend.get_file_mime_type`
-method should also be overridden to specify the MIME type.
+method may also need to be overridden to specify the MIME type.
 
 The example below assumes the backend generates a log file ``log`` and a
 single output file, ``output.pdb``, and allows the user to download these files
