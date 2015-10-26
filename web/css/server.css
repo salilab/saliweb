@@ -409,4 +409,9 @@ h5 {
   #fullpart {
     text-align: left;
   }
+
+  #fullpart table {
+    width: 100%;
+    table-layout: fixed;
+  }
 }
