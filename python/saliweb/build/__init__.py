@@ -528,8 +528,9 @@ def _check_mysql(env):
                              unix_socket=c.database['socket'],
                              passwd=backend['passwd'])
         cur = db.cursor()
-        cur.execute('DESCRIBE jobs')
-        _check_mysql_schema(env, c, cur)
+        for table in ('jobs', 'dependencies'):
+            cur.execute('DESCRIBE ' + table)
+            _check_mysql_schema(env, c, cur, table)
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
         _check_mysql_grants(env, cur, c.database['db'], backend['user'],
                             'SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, '
@@ -548,6 +549,8 @@ def _check_mysql(env):
                             'SELECT, INSERT (submit_time, contact_email, url, '
                             'passwd, user, directory, %sname)' % hostname,
                             table='jobs')
+        _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
+                            'SELECT,INSERT,UPDATE,DELETE', table='dependencies')
     except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
         # Only complain about possible too-long DB usernames if MySQL
         # itself first complained
@@ -615,19 +618,22 @@ def _generate_admin_mysql_script(database, backend, frontend):
     commands = """CREATE DATABASE %(database)s;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s';
 CREATE TABLE %(database)s.jobs (%(schema)s);
+CREATE TABLE %(database)s.dependencies (%(depschema)s);
 GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s';
 GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost';
+GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies to '%(frontend_user)s'@'localhost';
 """ % {'database': database, 'backend_user': backend['user'],
        'backend_passwd': backend['passwd'], 'frontend_user': frontend['user'],
        'frontend_passwd': frontend['passwd'],
-       'schema': ', '.join(x.get_schema() for x in d._fields)}
+       'schema': ', '.join(x.get_schema() for x in d._fields),
+       'depschema': ', '.join(x.get_schema() for x in d._dependfields)}
     os.write(fd, commands)
     os.close(fd)
     os.chmod(outfile, 0600)
     return outfile
 
 
-def _check_mysql_schema(env, config, cursor):
+def _check_mysql_schema(env, config, cursor, table):
     d = saliweb.backend.Database(None)
     if config.track_hostname:
         d.set_track_hostname()
@@ -637,11 +643,12 @@ def _check_mysql_schema(env, config, cursor):
                                                    null=row[2], key=row[3],
                                                    default=row[4]))
 
-    for dbfield, backfield in zip(dbfields, d._fields):
+    fields = {'jobs': d._fields, 'dependencies': d._dependfields}[table]
+    for dbfield, backfield in zip(dbfields, fields):
         dbfield.index = backfield.index # Ignore differences in indexes here
         if dbfield != backfield:
             print >> sys.stderr, """
-** The 'jobs' database table schema does not match that expected by the backend;
+** The '%s' database table schema does not match that expected by the backend;
 ** a mismatch has been found in the '%s' field. Please modify the
 ** table schema accordingly.
 **
@@ -652,18 +659,19 @@ def _check_mysql_schema(env, config, cursor):
 **
 ** For reference, the entire table schema should look like:
    %s
-""" % (dbfield.name, dbfield.name, dbfield.get_schema(), backfield.get_schema(),
-       ',\n   '.join(x.get_schema() for x in d._fields))
+""" % (table, dbfield.name, dbfield.name, dbfield.get_schema(),
+       backfield.get_schema(),
+       ',\n   '.join(x.get_schema() for x in fields))
             env.Exit(1)
 
-    if len(dbfields) != len(d._fields):
+    if len(dbfields) != len(fields):
         print >> sys.stderr, """
-** The 'jobs' database table schema does not match that expected by the backend;
+** The '%s' database table schema does not match that expected by the backend;
 ** it has %d fields, while the backend has %d fields. Please modify the
 ** table schema accordingly. The entire table schema should look like:
    %s
-""" % (len(dbfields), len(d._fields),
-       ',\n   '.join(x.get_schema() for x in d._fields))
+""" % (table, len(dbfields), len(fields),
+       ',\n   '.join(x.get_schema() for x in fields))
         env.Exit(1)
 
 

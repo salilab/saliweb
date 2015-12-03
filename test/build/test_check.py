@@ -443,8 +443,10 @@ class CheckTest(unittest.TestCase):
 """CREATE DATABASE testdb;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
 CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
+CREATE TABLE testdb.dependencies (child VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');
 GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost' identified by 'frontpwd';
 GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testdb.jobs to 'frontuser'@'localhost';
+GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localhost';
 """)
         os.unlink(o)
 
@@ -458,7 +460,8 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
         conf = DummyConf()
         conf.track_hostname = False
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields,
+                         'jobs')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assert_(re.search("'jobs' database table schema does not match.*"
@@ -470,20 +473,23 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
 
         # Field definition differs
         env = DummyEnv('testuser')
-        dbfields = [('name', 'varchar(30)', 'NO', 'PRI', '', '')]
+        dbfields = [('child', 'varchar(30)', 'NO', 'PRI', '', '')]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields,
+                         'dependencies')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('table schema does not match.*'
-                               'mismatch has been found in the \'name\' field.*'
-                               'Database schema for \'name\' field:.*'
-                               'name VARCHAR\(30\).*'
+        self.assert_(re.search("'dependencies' database table schema does "
+                               'not match.*'
+                               'mismatch has been found in the \'child\' '
+                               'field.*'
+                               'Database schema for \'child\' field:.*'
+                               'child VARCHAR\(30\).*'
                                'Should be modified.*'
-                               'name VARCHAR\(40\).*'
+                               'child VARCHAR\(40\).*'
                                'entire table schema.*'
-                               'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
-                               'DEFAULT \'\',.*user VARCHAR\(40\)',
+                               'child VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                               'DEFAULT \'\',.*parent VARCHAR\(40\)',
                                stderr, re.DOTALL),
                      'regex match failed on ' + stderr)
 
@@ -510,7 +516,8 @@ GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testd
                     ('failure', 'text', 'YES', '', None, ''),
                    ]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields)
+                         saliweb.build._check_mysql_schema, env, conf, dbfields,
+                         'jobs')
         self.assertEqual(stderr, '')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
