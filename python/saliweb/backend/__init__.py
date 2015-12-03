@@ -437,9 +437,10 @@ class Database(object):
         self._jobcls = jobcls
         self._fields = []
         # Set up fields for dependencies table
-        self._dependfields = [MySQLField('child', 'VARCHAR(40)', key='PRIMARY',
+        self._dependfields = [MySQLField('child', 'VARCHAR(40)', index=True,
                                          null=False),
-                              MySQLField('parent', 'VARCHAR(40)', null=False)]
+                              MySQLField('parent', 'VARCHAR(40)', index=True,
+                                         null=False)]
         # Add fields used by all web services
         states = ",".join("'%s'" % x for x in _JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(40)', key='PRIMARY',

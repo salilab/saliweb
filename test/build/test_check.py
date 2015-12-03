@@ -443,7 +443,7 @@ class CheckTest(unittest.TestCase):
 """CREATE DATABASE testdb;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
 CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
-CREATE TABLE testdb.dependencies (child VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');
+CREATE TABLE testdb.dependencies (child VARCHAR(40) NOT NULL DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');
 GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost' identified by 'frontpwd';
 GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testdb.jobs to 'frontuser'@'localhost';
 GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localhost';
@@ -488,7 +488,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                                'Should be modified.*'
                                'child VARCHAR\(40\).*'
                                'entire table schema.*'
-                               'child VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                               'child VARCHAR\(40\) NOT NULL '
                                'DEFAULT \'\',.*parent VARCHAR\(40\)',
                                stderr, re.DOTALL),
                      'regex match failed on ' + stderr)
