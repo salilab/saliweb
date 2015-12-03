@@ -108,6 +108,7 @@ class DatabaseTest(unittest.TestCase):
             self.assertRaises(sqlite3.OperationalError, c.execute,
                               'DROP INDEX ' + bad_index)
         c.execute('DROP TABLE jobs')
+        c.execute('DROP TABLE dependencies')
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE GARBAGE')
         db.conn.commit()
@@ -172,12 +173,16 @@ class DatabaseTest(unittest.TestCase):
         db._connect(None)
         c = db.conn.cursor()
         c.execute('CREATE TABLE jobs (test TEXT)')
+        c.execute('CREATE TABLE dependencies (test TEXT)')
         db.conn.commit()
+        db._drop_tables()
         # Should work regardless of whether tables exist
         db._drop_tables()
-        # It should have deleted the jobs table and state index
+        # It should have deleted the tables and state index
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP TABLE jobs')
+        self.assertRaises(sqlite3.OperationalError, c.execute,
+                          'DROP TABLE dependencies')
         self.assertRaises(sqlite3.OperationalError, c.execute,
                           'DROP INDEX state_index')
 

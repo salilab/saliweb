@@ -431,10 +431,15 @@ class Database(object):
        instantiate new job objects.
     """
     _jobtable = 'jobs'
+    _dependtable = 'dependencies'
 
     def __init__(self, jobcls):
         self._jobcls = jobcls
         self._fields = []
+        # Set up fields for dependencies table
+        self._dependfields = [MySQLField('child', 'VARCHAR(40)', key='PRIMARY',
+                                         null=False),
+                              MySQLField('parent', 'VARCHAR(40)', null=False)]
         # Add fields used by all web services
         states = ",".join("'%s'" % x for x in _JobState.get_valid_states())
         self.add_field(MySQLField('name', 'VARCHAR(40)', key='PRIMARY',
@@ -485,12 +490,14 @@ class Database(object):
         """Drop all tables in the database used to hold job state."""
         c = self.conn.cursor()
         c.execute('DROP TABLE IF EXISTS ' + self._jobtable)
+        c.execute('DROP TABLE IF EXISTS ' + self._dependtable)
         self.conn.commit()
 
     def _delete_tables(self):
         """Delete all tables in the database used to hold job state."""
         c = self.conn.cursor()
         c.execute('DELETE FROM ' + self._jobtable)
+        c.execute('DELETE FROM ' + self._dependtable)
         self.conn.commit()
 
     def _create_tables(self):
@@ -502,6 +509,9 @@ class Database(object):
             if field.index:
                 c.execute('CREATE INDEX %s_index ON %s (%s)' \
                           % (field.name, self._jobtable, field.name))
+
+        schema = ', '.join(x.get_schema() for x in self._dependfields)
+        c.execute('CREATE TABLE %s (%s)' % (self._dependtable, schema))
         self.conn.commit()
 
     def _execute(self, query, args=()):
@@ -576,6 +586,9 @@ class Database(object):
         query = 'DELETE FROM ' + self._jobtable \
                 + ' WHERE name=' + self._placeholder
         c.execute(query, [metadata['name']])
+        query = 'DELETE FROM %s WHERE parent=%s OR child=%s' \
+                % (self._dependtable, self._placeholder, self._placeholder)
+        c.execute(query, [metadata['name']]*2)
         self.conn.commit()
         metadata.mark_synced()
 
