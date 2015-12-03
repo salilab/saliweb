@@ -599,8 +599,16 @@ class Database(object):
                             for x in metadata.keys()) \
                 + ' WHERE name=' + self._placeholder
         self._execute(query, metadata.values() + [metadata['name']])
+        if state == 'COMPLETED':
+            self._remove_dependency_on(metadata['name'])
         self.conn.commit()
         metadata.mark_synced()
+
+    def _remove_dependency_on(self, jobname):
+        c = self.conn.cursor()
+        query = 'DELETE FROM %s WHERE parent=%s' \
+                % (self._dependtable, self._placeholder)
+        c.execute(query, [jobname])
 
     def _change_job_state(self, metadata, oldstate, newstate):
         """Change the job state in the database. This has the side effect of
