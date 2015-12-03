@@ -618,7 +618,10 @@ def _generate_admin_mysql_script(database, backend, frontend):
     commands = """CREATE DATABASE %(database)s;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s';
 CREATE TABLE %(database)s.jobs (%(schema)s);
+CREATE INDEX state_index ON %(database)s.jobs (state);
 CREATE TABLE %(database)s.dependencies (%(depschema)s);
+CREATE INDEX child_index ON %(database)s.dependencies (child);
+CREATE INDEX parent_index ON %(database)s.dependencies (parent);
 GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s';
 GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost';
 GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies to '%(frontend_user)s'@'localhost';
