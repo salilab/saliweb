@@ -138,6 +138,20 @@ class WebServiceTest(unittest.TestCase):
         ws2 = WebService(conf, db)
         self.assertRaises(StateFileError, ws2._check_state_file)
 
+    def test_incoming_depends(self):
+        """Check that incoming jobs honor dependencies"""
+        global job_log
+        job_log = []
+        db, conf, web = self._setup_webservice()
+        c = db.conn.cursor()
+        query = "INSERT INTO dependencies(child,parent) VALUES(?,?)"
+        c.execute(query, ('job1', 'job2'))
+        db.conn.commit()
+
+        web._process_incoming_jobs()
+        # job1 should not run because it depends on job2
+        self.assertEqual(job_log, [])
+
     def test_max_running(self):
         """Make sure that limits.running is honored"""
         global job_log

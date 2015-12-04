@@ -984,14 +984,17 @@ have done this, delete the state file (%s) to reenable runs.
         # Save doing an extra SQL SELECT if we're already at the maximum
         if numrunning >= maxrunning:
             return
+        depends = self.db._get_job_dependencies()
         for job in self.db._get_all_jobs_in_state('INCOMING',
                                                   order_by='submit_time'):
-            self._log("_process_incoming_jobs; trying to run job %s" % job.name)
-            job._try_run(self)
-            numrunning += 1
-            if numrunning >= maxrunning:
-                self._log("_process_incoming_jobs; job limit reached")
-                return
+            if job.name not in depends:
+                self._log("_process_incoming_jobs; trying to run job %s"
+                          % job.name)
+                job._try_run(self)
+                numrunning += 1
+                if numrunning >= maxrunning:
+                    self._log("_process_incoming_jobs; job limit reached")
+                    return
         self._log("_process_incoming_jobs done")
 
     def _cleanup_incoming_jobs(self):
