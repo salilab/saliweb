@@ -550,7 +550,8 @@ def _check_mysql(env):
                             'passwd, user, directory, %sname)' % hostname,
                             table='jobs')
         _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
-                            'SELECT,INSERT,UPDATE,DELETE', table='dependencies')
+                            'SELECT, INSERT, UPDATE, DELETE',
+                            table='dependencies')
     except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
         # Only complain about possible too-long DB usernames if MySQL
         # itself first complained
