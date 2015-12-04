@@ -268,5 +268,22 @@ class DatabaseTest(unittest.TestCase):
         self.assert_(job is not newjob)
         self.assertEqual(newjob._metadata['runner_id'], 'new-SGE-ID')
 
+    def test_get_job_dependencies(self):
+        """Check Database._get_job_dependencies()"""
+        db = MemoryDatabase(Job)
+        db._connect(None)
+        db._create_tables()
+        self.assertEqual(db._get_job_dependencies(), {})
+
+        c = db.conn.cursor()
+        query = "INSERT INTO dependencies(child,parent) VALUES(?,?)"
+        c.execute(query, ('foo', 'bar'))
+        c.execute(query, ('a', 'one'))
+        c.execute(query, ('a', 'two'))
+        db.conn.commit()
+
+        self.assertEqual(db._get_job_dependencies(),
+                         {'foo':['bar'], 'a':['one', 'two']})
+
 if __name__ == '__main__':
     unittest.main()

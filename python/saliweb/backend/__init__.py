@@ -541,6 +541,21 @@ class Database(object):
                           % (self._jobtable, self._placeholder), (state,))
         return c.fetchone()[0]
 
+    def _get_job_dependencies(self):
+        """Get all job dependencies.
+           This is returned as a dict of child:[parent,...] pairs,
+           where each child is a jobname that won't start until all of
+           the parents have completed."""
+        depends = {}
+        c = self._execute('SELECT child, parent FROM ' + self._dependtable)
+        for row in c:
+            child, parent = row
+            if child in depends:
+                depends[child].append(parent)
+            else:
+                depends[child] = [parent]
+        return depends
+
     def _get_all_jobs_in_state(self, state, name=None, after_time=None,
                                runner_id=None, order_by=None):
         """Get all the jobs in the given job state, as a generator of
