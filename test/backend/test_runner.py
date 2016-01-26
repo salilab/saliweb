@@ -65,6 +65,12 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(r._name, 'TestJob')
         r.set_sge_name('1234')
         self.assertEqual(r._name, 'J1234')
+        r.set_sge_name('None')
+        self.assertEqual(r._name, 'JNone')
+        r.set_sge_name('ALL')
+        self.assertEqual(r._name, 'JALL')
+        r.set_sge_name('template')
+        self.assertEqual(r._name, 'Jtemplate')
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""

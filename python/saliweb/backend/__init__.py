@@ -1611,7 +1611,7 @@ class SGERunner(Runner):
            a digit) then it is mapped to one that is.
         """
         name = re.sub('\s*', '', name)
-        if re.match('\d', name):
+        if re.match('\d', name) or name.upper() in ("NONE", "ALL", "TEMPLATE"):
             name = 'J' + name
         self._name = name
 
