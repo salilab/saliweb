@@ -353,6 +353,8 @@ class Config(object):
                 return datetime.timedelta(seconds=float(raw[:-1]) * 60 * 60)
             elif raw.endswith('d'):
                 return datetime.timedelta(days=float(raw[:-1]))
+            elif raw.endswith('w'):
+                return datetime.timedelta(days=float(raw[:-1]) * 7)
             elif raw.endswith('m'):
                 return datetime.timedelta(days=float(raw[:-1]) * 30)
             elif raw.endswith('y'):
@@ -362,8 +364,8 @@ class Config(object):
         except ValueError:
             pass
         raise ValueError("Time deltas must be 'NEVER' or numbers followed "
-                         "by h, d, m or y (for hours, days, months, or "
-                         "years), e.g. 24h, 30d, 3m, 1y; got " + raw)
+                         "by h, d, w, m or y (for hours, days, weeks, months, "
+                         "or years), e.g. 24h, 30d, 1w, 3m, 1y; got " + raw)
 
 
 class MySQLField(object):

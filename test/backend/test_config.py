@@ -99,6 +99,8 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].seconds, 8*60*60)
         conf = get_config(expire='5d')
         self.assertEqual(conf.oldjobs['expire'].days, 5)
+        conf = get_config(expire='2w')
+        self.assertEqual(conf.oldjobs['expire'].days, 14)
         conf = get_config(expire='2m')
         self.assertEqual(conf.oldjobs['expire'].days, 60)
         conf = get_config(expire='1y')

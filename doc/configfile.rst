@@ -132,8 +132,9 @@ archive
     Completed job results, after this time, will no longer be available for
     the end user to download from the frontend. The time is either NEVER to
     indicate that job results are available forever, or a number with a
-    single character suffix (h for hours, d for days, m for months or y for
-    years). For example, '90d' will archive job results after 90 days.
+    single character suffix (h for hours, d for days, w for weeks,
+    m for months or y for years). For example, '90d' will archive job
+    results after 90 days.
 
 expire
     Completed job results will be deleted from disk after this time. Times are
