@@ -2,6 +2,7 @@
 [![nightly build](https://salilab.org/nightly/stat/?s=saliweb&t=build)](https://salilab.org/nightly/saliweb/)
 [![python coverage](https://salilab.org/nightly/stat/?s=saliweb&t=python)](https://salilab.org/nightly/saliweb/logs/coverage/python/)
 [![perl coverage](https://salilab.org/nightly/stat/?s=saliweb&t=perl)](https://salilab.org/nightly/saliweb/logs/coverage/perl/)
+[![Code Climate](https://codeclimate.com/github/salilab/saliweb/badges/gpa.svg)](https://codeclimate.com/github/salilab/saliweb)
 
 This framework provides a simple set of classes and modules to simplify the process of deploying, in the Sali lab, a web service (a web-based front end to jobs that run on the lab cluster). It is designed specifically for the Sali lab environment, but can probably be adapted to run elsewhere if desired.
 
