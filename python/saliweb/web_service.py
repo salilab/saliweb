@@ -9,6 +9,8 @@
    command line interface to the services.
 """
 
+from __future__ import print_function
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -55,7 +57,7 @@ def _curl_rest_page(url, curl_args):
     try:
         dom = parseString(out)
     except xml.parsers.expat.ExpatError:
-        print >> sys.stderr, "Web service did not return valid XML:\n" + out
+        print("Web service did not return valid XML:\n" + out, file=sys.stderr)
         raise
     top = dom.getElementsByTagName('saliweb')
     if len(top) == 0:
@@ -117,21 +119,21 @@ def show_info(url, cookie=None):
         pstr = " ".join(x.get_full_arg() for x in parameters)
     else:
         pstr = "[name1=ARG] [name2=@FILENAME] ..."
-    print "\nSali Lab %s web service." % service
-    print "\nTo submit a job to this web service, run:\n"
-    print "%s submit %s " % (progname, url) + pstr
-    print
-    print "Where ARG is a string argument, and FILENAME is the name of a "
-    print "file to upload (note the '@' prefix)."
+    print("\nSali Lab %s web service." % service)
+    print("\nTo submit a job to this web service, run:\n")
+    print("%s submit %s " % (progname, url) + pstr)
+    print()
+    print("Where ARG is a string argument, and FILENAME is the name of a ")
+    print("file to upload (note the '@' prefix).")
     if parameters:
         for x in parameters:
-            print "   " + x.get_help()
+            print("   " + x.get_help())
     else:
-        print """
+        print("""
 To determine name1, name2 etc., view the HTML source of the regular web
 service page and look at the names of the HTML form elements. Alternatively,
 ask the developer of the web service to implement the
-get_submit_parameter_help() method!"""
+get_submit_parameter_help() method!""")
 
 def submit_job(url, args, cookie=None):
     """Submit a job to a Sali Lab web service (but don't wait for it to end).
@@ -160,7 +162,7 @@ def submit_job(url, args, cookie=None):
     p, out = _curl_rest_page(url, curl_args)
     for results in p.getElementsByTagName('job'):
         url = results.getAttribute('xlink:href')
-        print "Job submitted: results will be found at " + url
+        print("Job submitted: results will be found at " + url)
         return url
     raise IOError("Could not submit job: " + out)
 
@@ -174,18 +176,18 @@ def get_results(url):
         u = urllib2.urlopen(url)
     except urllib2.HTTPError, detail:
         if detail.code == 503:
-            print "Job not done yet"
+            print("Job not done yet")
             return
         else:
             raise
     dom = parseString(u.read())
-    print "Got results:"
+    print("Got results:")
     urls = []
     top = dom.getElementsByTagName('saliweb')[0]
     for results in top.getElementsByTagName('results_file'):
         url = results.getAttribute('xlink:href')
         urls.append(url)
-        print "   " + url
+        print("   " + url)
     dom.unlink()
     return urls
 
@@ -209,8 +211,8 @@ class _Command(object):
         self.progname = progname
         self.usage_prefix = usage_prefix
     def usage(self):
-        print "\nUsage: %s " % self.usage_prefix + self.usage_args \
-              + '\n\n' + self.long_help.replace('%prog', self.progname)
+        print("\nUsage: %s " % self.usage_prefix + self.usage_args
+              + '\n\n' + self.long_help.replace('%prog', self.progname))
 
 class _InfoCommand(_Command):
     short_help = "Get basic information about a web service."
@@ -232,7 +234,7 @@ a sample usage for submitting jobs to the service.
         try:
             cookie, args = _get_cookie_arg(args)
         except getopt.GetoptError, err:
-            print str(err)
+            print(str(err))
             self.usage()
             sys.exit(1)
         if len(args) == 1:
@@ -261,7 +263,7 @@ at which the results will become available when the job completes. Use
         try:
             cookie, args = _get_cookie_arg(args)
         except getopt.GetoptError, err:
-            print str(err)
+            print(str(err))
             self.usage()
             sys.exit(1)
         if len(args) >= 1:
@@ -313,7 +315,7 @@ class _WebService(object):
 
     def main(self):
         if len(sys.argv) <= 1:
-            print self.short_help + " Use '%s help' for help." % self._progname
+            print(self.short_help + " Use '%s help' for help." % self._progname)
         else:
             command = sys.argv[1]
             if command == 'help':
@@ -327,16 +329,16 @@ class _WebService(object):
                 self.unknown_command(command)
 
     def show_help(self):
-        print self.short_help + """
+        print(self.short_help + """
 
 Usage: %s <command> [args]
 
-Commands:""" % self._progname
-        print "    %-8s  Get help on using %s." % ('help', self._progname)
+Commands:""" % self._progname)
+        print("    %-8s  Get help on using %s." % ('help', self._progname))
         for (key, val) in self._all_commands.items():
-            print "    %-8s  %s" % (key, val.short_help)
-        print """
-Use "%s help <command>" for detailed help on any command.""" % self._progname
+            print("    %-8s  %s" % (key, val.short_help))
+        print("""
+Use "%s help <command>" for detailed help on any command.""" % self._progname)
 
     def show_command_help(self, command):
         if command == 'help':
@@ -354,8 +356,8 @@ Use "%s help <command>" for detailed help on any command.""" % self._progname
         c.main(sys.argv[2:])
 
     def unknown_command(self, command):
-        print "Unknown command: '%s'" % command
-        print "Use '%s help' for help." % self._progname
+        print("Unknown command: '%s'" % command)
+        print("Use '%s help' for help." % self._progname)
         sys.exit(1)
 
 def main():

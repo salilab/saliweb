@@ -1,3 +1,4 @@
+from __future__ import print_function
 import glob
 import os
 
@@ -43,7 +44,7 @@ def action(target, source, env):
             cov.file_locator.relative_dir = topdir + '/'
         cov.html_report(mods, directory='html_coverage/python')
     else:
-        print "Could not find new enough coverage module"
+        print("Could not find new enough coverage module")
         return 1
     env.Execute("cover -outputdir html_coverage/perl "
                 "test/frontend/cover_db")

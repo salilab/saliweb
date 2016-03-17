@@ -1,3 +1,4 @@
+from __future__ import print_function
 import saliweb.backend
 from optparse import OptionParser
 import sys
@@ -29,4 +30,4 @@ def main(webservice):
     web = webservice.get_web_service(webservice.config)
     for state in states:
         for job in web.db._get_all_jobs_in_state(state, order_by='submit_time'):
-            print "%-60s %s" % (job.name, state)
+            print("%-60s %s" % (job.name, state))

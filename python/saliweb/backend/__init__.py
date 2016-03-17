@@ -524,7 +524,7 @@ class Database(object):
         c = self.conn.cursor()
         try:
             c.execute(query, args)
-        except self._OperationalError, err:
+        except self._OperationalError as err:
             # Catch a MySQLdb.OperationalError with code 2006
             # ("server has gone away"); any other kind of error is
             # fatal and so is passed on
@@ -821,7 +821,7 @@ have done this, delete the state file (%s) to reenable runs.
                     os.unlink(self.config.backend['state_file'])
                 self._close_socket(s)
                 self._register(up=False)
-        except Exception, detail:
+        except Exception as detail:
             self._handle_fatal_error(detail)
 
     def _register(self, up):
@@ -1159,7 +1159,7 @@ class Job(object):
                 self.__set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 self._start_runner(runner, webservice)
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def _sanity_check(self):
@@ -1172,7 +1172,7 @@ class Job(object):
                 raise SanityError("Job %s is in state %s; this should not be "
                                   "possible unless the web service were shut "
                                   "down uncleanly" % (self.name, state))
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def _job_state_file_done(self):
@@ -1248,7 +1248,7 @@ class Job(object):
                 self._start_runner(runner, webservice)
             else:
                 self._mark_job_completed()
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def _mark_job_completed(self):
@@ -1272,7 +1272,7 @@ class Job(object):
             self.__set_state('ARCHIVED')
             self._run_in_job_directory(self.archive)
             self._sync_metadata()
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def _try_expire(self):
@@ -1280,7 +1280,7 @@ class Job(object):
             self.__set_state('EXPIRED')
             self.expire()
             self._sync_metadata()
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def _sync_metadata(self):
@@ -1361,7 +1361,7 @@ class Job(object):
                 body = 'Job %s failed with the following error:\n' \
                        % self.name + reason
                 self._db.config.send_admin_email(subject, body)
-        except Exception, detail:
+        except Exception as detail:
             # Ensure we can extract the original error
             detail.original_error = reason
             raise
@@ -1389,7 +1389,7 @@ class Job(object):
                 s.close()
             except socket.error:
                 pass
-        except Exception, detail:
+        except Exception as detail:
             self._fail(detail)
 
     def admin_fail(self, email):

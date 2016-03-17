@@ -1,3 +1,4 @@
+from __future__ import print_function
 from optparse import OptionParser
 import saliweb.backend
 import sys
@@ -37,23 +38,23 @@ def kill_pid(pid):
 def status(web):
     pid = web.get_running_pid()
     if pid is None:
-        print "%s is stopped" % web.config.service_name
+        print("%s is stopped" % web.config.service_name)
         sys.exit(3)
     else:
-        print "%s (pid %d) is running..." % (web.config.service_name, pid)
+        print("%s (pid %d) is running..." % (web.config.service_name, pid))
 
 
 def stop(web):
     sys.stdout.write("Stopping %s: " % web.config.service_name)
     pid = web.get_running_pid()
     if pid is None:
-        print "FAILED; not running"
+        print("FAILED; not running")
         sys.exit(1)
     else:
         if kill_pid(pid):
-            print "OK"
+            print("OK")
         else:
-            print "FAILED; pid %d did not terminate" % pid
+            print("FAILED; pid %d did not terminate" % pid)
             sys.exit(2)
 
 
@@ -66,8 +67,8 @@ def condstart(web):
     sys.stdout.write("Starting %s: " % web.config.service_name)
     try:
         web.do_all_processing(daemonize=True, status_fh=sys.stdout)
-    except saliweb.backend.StateFileError, detail:
-        print "not started: " + str(detail)
+    except saliweb.backend.StateFileError as detail:
+        print("not started: " + str(detail))
 
 
 def restart(web):

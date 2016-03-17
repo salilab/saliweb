@@ -1,3 +1,4 @@
+from __future__ import print_function
 from optparse import OptionParser
 import string
 import random
@@ -7,7 +8,7 @@ import pwd
 import subprocess
 
 def _run_command(prefix, cmd, cwd):
-    print prefix + " " + " ".join(cmd)
+    print(prefix + " " + " ".join(cmd))
     ret = subprocess.call([prefix] + cmd, cwd=cwd)
     if ret != 0:
         raise OSError("subprocess failed with code %d" % ret)
@@ -120,8 +121,9 @@ class MakeWebService(object):
 
     def _print_completion(self):
         uid = pwd.getpwnam(self.user).pw_uid
-        print >> sys.stderr, "Web service set up in %s directory" % self.topdir
-        print >> sys.stderr, """Still need to:
+        print("Web service set up in %s directory" % self.topdir,
+              file=sys.stderr)
+        print("""Still need to:
 1. Add access to the %(user)s account to users by running
 /usr/bin/sudo /usr/sbin/visudo
 and adding lines such as
@@ -137,7 +139,7 @@ to run cluster jobs.
 4. Change into the %(topdir)s directory and run
 /usr/bin/sudo -u %(user)s scons
 until it works.
-""" % {'user': self.user, 'topdir': self.topdir, 'uid': uid}
+""" % {'user': self.user, 'topdir': self.topdir, 'uid': uid}, file=sys.stderr)
 
     def _make_password(self, length):
         return "".join(random.choice(string.letters + string.digits) \
@@ -147,7 +149,7 @@ until it works.
         try:
             dir = pwd.getpwnam(self.user).pw_dir
         except KeyError:
-            print """The %(user)s user doesn't exist. Please create it first:
+            print("""The %(user)s user doesn't exist. Please create it first:
 
 1. Determine the UID for the new user and add it to the wiki page:
 https://salilab.org/internal/wiki/SysAdmin/UID
@@ -156,7 +158,7 @@ https://salilab.org/internal/wiki/SysAdmin/UID
 /usr/bin/sudo /usr/sbin/groupadd -g <UID> %(user)s
 /usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' -d %(dir)s %(user)s
 /usr/bin/sudo chmod a+rx ~%(user)s
-""" % {'user': self.user, 'dir': '/modbase5/home/%s' % self.user}
+""" % {'user': self.user, 'dir': '/modbase5/home/%s' % self.user})
             sys.exit(1)
         return os.path.join(dir, 'service')
 
@@ -168,8 +170,8 @@ https://salilab.org/internal/wiki/SysAdmin/UID
 
     def _make_sconstruct(self):
         envmodule = ", service_module='%s'" % self.short_name
-        f = open(os.path.join(self.topdir, 'SConstruct'), 'w')
-        print >> f, """import saliweb.build
+        with open(os.path.join(self.topdir, 'SConstruct'), 'w') as f:
+            print("""import saliweb.build
 
 vars = Variables('config.py')
 env = saliweb.build.Environment(vars, ['conf/live.conf']%s)
@@ -182,45 +184,45 @@ Export('env')
 SConscript('python/%s/SConscript')
 SConscript('lib/SConscript')
 SConscript('txt/SConscript')
-SConscript('test/SConscript')""" % (envmodule, self.short_name)
+SConscript('test/SConscript')""" % (envmodule, self.short_name), file=f)
 
     def _make_sconscripts(self):
-        f = open(os.path.join(self.topdir, 'python', self.short_name,
-                              'SConscript'), 'w')
-        print >> f, """Import('env')
+        with open(os.path.join(self.topdir, 'python', self.short_name,
+                               'SConscript'), 'w') as f:
+            print("""Import('env')
 
-env.InstallPython(['__init__.py'])"""
+env.InstallPython(['__init__.py'])""", file=f)
 
-        f = open(os.path.join(self.topdir, 'lib', 'SConscript'), 'w')
-        print >> f, """Import('env')
+        with open(os.path.join(self.topdir, 'lib', 'SConscript'), 'w') as f:
+            print("""Import('env')
 
-env.InstallPerl(['%s.pm'])""" % self.short_name
+env.InstallPerl(['%s.pm'])""" % self.short_name, file=f)
 
-        f = open(os.path.join(self.topdir, 'txt', 'SConscript'), 'w')
-        print >> f, """Import('env')
+        with open(os.path.join(self.topdir, 'txt', 'SConscript'), 'w') as f:
+            print("""Import('env')
 
-env.InstallTXT(['help.txt', 'contact.txt'])"""
+env.InstallTXT(['help.txt', 'contact.txt'])""", file=f)
 
-        f = open(os.path.join(self.topdir, 'test', 'backend',
-                              'SConscript'), 'w')
-        print >> f, """Import('env')
+        with open(os.path.join(self.topdir, 'test', 'backend',
+                               'SConscript'), 'w') as f:
+            print("""Import('env')
 
-env.RunPythonTests(Glob("*.py"))"""
+env.RunPythonTests(Glob("*.py"))""", file=f)
 
-        f = open(os.path.join(self.topdir, 'test', 'frontend',
-                              'SConscript'), 'w')
-        print >> f, """Import('env')
+        with open(os.path.join(self.topdir, 'test', 'frontend',
+                               'SConscript'), 'w') as f:
+            print("""Import('env')
 
-env.RunPerlTests(Glob("*.pl"))"""
+env.RunPerlTests(Glob("*.pl"))""", file=f)
 
-        f = open(os.path.join(self.topdir, 'test',
-                              'SConscript'), 'w')
-        print >> f, """SConscript('backend/SConscript')
-SConscript('frontend/SConscript')"""
+        with open(os.path.join(self.topdir, 'test',
+                               'SConscript'), 'w') as f:
+            print("""SConscript('backend/SConscript')
+SConscript('frontend/SConscript')""", file=f)
 
     def _make_config(self):
-        f = open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w')
-        print >> f, """[general]
+        with open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w') as f:
+            print("""[general]
 admin_email: %(user)s@salilab.org
 socket: %(install)s/%(short_name)s.socket
 service_name: %(service_name)s
@@ -245,22 +247,21 @@ failed: %(install)s/failed/
 
 [oldjobs]
 archive: 7d
-expire: 30d""" % self.__dict__
+expire: 30d""" % self.__dict__, file=f)
         for (end, user) in (('frontend', self.db_frontend_user),
                             ('backend', self.db_backend_user)):
             fname = os.path.join(self.topdir, 'conf', '%s.conf' % end)
             passwd = self._make_password(20)
-            f = open(fname, 'w')
-            print >> f, """[%s_db]
+            with open(fname, 'w') as f:
+                print("""[%s_db]
 user: %s
-passwd: %s""" % (end, user, passwd)
-            f.close()
+passwd: %s""" % (end, user, passwd), file=f)
             os.chmod(fname, 0600)
 
     def _make_frontend(self):
-        f = open(os.path.join(self.topdir, 'lib',
-                              '%s.pm' % self.short_name), 'w')
-        print >> f, """package %(short_name)s;
+        with open(os.path.join(self.topdir, 'lib',
+                                '%s.pm' % self.short_name), 'w') as f:
+            print("""package %(short_name)s;
 use saliweb::frontend;
 use strict;
 
@@ -301,12 +302,12 @@ sub get_results_page {
     # TODO
 }
 
-1;""" % self.__dict__
+1;""" % self.__dict__, file=f)
 
     def _make_backend(self):
-        f = open(os.path.join(self.topdir, 'python', self.short_name,
-                              '__init__.py'), 'w')
-        print >> f, """import saliweb.backend
+        with open(os.path.join(self.topdir, 'python', self.short_name,
+                               '__init__.py'), 'w') as f:
+            print("""import saliweb.backend
 
 class Job(saliweb.backend.Job):
 
@@ -318,16 +319,16 @@ def get_web_service(config_file):
     db = saliweb.backend.Database(Job)
     config = saliweb.backend.Config(config_file)
     return saliweb.backend.WebService(config, db)
-"""
+""", file=f)
 
     def _make_txt(self):
-        f = open(os.path.join(self.topdir, 'txt', 'contact.txt'), 'w')
-        print >> f, """<p>Please address inquiries to:<br />
+        with open(os.path.join(self.topdir, 'txt', 'contact.txt'), 'w') as f:
+            print("""<p>Please address inquiries to:<br />
 <script type="text/javascript">escramble('%s','salilab.org')</script></p>
-""" % self.user
+""" % self.user, file=f)
 
-        f = open(os.path.join(self.topdir, 'txt', 'help.txt'), 'w')
-        print >> f, "<h1>Help</h1>"
+        with open(os.path.join(self.topdir, 'txt', 'help.txt'), 'w') as f:
+            print("<h1>Help</h1>", file=f)
 
 
 def get_options():

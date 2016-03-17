@@ -1,5 +1,6 @@
 """Utility functions used by all IMP modules"""
 
+from __future__ import print_function
 import os.path
 import re
 import sys
@@ -13,7 +14,7 @@ class WineEnvironment(Environment):
        and w32link shell scripts"""
     def __init__(self, platform='win32', CC='w32cc', LINK='w32link', **kw):
         if sys.platform != 'linux2':
-            print "ERROR: Wine is supported only on Linux systems"
+            print("ERROR: Wine is supported only on Linux systems")
             Exit(1)
         Environment.__init__(self, platform=platform, CC=CC, LINK=LINK, **kw)
         posix_env = Environment(platform='posix')
