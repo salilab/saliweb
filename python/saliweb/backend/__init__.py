@@ -1,3 +1,4 @@
+from __future__ import print_function
 import subprocess
 import re
 import fcntl
@@ -711,7 +712,7 @@ class WebService(object):
                                  "sure that another instance of the daemon "
                                  "is not already running." % state_file)
         f.truncate(0)
-        print >> f, os.getpid()
+        print(os.getpid(), file=f)
         f.flush()
         # Keep file open so as not to lose the lock
         self.__state_file_handle = f
@@ -726,9 +727,8 @@ class WebService(object):
         if hasattr(detail, 'original_error'):
             err += "\n\nThis error in turn occurred while trying to " + \
                    "handle the original error below:\n" + detail.original_error
-        f = open(self.config.backend['state_file'], 'w')
-        print >> f, "FAILED: " + err
-        f.close()
+        with open(self.config.backend['state_file'], 'w') as f:
+            print("FAILED: " + err, file=f)
         subject = 'Sali lab %s service: SHUTDOWN WITH FATAL ERROR' \
                   % self.config.service_name
         body = """
@@ -769,12 +769,12 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _delete_all_jobs(self):
         """Delete all jobs, both in the database and on the filesystem."""
-        print "Deleting database table"
+        print("Deleting database table")
         self.db._delete_tables()
         job_states = _JobState.get_valid_states()
         job_states.remove('EXPIRED')
         for s in job_states:
-            print "Deleting all jobs in %s state" % s
+            print("Deleting all jobs in %s state" % s)
             for g in glob.glob(os.path.join(self.config.directories[s], '*')):
                 if os.path.isdir(g):
                     shutil.rmtree(g)
@@ -1633,25 +1633,25 @@ class SGERunner(Runner):
         return self._qsub(script, webservice)
 
     def _write_sge_script(self, fh):
-        print >> fh, "#!" + self._interpreter
-        print >> fh, "#$ -S " + self._interpreter
-        print >> fh, "#$ -cwd"
+        print("#!" + self._interpreter, file=fh)
+        print("#$ -S " + self._interpreter, file=fh)
+        print("#$ -cwd", file=fh)
         if self._opts:
-            print >> fh, '#$ ' + self._opts
+            print('#$ ' + self._opts, file=fh)
         if self._name:
-            print >> fh, '#$ -N ' + self._name
+            print('#$ -N ' + self._name, file=fh)
         # Update job state file at job start and end
         if self._interpreter in ('/bin/sh', '/bin/bash'):
-            print >> fh, "_SALI_JOB_DIR=`pwd`"
+            print("_SALI_JOB_DIR=`pwd`", file=fh)
         if self._interpreter in ('/bin/csh', '/bin/tcsh'):
-            print >> fh, "setenv _SALI_JOB_DIR `pwd`"
+            print("setenv _SALI_JOB_DIR `pwd`", file=fh)
         if self._interpreter in ('/bin/sh', '/bin/bash', '/bin/csh',
                                  '/bin/tcsh'):
-            print >> fh, 'echo "STARTED" > ${_SALI_JOB_DIR}/job-state'
-        print >> fh, self._script
+            print('echo "STARTED" > ${_SALI_JOB_DIR}/job-state', file=fh)
+        print(self._script, file=fh)
         if self._interpreter in ('/bin/sh', '/bin/bash', '/bin/csh',
                                  '/bin/tcsh'):
-            print >> fh, 'echo "DONE" > ${_SALI_JOB_DIR}/job-state'
+            print('echo "DONE" > ${_SALI_JOB_DIR}/job-state', file=fh)
 
     def _qsub(self, script, webservice):
         """Submit a job script to the cluster using DRMAA."""

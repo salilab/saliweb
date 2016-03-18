@@ -6,9 +6,10 @@
 
 """
 
+from __future__ import print_function
 try:
     import MySQLdb
-except ImportError, detail:
+except ImportError as detail:
     MySQLdb = detail
 import warnings
 import sys
@@ -137,7 +138,7 @@ def builder_perl_tests(target, source, env):
     ret = e.Execute(app)
     if ret != 0:
         shutil.rmtree(tmpdir, ignore_errors=True)
-        print "unit tests FAILED"
+        print("unit tests FAILED")
         return 1
     else:
         if env.get('html_coverage', None):
@@ -159,7 +160,7 @@ def builder_python_tests(target, source, env):
     e['ENV']['PYTHONPATH'] = 'python'
     ret = e.Execute(app)
     if ret != 0:
-        print "unit tests FAILED"
+        print("unit tests FAILED")
         return 1
 
 
@@ -209,12 +210,12 @@ def _setup_sconsign(env):
     if not os.path.exists('.scons'):
         try:
             os.mkdir('.scons')
-        except OSError, detail:
-            print >> sys.stderr, """
+        except OSError as detail:
+            print("""
 ** Cannot make .scons directory: %s
 ** Please first make it manually, with a command like
    mkdir .scons
-""" % str(detail)
+""" % str(detail), file=sys.stderr)
             env.Exit(1)
     env.SConsignFile('.scons/sconsign.dblite')
 
@@ -231,7 +232,7 @@ def _run_version_binary(env, cmd, args):
                               "stderr %s" \
                               % (p.returncode, ret[0], ret[1]))
             return ret[0].split('\n')[0]
-        except OSError, detail:
+        except OSError as detail:
             warnings.warn("Could not run %s: %s" \
                           % (fullcmd, str(detail)))
     else:
@@ -287,9 +288,9 @@ def _check(env):
     _check_permissions(env)
     _check_directories(env)
     if isinstance(MySQLdb, Exception):
-        print >> sys.stderr, "Could not import the MySQLdb module: %s" \
-                             % MySQLdb
-        print >> sys.stderr, "This module is needed by the backend."
+        print("Could not import the MySQLdb module: %s" % MySQLdb,
+              file=sys.stderr)
+        print("This module is needed by the backend.", file=sys.stderr)
         env.Exit(1)
     _check_mysql(env)
     _check_service(env)
@@ -306,18 +307,18 @@ def _check_directory_locations(env):
         dir = env['config'].directories[key]
         if not dir.startswith('/modbase') and not dir.startswith('/usr') \
            and not dir.startswith('/var') and not dir.startswith('/home'):
-            print >> sys.stderr, """
+            print("""
 ** The %s directory is set to %s.
 ** It must be on a local disk (e.g. /modbase1).
-""" % (key, dir)
+""" % (key, dir), file=sys.stderr)
             env.Exit(1)
 
     running = env['config'].directories['RUNNING']
     if not running.startswith('/netapp'):
-        print >> sys.stderr, """
+        print("""
 ** The RUNNING directory is set to %s.
 ** It must be on a cluster-accessible disk (i.e. /netapp).
-""" % running
+""" % running, file=sys.stderr)
         env.Exit(1)
 
 
@@ -331,20 +332,20 @@ def _check_directory_permissions(env):
                                     stderr=subprocess.PIPE).communicate()
         if not re.search('^# owner: ' + backend_user, out,
                          re.MULTILINE | re.DOTALL):
-            print >> sys.stderr, """
+            print("""
 ** Install directory %s is not owned by the backend user, %s!
 ** Please change the ownership of this directory.
-""" % (dir, backend_user)
+""" % (dir, backend_user), file=sys.stderr)
             env.Exit(1)
         if not re.search('^group::.\-..*other::.\-.', out,
                          re.MULTILINE | re.DOTALL):
-            print >> sys.stderr, """
+            print("""
 ** Install directory %s appears to be group- or world-writable!
 ** It should only be writable by the backend user, %s.
 ** To fix this, run
    /usr/bin/sudo -u %s chmod 755 %s
 ** or delete the directory and then rerun scons to recreate it.
-""" % (dir, backend_user, backend_user, dir)
+""" % (dir, backend_user, backend_user, dir), file=sys.stderr)
             env.Exit(1)
 
 def _check_incoming_directory_permissions(env):
@@ -371,13 +372,13 @@ def _check_incoming_directory_permissions(env):
                        'default:group::r-x', 'default:mask::rwx',
                        'default:other::r-x' ]
     if lines != expected_lines:
-        print >> sys.stderr, """
+        print("""
 ** Wrong permissions on incoming directory %s!
 ** Please remove this directory, then rerun scons to recreate it with
 ** the correct permissions.
 ** Expected permissions: %s
 ** Actual permissions: %s
-""" % (incoming, expected_lines, lines)
+""" % (incoming, expected_lines, lines), file=sys.stderr)
         env.Exit(1)
 
 
@@ -387,12 +388,12 @@ def _check_ownership(env):
     backend_uid = pwd.getpwnam(backend_user).pw_uid
     owner_uid = os.stat('.').st_uid
     if backend_uid == owner_uid:
-        print >> sys.stderr, """
+        print("""
 The directory containing the web service checkout is owned by the %s
 user. This is also the backend user. The checkout should *not* be owned
 by the backend; please maintain these files in a regular user's
 account instead.
-""" % (backend_user)
+""" % (backend_user), file=sys.stderr)
         env.Exit(1)
 
 
@@ -401,30 +402,32 @@ def _check_user(env):
     try:
         pwd.getpwnam(backend_user)
     except KeyError:
-        print >> sys.stderr, """
+        print("""
 The backend user is '%s' according to the config file, %s.
 This user does not exist on the system. Please check to make sure you have
 specified the name correctly in the config file, and if so, please ask a
 sysadmin to set up the account for you and give you 'sudo' access to it.
-""" % (backend_user, env['configfile'])
+""" % (backend_user, env['configfile']), file=sys.stderr)
         env.Exit(1)
 
     uid = os.getuid()
     current_user = pwd.getpwuid(uid).pw_name
     if backend_user != current_user:
-        print >> sys.stderr, """
+        print("""
 scons must be run as the backend user, which is '%s' according to the
 config file, %s.
 You are currently trying to run scons as the '%s' user.
 Please run again with something like \"/usr/bin/sudo -u %s scons\"
-""" % (backend_user, env['configfile'], current_user, backend_user)
+""" % (backend_user, env['configfile'], current_user, backend_user),
+               file=sys.stderr)
         env.Exit(1)
 
     if uid < backend_uid_range[0] or uid > backend_uid_range[1]:
-        print >> sys.stderr, """
+        print("""
 The backend user (%s) has an invalid user ID (%d); it must be
 between %d and %d. Please ask a sysadmin to help you fix this problem.
-""" % (backend_user, uid, backend_uid_range[0], backend_uid_range[1])
+""" % (backend_user, uid, backend_uid_range[0], backend_uid_range[1]),
+              file=sys.stderr)
         env.Exit(1)
 
 
@@ -434,14 +437,14 @@ def _check_permissions(env):
     try:
         open('.scons/.test', 'w')
         os.unlink('.scons/.test')
-    except IOError, detail:
-        print >> sys.stderr, """
+    except IOError as detail:
+        print("""
 ** Cannot write to .scons directory: %s
 ** The backend user needs to be able to write to this directory.
 ** To fix this problem, make sure that your checkout is on a local disk
 ** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
    setfacl -m u:%s:rwx .scons
-""" % (str(detail), env['config'].backend['user'])
+""" % (str(detail), env['config'].backend['user']), file=sys.stderr)
         env.Exit(1)
     for end in ('back', 'front'):
         conf = env['config'].database['%send_config' % end]
@@ -452,35 +455,35 @@ def _check_permissions(env):
                                     stderr=subprocess.PIPE).communicate()
         if not re.search('^group::\-\-\-.*^other::\-\-\-', out,
                          re.MULTILINE | re.DOTALL):
-            print >> sys.stderr, """
+            print("""
 ** The database configuration file %s appears to be group- or world-
 ** readable or writable. It should only be user readable and writable.
 ** To fix this, run
    chmod 0600 %s
-""" % (conf, conf)
+""" % (conf, conf), file=sys.stderr)
             env.Exit(1)
         dir, base = os.path.split(conf)
         svnbase = os.path.join(dir, '.svn', 'text-base', base + '.svn-base')
         if os.path.exists(svnbase):
-            print >> sys.stderr, """
+            print("""
 ** The database configuration file %s appears to be under SVN control.
 ** Please do not put files containing sensitive information (i.e. passwords)
 ** under SVN control.
 ** To fix this, run
    svn rm %s; svn ci %s
 ** Then recreate %s using a fresh password.
-""" % (conf, conf, conf, conf)
+""" % (conf, conf, conf, conf), file=sys.stderr)
             env.Exit(1)
         try:
             open(conf)
-        except IOError, detail:
-            print >> sys.stderr, """
+        except IOError as detail:
+            print("""
 ** Cannot read database configuration file: %s
 ** The backend user needs to be able to read this file.
 ** To fix this problem, make sure that your checkout is on a local disk
 ** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
    setfacl -m u:%s:r %s
-""" % (str(detail), env['config'].backend['user'], conf)
+""" % (str(detail), env['config'].backend['user'], conf), file=sys.stderr)
             env.Exit(1)
 
 
@@ -500,18 +503,18 @@ def _check_service(env):
         pid = ws.get_running_pid()
         binary = os.path.join(env['bindir'], 'service.py')
         if pid is None:
-            print "** Backend daemon is not currently running. Run"
-            print "   " + _format_shell_command(env, "%s start" % binary)
-            print "** to have it start processing jobs."
+            print("** Backend daemon is not currently running. Run")
+            print("   " + _format_shell_command(env, "%s start" % binary))
+            print("** to have it start processing jobs.")
         else:
-            print "** Backend daemon is currently running. Run"
-            print "   " + _format_shell_command(env, "%s restart" % binary)
-            print "** to restart it to pick up any changes."
-    except saliweb.backend.StateFileError, detail:
-        print "** Backend daemon will not start due to a previous failure. "
-        print "** You will need to fix this manually before it will run again."
-        print "** Refer to %s for more information" \
-              % config.backend['state_file']
+            print("** Backend daemon is currently running. Run")
+            print("   " + _format_shell_command(env, "%s restart" % binary))
+            print("** to restart it to pick up any changes.")
+    except saliweb.backend.StateFileError as detail:
+        print("** Backend daemon will not start due to a previous failure. ")
+        print("** You will need to fix this manually before it will run again.")
+        print("** Refer to %s for more information"
+              % config.backend['state_file'])
 
 
 def _check_mysql(env):
@@ -552,14 +555,14 @@ def _check_mysql(env):
         _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
                             'SELECT, INSERT, UPDATE, DELETE',
                             table='dependencies')
-    except (MySQLdb.OperationalError, MySQLdb.ProgrammingError), detail:
+    except (MySQLdb.OperationalError, MySQLdb.ProgrammingError) as detail:
         # Only complain about possible too-long DB usernames if MySQL
         # itself first complained
         _check_sql_username_length(env, frontend, 'front')
         _check_sql_username_length(env, backend, 'back')
         outfile = _generate_admin_mysql_script(c.database['db'], backend,
                                                frontend)
-        print >> sys.stderr, """
+        print("""
 ** Could not query the jobs table in the %s database using both the
 ** frontend and backend users. The actual error message follows:
 ** %s
@@ -568,18 +571,18 @@ def _check_mysql(env):
 ** service's MySQL accounts are not set up correctly. If the latter, please
 ** ask a sysadmin to run the commands in the file
 ** %s to set this up properly.
-""" % (c.database['db'], str(detail), outfile)
+""" % (c.database['db'], str(detail), outfile), file=sys.stderr)
         env.Exit(1)
 
 def _check_sql_username_length(env, auth, typ):
     max_length = 16 # MySQL username length limit
     username = auth['user']
     if len(username) > max_length:
-        print >> sys.stderr, """
+        print("""
 ** The database username for the %send user is too long;
 ** MySQL usernames can be at most %d characters long.
 ** Please shorten the username in the configuration file.
-""" % (typ, max_length)
+""" % (typ, max_length), file=sys.stderr)
         env.Exit(1)
 
 def _get_sorted_grant(grant):
@@ -604,12 +607,12 @@ def _check_mysql_grants(env, cursor, database, user, grant, table=None):
     for row in cursor:
         if _get_sorted_grant(row[0]) == grant:
             return
-    print >> sys.stderr, """
+    print("""
 ** The %s user does not appear to have the necessary
 ** MySQL privileges.
 ** Please have an admin run the following MySQL command:
    %s
-""" % (user, grant)
+""" % (user, grant), file=sys.stderr)
     env.Exit(1)
 
 
@@ -651,7 +654,7 @@ def _check_mysql_schema(env, config, cursor, table):
     for dbfield, backfield in zip(dbfields, fields):
         dbfield.index = backfield.index # Ignore differences in indexes here
         if dbfield != backfield:
-            print >> sys.stderr, """
+            print("""
 ** The '%s' database table schema does not match that expected by the backend;
 ** a mismatch has been found in the '%s' field. Please modify the
 ** table schema accordingly.
@@ -665,17 +668,17 @@ def _check_mysql_schema(env, config, cursor, table):
    %s
 """ % (table, dbfield.name, dbfield.name, dbfield.get_schema(),
        backfield.get_schema(),
-       ',\n   '.join(x.get_schema() for x in fields))
+       ',\n   '.join(x.get_schema() for x in fields)), file=sys.stderr)
             env.Exit(1)
 
     if len(dbfields) != len(fields):
-        print >> sys.stderr, """
+        print("""
 ** The '%s' database table schema does not match that expected by the backend;
 ** it has %d fields, while the backend has %d fields. Please modify the
 ** table schema accordingly. The entire table schema should look like:
    %s
 """ % (table, len(dbfields), len(fields),
-       ',\n   '.join(x.get_schema() for x in fields))
+       ',\n   '.join(x.get_schema() for x in fields)), file=sys.stderr)
         env.Exit(1)
 
 
@@ -722,24 +725,21 @@ def _install_directories(env):
 
 def _make_readme(env, target, source):
     service_name = source[0].get_contents()
-    f = open(target[0].path, 'w')
-    print >> f, "Do not edit files in this directory directly!"
-    print >> f, "Instead, check out the source files for the %s service," \
-                % service_name
-    print >> f, "and run 'scons' to install them here."
-    f.close()
-
+    with open(target[0].path, 'w') as f:
+        print("Do not edit files in this directory directly!", file=f)
+        print("Instead, check out the source files for the %s service,"
+              % service_name, file=f)
+        print("and run 'scons' to install them here.", file=f)
 
 def _make_script(env, target, source):
     name = os.path.basename(str(target[0]))
     if name.endswith('.py'):
         name = name[:-3]
-    f = open(target[0].path, 'w')
-    print >> f, "#!/usr/bin/python"
-    print >> f, "import webservice"
-    print >> f, "import saliweb.backend." + name
-    print >> f, "saliweb.backend.%s.main(webservice)" % name
-    f.close()
+    with open(target[0].path, 'w') as f:
+        print("#!/usr/bin/python", file=f)
+        print("import webservice", file=f)
+        print("import saliweb.backend." + name, file=f)
+        print("saliweb.backend.%s.main(webservice)" % name, file=f)
     env.Execute(Chmod(target[0], 0700))
 
 
@@ -749,29 +749,27 @@ def _make_cgi_script(env, target, source):
     perldir = source[1].get_contents()
     if name.endswith('.cgi'):
         name = name[:-4]
-    f = open(target[0].path, 'w')
-    print >> f, "#!/usr/bin/perl -w"
-    print >> f, 'BEGIN { @INC = ("%s",@INC); }' % perldir
-    print >> f, "use %s;" % modname
-    if name == 'job':  # Set up REST interface
-        print >> f, "use saliweb::frontend::RESTService;"
-        print >> f, "@%s::ISA = qw(saliweb::frontend::RESTService);" \
-                    % modname
-        print >> f, "my $m = new %s;" % modname
-        print >> f, "if ($m->cgi->request_method eq 'POST') {"
-        print >> f, "    $m->display_submit_page();"
-        print >> f, "} else {"
-        print >> f, "    $m->display_results_page();"
-        print >> f, "}"
-    else:
-        print >> f, "my $m = new %s;" % modname
-        print >> f, "$m->display_%s_page();" % name
-    f.close()
+    with open(target[0].path, 'w') as f:
+        print("#!/usr/bin/perl -w", file=f)
+        print('BEGIN { @INC = ("%s",@INC); }' % perldir, file=f)
+        print("use %s;" % modname, file=f)
+        if name == 'job':  # Set up REST interface
+            print("use saliweb::frontend::RESTService;", file=f)
+            print("@%s::ISA = qw(saliweb::frontend::RESTService);"
+                  % modname, file=f)
+            print("my $m = new %s;" % modname, file=f)
+            print("if ($m->cgi->request_method eq 'POST') {", file=f)
+            print("    $m->display_submit_page();", file=f)
+            print("} else {", file=f)
+            print("    $m->display_results_page();", file=f)
+            print("}", file=f)
+        else:
+            print("my $m = new %s;" % modname, file=f)
+            print("$m->display_%s_page();" % name, file=f)
     env.Execute(Chmod(target[0], 0755))
 
 
 def _make_web_service(env, target, source):
-    f = open(target[0].path, 'w')
     config = source[0].get_contents()
     modname = source[1].get_contents()
     pydir = source[2].get_contents()
@@ -780,15 +778,16 @@ def _make_web_service(env, target, source):
         version = "r'%s'" % version
     else:
         version = None
-    print >> f, "config = '%s'" % config
-    print >> f, "pydir = '%s'" % pydir
-    print >> f, "import sys"
-    print >> f, "sys.path.insert(0, pydir)"
-    print >> f, "import %s" % modname
-    print >> f, "def get_web_service(config):"
-    print >> f, "    ws = %s.get_web_service(config)" % modname
-    print >> f, "    ws.version = %s" % version
-    print >> f, "    return ws"
+    with open(target[0].path, 'w') as f:
+        print("config = '%s'" % config, file=f)
+        print("pydir = '%s'" % pydir, file=f)
+        print("import sys", file=f)
+        print("sys.path.insert(0, pydir)", file=f)
+        print("import %s" % modname, file=f)
+        print("def get_web_service(config):", file=f)
+        print("    ws = %s.get_web_service(config)" % modname, file=f)
+        print("    ws.version = %s" % version, file=f)
+        print("    return ws", file=f)
 
 
 def _InstallAdminTools(env, tools=None):

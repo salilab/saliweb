@@ -174,7 +174,7 @@ def get_results(url):
     """
     try:
         u = urllib2.urlopen(url)
-    except urllib2.HTTPError, detail:
+    except urllib2.HTTPError as detail:
         if detail.code == 503:
             print("Job not done yet")
             return
@@ -233,7 +233,7 @@ a sample usage for submitting jobs to the service.
     def main(self, args):
         try:
             cookie, args = _get_cookie_arg(args)
-        except getopt.GetoptError, err:
+        except getopt.GetoptError as err:
             print(str(err))
             self.usage()
             sys.exit(1)
@@ -262,7 +262,7 @@ at which the results will become available when the job completes. Use
     def main(self, args):
         try:
             cookie, args = _get_cookie_arg(args)
-        except getopt.GetoptError, err:
+        except getopt.GetoptError as err:
             print(str(err))
             self.usage()
             sys.exit(1)
