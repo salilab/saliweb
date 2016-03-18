@@ -38,7 +38,7 @@ for REPO in ${SVN_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
   # Get top-most revision number (must be a nicer way of doing this?)
-  rev="$(svn log -q --limit 1 ${SVNDIR} |grep '^r' | cut -f 1 -d' ')"
+  rev="$(svn log -q --limit 1 "${SVNDIR}" |grep '^r' | cut -f 1 -d' ')"
 
   # Get code from SVN
   svn export -q "-${rev}" "${SVNDIR}" "${REPO}"
