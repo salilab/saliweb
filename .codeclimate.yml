@@ -14,6 +14,10 @@ engines:
     enabled: true
   fixme:
     enabled: true
+    # Don't complain about TODOs that make_web_service.py puts in the template
+    # files it generates
+    exclude_fingerprints:
+    - 442f1ef163787b3f1dc66ae6e8e3a411
   radon:
     enabled: true
   shellcheck:
