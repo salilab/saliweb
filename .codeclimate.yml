@@ -38,3 +38,4 @@ ratings:
   - "**.md"
 exclude_paths:
 - test/
+- python_tools/reindent.py
