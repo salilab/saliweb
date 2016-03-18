@@ -17,7 +17,7 @@ MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
 
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
-cd ${TMPDIR}
+cd ${TMPDIR} || exit 1
 SVN_REPOS="multifit_web modweb salign"
 GIT_REPOS="modloop saliweb evaluation ligscore saxsmerge allosmod"
 
@@ -25,12 +25,12 @@ for REPO in ${GIT_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
   # Get branch and revision
-  (cd /cowbell1/git/${REPO}.git && echo "`git rev-parse --abbrev-ref HEAD` `git rev-parse --short HEAD`" > "${MODINSTALL}/build/${REPO}-version" && git rev-parse HEAD > "${MODINSTALL}/build/${REPO}-gitrev")
+  (cd "/cowbell1/git/${REPO}.git" && echo "$(git rev-parse --abbrev-ref HEAD) $(git rev-parse --short HEAD)" > "${MODINSTALL}/build/${REPO}-version" && git rev-parse HEAD > "${MODINSTALL}/build/${REPO}-gitrev")
 
   # Get code from git and write out a tarball
-  git clone -q /cowbell1/git/${REPO}.git
-  tar --exclude .git -czf ${SWSRCTGZ} ${REPO}
-  rm -rf ${REPO}
+  git clone -q "/cowbell1/git/${REPO}.git"
+  tar --exclude .git -czf "${SWSRCTGZ}" "${REPO}"
+  rm -rf "${REPO}"
 done
 
 for REPO in ${SVN_REPOS}; do
@@ -38,20 +38,20 @@ for REPO in ${SVN_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
 
   # Get top-most revision number (must be a nicer way of doing this?)
-  rev=$(svn log -q --limit 1 ${SVNDIR} |grep '^r' | cut -f 1 -d' ')
+  rev="$(svn log -q --limit 1 ${SVNDIR} |grep '^r' | cut -f 1 -d' ')"
 
   # Get code from SVN
-  svn export -q -${rev} ${SVNDIR} ${REPO}
+  svn export -q "-${rev}" "${SVNDIR}" "${REPO}"
 
   # Write out a version file
   verfile="${MODINSTALL}/build/${REPO}-version"
-  echo "${rev}" > $verfile
+  echo "${rev}" > "$verfile"
 
   # Write out a tarball:
-  tar -czf ${SWSRCTGZ} ${REPO}
-  rm -rf ${REPO}
+  tar -czf "${SWSRCTGZ}" "${REPO}"
+  rm -rf "${REPO}"
 done
 
 # Cleanup
-cd /
+cd / || exit 1
 rm -rf ${TMPDIR}
