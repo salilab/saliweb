@@ -3,8 +3,8 @@ html {
 }
 
 body {
-        margin: 0px auto;
-        padding: 0px;
+        margin: 0 auto;
+        padding: 0;
         font-family: Arial, Helvetica, sans-serif;
         background-color: #EEEEEE;
         color: #666666;
@@ -65,8 +65,8 @@ h1 {
    font-family: Helvetica;
    font-weight: normal;
    font-size: 1.5em;
-   margin-top: 0px;
-   margin-bottom: 0px;
+   margin-top: 0;
+   margin-bottom: 0;
    color: #E2A361;
 }
 
@@ -75,7 +75,7 @@ h2 {
    font-weight: bold;
    font-size: 1.4em;
    margin-top: -20px;
-   margin-bottom: 0px;
+   margin-bottom: 0;
    color: #E2A361;
 }
 
@@ -83,7 +83,7 @@ h3 {
         font-family: Verdana, Arial, Helvetica, sans-serif;
         font-weight: bold;
         font-size: 1.1em;
-        margin-top: 0px;
+        margin-top: 0;
         text-align: center;
         margin-bottom: 5px;
         color: #CE8E4C;
@@ -102,7 +102,7 @@ h5 {
         font-family: Verdana, Arial, Helvetica, sans-serif;
         font-weight: bold;
         font-size: 1.0em;
-        margin-top: 0px;
+        margin-top: 0;
         text-align: left;
         margin-bottom: 5px;
         color: #003366;
@@ -116,7 +116,7 @@ h5 {
 }
 #left h4  a{
         color: #CE8E4C;
-        font-size=0.8em;
+        font-size: 0.8em;
         text-align: left;
 }
 #fullpart h3 {
@@ -136,8 +136,8 @@ h5 {
         -webkit-border-radius: 1em;
         border-radius: 1em;
         background-color: #FFFFFF;
-        box-shadow: 10px 10px 5px #AAA;
         -webkit-box-shadow: 5px 5px 3px #AAA;
+        box-shadow: 10px 10px 5px #AAA;
 }
 #headerarea {
         background-color: inherit;
@@ -154,7 +154,7 @@ h5 {
 }
 #navigation_second {
         position:relative;
-        top: 0px;
+        top: 0;
         background-color: #FFFFFF;
         font-size: 0.8em;
         text-align: center;
@@ -164,7 +164,7 @@ h5 {
 }
 #navigation_current {
         position:relative;
-        top: 0px;
+        top: 0;
         background-color: #FFFFFF;
         font-size: 0.8em;
         text-align: left;
@@ -177,7 +177,7 @@ h5 {
         text-align: left;
 }
 #navigation_current ul {
-        text-indent: 0px;
+        text-indent: 0;
         margin: 0em;
         padding-top: 0em;
         padding-bottom: 0em;
@@ -186,7 +186,7 @@ h5 {
 
 #navigation_lab {
         position:relative;
-        top: 0px;
+        top: 0;
         background-color: #596E98;
         font-size: 0.8em;
         text-align: center;
@@ -220,7 +220,7 @@ h5 {
 }
 
 #left ul {
-        text-indent: 0px;
+        text-indent: 0;
         padding-left: 2.5em;
 }
 #left li{
@@ -257,14 +257,14 @@ h5 {
         vertical-align: top;
 }
 #fullpart p {
-        margin-top: 0px;
-        margin-left: 0px;
-        margin-right: 0px;
+        margin-top: 0;
+        margin-left: 0;
+        margin-right: 0;
         margin-bottom: 3px;
 
 }
 #fullpart ul {
-        text-indent: 0px;
+        text-indent: 0;
         padding-left: 2.5em;
 }
 #resulttable table {
@@ -306,7 +306,7 @@ h5 {
         padding-top: 10px;
         padding-right: 20px;
         padding-bottom: 10px;
-        padding-left: 0px;
+        padding-left: 0;
         float: left;
         clear: none;
         -moz-border-radius: 1em;
@@ -327,7 +327,7 @@ h5 {
         font-family: Verdana, Arial, Helvetica, sans-serif;
         font-weight: bold;
         font-size: 1.1em;
-        margin-top: 0px;
+        margin-top: 0;
         text-align: center;
         margin-bottom: 5px;
         color: #EFAF6E;
@@ -336,7 +336,7 @@ h5 {
         font-family: Verdana, Arial, Helvetica, sans-serif;
         font-weight: bold;
         font-size: 1.1em;
-        margin-top: 0px;
+        margin-top: 0;
         text-align: center;
         margin-bottom: 5px;
         color: #EFAF6E;
@@ -347,7 +347,7 @@ h5 {
         font-family: "Verdana";
         text-align: justify;
         font-size: 0.7em;
-        bottom: 0px;
+        bottom: 0;
         padding: 10px;
         background-color: inherit;
         margin-bottom: 10px;
@@ -387,8 +387,8 @@ h5 {
     text-align: left;
     width: 95%;
     float: none;
-    right: 0px;
-    top: 0px;
+    right: 0;
+    top: 0;
     padding: 7px 10px 10px 7px;
   }
 }
