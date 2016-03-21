@@ -137,17 +137,18 @@ h5 {
         border-radius: 1em;
         background-color: #FFFFFF;
         -webkit-box-shadow: 5px 5px 3px #AAA;
+        -moz-box-shadow: 5px 5px 3px #AAA;
         box-shadow: 10px 10px 5px #AAA;
 }
 #headerarea {
         background-color: inherit;
 }
 #header1 {
-        padding-left:0px;
+        padding-left: 0;
      	vertical-align: top;
         background-color: inherit;
         margin-top:10px;
-        padding-bottom:0px;
+        padding-bottom: 0;
         font-weight: bold;
         text-transform: none;
         z-index: 2;
@@ -178,9 +179,9 @@ h5 {
 }
 #navigation_current ul {
         text-indent: 0;
-        margin: 0em;
-        padding-top: 0em;
-        padding-bottom: 0em;
+        margin: 0;
+        padding-top: 0;
+        padding-bottom: 0;
         padding-left: 2.5em;
 }
 
@@ -235,10 +236,7 @@ h5 {
         top: 20px;
         bottom: auto;
         right: 5px;
-        padding-left: 20px;
-        padding-right: 20px;
-        padding-top: 7px;
-        padding-bottom: 30px;
+        padding: 7px 20px 30px 20px;
         font-size: 0.8em;
         text-align: justify;
         margin-bottom: 10px;
@@ -257,11 +255,7 @@ h5 {
         vertical-align: top;
 }
 #fullpart p {
-        margin-top: 0;
-        margin-left: 0;
-        margin-right: 0;
-        margin-bottom: 3px;
-
+        margin: 0 0 3px 0;
 }
 #fullpart ul {
         text-indent: 0;
@@ -303,10 +297,7 @@ h5 {
         width: 5px;
         left: 4px;
         background-color: #596E98;
-        padding-top: 10px;
-        padding-right: 20px;
-        padding-bottom: 10px;
-        padding-left: 0;
+        padding: 10px 20px 10px 0;
         float: left;
         clear: none;
         -moz-border-radius: 1em;
