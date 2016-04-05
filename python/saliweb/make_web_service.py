@@ -256,7 +256,7 @@ expire: 30d""" % self.__dict__, file=f)
                 print("""[%s_db]
 user: %s
 passwd: %s""" % (end, user, passwd), file=f)
-            os.chmod(fname, 0600)
+            os.chmod(fname, 0o600)
 
     def _make_frontend(self):
         with open(os.path.join(self.topdir, 'lib',
