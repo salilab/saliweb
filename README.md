@@ -2,6 +2,7 @@
 [![nightly build](https://salilab.org/nightly/stat/?s=saliweb&t=build)](https://salilab.org/nightly/saliweb/)
 [![python coverage](https://salilab.org/nightly/stat/?s=saliweb&t=python)](https://salilab.org/nightly/saliweb/logs/coverage/python/)
 [![perl coverage](https://salilab.org/nightly/stat/?s=saliweb&t=perl)](https://salilab.org/nightly/saliweb/logs/coverage/perl/)
+[![Coverity scan](https://img.shields.io/coverity/scan/8508.svg)](https://scan.coverity.com/projects/salilab-saliweb)
 [![Code Climate](https://codeclimate.com/github/salilab/saliweb/badges/gpa.svg)](https://codeclimate.com/github/salilab/saliweb)
 
 This framework provides a simple set of classes and modules to simplify
