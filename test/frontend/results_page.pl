@@ -18,6 +18,8 @@ use strict;
 
 BEGIN { use_ok('saliweb::frontend'); }
 
+$ENV{REQUEST_URI} = "dummy request URI";
+
 # Test allow_file_download
 {
     my $cls = {};

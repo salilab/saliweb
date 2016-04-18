@@ -15,6 +15,8 @@ BEGIN {
     use_ok('saliweb::frontend');
 }
 
+$ENV{REQUEST_URI} = "dummy request URI";
+
 # Test display_download_page
 {
     my $cls = {CGI=>new CGI, page_title=>'test title', cgiroot=>'/foo',

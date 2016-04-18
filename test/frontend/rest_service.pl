@@ -17,6 +17,8 @@ BEGIN {
     require Dummy;
 }
 
+$ENV{REQUEST_URI} = "dummy request URI";
+
 # Test simple accessors
 {
     my $self = {'cgiroot'=>'testroot'};

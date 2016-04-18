@@ -531,6 +531,8 @@ from being able to use your web service.
 
 The specific error message is shown below:
 $exc
+
+URI: $ENV{REQUEST_URI}
 END
 
     if ($count == $limit) {

@@ -31,6 +31,8 @@ BEGIN {
     require Dummy;
 }
 
+$ENV{REQUEST_URI} = "dummy request URI";
+
 # Test help_link method
 {
     my $cgi = new CGI;
