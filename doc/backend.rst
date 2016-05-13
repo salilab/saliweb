@@ -33,7 +33,8 @@ the job starts; it is expected to start the job running on the cluster,
 typically by using an :class:`SGERunner` object. There are similar methods
 that can be used to do extra processing before the job starts
 (:meth:`Job.preprocess`), after it finishes running on the cluster
-(:meth:`Job.postprocess`) or when the job is moved to long-term storage
+(:meth:`Job.postprocess` and :meth:`Job.finalize`) or when the job is moved
+to long-term storage
 (:meth:`Job.archive`), for example. Each method is run in the directory
 containing all of the job's data (i.e. any files uploaded by the end user
 when the job was submitted, plus any output files after the job has run).
@@ -119,6 +120,12 @@ a job will move from the first state in the list below to the last.
   the :meth:`Job.postprocess` method is called. Like preprocessing, this runs
   serially on the server machine and so should not be computationally
   expensive.
+
+* It may be decided in postprocessing that further runs are required, in which
+  case the job moves back to the **RUNNING** state for another cycle. Otherwise,
+  it moves to the **FINALIZING** state and :meth:`Job.finalize` is called. This
+  is the same as **POSTPROCESSING** except that is only called on the last
+  cycle (no further runs can be started here).
 
 * Next the job moves to the **COMPLETED** state and the :meth:`Job.complete`
   method is called. If the user provided an email address to the frontend,

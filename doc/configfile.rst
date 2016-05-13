@@ -119,9 +119,9 @@ incoming, preprocessing, etc.
     directories are required; others, if not specified, will default to the
     directory for the previous state (i.e. the RUNNING directory will default
     to that for PREPROCESSING, that for POSTPROCESSING will default to RUNNING,
-    COMPLETED to POSTPROCESSING, and ARCHIVED to COMPLETED). If the FAILED
-    directory is not given, it will default to the same as the COMPLETED
-    directory.
+    FINALIZING to POSTPROCESSING, COMPLETED to FINALIZING, and ARCHIVED
+    to COMPLETED). If the FAILED directory is not given, it will default
+    to the same as the COMPLETED directory.
 
 oldjobs
 =======

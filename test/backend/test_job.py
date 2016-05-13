@@ -82,6 +82,13 @@ class MyJob(Job):
         f.close()
         if self.name == 'reschedule':
             self.reschedule_run('my-reschedule')
+    def finalize(self):
+        l = self.logger # Make sure self.logger is populated
+        if self.name == 'fail-finalize':
+            raise ValueError('Failure in finalizing')
+        self._metadata['testfield'] = 'finalize'
+        f = open('finalize', 'w')
+        f.close()
     def complete(self):
         l = self.logger # Make sure self.logger is populated
         if self.name == 'fail-complete':
@@ -231,6 +238,17 @@ def add_postprocessing_job(db, name):
     db.conn.commit()
     return jobdir
 
+def add_finalizing_job(db, name):
+    c = db.conn.cursor()
+    jobdir = os.path.join(db.config.directories['FINALIZING'], name)
+    os.mkdir(jobdir)
+    utcnow = datetime.datetime.utcnow()
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
+              + "VALUES(?,?,?,?,?)", (name, 'FINALIZING', utcnow, jobdir,
+                                      'http://testurl'))
+    db.conn.commit()
+    return jobdir
+
 def setup_webservice(archive='30d', expire='90d'):
     tmpdir = tempfile.mkdtemp()
     incoming = os.path.join(tmpdir, 'incoming')
@@ -357,6 +375,20 @@ class JobTest(unittest.TestCase):
                              + 'SanityError: .*is in state POSTPROCESSING', job)
         cleanup_webservice(conf, tmpdir)
 
+    def test_sanity_check_finalize_state(self):
+        """Make sure that sanity checks catch jobs in FINALIZING state"""
+        utcnow = datetime.datetime.utcnow()
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = add_finalizing_job(db, 'fin')
+        web._sanity_check()
+        job = web.get_job_by_name('FAILED', 'fin')
+        failjobdir = os.path.join(conf.directories['FAILED'], 'fin')
+        self.assertEqual(job.directory, failjobdir)
+        os.rmdir(failjobdir)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'SanityError: .*is in state FINALIZING', job)
+        cleanup_webservice(conf, tmpdir)
+
     def test_preprocess_failure(self):
         """Make sure that preprocess failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
@@ -479,8 +511,9 @@ class JobTest(unittest.TestCase):
         self.assertNotEqual(job._metadata['end_time'], None)
         self.assertNotEqual(job._metadata['archive_time'], None)
         self.assertNotEqual(job._metadata['expire_time'], None)
-        # postprocess and complete methods in MyJob should have triggered
+        # postprocess, finalize, complete methods in MyJob should have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
+        os.unlink(os.path.join(compjobdir, 'finalize'))
         os.unlink(os.path.join(compjobdir, 'complete'))
         # Should have checked for batch completion
         os.unlink(os.path.join(compjobdir, 'batch_complete'))
@@ -508,6 +541,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job._metadata['archive_time'], None)
         self.assertEqual(job._metadata['expire_time'], None)
         os.unlink(os.path.join(jobdir, 'postproc'))
+        os.unlink(os.path.join(jobdir, 'finalize'))
         os.unlink(os.path.join(jobdir, 'complete'))
         os.unlink(os.path.join(jobdir, 'batch_complete'))
         os.rmdir(jobdir)
@@ -546,6 +580,25 @@ class JobTest(unittest.TestCase):
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
 
+    def test_finalize_failure(self):
+        """Make sure that finalize failures are handled correctly"""
+        db, conf, web, tmpdir = setup_webservice()
+        runjobdir = add_running_job(db, 'fail-finalize', completed=True)
+        web._process_completed_jobs()
+
+        # Job should now have moved from RUNNING to FAILED
+        job = web.get_job_by_name('FAILED', 'fail-finalize')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-finalize')
+        self.assertEqual(job.directory, failjobdir)
+        self.assert_fail_msg('Python exception:.*Traceback.*' \
+                             + 'ValueError: Failure in finalizing', job)
+        # postprocess method in MyJob should have triggered
+        os.unlink(os.path.join(failjobdir, 'postproc'))
+        os.unlink(os.path.join(failjobdir, 'batch_complete'))
+        os.rmdir(failjobdir)
+        cleanup_webservice(conf, tmpdir)
+
     def test_complete_failure(self):
         """Make sure that complete failures are handled correctly"""
         db, conf, web, tmpdir = setup_webservice()
@@ -559,8 +612,9 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in completion', job)
-        # postprocess method in MyJob should have triggered
+        # postprocess, finalize methods in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'postproc'))
+        os.unlink(os.path.join(failjobdir, 'finalize'))
         # should have checked for batch completion
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)

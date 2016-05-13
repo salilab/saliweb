@@ -442,7 +442,7 @@ class CheckTest(unittest.TestCase):
         self.assertEquals(contents, \
 """CREATE DATABASE testdb;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
-CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
+CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED','FINALIZING') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, finalize_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
 CREATE INDEX state_index ON testdb.jobs (state);
 CREATE TABLE testdb.dependencies (child VARCHAR(40) NOT NULL DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');
 CREATE INDEX child_index ON testdb.dependencies (child);
@@ -468,7 +468,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assert_(re.search("'jobs' database table schema does not match.*"
-                               'it has 0 fields, while the backend has 16 '
+                               'it has 0 fields, while the backend has 17 '
                                'fields.*entire table schema should look like.*'
                                'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
                                "DEFAULT ''", stderr, re.DOTALL),
@@ -506,12 +506,13 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                     ('url', 'text', 'NO', '', None, ''),
                     ('state', "ENUM('INCOMING','PREPROCESSING','RUNNING',"
                               "'POSTPROCESSING','COMPLETED','FAILED',"
-                              "'EXPIRED','ARCHIVED')", 'NO', '',
+                              "'EXPIRED','ARCHIVED','FINALIZING')", 'NO', '',
                               'INCOMING', ''),
                     ('submit_time', 'datetime', 'NO', '', '', ''),
                     ('preprocess_time', 'datetime', 'YES', '', None, ''),
                     ('run_time', 'datetime', 'YES', '', None, ''),
                     ('postprocess_time', 'datetime', 'YES', '', None, ''),
+                    ('finalize_time', 'datetime', 'YES', '', None, ''),
                     ('end_time', 'datetime', 'YES', '', None, ''),
                     ('archive_time', 'datetime', 'YES', '', None, ''),
                     ('expire_time', 'datetime', 'YES', '', None, ''),

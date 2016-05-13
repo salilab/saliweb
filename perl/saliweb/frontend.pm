@@ -232,8 +232,8 @@ sub new {
     $self->{frontend} = $frontend;
     $self->{results} = [];
     $self->{metadata} = [];
-    for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'end',
-                      'archive', 'expire') {
+    for my $timename ('submit', 'preprocess', 'run', 'postprocess', 'finalize',
+                      'end', 'archive', 'expire') {
         my $key = "${timename}_time";
         $self->{$key} = _to_unix_time($self->{$key});
     }

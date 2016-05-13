@@ -81,13 +81,16 @@ class ConfigTest(unittest.TestCase):
         conf = get_config(extradir='completed: /foo')
         self.assertEqual(conf.directories['FAILED'], '/foo')
         self.assertEqual(conf.directories['ARCHIVED'], '/foo')
-        # COMPLETED and later default to POSTPROCESSING
-        conf = get_config(extradir='postprocessing: /postproc\narchived:/arch')
-        self.assertEqual(conf.directories['COMPLETED'], '/postproc')
-        self.assertEqual(conf.directories['FAILED'], '/postproc')
+        # COMPLETED and later default to FINALIZING
+        conf = get_config(extradir='finalizing: /fin\narchived:/arch')
+        self.assertEqual(conf.directories['COMPLETED'], '/fin')
+        self.assertEqual(conf.directories['FAILED'], '/fin')
         self.assertEqual(conf.directories['ARCHIVED'], '/arch')
+        conf = get_config(extradir='finalizing: /fin')
+        self.assertEqual(conf.directories['ARCHIVED'], '/fin')
+        # FINALIZING defaults to POSTPROCESSING
         conf = get_config(extradir='postprocessing: /postproc')
-        self.assertEqual(conf.directories['ARCHIVED'], '/postproc')
+        self.assertEqual(conf.directories['FINALIZING'], '/postproc')
         # POSTPROCESSING defaults to RUNNING
         conf = get_config(extradir='running: /running')
         self.assertEqual(conf.directories['POSTPROCESSING'], '/running')

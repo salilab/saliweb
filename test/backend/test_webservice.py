@@ -251,9 +251,11 @@ class WebServiceTest(unittest.TestCase):
         job_log = []
         db, conf, web = self._setup_webservice()
         web._job_sanity_check()
-        # sanity check should check PREPROCESSING and POSTPROCESSING jobs
+        # sanity check should check PREPROCESSING, POSTPROCESSING, and
+        # FINALIZING jobs
         self.assertEqual(job_log, [('preproc', 'sanity_check'),
-                                   ('postproc', 'sanity_check')])
+                                   ('postproc', 'sanity_check'),
+                                   ('finalize', 'sanity_check')])
 
     def test_get_running_pid(self):
         """Check WebService.get_running_pid()"""

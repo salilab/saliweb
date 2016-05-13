@@ -7,7 +7,7 @@ import sys
 def get_options():
     parser = OptionParser()
     default_states = ['FAILED', 'INCOMING', 'PREPROCESSING',
-                      'POSTPROCESSING', 'RUNNING']
+                      'POSTPROCESSING', 'FINALIZING', 'RUNNING']
     parser.set_usage("""
 %prog [-h] [STATE ...]
 

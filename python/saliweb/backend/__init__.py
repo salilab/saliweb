@@ -99,15 +99,18 @@ def _make_daemon():
 
 class _JobState(object):
     """Simple state machine for jobs."""
+    # Only add new states to the *end* of this list, since the ordering
+    # cannot be changed (it is used to populate SQL enum fields)
     __valid_states = ['INCOMING', 'PREPROCESSING', 'RUNNING',
                       'POSTPROCESSING', 'COMPLETED', 'FAILED',
-                      'EXPIRED', 'ARCHIVED']
+                      'EXPIRED', 'ARCHIVED', 'FINALIZING']
     __valid_transitions = [['INCOMING', 'PREPROCESSING'],
                            ['PREPROCESSING', 'RUNNING'],
                            ['PREPROCESSING', 'COMPLETED'],
                            ['RUNNING', 'POSTPROCESSING'],
-                           ['POSTPROCESSING', 'COMPLETED'],
+                           ['POSTPROCESSING', 'FINALIZING'],
                            ['POSTPROCESSING', 'RUNNING'],
+                           ['FINALIZING', 'COMPLETED'],
                            ['COMPLETED', 'ARCHIVED'],
                            ['ARCHIVED', 'EXPIRED'],
                            ['FAILED', 'INCOMING']]
@@ -297,7 +300,7 @@ class Config(object):
         others = _JobState.get_valid_states()
         others.remove('EXPIRED')
         sorted_others = ['PREPROCESSING', 'RUNNING', 'POSTPROCESSING',
-                         'COMPLETED', 'ARCHIVED']
+                         'FINALIZING', 'COMPLETED', 'ARCHIVED']
         # INCOMING and PREPROCESSING directories must be specified
         for key in ('INCOMING', 'PREPROCESSING'):
             others.remove(key)
@@ -459,6 +462,7 @@ class Database(object):
         self.add_field(MySQLField('preprocess_time', 'DATETIME'))
         self.add_field(MySQLField('run_time', 'DATETIME'))
         self.add_field(MySQLField('postprocess_time', 'DATETIME'))
+        self.add_field(MySQLField('finalize_time', 'DATETIME'))
         self.add_field(MySQLField('end_time', 'DATETIME'))
         self.add_field(MySQLField('archive_time', 'DATETIME'))
         self.add_field(MySQLField('expire_time', 'DATETIME'))
@@ -849,10 +853,9 @@ have done this, delete the state file (%s) to reenable runs.
 
     def _job_sanity_check(self):
         """Check for jobs in incorrect states"""
-        for job in self.db._get_all_jobs_in_state('PREPROCESSING'):
-            job._sanity_check()
-        for job in self.db._get_all_jobs_in_state('POSTPROCESSING'):
-            job._sanity_check()
+        for state in ('PREPROCESSING', 'POSTPROCESSING', 'FINALIZING'):
+            for job in self.db._get_all_jobs_in_state(state):
+                job._sanity_check()
 
     def _filesystem_sanity_check(self):
         """Check that filesystem is consistent with the database"""
@@ -1168,7 +1171,7 @@ class Job(object):
             state = self._get_state()
             # These states are transient and so jobs should not be found in the
             # database in this state
-            if state == 'PREPROCESSING' or state == 'POSTPROCESSING':
+            if state in ('PREPROCESSING', 'POSTPROCESSING', 'FINALIZING'):
                 raise SanityError("Job %s is in state %s; this should not be "
                                   "possible unless the web service were shut "
                                   "down uncleanly" % (self.name, state))
@@ -1247,6 +1250,9 @@ class Job(object):
                                                     self.__reschedule_data)
                 self._start_runner(runner, webservice)
             else:
+                self._metadata['finalize_time'] = datetime.datetime.utcnow()
+                self.__set_state('FINALIZING')
+                self._run_in_job_directory(self.finalize)
                 self._mark_job_completed()
         except Exception as detail:
             self._fail(detail)
@@ -1438,7 +1444,9 @@ class Job(object):
 
     def complete(self):
         """This method is called after a job completes. Does nothing by
-           default, but can be overridden by the user.
+           default, but can be overridden by the user. Note that it is rare
+           to override this method - usually :meth:`finalize` makes more
+           sense.
            This method should not be called directly."""
 
     def send_job_completed_email(self):
@@ -1476,7 +1484,7 @@ class Job(object):
     def skip_run(self):
         """Tell the backend to skip the actual running of the job, so that
            when preprocessing has completed, it moves directly to the
-           COMPLETED state, skipping RUNNING and POSTPROCESSING.
+           COMPLETED state, skipping RUNNING, POSTPROCESSING, and FINALIZING.
 
            It is only valid to call this method from the PREPROCESSING state,
            usually from a user-defined :meth:`preprocess` method."""
@@ -1491,7 +1499,7 @@ class Job(object):
            `results`, if given, contains explicit results from the job runner.
            For example, the :class:`SaliWebServiceRunner` returns a list of
            files generated by the web service (as :class:`SaliWebServiceResult`
-           objects).
+           objects). See also :meth:`finalize`.
            This method should not be called directly."""
 
     def reschedule_run(self, data=None):
@@ -1515,6 +1523,13 @@ class Job(object):
         self._assert_state('POSTPROCESSING')
         self.__reschedule_run = True
         self.__reschedule_data = data
+
+    def finalize(self):
+        """Do any necessary finalizing when the job completes successfully.
+           Does nothing by default. This is like :meth:`postprocess` except
+           that it cannot schedule any more jobs (:meth:`reschedule_run`), i.e.
+           it is only called on the last cycle of a multi-job run.
+           This method should not be called directly."""
 
     name = property(lambda x: x._metadata['name'],
                     doc="Unique job name (read-only)")

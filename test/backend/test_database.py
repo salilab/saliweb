@@ -37,6 +37,11 @@ def make_test_jobs(sql):
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
               + "archive_time,expire_time,directory,url) " \
               + "VALUES(?,?,?,?,?,?,?,?)",
+              ('finalize', 'FINALIZING', None, utcnow, utcnow, utcnow,
+               '/', 'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
+              + "archive_time,expire_time,directory,url) " \
+              + "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
@@ -59,7 +64,7 @@ class DatabaseTest(unittest.TestCase):
     def test_init(self):
         """Check Database init"""
         db = MemoryDatabase(Job)
-        self.assertEqual(len(db._fields), 16)
+        self.assertEqual(len(db._fields), 17)
         self.assertEqual(db._fields[0].name, 'name')
 
     def test_connect(self):
