@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import sys
 import saliweb.build
@@ -98,7 +99,8 @@ class SetupTest(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         def get_broken_env_pyscript(name, script):
             tmpfile = os.path.join(tmpdir, name)
-            print >> open(tmpfile, 'w'), "#!/usr/bin/python\n" + script
+            with open(tmpfile, 'w') as fh:
+                print("#!/usr/bin/python\n" + script, file=fh)
             os.chmod(tmpfile, 0755)
             return BrokenEnv(tmpfile)
 
@@ -127,7 +129,9 @@ class SetupTest(unittest.TestCase):
             self.assertEqual(env, {'version': None})
     
             # No number provided; svnversion binary reports 'exported'
-            env = get_broken_env_pyscript('expscript', 'print "exported"')
+            env = get_broken_env_pyscript('expscript', """
+from __future__ import print_function
+print("exported")""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 0)
@@ -135,9 +139,10 @@ class SetupTest(unittest.TestCase):
     
             # No number provided; svnversion binary returns error
             env = get_broken_env_pyscript('errscript', """
+from __future__ import print_function
 import sys
-print >> sys.stderr, "error text"
-print "output text"
+print("error text", file=sys.stderr)
+print("output text")
 sys.exit(1)""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
@@ -149,7 +154,9 @@ sys.exit(1)""")
             self.assertEqual(env, {'version': None})
     
             # No number provided; svnversion binary works
-            env = get_broken_env_pyscript('workscript', 'print "1024\\n2048"')
+            env = get_broken_env_pyscript('workscript', """
+from __future__ import print_function
+print("1024\\n2048")""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 0)
@@ -158,11 +165,12 @@ sys.exit(1)""")
             # git repository
             os.mkdir('.git')
             env = get_broken_env_pyscript('gitscript', """
+from __future__ import print_function
 import sys
 if sys.argv[1:4] == ['rev-parse', '--abbrev-ref', 'HEAD']:
-    print "master\\nfoo"
+    print("master\\nfoo")
 elif sys.argv[1:4] == ['rev-parse', '--short', 'HEAD']:
-    print "abc123\\nbar"
+    print("abc123\\nbar")
 else:
     raise IOError(sys.argv)
 """)

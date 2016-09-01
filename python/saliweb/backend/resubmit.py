@@ -1,3 +1,4 @@
+from __future__ import print_function
 from optparse import OptionParser
 import sys
 
@@ -23,4 +24,4 @@ def main(webservice):
         if job:
             job.resubmit()
         else:
-            print >> sys.stderr, "Could not find job", name
+            print("Could not find job", name, file=sys.stderr)

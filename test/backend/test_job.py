@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import glob
 import logging
@@ -129,8 +130,8 @@ class MyJob(Job):
         elif self.name == 'batch-complete-race':
             # Simulate job completing just after the first check of the
             # state file
-            f = open(os.path.join(self.directory, 'job-state'), 'w')
-            print >> f, "DONE"
+            with open(os.path.join(self.directory, 'job-state'), 'w') as f:
+                print("DONE", file=f)
             return True
         f = open(os.path.join(self.directory, 'batch_complete'), 'w')
         f.close()
@@ -158,11 +159,11 @@ def add_running_job(db, name, completed):
               (name, 'RUNNING', utcnow, 'mock:SGE-'+name, jobdir,
               'testuser@salilab.org', 'http://testurl'))
     db.conn.commit()
-    f = open(os.path.join(jobdir, 'job-state'), 'w')
-    if completed:
-        print >> f, "DONE"
-    else:
-        print >> f, "STARTED"
+    with open(os.path.join(jobdir, 'job-state'), 'w') as f:
+        if completed:
+            print("DONE", file=f)
+        else:
+            print("STARTED", file=f)
     return jobdir
 
 def add_completed_job(db, name, archive_time):

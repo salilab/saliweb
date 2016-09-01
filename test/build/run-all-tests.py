@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest, sys, os, re
 import glob
 
@@ -35,7 +36,7 @@ class RunAllTests(unittest.TestProgram):
             self.cov.stop()
             self.cov.combine()
             self.cov.use_cache(True)
-            print >> sys.stderr, "\nPython coverage report\n"
+            print("\nPython coverage report\n", file=sys.stderr)
 
             if hasattr(coverage.files, 'RELATIVE_DIR'):
                 coverage.files.RELATIVE_DIR = self.topdir + '/'

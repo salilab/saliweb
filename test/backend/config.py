@@ -1,3 +1,4 @@
+from __future__ import print_function
 import saliweb.backend
 import tempfile
 import os
@@ -10,12 +11,11 @@ class Config(saliweb.backend.Config):
         self.__tmpdir = tempfile.mkdtemp()
         self._mailer = os.path.join(self.__tmpdir, 'mailer')
         self.__mailoutput = os.path.join(self.__tmpdir, 'output')
-        f = open(self._mailer, 'w')
-        print >> f, """#!/usr/bin/python
+        with open(self._mailer, 'w') as f:
+            print("""#!/usr/bin/python
 import sys
 open('%s', 'w').write(sys.stdin.read())
-""" % self.__mailoutput
-        f.close()
+""" % self.__mailoutput, file=f)
         os.chmod(self._mailer, 0755)
 
     def __del__(self):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import tempfile
 import shutil
@@ -48,28 +49,29 @@ class WebServiceTests(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
         curl = os.path.join(self.tmpdir, 'curl')
         open(curl, 'w').write("""#!/usr/bin/python
+from __future__ import print_function
 import sys
 url = sys.argv[-1]
 ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
 if 'badcurl' in url:
-    print >> sys.stderr, "some curl error"
+    print("some curl error", file=sys.stderr)
     sys.exit(1)
 elif 'invalidxml' in url:
-    print "this is not valid xml"
+    print("this is not valid xml")
 elif 'wrongxml' in url:
-    print "<wrongtag />"
+    print("<wrongtag />")
 elif 'noparam' in url:
-    print '<saliweb><service name="modfoo"/></saliweb>'
+    print('<saliweb><service name="modfoo"/></saliweb>')
 elif 'badsubmit' in url:
-    print '<saliweb><error>invalid job submission</error></saliweb>'
+    print('<saliweb><error>invalid job submission</error></saliweb>')
 elif 'oksubmit' in url:
-    print '<saliweb %s><job xlink:href="http://jobresults/" /></saliweb>' % ns
+    print('<saliweb %s><job xlink:href="http://jobresults/" /></saliweb>' % ns)
 elif 'longsubmit' in url:
-    print '<saliweb %s><job xlink:href="http://longjob/" /></saliweb>' % ns
+    print('<saliweb %s><job xlink:href="http://longjob/" /></saliweb>' % ns)
 else:
-    print '<saliweb><service name="modfoo"/>' \
-          '<parameters><string name="foo">bar</string>' \
-          '</parameters></saliweb>'
+    print('<saliweb><service name="modfoo"/>'
+          '<parameters><string name="foo">bar</string>'
+          '</parameters></saliweb>')
 """)
         os.chmod(curl, 0700)
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']

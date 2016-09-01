@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import os
 from saliweb.backend import _DelayFileStream
@@ -17,7 +18,7 @@ class LoggingTest(unittest.TestCase):
         dfs.flush()
         self.assertEqual(os.path.exists('foo'), False)
         # File should appear on the first write
-        print >> dfs, "test text"
+        print("test text", file=dfs)
         dfs.flush()
         self.assertEqual(os.path.exists('foo'), True)
         contents = open('foo').read()

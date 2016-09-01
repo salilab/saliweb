@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import modfoo
 import saliweb.test
@@ -13,8 +14,10 @@ class JobTests(saliweb.test.TestCase):
         # Run the rest of this testcase in the job's directory
         d = saliweb.test.RunInDir(j.directory)
         # Make a test PDB file and another incidental file
-        print >> open('test.pdb', 'w'), "test pdb"
-        print >> open('test.txt', 'w'), "text file"
+        with open('test.pdb', 'w') as f:
+            print("test pdb", file=f)
+        with open('test.txt', 'w') as f:
+            print("text file", file=f)
 
         # Run the job's "archive" method
         j.archive()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import saliweb.backend
 from optparse import OptionParser
 import sys
@@ -49,4 +50,4 @@ def main(webservice):
         if job:
             delete_job(job, opts.force)
         else:
-            print >> sys.stderr, "Could not find job", name
+            print("Could not find job", name, file=sys.stderr)

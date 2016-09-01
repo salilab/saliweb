@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 from StringIO import StringIO
 import saliweb.backend.events
@@ -98,15 +99,16 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
         TestRunner._waited_jobs.add('waitedjob')
         qstat = open('qstat', 'w')
         qstat.write("""#!/usr/bin/python
+from __future__ import print_function
 import sys
 if sys.argv[2].startswith('badbulk'):
     sys.exit(1)
 elif sys.argv[2].startswith('donebulk'):
-    print "Following jobs do not exist:"
-    print sys.argv[2]
+    print("Following jobs do not exist:")
+    print(sys.argv[2])
     sys.exit(1)
 else:
-    print "job info"
+    print("job info")
 """)
         qstat.close()
         os.chmod('qstat', 0755)
