@@ -12,7 +12,7 @@ from config import Config
 from saliweb.backend import WebService, Job, StateFileError, SanityError
 import saliweb.backend
 from StringIO import StringIO
-from testutil import RunInTempDir
+import testutil
 
 basic_config = """
 [general]
@@ -257,10 +257,10 @@ class WebServiceTest(unittest.TestCase):
                                    ('postproc', 'sanity_check'),
                                    ('finalize', 'sanity_check')])
 
+    @testutil.run_in_tempdir
     def test_get_running_pid(self):
         """Check WebService.get_running_pid()"""
-        t = RunInTempDir()
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         # No state file -> return None
         self.assertEqual(web.get_running_pid(), None)
         # FAILED state file -> raise error
@@ -275,10 +275,10 @@ class WebServiceTest(unittest.TestCase):
         open('state_file', 'w').write('99999999')
         self.assertEqual(web.get_running_pid(), None)
 
+    @testutil.run_in_tempdir
     def test_filesystem_sanity_check(self):
         """Check WebService._filesystem_sanity_check()"""
-        t = RunInTempDir()
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         # Fail if job directories do not exist
         self.assertRaises(SanityError, web._filesystem_sanity_check)
         # Make job directories
@@ -288,34 +288,34 @@ class WebServiceTest(unittest.TestCase):
         open('garbage-file', 'w').write('test')
         web._filesystem_sanity_check()
 
+    @testutil.run_in_tempdir
     def test_filesystem_sanity_check_garbage_files(self):
         """Check WebService._filesystem_sanity_check() with garbage files"""
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         web._filesystem_sanity_check()
         # Make files (not directories) in job directories
         open('incoming/garbage-file', 'w').write('test')
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
+    @testutil.run_in_tempdir
     def test_filesystem_sanity_check_garbage_dirs(self):
         """Check WebService._filesystem_sanity_check() with garbage dirs"""
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         web._filesystem_sanity_check()
         # Make extra directories in job directories
         os.mkdir('incoming/garbage-job')
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
+    @testutil.run_in_tempdir
     def test_filesystem_sanity_check_badjobdir(self):
         """Check WebService._filesystem_sanity_check() with bad job dir"""
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         web._filesystem_sanity_check()
         # Make job with non-existing directory
         c = db.conn.cursor()
@@ -328,12 +328,12 @@ class WebServiceTest(unittest.TestCase):
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
+    @testutil.run_in_tempdir
     def test_filesystem_sanity_check_nojobdir(self):
         """Check WebService._filesystem_sanity_check() with no job dir"""
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         web._filesystem_sanity_check()
         # Make job with non-existing directory
         c = db.conn.cursor()
@@ -346,15 +346,15 @@ class WebServiceTest(unittest.TestCase):
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
+    @testutil.run_in_tempdir
     def test_cleanup_incoming_jobs(self):
         """Test WebSerivce._cleanup_incoming_jobs() method"""
         cleaned_dirs = []
         def _cleanup_dir(dir, age):
             cleaned_dirs.append((dir, age))
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         # Make directory with no corresponding job database row
         os.mkdir('incoming/badjob')
         # Make job with non-existing directory
@@ -374,16 +374,16 @@ class WebServiceTest(unittest.TestCase):
         # Cleanup of zero directories should also work
         web._cleanup_incoming_jobs()
 
+    @testutil.run_in_tempdir
     def test_cleanup_dir(self):
         """Test WebService._cleanup_dir() method"""
         if isinstance(os.stat("/tmp").st_mtime, int):
             sys.stderr.write("test skipped: stat does not have "
                              "subsecond granularity: ")
             return
-        t = RunInTempDir()
         os.mkdir('incoming')
         os.mkdir('preprocessing')
-        db, conf, web = self._setup_webservice(t.tmpdir)
+        db, conf, web = self._setup_webservice('.')
         os.mkdir('dir1')
         os.mkdir('dir2')
         time.sleep(0.02)

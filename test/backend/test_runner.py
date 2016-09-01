@@ -2,7 +2,7 @@ import unittest
 from StringIO import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, Job
-from testutil import RunInTempDir
+import testutil
 import sys
 import re
 import os
@@ -92,9 +92,9 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
 """
             self.assertEqual(sio.getvalue(), expected)
 
+    @testutil.run_in_tempdir
     def test_check_completed(self):
         """Check SGERunner._check_completed()"""
-        d = RunInTempDir()
         TestRunner._waited_jobs.add('waitedjob')
         qstat = open('qstat', 'w')
         qstat.write("""#!/usr/bin/python

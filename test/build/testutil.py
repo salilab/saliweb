@@ -3,6 +3,7 @@ import tempfile
 import os
 import glob
 import shutil
+import contextlib
 
 def run_catch_warnings(method, *args, **keys):
     """Run a method and return both its own return value and a list of any
@@ -21,15 +22,26 @@ def run_catch_warnings(method, *args, **keys):
         warnings.showwarning = oldwarn
         warnings.resetwarnings()
 
-class RunInTempDir(object):
-    """Simple RAII-style class to run a test in a temporary directory"""
-    def __init__(self):
-        self.origdir = os.getcwd()
-        self.tmpdir = tempfile.mkdtemp()
-        os.chdir(self.tmpdir)
-    def __del__(self):
-        os.chdir(self.origdir)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+class _TempDir(object):
+    def __init__(self, origdir, tmpdir):
+        self.origdir, self.tmpdir = origdir, tmpdir
+
+@contextlib.contextmanager
+def temp_working_dir():
+    """Simple context manager to run some code in a temporary directory"""
+    origdir = os.getcwd()
+    tmpdir = tempfile.mkdtemp()
+    os.chdir(tmpdir)
+    yield _TempDir(origdir, tmpdir)
+    os.chdir(origdir)
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
+def run_in_tempdir(func):
+    """Decorate a test method to run it entirely in a temporary directory"""
+    def wrapper(*args, **kwargs):
+        with temp_working_dir():
+            func(*args, **kwargs)
+    return wrapper
 
 def get_open_files():
     """Get a list of all files currently opened by this process"""

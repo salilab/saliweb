@@ -4,7 +4,7 @@ import os
 from saliweb.backend import SaliWebServiceRunner
 import saliweb
 import saliweb.backend.events
-from test_make_web_service import RunInTempDir
+import testutil
 
 class DummyJob(object):
     def _try_complete(self, webservice, run_exception):
@@ -42,25 +42,25 @@ class Test(unittest.TestCase):
             saliweb.backend._SaliWebJobWaiter._start_interval = 0.01
             saliweb.web_service = dm
             ws = DummyWebService()
-            d = RunInTempDir()
-            r = SaliWebServiceRunner('testurl', ['arg1', 'arg2'])
-            os.chdir(d.origdir)
-            url = r._run(ws)
-            self.assertEqual(url, 'jobid')
-            event1 = ws._event_queue.get()
-            self.assertEqual(event1.run_exception, None)
-            self.assertEqual(event1.runid, 'jobid')
-            self.assertEqual(event1.runner, r)
-            self.assertEqual(event1.webservice, ws)
-            # Give the waiter thread enough time to close down
-            for i in range(20):
-                if 'jobid' not in SaliWebServiceRunner._waited_jobs:
-                    break
-                time.sleep(0.05)
-            res = SaliWebServiceRunner._check_completed(url, d.tmpdir)
-            self.assertEqual(len(res), 2)
-            d = open(os.path.join(d.tmpdir, 'job-state')).read()
-            self.assertEqual(d, 'DONE')
+            with testutil.temp_working_dir() as d:
+                r = SaliWebServiceRunner('testurl', ['arg1', 'arg2'])
+                os.chdir(d.origdir)
+                url = r._run(ws)
+                self.assertEqual(url, 'jobid')
+                event1 = ws._event_queue.get()
+                self.assertEqual(event1.run_exception, None)
+                self.assertEqual(event1.runid, 'jobid')
+                self.assertEqual(event1.runner, r)
+                self.assertEqual(event1.webservice, ws)
+                # Give the waiter thread enough time to close down
+                for i in range(20):
+                    if 'jobid' not in SaliWebServiceRunner._waited_jobs:
+                        break
+                    time.sleep(0.05)
+                res = SaliWebServiceRunner._check_completed(url, d.tmpdir)
+                self.assertEqual(len(res), 2)
+                state = open(os.path.join(d.tmpdir, 'job-state')).read()
+                self.assertEqual(state, 'DONE')
         finally:
             saliweb.web_service = old
             saliweb.backend._SaliWebJobWaiter._start_interval = oldin

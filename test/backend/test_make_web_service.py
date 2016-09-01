@@ -5,22 +5,12 @@ import tempfile
 import shutil
 import subprocess
 import saliweb.make_web_service
+import testutil
 from saliweb.make_web_service import MakeWebService, get_options
 from saliweb.make_web_service import SVNSourceControl, _run_command
 from saliweb.make_web_service import GitSourceControl
 import saliweb.backend
 import StringIO
-
-class RunInTempDir(object):
-    """Simple RAII-style class to run a test in a temporary directory"""
-    def __init__(self):
-        self.origdir = os.getcwd()
-        self.tmpdir = tempfile.mkdtemp()
-        os.chdir(self.tmpdir)
-    def __del__(self):
-        os.chdir(self.origdir)
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-
 
 class MakeWebServiceTests(unittest.TestCase):
     """Test the make_web_service module."""
@@ -71,6 +61,7 @@ class MakeWebServiceTests(unittest.TestCase):
         _run_command('svn', ['help'], cwd='/')
         self.assertRaises(OSError, _run_command, 'svn', ['garbage'], '/')
 
+    @testutil.run_in_tempdir
     def test_make(self):
         """Check MakeWebService.make method, using SVN"""
         class DummySourceControl(SVNSourceControl):
@@ -79,7 +70,6 @@ class MakeWebServiceTests(unittest.TestCase):
         class Dummy(MakeWebService):
             def _get_install_dir(self):
                 return "dummy"
-        d = RunInTempDir()
         m = Dummy('modfoo', 'ModFoo', git=False)
         msc = DummySourceControl('modfoo', 'modfoo')
         m.source_control = msc
@@ -106,6 +96,7 @@ class MakeWebServiceTests(unittest.TestCase):
                   'test/backend/SConscript'):
             os.unlink('modfoo/' + f)
 
+    @testutil.run_in_tempdir
     def test_make_git(self):
         """Check MakeWebService.make method, using git"""
         class DummySourceControl(GitSourceControl):
@@ -114,7 +105,6 @@ class MakeWebServiceTests(unittest.TestCase):
         class Dummy(MakeWebService):
             def _get_install_dir(self):
                 return "dummy"
-        d = RunInTempDir()
         m = Dummy('modfoo', 'ModFoo', git=True)
         msc = DummySourceControl('modfoo', 'modfoo')
         m.source_control = msc

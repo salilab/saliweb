@@ -4,7 +4,7 @@ import os
 import signal
 import subprocess
 from saliweb.backend import LocalRunner
-from test_make_web_service import RunInTempDir
+import testutil
 import saliweb.backend.events
 
 class DummyJob(object):
@@ -67,14 +67,14 @@ class LocalRunnerTest(unittest.TestCase):
     def test_run_directory(self):
         """Make sure that LocalRunner runs in the right directory"""
         ws = DummyWebService()
-        d = RunInTempDir()
-        r = LocalRunner('echo foo > bar')
-        os.chdir(d.origdir)
-        # bar should be end up in dir at time of creation, not run
-        pid = r._run(ws)
-        # wait for completion
-        event = ws._event_queue.get()
-        os.unlink(os.path.join(d.tmpdir, 'bar'))
+        with testutil.temp_working_dir() as d:
+            r = LocalRunner('echo foo > bar')
+            os.chdir(d.origdir)
+            # bar should be end up in dir at time of creation, not run
+            pid = r._run(ws)
+            # wait for completion
+            event = ws._event_queue.get()
+            os.unlink(os.path.join(d.tmpdir, 'bar'))
 
     def test_run_proc(self):
         """Check that LocalRunner jobs from other processes are checked"""

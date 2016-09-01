@@ -7,7 +7,8 @@ import shutil
 import os
 import re
 import StringIO
-from testutil import run_catch_warnings, RunInTempDir
+import testutil
+from testutil import run_catch_warnings
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
@@ -100,59 +101,63 @@ class SetupTest(unittest.TestCase):
             print >> open(tmpfile, 'w'), "#!/usr/bin/python\n" + script
             os.chmod(tmpfile, 0755)
             return BrokenEnv(tmpfile)
-        curdir = RunInTempDir()
 
-        # Check with provided version number
-        env = {}
-        saliweb.build._setup_version(env, '1.0')
-        self.assertEqual(env, {'version': '1.0'})
-
-        # No number provided; no svnversion binary in path
-        env = BrokenEnv(None)
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 1)
-        self.assertEqual(warns[0][0].args,
-                         ("Could not find 'svnversion' binary in path",))
-        self.assertEqual(env, {'version': None})
-
-        # No number provided; cannot find svnversion binary
-        env = BrokenEnv('/not/exist/svnversion')
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 1)
-        self.assertEqual(warns[0][0].args,
-                         ("Could not run /not/exist/svnversion: [Errno 2] "
-                          "No such file or directory",))
-        self.assertEqual(env, {'version': None})
-
-        # No number provided; svnversion binary reports 'exported'
-        env = get_broken_env_pyscript('expscript', 'print "exported"')
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 0)
-        self.assertEqual(env, {'version': None})
-
-        # No number provided; svnversion binary returns error
-        env = get_broken_env_pyscript('errscript', """
+        with testutil.temp_working_dir():
+            # Check with provided version number
+            env = {}
+            saliweb.build._setup_version(env, '1.0')
+            self.assertEqual(env, {'version': '1.0'})
+    
+            # No number provided; no svnversion binary in path
+            env = BrokenEnv(None)
+            ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
+            self.assertEqual(len(warns), 1)
+            self.assertEqual(warns[0][0].args,
+                             ("Could not find 'svnversion' binary in path",))
+            self.assertEqual(env, {'version': None})
+    
+            # No number provided; cannot find svnversion binary
+            env = BrokenEnv('/not/exist/svnversion')
+            ret, warns = run_catch_warnings(saliweb.build._setup_version,
+                                            env, None)
+            self.assertEqual(len(warns), 1)
+            self.assertEqual(warns[0][0].args,
+                             ("Could not run /not/exist/svnversion: [Errno 2] "
+                              "No such file or directory",))
+            self.assertEqual(env, {'version': None})
+    
+            # No number provided; svnversion binary reports 'exported'
+            env = get_broken_env_pyscript('expscript', 'print "exported"')
+            ret, warns = run_catch_warnings(saliweb.build._setup_version,
+                                            env, None)
+            self.assertEqual(len(warns), 0)
+            self.assertEqual(env, {'version': None})
+    
+            # No number provided; svnversion binary returns error
+            env = get_broken_env_pyscript('errscript', """
 import sys
 print >> sys.stderr, "error text"
 print "output text"
 sys.exit(1)""")
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 1)
-        self.assert_(re.match('Could not run \S+\/errscript: returned exit '
-                              'code 1, stdout output text\n, '
-                              'stderr error text\n$', warns[0][0].args[0]),
-                     "%s does not match re" % warns[0][0].args[0])
-        self.assertEqual(env, {'version': None})
-
-        # No number provided; svnversion binary works
-        env = get_broken_env_pyscript('workscript', 'print "1024\\n2048"')
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 0)
-        self.assertEqual(env, {'version': 'r1024'}) # Only first line used
-
-        # git repository
-        os.mkdir('.git')
-        env = get_broken_env_pyscript('gitscript', """
+            ret, warns = run_catch_warnings(saliweb.build._setup_version,
+                                            env, None)
+            self.assertEqual(len(warns), 1)
+            self.assert_(re.match('Could not run \S+\/errscript: returned exit '
+                                  'code 1, stdout output text\n, '
+                                  'stderr error text\n$', warns[0][0].args[0]),
+                         "%s does not match re" % warns[0][0].args[0])
+            self.assertEqual(env, {'version': None})
+    
+            # No number provided; svnversion binary works
+            env = get_broken_env_pyscript('workscript', 'print "1024\\n2048"')
+            ret, warns = run_catch_warnings(saliweb.build._setup_version,
+                                            env, None)
+            self.assertEqual(len(warns), 0)
+            self.assertEqual(env, {'version': 'r1024'}) # Only first line used
+    
+            # git repository
+            os.mkdir('.git')
+            env = get_broken_env_pyscript('gitscript', """
 import sys
 if sys.argv[1:4] == ['rev-parse', '--abbrev-ref', 'HEAD']:
     print "master\\nfoo"
@@ -161,11 +166,12 @@ elif sys.argv[1:4] == ['rev-parse', '--short', 'HEAD']:
 else:
     raise IOError(sys.argv)
 """)
-        ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
-        self.assertEqual(len(warns), 0)
-        self.assertEqual(env, {'version': 'master.abc123'})
-
-        shutil.rmtree(tmpdir, ignore_errors=True)
+            ret, warns = run_catch_warnings(saliweb.build._setup_version,
+                                            env, None)
+            self.assertEqual(len(warns), 0)
+            self.assertEqual(env, {'version': 'master.abc123'})
+    
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_setup_sconsign(self):
         """Test _setup_sconsign function"""
@@ -189,16 +195,17 @@ else:
         # Try with unwritable top-level directory
         env = DummyEnv()
         env['config'] = DummyConfig()
-        tmpdir = RunInTempDir()
-        os.chmod('.', 0555)
-        ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
-        self.assertEqual(ret, None)
-        self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('Cannot make \.scons directory:.*'
-                               'Permission denied.*Please first make it '
-                               'manually, with a command like.*'
-                               'mkdir \.scons', stderr,
-                               re.DOTALL), 'regex match failed on ' + stderr)
+        with testutil.temp_working_dir():
+            os.chmod('.', 0555)
+            ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assert_(re.search('Cannot make \.scons directory:.*'
+                                   'Permission denied.*Please first make it '
+                                   'manually, with a command like.*'
+                                   'mkdir \.scons', stderr,
+                                   re.DOTALL),
+                         'regex match failed on ' + stderr)
 
 
 if __name__ == '__main__':

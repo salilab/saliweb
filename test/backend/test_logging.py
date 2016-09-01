@@ -1,16 +1,16 @@
 import unittest
 import os
 from saliweb.backend import _DelayFileStream
-from testutil import RunInTempDir
+import testutil
 
 class LoggingTest(unittest.TestCase):
     """Check job logging"""
 
+    @testutil.run_in_tempdir
     def test_init(self):
         """Check create of _DelayFileStream objects"""
-        d = RunInTempDir()
         dfs = _DelayFileStream('foo')
-        self.assertEqual(dfs.filename, os.path.join(d.tmpdir, 'foo'))
+        self.assertEqual(dfs.filename, os.path.join(os.getcwd(), 'foo'))
         self.assertEqual(dfs.stream, None)
         self.assertEqual(os.path.exists('foo'), False)
         # flush should be a no-op

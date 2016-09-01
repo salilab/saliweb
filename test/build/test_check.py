@@ -214,9 +214,9 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
 
+    @testutil.run_in_tempdir
     def test_check_permissions(self):
         """Check _check_permissions function"""
-        tmpdir = testutil.RunInTempDir()
         conf = 'test.conf'
         open(conf, 'w').write('test')
         os.chmod(conf, 0600)
@@ -338,9 +338,9 @@ class CheckTest(unittest.TestCase):
                              '.\n** It must be on a cluster-accessible disk '
                              '(i.e. /netapp).\n\n')
 
+    @testutil.run_in_tempdir
     def test_check_directory_permissions(self):
         """Check _check_directory_permissions function"""
-        tmpdir = testutil.RunInTempDir()
         def make_env(dir):
             env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
             env['config'].directories = {'testdir': dir}
@@ -380,9 +380,9 @@ class CheckTest(unittest.TestCase):
                                    'chmod 755 test', stderr, re.DOTALL),
                          'regex match failed on ' + stderr)
 
+    @testutil.run_in_tempdir
     def test_check_incoming_directory_permissions(self):
         """Check _check_incoming_directory_permissions function"""
-        tmpdir = testutil.RunInTempDir()
         def make_env(dir):
             env = DummyEnv(pwd.getpwuid(os.getuid()).pw_name)
             env['config'].directories = {'INCOMING': dir}
