@@ -371,7 +371,7 @@ def _check_incoming_directory_permissions(env):
                        'default:user:%s:rwx' % backend_user,
                        'default:group::r-x', 'default:mask::rwx',
                        'default:other::r-x' ]
-    if lines != expected_lines:
+    if sorted(lines) != sorted(expected_lines):
         print("""
 ** Wrong permissions on incoming directory %s!
 ** Please remove this directory, then rerun scons to recreate it with
