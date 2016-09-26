@@ -6,7 +6,10 @@ install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libtest-exception-perl libtest-output-perl libdevel-cover-perl acl
   - pip install codecov
+  - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov
 script:
   - scons test
 after_success:
-  - codecov
+  - mv .coverage.backend .coverage && codecov
+  - mv .coverage.build .coverage && codecov
+  - cd test/frontend && cover -report codecov
