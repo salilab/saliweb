@@ -43,7 +43,7 @@ def MyEnvironment(variables=None, *args, **kw):
         env = WineEnvironment(variables=variables, *args, **kw)
     else:
         env = Environment(variables=variables, *args, **kw)
-        env['PYTHON'] = 'python'
+        env['PYTHON'] = sys.executable
         env['PATHSEP'] = os.path.pathsep
     return env
 
