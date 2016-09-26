@@ -10,6 +10,5 @@ install:
 script:
   - scons test
 after_success:
-  - mv .coverage.backend .coverage && codecov
-  - mv .coverage.build .coverage && codecov
+  - coverage combine && codecov
   - cd test/frontend && cover -report codecov
