@@ -61,6 +61,8 @@ def Environment(variables, configfiles, version=None, service_module=None,
     # Inherit some variables from the environment:
     if 'PERL5LIB' in os.environ:
         env['ENV']['PERL5LIB'] = os.environ['PERL5LIB']
+    if 'PATH' in os.environ:
+        env['ENV']['PATH'] = os.environ['PATH']
 
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
