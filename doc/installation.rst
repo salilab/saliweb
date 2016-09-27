@@ -46,9 +46,8 @@ Prerequisites
 
 * `MODELLER <http://salilab.org/modeller/>`_. The framework needs your academic MODELLER license key (in order for
   the `check_modeller_key() function <http://salilab.org/saliweb/modules/frontend.html#saliweb::frontend.check_modeller_key>`_
-  to work). It obtains this by parsing the :file:`config.py` file in your MODELLER installation. The framework is hardcoded
-  to use the path of the Sali lab's own installation; to use outside of the Sali lab you will need to edit
-  :file:`perl/saliweb/SConscript` and change the path to :file:`config.py`.
+  to work). Provide this with the scons `modeller_key` variable when running
+  `scons install`.
 
 * Web server. The frontend consists of Perl CGI scripts which need to be hosted by a web server. Apache is used in the
   Sali lab, but other web servers would probably work too (the only assumption made in the code is that files uploaded

@@ -1,20 +1,12 @@
 import os
-import re
 
 Import('env')
 
 def subst_modeller_key(target=None, source=None, env=None):
     f = str(target[0])
     contents = open(f).read()
-    # Extract a real Modeller license key from our Modeller installation:
-    config = '/salilab/diva1/home/modeller/SVN/modlib/modeller/config.py'
-    config = open(config).read()
-    modkey = re.search("license\s+=\s+r?'([^']+)'", config).group(1)
-    if '\\@MODELLERKEY\\@' not in contents:
-        raise ValueError("Could not find Modeller key")
-    else:
-        contents = contents.replace('\\@MODELLERKEY\\@', modkey)
-        open(f, 'w').write(contents)
+    contents = contents.replace('\\@MODELLERKEY\\@', env['modeller_key'])
+    open(f, 'w').write(contents)
 
 perl_files = [ 'server.pm', 'Test.pm' ]
 

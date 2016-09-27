@@ -67,6 +67,7 @@ def add_common_variables(vars, package):
     vars.Add(BoolVariable('wine',
                           'Build using MS Windows tools via Wine emulation',
                           False))
+    vars.Add('modeller_key', 'MODELLER license key')
     vars.Add('http_proxy', 'Proxy for sphinx to use to get Python doc links')
     vars.Add('https_proxy',
              'Proxy for sphinx to use to get SSL Python doc links')
