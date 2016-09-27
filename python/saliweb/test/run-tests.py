@@ -18,7 +18,7 @@ class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, opts, *args, **keys):
         self.opts = opts
-        for cov in glob.glob('.coverage.*'):
+        for cov in glob.glob('.coverage*'):
             os.unlink(cov)
         if coverage:
             # Start coverage testing now before we import any modules
@@ -37,7 +37,7 @@ class RunAllTests(unittest.TestProgram):
 
         if coverage:
             self.cov.stop()
-            self.cov.combine()
+            self.cov.save()
             self.cov.use_cache(False)
             print("\nPython coverage report\n", file=sys.stderr)
 
@@ -51,7 +51,7 @@ class RunAllTests(unittest.TestProgram):
                 self.cov.html_report(self.mods,
                                      directory=os.path.join(html, 'python'))
             if not self.opts.coverage:
-                for cov in glob.glob('.coverage.*'):
+                for cov in glob.glob('.coverage*'):
                     os.unlink(cov)
         sys.exit(not result.wasSuccessful())
 
