@@ -10,11 +10,9 @@ instdir = os.path.join(env['pythondir'], 'saliweb')
 pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
 
-# Also install web_service.py in the path and make it available to download
-cmdinst = env.Install('/usr/bin', ws_script)
-dwnldinst = env.Install('/modbase1/home/modbase/www/modbase-new/html',
-                        ws_script)
-env.Alias('install', (cmdinst, dwnldinst))
+# Also install web_service.py in the path
+cmdinst = env.Install(env['bindir'], ws_script)
+env.Alias('install', cmdinst)
 
 SConscript('backend/SConscript')
 SConscript('build/SConscript')
