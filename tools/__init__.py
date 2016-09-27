@@ -53,6 +53,9 @@ def add_common_variables(vars, package):
                           PathVariable.PathAccept))
     vars.Add(PathVariable('bindir', 'Binary installation directory',
                           '${prefix}/bin', PathVariable.PathAccept))
+    vars.Add(PathVariable('sbindir',
+                          'System admin binary installation directory',
+                          '${prefix}/sbin', PathVariable.PathAccept))
     vars.Add(PathVariable('pythondir', 'Python module installation directory',
                           '${prefix}/lib/python%d.%d/site-packages' \
                           % sys.version_info[0:2], PathVariable.PathAccept))
