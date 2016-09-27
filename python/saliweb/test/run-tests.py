@@ -18,6 +18,8 @@ class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, opts, *args, **keys):
         self.opts = opts
+        for cov in glob.glob('.coverage.*'):
+            os.unlink(cov)
         if coverage:
             # Start coverage testing now before we import any modules
             self.topdir = os.path.abspath(os.path.join(os.getcwd(), 'python'))
@@ -48,8 +50,9 @@ class RunAllTests(unittest.TestProgram):
             if html:
                 self.cov.html_report(self.mods,
                                      directory=os.path.join(html, 'python'))
-            for cov in glob.glob('.coverage.*'):
-                os.unlink(cov)
+            if not self.opts.coverage:
+                for cov in glob.glob('.coverage.*'):
+                    os.unlink(cov)
         sys.exit(not result.wasSuccessful())
 
 def get_boilerplate_test_case(module_name):
@@ -107,6 +110,9 @@ def parse_options():
     parser.add_option("--html_coverage", dest="html_coverage", type="string",
                       default=None,
                       help="directory to write HTML coverage info into")
+    parser.add_option("--coverage", dest="coverage",
+                      default=False, action="store_true",
+                      help="preserve output coverage files")
     return parser.parse_args()
 
 if __name__ == "__main__":

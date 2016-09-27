@@ -42,6 +42,16 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(t, 1)
 
         e = DummyEnv(0)
+        e.env['coverage'] = 'True'
+        t = saliweb.build.builder_python_tests('dummytgt',
+                                               ['foo.py', 'bar.py'], e)
+        regex = '.*python .*/run\-tests\.py --coverage testser ' \
+                  + 'foo\.py bar\.py$'
+        m = re.match(regex, e.exec_str)
+        self.assertNotEqual(m, None, 'String %s does not match regex %s' \
+                            % (e.exec_str, regex))
+
+        e = DummyEnv(0)
         e.env['html_coverage'] = 'testcov'
         t = saliweb.build.builder_python_tests('dummytgt',
                                                ['foo.py', 'bar.py'], e)

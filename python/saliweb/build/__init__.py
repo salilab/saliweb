@@ -54,6 +54,8 @@ def Environment(variables, configfiles, version=None, service_module=None,
     variables.Add(SCons.Script.PathVariable('html_coverage',
                                'Directory to output HTML coverage reports into',
                                None, SCons.Script.PathVariable.PathIsDirCreate))
+    variables.Add(SCons.Script.BoolVariable('coverage',
+                               'Preserve output coverage files', False))
 
     env = SCons.Script.Environment(variables=variables)
     configfile = buildmap[env['build']]
@@ -131,7 +133,7 @@ def builder_perl_tests(target, source, env):
 
     e = env.Clone()
     e['ENV']['PERL5LIB'] = tmpdir
-    if env.get('html_coverage', None):
+    if env.get('html_coverage', None) or env.get('coverage', None):
         e['ENV']['HARNESS_PERL_SWITCHES'] = \
                      "-MDevel::Cover=+select,%s,+select,^lib,+ignore,." % tmpdir
         e.Execute('cover -delete')
@@ -154,6 +156,8 @@ def builder_python_tests(target, source, env):
                        'run-tests.py')
     if env.get('html_coverage', None):
         mod += ' --html_coverage=%s' % env['html_coverage']
+    if env.get('coverage', None):
+        mod += ' --coverage'
     mod += " " + env['service_module']
     app = sys.executable + " " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
