@@ -64,18 +64,13 @@ class BuilderTest(unittest.TestCase):
     def test_fixup_perl(self):
         """Test _fixup_perl_html_coverage function"""
         tmpdir = tempfile.mkdtemp()
-        prefix = '/foo/bar/'
-        mangled = '-foo-bar-'
-        f = open(os.path.join(tmpdir, 'coverage.html'), 'w')
-        f.write('%sbaz/foo.html\n%sbaz-foo.html\n' % (prefix, mangled))
-        f.close()
-        open(os.path.join(tmpdir, '%sbaz-foo.html' % mangled), 'w')
-        saliweb.build._fixup_perl_html_coverage(prefix, tmpdir)
+        with open(os.path.join(tmpdir, 'coverage.html'), 'w') as f:
+            f.write('foobar')
+        saliweb.build._fixup_perl_html_coverage(tmpdir)
 
-        f = open(os.path.join(tmpdir, 'index.html'))
-        self.assertEqual(f.read(), 'baz/foo.html\nbaz-foo.html\n')
+        with open(os.path.join(tmpdir, 'index.html')) as f:
+            self.assertEqual(f.read(), 'foobar')
         os.unlink(os.path.join(tmpdir, 'index.html'))
-        os.unlink(os.path.join(tmpdir, 'baz-foo.html'))
         os.rmdir(tmpdir)
 
     def test_builder_perl_tests(self):
@@ -84,7 +79,7 @@ class BuilderTest(unittest.TestCase):
             frontends = []
         shutil.rmtree('lib', ignore_errors=True)
         os.mkdir('lib')
-        open('lib/testser.pm', 'w').write('line1\n@CONFIG@\nline2\n')
+        open('lib/testser.pm', 'w').write('line1\n"##CONFIG##"\nline2\n')
         open('lib/other.pm', 'w')
         e = DummyEnv(0)
         e.env['config'] = DummyConfig()
@@ -105,7 +100,7 @@ class BuilderTest(unittest.TestCase):
         e.env['html_coverage'] = 'testcov'
         old = saliweb.build._fixup_perl_html_coverage
         try:
-            def dummy_func(prefix, outdir): pass
+            def dummy_func(outdir): pass
             saliweb.build._fixup_perl_html_coverage = dummy_func
             t = saliweb.build.builder_perl_tests('dummytgt',
                                                  ['foo.pl', 'bar.pl'], e)

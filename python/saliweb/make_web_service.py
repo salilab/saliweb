@@ -268,7 +268,7 @@ use strict;
 our @ISA = "saliweb::frontend";
 
 sub new {
-    return saliweb::frontend::new(@_, @CONFIG@);
+    return saliweb::frontend::new(@_, "##CONFIG##");
 }
 
 sub get_navigation_links {

@@ -87,68 +87,30 @@ def Environment(variables, configfiles, version=None, service_module=None,
     env.Default(install)
     return env
 
-def _fixup_perl_html_coverage(prefix, subdir):
-    urlprefix=prefix.replace('/', '-')
+def _fixup_perl_html_coverage(subdir):
     os.rename(os.path.join(subdir, 'coverage.html'),
               os.path.join(subdir, 'index.html'))
-    # Remove prefixes from file coverage pages
-    for f in glob.glob(os.path.join(subdir, '%s*.html' % urlprefix)):
-        b = os.path.basename(f)
-        os.rename(f, os.path.join(subdir, b[len(urlprefix):]))
-    # Remove file and URL prefixes from text in all HTML files
-    for f in glob.glob(os.path.join(subdir, '*.html')):
-        fin = open(f)
-        fout = open(f + '.new', 'w')
-        for line in fin:
-            fout.write(line.replace(prefix, '').replace(urlprefix, ''))
-        fin.close()
-        fout.close()
-        os.rename(f + '.new', f)
-
-def subst_install(module, tmpdir):
-    fin = open(os.path.join('lib', module))
-    fout = open(os.path.join(tmpdir, module), 'w')
-    for line in fin:
-        fout.write(line.replace('@CONFIG@', ''))
-    fin.close()
-    fout.close()
 
 def builder_perl_tests(target, source, env):
     """Custom builder to run Perl tests"""
     app = "prove " + " ".join(str(s) for s in source)
-    # Make a temporary copy of the Perl module, so that it works
-    tmpdir = tempfile.mkdtemp()
-    module = '%s.pm' % env['service_module']
-    subst_install(module, tmpdir)
-
-    # Do the same for all alternative frontends; make symlinks for everything
-    # else, so (e.g.) module imports work
     abslib = os.path.abspath('lib')
-    for f in os.listdir('lib'):
-        if f != module:
-            if os.path.splitext(f)[0] in env['config'].frontends:
-                subst_install(f, tmpdir)
-            else:
-                os.symlink(os.path.join(abslib, f), os.path.join(tmpdir, f))
-
     e = env.Clone()
-    e['ENV']['PERL5LIB'] = tmpdir
+    e['ENV']['PERL5LIB'] = abslib
     if env.get('html_coverage', None) or env.get('coverage', None):
         e['ENV']['HARNESS_PERL_SWITCHES'] = \
-                     "-MDevel::Cover=+select,%s,+select,^lib,+ignore,." % tmpdir
+                     "-MDevel::Cover=+select,^lib,+ignore,."
         e.Execute('cover -delete')
     ret = e.Execute(app)
     if ret != 0:
-        shutil.rmtree(tmpdir, ignore_errors=True)
         print("unit tests FAILED")
         return 1
     else:
         if env.get('html_coverage', None):
             outdir = os.path.join(env['html_coverage'], 'perl')
             e.Execute('cover -outputdir %s' % outdir)
-            _fixup_perl_html_coverage(tmpdir + '/', outdir)
+            _fixup_perl_html_coverage(outdir)
             e.Execute('cover -delete')
-        shutil.rmtree(tmpdir, ignore_errors=True)
 
 def builder_python_tests(target, source, env):
     """Custom builder to run Python tests"""
@@ -857,8 +819,8 @@ def _subst_install(env, target, source):
     else:
         frontend = "'" + frontend + "'"
     for line in fin:
-        line = line.replace('@CONFIG@', "'%s', %s, '%s', %s" \
-                               % (configfile, version, service_name, frontend))
+        line = line.replace('"##CONFIG##"', "'%s', %s, '%s', %s" \
+                            % (configfile, version, service_name, frontend))
         fout.write(line)
     fin.close()
     fout.close()

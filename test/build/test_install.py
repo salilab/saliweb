@@ -238,7 +238,7 @@ class InstallTest(unittest.TestCase):
                 self.path = path
             def get_contents(self):
                 return self.contents
-        open('dummysrc', 'w').write('line1\nfoo@CONFIG@bar\nline2\n')
+        open('dummysrc', 'w').write('line1\nfoo"##CONFIG##"bar\nline2\n')
         for ver, expver in (('None', "undef"), ('r345', "'r345'")):
             for frontend, expfrontend in (('', 'undef'),
                                           ('dummyfront', "'dummyfront'")):

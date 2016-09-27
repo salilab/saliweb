@@ -34,7 +34,7 @@ done in the Perl module ``modfoo.pm``. This is fairly standard boilerplate:
    :language: perl
 
 The 'new' method simply creates a new Perl object and passes it configuration
-information (@CONFIG@ is filled in automatically by the build system).
+information ("##CONFIG##" is filled in automatically by the build system).
 
 Web page layout
 ===============
