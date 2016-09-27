@@ -73,6 +73,14 @@ class BuilderTest(unittest.TestCase):
         os.unlink(os.path.join(tmpdir, 'index.html'))
         os.rmdir(tmpdir)
 
+    def test_add_to_path(self):
+        """Test _add_to_path function"""
+        e = DummyEnv(0)
+        saliweb.build._add_to_path(e, 'foo', 'bar')
+        self.assertEqual(e['ENV']['foo'], 'bar')
+        saliweb.build._add_to_path(e, 'foo', 'baz')
+        self.assertEqual(e['ENV']['foo'], 'baz:bar')
+
     def test_builder_perl_tests(self):
         """Test builder_perl_tests function"""
         class DummyConfig:

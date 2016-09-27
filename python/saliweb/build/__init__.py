@@ -58,6 +58,10 @@ def Environment(variables, configfiles, version=None, service_module=None,
                                'Preserve output coverage files', False))
 
     env = SCons.Script.Environment(variables=variables)
+    # Inherit some variables from the environment:
+    if 'PERL5LIB' in os.environ:
+        env['ENV']['PERL5LIB'] = os.environ['PERL5LIB']
+
     configfile = buildmap[env['build']]
     env['configfile'] = File(configfile)
     env['config'] = config = config_class(configfile)
@@ -91,12 +95,18 @@ def _fixup_perl_html_coverage(subdir):
     os.rename(os.path.join(subdir, 'coverage.html'),
               os.path.join(subdir, 'index.html'))
 
+def _add_to_path(env, varname, val):
+    if varname in env['ENV']:
+        env['ENV'][varname] = val + ':' + env['ENV'][varname]
+    else:
+        env['ENV'][varname] = val
+
 def builder_perl_tests(target, source, env):
     """Custom builder to run Perl tests"""
     app = "prove " + " ".join(str(s) for s in source)
     abslib = os.path.abspath('lib')
     e = env.Clone()
-    e['ENV']['PERL5LIB'] = abslib
+    _add_to_path(e, 'PERL5LIB', abslib)
     if env.get('html_coverage', None) or env.get('coverage', None):
         e['ENV']['HARNESS_PERL_SWITCHES'] = \
                      "-MDevel::Cover=+select,^lib,+ignore,."
