@@ -67,6 +67,7 @@ class TestCase(unittest.TestCase):
         db = _DummyDB()
         db.config = _DummyConfig()
         db.config.admin_email = 'test_admin@example.com'
+        db.config.service_name = 'test service'
         metadata = {'directory': t.tmpdir, 'name': 'testjob',
                     'url': 'http://server/test/path/testjob?passwd=abc'}
         j = jobcls(db, metadata, s)
