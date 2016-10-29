@@ -140,10 +140,10 @@ When designing a web service, the following design tips may be useful:
   own machines, rather than having to use Sali lab resources via the web
   service. The web service itself should only handle generating input files
   and nicely presenting any results (e.g. with interactive plots or protein
-  structures). For example, `ModLoop <https://salilab.org/modloop/>`_) relies
-  on `MODELLER <https://salilab.org/modeller>`_) for the actual algorithm,
+  structures). For example, `ModLoop <https://salilab.org/modloop/>`_ relies
+  on `MODELLER <https://salilab.org/modeller>`_ for the actual algorithm,
   while the algorithm used by the
-  `AllosMod <https://salilab.org/allosmod/>`_ webservice is implemented in
+  `AllosMod <https://salilab.org/allosmod/>`_ web service is implemented in
   a separate `AllosMod library <https://github.com/salilab/allosmod-lib>`_,
   which allows the AllosMod protocol to be run from a command line.
 
