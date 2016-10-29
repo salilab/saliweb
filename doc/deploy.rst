@@ -129,6 +129,24 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
    For advanced access, a shell can be opened as the backend user by running
    something like ``sudo -u pepdock bash``.
 
+Design tips
+===========
+
+When designing a web service, the following design tips may be useful:
+
+* The web service should implement little or none of the actual algorithm;
+  instead, the algorithm should be implemented in another package that can
+  be used independently. This allows others to use your algorithm on their
+  own machines, rather than having to use Sali lab resources via the web
+  service. The web service itself should only handle generating input files
+  and nicely presenting any results (e.g. with interactive plots or protein
+  structures). For example, `ModLoop <https://salilab.org/modloop/>`_) relies
+  on `MODELLER <https://salilab.org/modeller>`_) for the actual algorithm,
+  while the algorithm used by the
+  `AllosMod <https://salilab.org/allosmod/>`_ webservice is implemented in
+  a separate `AllosMod library <https://github.com/salilab/allosmod-lib>`_,
+  which allows the AllosMod protocol to be run from a command line.
+
 The following sections describe the various components of a web service in more
 detail, for developers that wish to set things up themselves without using the
 convenience scripts.
