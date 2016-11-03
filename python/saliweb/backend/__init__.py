@@ -286,6 +286,9 @@ class Config(object):
             self.limits['running'] = config.getint('limits', 'running')
         else:
             self.limits['running'] = 5
+        if config.has_option('limits', 'concurrent_tasks'):
+            self.limits['concurrent_tasks'] = config.getint('limits',
+                                                            'concurrent_tasks')
 
     def _read_db_auth(self, end='back'):
         filename = self.database[end + 'end_config']

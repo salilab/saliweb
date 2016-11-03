@@ -56,12 +56,16 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].days, 90)
         self.assertEqual(conf.admin_email, 'test@salilab.org')
         self.assertEqual(conf.limits['running'], 5)
+        self.assertFalse('concurrent_tasks' in conf.limits)
         self.assertEqual(len(conf.frontends.keys()), 2)
         self.assertEqual(conf.frontends['foo']['service_name'], 'Foo')
         self.assertEqual(conf.frontends['bar']['service_name'], 'Bar')
 
         conf = get_config(extra='[limits]\nrunning: 10')
         self.assertEqual(conf.limits['running'], 10)
+
+        conf = get_config(extra='[limits]\nconcurrent_tasks: 10')
+        self.assertEqual(conf.limits['concurrent_tasks'], 10)
 
     def test_send_email(self):
         """Check Config.send_email()"""

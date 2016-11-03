@@ -87,6 +87,13 @@ limits
 running
     The maximum number of jobs that will run simultaneously. Defaults to 5.
 
+concurrent_tasks
+    The maximum number of tasks in each job that will run simultaneously.
+    This is not enforced by the framework, but a service that runs a job on
+    more than one machine can use this value to limit the parallelism.
+    For example, services that run SGE array jobs can use this value to
+    populate the `-tc` qsub parameter. Default is no limit.
+
 database
 ========
 
