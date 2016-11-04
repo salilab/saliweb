@@ -18,7 +18,7 @@ MODINSTALL=/salilab/diva1/home/modeller/.${VER}-new
 rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR} || exit 1
-SVN_REPOS="multifit_web modweb salign"
+SVN_REPOS="multifit_web modweb salign foxsdock"
 GIT_REPOS="modloop saliweb evaluation ligscore saxsmerge allosmod cryptosite-web"
 
 for REPO in ${GIT_REPOS}; do
