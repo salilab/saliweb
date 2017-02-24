@@ -467,3 +467,9 @@ the web frontend.
    The full path to the file is returned. If the code is invalid or does
    not exist, or at least one chain is specified that is not in the PDB
    file, throw an :exc:`InputValidationError` exception.
+
+.. function:: sanitize_filename(filename)
+
+   Make sure that a user-provided string is suitable for use as a filename
+   component (this will remove things like spaces and relative paths).
+   The sanitized version of the filename is returned.

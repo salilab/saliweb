@@ -366,7 +366,8 @@ use IO::Zlib;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(check_optional_email check_required_email check_modeller_key
-             get_pdb_code get_pdb_chains pdb_code_exists get_modeller_key);
+             get_pdb_code get_pdb_chains pdb_code_exists get_modeller_key
+             sanitize_filename);
 
 # Location of our PDB mirror.
 our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
@@ -872,6 +873,17 @@ sub check_required_email {
         || $email !~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
         throw saliweb::frontend::InputValidationError(
                  "Please provide a valid return email address");
+    }
+}
+
+sub sanitize_filename {
+    my ($filename) = @_;
+    if (defined($filename)) {
+        # Remove everything except for whitelisted characters
+        $filename =~ s/[^a-zA-Z0-9_=,.-]//g;
+        # Don't let a filename start with a period
+        $filename =~ s/^\.+//;
+        return $filename;
     }
 }
 

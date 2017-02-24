@@ -715,6 +715,15 @@ sub make_test_pdb {
     $saliweb::frontend::pdb_root = $oldroot;
 }
 
+# Test sanitize_filename function
+{
+    my $f = sanitize_filename("../../../FOO b;&ar=45");
+    is($f, "FOObar=45", "sanitize filename");
+
+    $f = sanitize_filename("..foo..ba.r");
+    is($f, "foo..ba.r", "sanitize filename, no starting periods");
+}
+
 # Test check_modeller_key function
 {
     throws_ok { check_modeller_key("garbage") }
