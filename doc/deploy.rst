@@ -147,6 +147,20 @@ When designing a web service, the following design tips may be useful:
   a separate `AllosMod library <https://github.com/salilab/allosmod-lib>`_,
   which allows the AllosMod protocol to be run from a command line.
 
+* A web service must be self contained. If you absolutely must use external
+  scripts in your web service, don't put them in your home directory or some
+  other random place on the disk. Include and install them with the rest of
+  the web service.
+  See the `MultiFoXS service <https://github.com/salilab/multifoxs>`_ for an
+  example (in that case the external scripts are put in a `scripts` directory
+  and installed in a cluster-accessible location).
+
+* Web service dependencies must be well defined. If you need to use external
+  software, like IMP, scikit, or gnuplot, don't compile your own version of
+  that software and install it in a random place. Use "`module load`" to load
+  the module for that software instead (if a module isn't available, ask a
+  sysadmin to build one for you).
+
 The following sections describe the various components of a web service in more
 detail, for developers that wish to set things up themselves without using the
 convenience scripts.
