@@ -39,7 +39,7 @@ class RunnerError(Exception):
 
 
 class StateFileError(Exception):
-    "Exception raised if a previous run is still running or crashed."""
+    """Exception raised if a previous run is still running or crashed."""
     pass
 
 
