@@ -56,6 +56,7 @@ def Environment(variables, configfiles, version=None, service_module=None,
                                None, SCons.Script.PathVariable.PathIsDirCreate))
     variables.Add(SCons.Script.BoolVariable('coverage',
                                'Preserve output coverage files', False))
+    variables.Add('python', 'Python executable to use', sys.executable)
 
     env = SCons.Script.Environment(variables=variables)
     # Inherit some variables from the environment:
@@ -133,7 +134,7 @@ def builder_python_tests(target, source, env):
     if env.get('coverage', None):
         mod += ' --coverage'
     mod += " " + env['service_module']
-    app = sys.executable + " " + mod + " " + " ".join(str(s) for s in source)
+    app = env['python'] + " " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'python'
     ret = e.Execute(app)
