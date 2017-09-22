@@ -9,7 +9,7 @@ import shutil
 class DummyEnv(object):
     def __init__(self, exit_val):
         self.exit_val = exit_val
-        self.env = {'ENV': {}, 'service_module': 'testser'}
+        self.env = {'ENV': {}, 'service_module': 'testser', 'python': 'python'}
     def __getitem__(self, key):
         return self.env[key]
     def get(self, key, default):
