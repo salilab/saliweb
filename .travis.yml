@@ -8,7 +8,7 @@ install:
   - pip install codecov
   - sudo cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov
 script:
-  - scons test
+  - scons python=$(which python) test
 after_success:
   - coverage combine && codecov
   - cd test/frontend && cover -report codecov
