@@ -41,11 +41,13 @@ $ENV{REQUEST_URI} = "dummy request URI";
     my $link = $cls->help_link('mytarget');
 
     like($link,
-         '/^<a class="helplink" onclick="launchHelp\(\'\/help.cgi\?type=' .
-         'help&amp;style=helplink#mytarget\'\); return false;" ' .
-         'href="\/help.cgi\?type=help&amp;style=helplink#mytarget">' .
+         '/^<a [^>]*onclick="launchHelp\(\'\/help.cgi\?type=' .
+         'help&amp;style=helplink#mytarget\'\); return false;"[^>]*>' .
          '<img class="helplink" src="\/saliweb\/img\/help\.jpg" ' .
          'alt="help" \/></a>\s*$/s', "check help_link");
+    like($link,
+         '/^<a [^>]*href="\/help.cgi\?type=help&amp;style=helplink#mytarget"',
+         "check help_link href");
 }
 
 # Test _google_ua method
@@ -93,12 +95,14 @@ $ENV{REQUEST_URI} = "dummy request URI";
          '/<!DOCTYPE html.*<head>.*<title>test page title<\/title>' .
          '.*<link rel="stylesheet" type="text\/css" ' .
          'href="\/saliweb\/css\/server.css" \/>' .
-         '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
+         '.*<script (type="text/JavaScript" )?' .
+	 'src="\/saliweb\/js\/salilab\.js".*<\/head>' .
          '.*<body>/s', "start_html (default style)");
     like($self->start_html('mystyle.css'),
          '/<!DOCTYPE html.*<head>.*<title>test page title<\/title>' .
          '.*<link rel="stylesheet".*href="mystyle.css"' .
-         '.*<script src="\/saliweb\/js\/salilab\.js".*<\/head>' .
+         '.*<script (type="text/JavaScript" )?' .
+         'src="\/saliweb\/js\/salilab\.js".*<\/head>' .
          '.*<body>/s', "           (mystyle)");
 }
 
@@ -110,8 +114,8 @@ $ENV{REQUEST_URI} = "dummy request URI";
     like($self->start_html(),
          '/type="text\/css" href="\/saliweb\/css\/server\.css".*' .
          'type="text\/css" href="dummy\.css".*' .
-         'script src="\/saliweb\/js\/salilab\.js".*' .
-         'script src="dummy\.js"/s',
+         'script (type="text/JavaScript" )?src="\/saliweb\/js\/salilab\.js".*' .
+         'script (type="text/JavaScript" )?src="dummy\.js"/s',
          "start_html (modified header)");
 }
 
