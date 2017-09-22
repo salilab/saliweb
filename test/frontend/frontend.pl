@@ -43,10 +43,10 @@ $ENV{REQUEST_URI} = "dummy request URI";
     like($link,
          '/^<a [^>]*onclick="launchHelp\(\'\/help.cgi\?type=' .
          'help&amp;style=helplink#mytarget\'\); return false;"[^>]*>' .
-         '<img class="helplink" src="\/saliweb\/img\/help\.jpg" ' .
-         'alt="help" \/></a>\s*$/s', "check help_link");
+         '<img [^>]*src="\/saliweb\/img\/help\.jpg"[^>]*></a>\s*$/s',
+	 "check help_link");
     like($link,
-         '/^<a [^>]*href="\/help.cgi\?type=help&amp;style=helplink#mytarget"',
+         '/^<a [^>]*href="\/help.cgi\?type=help&amp;style=helplink#mytarget"/s',
          "check help_link href");
 }
 
