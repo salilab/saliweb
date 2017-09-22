@@ -25,7 +25,6 @@ class WineEnvironment(Environment):
         self['SPAWN'] = posix_env['SPAWN']
         self['SHELL'] = posix_env['SHELL']
         self['ENV'] = posix_env['ENV']
-        self['PYTHON'] = 'w32python'
         self['PATHSEP'] = ';'
         # Use / rather than \ path separator:
         self['LINKCOM'] = self['LINKCOM'].replace('.windows', '')
@@ -43,7 +42,6 @@ def MyEnvironment(variables=None, *args, **kw):
         env = WineEnvironment(variables=variables, *args, **kw)
     else:
         env = Environment(variables=variables, *args, **kw)
-        env['PYTHON'] = sys.executable
         env['PATHSEP'] = os.path.pathsep
     return env
 
@@ -70,6 +68,7 @@ def add_common_variables(vars, package):
     vars.Add(BoolVariable('wine',
                           'Build using MS Windows tools via Wine emulation',
                           False))
+    vars.Add('python', 'Python binary to use for tests', sys.executable)
     vars.Add('modeller_key', 'MODELLER license key')
     vars.Add('http_proxy', 'Proxy for sphinx to use to get Python doc links')
     vars.Add('https_proxy',
