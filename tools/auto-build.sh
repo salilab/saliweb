@@ -19,7 +19,7 @@ rm -rf ${TMPDIR}
 mkdir ${TMPDIR}
 cd ${TMPDIR} || exit 1
 SVN_REPOS="multifit_web modweb salign"
-GIT_REPOS="modloop saliweb evaluation ligscore saxsmerge allosmod cryptosite-web multifoxs foxsdock"
+GIT_REPOS="modloop saliweb evaluation ligscore saxsmerge allosmod cryptosite-web multifoxs foxsdock pcss-web"
 
 for REPO in ${GIT_REPOS}; do
   SWSRCTGZ=${MODINSTALL}/build/sources/private/${REPO}.tar.gz
