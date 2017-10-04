@@ -823,6 +823,8 @@ have done this, delete the state file (%s) to reenable runs.
                 except _SigTermError:
                     pass # Expected, so just swallow it
             finally:
+                # Don't let any further SigTerm exceptions through
+                signal.signal(signal.SIGTERM, signal.SIG_IGN)
                 if self.__state_file_handle:
                     del self.__state_file_handle # close and unlock the file
                     os.unlink(self.config.backend['state_file'])
