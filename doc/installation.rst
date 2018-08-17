@@ -38,7 +38,7 @@ Prerequisites
   (or a compatible product, such as `OGE <http://www.oracle.com/us/products/tools/oracle-grid-engine-075549.html>`_
   or `OGS <http://gridscheduler.sourceforge.net/>`_). The framework talks to SGE via DRMAA, so you will also need
   the `DRMAA Python bindings <https://github.com/pygridtools/drmaa-python>`_. The framework contains classes to
-  talk to the two SGE installations available in the Sali lab - :class:`SGERunner` and :class:`SaliSGERunner`
+  talk to the three SGE installations available in the Sali lab - :class:`SGERunner`, :class:`WyntonSGERunner`, and :class:`SaliSGERunner`
   in :file:`saliweb/python/saliweb/backend/__init__.py`. To work in your environment, add a new subclass to that file
   (see the implementation of :class:`SaliSGERunner` for an example) setting the `SGE_CELL` and `SGE_ROOT` environment
   variables appropriately, setting `DRMAA_LIBRARY_PATH` to the location of your :file:`libdrmaa.so` file, setting

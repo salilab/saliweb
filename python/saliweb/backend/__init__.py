@@ -1750,6 +1750,20 @@ class SaliSGERunner(SGERunner):
 Job.register_runner_class(SaliSGERunner)
 
 
+class WyntonSGERunner(SGERunner):
+    """Run commands on the Wynton SGE cluster instead of the QB3 cluster."""
+    _runner_name = 'wyntonsge'
+    _drmaa = None
+    _env = {'SGE_CELL': 'wynton',
+            'SGE_ROOT': '/opt/sge',
+            'DRMAA_LIBRARY_PATH':
+                        '/opt/sge/lib/lx-amd64/libdrmaa.so.1.0'}
+    _qstat = '/opt/sge/bin/lx-amd64/qstat'
+
+    _waited_jobs = _LockedJobDict()
+Job.register_runner_class(WyntonSGERunner)
+
+
 class _LocalJobWaiter(_JobThread):
     """Wait for a job started by LocalRunner to finish"""
     def __init__(self, webservice, subproc, runner, runid):

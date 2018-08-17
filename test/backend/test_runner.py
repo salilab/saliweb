@@ -2,7 +2,7 @@ from __future__ import print_function
 import unittest
 from StringIO import StringIO
 import saliweb.backend.events
-from saliweb.backend import SGERunner, SaliSGERunner, Job
+from saliweb.backend import SGERunner, SaliSGERunner, WyntonSGERunner, Job
 import testutil
 import sys
 import re
@@ -75,7 +75,7 @@ class RunnerTest(unittest.TestCase):
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
-        for runner in (SGERunner, SaliSGERunner):
+        for runner in (SGERunner, SaliSGERunner, WyntonSGERunner):
             r = runner('echo foo', interpreter='/bin/csh')
             r.set_sge_options('-l diva1=1G')
             r.set_sge_name('test\t job ')
