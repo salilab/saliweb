@@ -293,10 +293,10 @@ def _check_directory_locations(env):
             env.Exit(1)
 
     running = env['config'].directories['RUNNING']
-    if not running.startswith('/netapp'):
+    if not running.startswith('/netapp') and not running.startswith('/wynton'):
         print("""
 ** The RUNNING directory is set to %s.
-** It must be on a cluster-accessible disk (i.e. /netapp).
+** It must be on a cluster-accessible disk (i.e. /netapp or /wynton).
 """ % running, file=sys.stderr)
         env.Exit(1)
 
