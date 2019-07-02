@@ -1,3 +1,58 @@
-from flask import Blueprint
+from flask import Blueprint, url_for, Markup
+import datetime
+
+
+def _format_timediff(timediff):
+    def _format_unit(df, unit):
+        return '%d %s%s' % (df, unit, '' if unit == 1 else 's')
+
+    if not timediff:
+        return
+    timediff = (timediff - datetime.datetime.utcnow()).total_seconds()
+    if timediff < 0:
+        return
+    if timediff < 120:
+        return _format_unit(timediff, 'second')
+    timediff /= 60.0
+    if timediff < 120:
+        return _format_unit(timediff, 'minute')
+    timediff /= 60.0
+    if timediff < 48:
+        return _format_unit(timediff, 'hour')
+    timediff /= 24.0
+    if timediff < 48:
+        return _format_unit(timediff, 'day')
+
+
+class QueuedJob(object):
+    def __init__(self, sql_dict):
+        for k in ('name', 'submit_time', 'state'):
+            setattr(self, k, sql_dict[k])
+
+
+class CompletedJob(object):
+
+    def __init__(self, sql_dict):
+        for k in ('name', 'passwd', 'archive_time', 'directory'):
+            setattr(self, k, sql_dict[k])
+
+    def get_results_file_url(self, fname):
+        """Return a URL which the user can use to download the passed file.
+           The file must be in the job directory (or a subdirectory of it);
+           absolute paths are not allowed.
+           If files are compressed with gzip, the .gz extension can be
+           ommitted here if desired. (If it is ommitted, the file will be
+           automatically decompressed when the user downloads it; otherwise
+           the original .gz file is downloaded.)"""
+        return url_for('results_file', name=self.name, fp=fname,
+                       passwd=self.passwd)
+
+    def get_results_available_time(self):
+        """Get an HTML fragment stating how long results will be available"""
+        avail = _format_timediff(self.archive_time)
+        if avail:
+            return Markup('<p>Job results will be available at this '
+                          'URL for %s.</p>' % avail)
+
 
 blueprint = Blueprint('saliweb', __name__, template_folder='templates')
