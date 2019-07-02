@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}ModLoop Queue{% endblock %}
+
+{%- macro show_jobs(jobs, description) %}
+  {%- if jobs %}
+    {%- for job in jobs %}
+      <tr><td>{{ job.name }}</td> <td>{{ job.submit_time }}</td> <td>{{ job.state }}</td></tr>
+    {%- endfor %}
+  {%- else %}
+    <tr><td class="nojobs" colspan="3">No {{ description }} jobs</td></tr>
+  {%- endif %}
+{%- endmacro %}
+
+{% block body %}
+<h3>Current ModLoop Queue</h3>
+<p><a onclick="toggle_visibility_tbody('completedjobs', 'completedtoggle'); return false;" id="completedtoggle" href="#">Show completed jobs</a></p>
+
+<table id="queue">
+  <thead>
+    <tr><th>Job ID</th> <th>Submit time (UTC)</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {{ show_jobs(running_jobs, "pending or running") }}
+  </tbody>
+  <tbody id='completedjobs' style='display:none'>
+    {{ show_jobs(completed_jobs, "completed") }}
+  </tbody>
+</table>
+
+<script type="text/javascript">
+  convert_utc_dates_to_local();
+</script>
+
+<h3>Key</h3>
+<p><a onclick="toggle_visibility('key', 'keytoggle'); return false;" id="keytoggle" href="#">Show</a></p>
+<div id="key" style="display:none">
+  <p><b>INCOMING:</b>  the job has been successfully submitted by the web
+  interface, but has not yet started running. No more than 5 jobs may run
+  simultaneously on the system.</p>
+
+  <p><b>QUEUED:</b>  the job has been passed to our compute cluster,
+  but the cluster is currently busy with other jobs, and so the job is
+  not yet running. When the system is particularly busy, a job could wait
+  for hours or days, so please be patient. Resubmitting your job will
+  not help.</p>
+
+  <p><b>RUNNING:</b>  the job is running on our compute cluster.</p>
+
+  <p><b>COMPLETED:</b>  the job has finished. You can find the job
+  results at the URL given when you submitted it. If you provided an
+  email address, you should also receive an email notification when
+  the job finishes.</p>
+
+  <p><b>FAILED:</b>  a technical fault occurred. We are automatically
+  notified of such jobs, and will resubmit the job for you once the
+  problem has been fixed. (Typically, resubmitting it yourself will
+  not help.)</p>
+</div>
+{% endblock %}

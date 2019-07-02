@@ -2,7 +2,7 @@ import os
 
 Import('env')
 
-templates = [ 'layout.html' ]
+templates = [ 'layout.html', 'queue.html' ]
 
 # Install template files:
 instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend', 'templates',
