@@ -1,0 +1,11 @@
+import os
+
+Import('env')
+
+templates = [ 'layout.html' ]
+
+# Install template files:
+instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend', 'templates',
+                       'saliweb')
+tmplinst = env.Install(instdir, templates)
+env.Alias('install', tmplinst)

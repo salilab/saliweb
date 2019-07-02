@@ -14,6 +14,7 @@ env.Alias('install', pyinst)
 cmdinst = env.Install(env['bindir'], ws_script)
 env.Alias('install', cmdinst)
 
+SConscript('frontend/SConscript')
 SConscript('backend/SConscript')
 SConscript('build/SConscript')
 SConscript('test/SConscript')

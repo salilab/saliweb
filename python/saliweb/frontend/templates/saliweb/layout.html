@@ -1,0 +1,62 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+<title>
+{%- block title -%}
+{%- endblock -%}
+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" type="text/css" href="/saliweb/css/server.css" />
+<link rel="stylesheet" type="text/css" href="/modloop/html/modloop.css" />
+<script src="/saliweb/js/salilab.js" type="text/JavaScript"></script>
+<script type="text/JavaScript">//<![CDATA[
+
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ 
+    ga('create', 'UA-44577804-15', 'ucsf.edu');
+    ga('send', 'pageview'); 
+//]]></script>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+</head>
+<body>
+<div id="container">
+    <div id="header1"> 
+        <h3><img src="//salilab.org/img/logo_small.gif" height="40" alt="" />{{ self.title() }}</h3>
+    </div>
+    <div id="navigation_lab">&bull;&nbsp;<a href="//salilab.org/">Sali Lab Home</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/modweb/">ModWeb</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/modbase/">ModBase</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/evaluation/">ModEval</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/peptide/">PCSS</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/foxs/">FoXS</a>&nbsp;&bull;&nbsp;
+<a href="//integrativemodeling.org/">IMP</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/multifit/">MultiFit</a>&nbsp;&bull;&nbsp;
+<a href="//salilab.org/modpipe/">ModPipe</a>&nbsp;&bull;&nbsp;&nbsp;</div>
+
+<div id="navigation_second">
+{%- block navigation %}
+{%- endblock %}
+</div>
+        <div style="clear:both;"></div><div id="bodypart"> 
+
+<div id="left">
+{%- block sidebar %}
+{%- endblock %}
+</div>
+
+<div id="right"><div id="fullpart"><div id="resulttable">
+{%- block body %}
+{%- endblock %}
+</div></div></div><div style="clear:both;"></div>
+
+{%- block footer %}
+{%- endblock %}
+</div>
+
+</body>
+</html>

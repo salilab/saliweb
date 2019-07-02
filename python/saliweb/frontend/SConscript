@@ -1,0 +1,12 @@
+import os
+
+Import('env')
+
+python_files = [ '__init__.py' ]
+
+# Install .py files:
+instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend')
+pyinst = env.Install(instdir, python_files)
+env.Alias('install', pyinst)
+
+SConscript('templates/saliweb/SConscript')
