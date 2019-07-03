@@ -118,13 +118,14 @@ def _setup_email_logging(app):
         app.logger.addHandler(mail_handler)
 
 
-def make_application(name, config, *args, **kwargs):
+def make_application(name, config, version, *args, **kwargs):
     """Make and return a Flask application.
        `name` should normally be `__name__`; `config` is the path to the
-       web service config file. Other arguments are passed to the Flask
-       constructor."""
+       web service config file; `version` is the current version of the
+       web service. Other arguments are passed to the Flask constructor."""
     app = flask.Flask(name, *args, **kwargs)
     _read_config(app, config)
+    app.config['VERSION'] = version
     _setup_email_logging(app)
     app.register_blueprint(blueprint)
 
