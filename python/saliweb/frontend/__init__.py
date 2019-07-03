@@ -84,6 +84,10 @@ def _read_config(app, fname):
         value = config.get('frontend_db', name)
         app.config["DATABASE_" + name.upper()] = value
 
+    # Set defaults
+    if 'DATABASE_SOCKET' not in app.config:
+        app.config['DATABASE_SOCKET'] = '/var/lib/mysql/mysql.sock'
+
 
 def _setup_email_logging(app):
     if not app.debug:
