@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}ModLoop Queue{% endblock %}
+{% block title %}{{ config.SERVICE_NAME }} Queue{% endblock %}
 
 {%- macro show_jobs(jobs, description) %}
   {%- if jobs %}
@@ -13,7 +13,7 @@
 {%- endmacro %}
 
 {% block body %}
-<h3>Current ModLoop Queue</h3>
+<h3>Current {{ config.SERVICE_NAME }} Queue</h3>
 <p><a onclick="toggle_visibility_tbody('completedjobs', 'completedtoggle'); return false;" id="completedtoggle" href="#">Show completed jobs</a></p>
 
 <table id="queue">
