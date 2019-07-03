@@ -2,6 +2,7 @@ from __future__ import print_function
 import unittest
 import saliweb.frontend
 import datetime
+import functools
 
 
 class Tests(unittest.TestCase):
@@ -46,6 +47,26 @@ class Tests(unittest.TestCase):
         self.assertEqual(q.submit_time, 'testst')
         self.assertEqual(q.state, 'teststate')
         self.assertFalse(hasattr(q, 'foo'))
+
+    def test_check_email_required(self):
+        """Test check_email with required=True"""
+        tf = functools.partial(saliweb.frontend.check_email, required=True)
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, None)
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, '')
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, 'garbage')
+        tf("test@test.com")
+
+    def test_check_email_optional(self):
+        """Test check_email with required=False"""
+        tf = functools.partial(saliweb.frontend.check_email, required=False)
+        tf(None)
+        tf('')
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, 'garbage')
+        tf("test@test.com")
 
 
 if __name__ == '__main__':

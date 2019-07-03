@@ -11,15 +11,13 @@ The :mod:`saliweb.frontend` Python module
    :members:
 
 .. autofunction:: make_application
-   :members:
 
 .. autofunction:: get_completed_job
-   :members:
 
 .. autofunction:: get_db
-   :members:
 
 .. autofunction:: render_queue_page
-   :members:
+
+.. autofunction:: check_email
 
 .. autoexception:: InputValidationError

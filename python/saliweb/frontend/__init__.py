@@ -3,6 +3,7 @@ from flask import url_for, Markup
 import datetime
 import ConfigParser
 import os
+import re
 import logging.handlers
 import MySQLdb
 
@@ -221,3 +222,19 @@ def render_queue_page():
     return flask.render_template('saliweb/queue.html',
                                  running_jobs=running_jobs,
                                  completed_jobs=completed_jobs)
+
+
+def check_email(email, required=False):
+    """Check a user-provided email address for sanity.
+
+       :param str email: The email address to check.
+       :param bool required: If True, an empty email address will raise
+              an exception (usually it is recommended that the email address
+              is optional).
+    """
+    if not email and not required:
+        return
+    elif (not email
+          or not re.match(r'[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$', email)):
+        raise InputValidationError(
+            "Please provide a valid return email address")
