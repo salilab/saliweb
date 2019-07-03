@@ -7,16 +7,28 @@ import logging.handlers
 import MySQLdb
 
 
+class _UserError(Exception):
+    """An error that is caused by the user and should be reported"""
+    pass
+
+
+class InputValidationError(_UserError):
+    """Invalid user input, usually during a job submission.
+       These errors are handled by reporting them to the user and asking
+       them to fix their input accordingly."""
+    http_status = 400  # bad request
+
+
 class _ResultsError(Exception):
     pass
 
 
 class _ResultsBadJobError(_ResultsError):
-    http_status = 400
+    http_status = 400  # bad request
 
 
 class _ResultsGoneError(_ResultsError):
-    http_status = 410
+    http_status = 410  # gone
 
 
 class _ResultsStillRunningError(_ResultsError):
@@ -143,8 +155,13 @@ def make_application(name, config, version, static_folder='html', *args,
     app.register_blueprint(_blueprint)
 
     @app.errorhandler(_ResultsError)
-    def handle_custom_error(error):
-        return (flask.render_template('saliweb/error.html',
+    def handle_results_error(error):
+        return (flask.render_template('saliweb/results_error.html',
+                                      message=str(error)), error.http_status)
+
+    @app.errorhandler(_UserError)
+    def handle_user_error(error):
+        return (flask.render_template('saliweb/user_error.html',
                                       message=str(error)), error.http_status)
 
     return app

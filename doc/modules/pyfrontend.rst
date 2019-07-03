@@ -21,3 +21,5 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: render_queue_page
    :members:
+
+.. autoexception:: InputValidationError

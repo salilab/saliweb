@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ config.SERVICE_NAME }} Error{% endblock %}
+
+{% block body %}
+<h2>Invalid input</h2>
+
+<p>&nbsp;</p>
+
+<p><b>An error occurred during your request:</b></p>
+
+<div class="standout">
+<p>{{ message }}</p>
+</div>
+
+<p><b>Please click on your browser's "BACK" button, and correct the problem.</b></p>
+
+{% endblock %}
