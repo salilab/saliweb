@@ -80,6 +80,7 @@ class SetupTest(unittest.TestCase):
                            ('confdir', '/foo/bar/conf'),
                            ('pythondir', '/foo/bar/python'),
                            ('htmldir', '/foo/bar/html'),
+                           ('frontenddir', '/foo/bar/frontend'),
                            ('txtdir', '/foo/bar/txt'),
                            ('cgidir', '/foo/bar/cgi'),
                            ('perldir', '/foo/bar/lib')):

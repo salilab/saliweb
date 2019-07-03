@@ -58,6 +58,21 @@ This module provides a simple SCons-based build infrastructure for web services.
       directory underneath the installation directory. The files can be
       installed in a subdirectory if desired by giving the *subdir* argument.
 
+   .. method:: InstallPythonFrontend(files[, subdir])
+
+      Installs a provided list of Python frontend files in the ``frontend``
+      directory underneath the installation directory. If installing
+      subpackages, also specify the *subdir* argument to install them
+      in a subdirectory.
+
+   .. method:: InstallFrontend(files[, subdir])
+
+      Installs a provided list of frontend support files (generally
+      Jinja2 templates) in the `frontend`` directory underneath the
+      installation directory. The files can be installed in a subdirectory
+      (such as ``templates``) if desired by giving the *subdir* argument.
+
+
    .. method:: InstallCGI(files[, subdir])
 
       Installs a provided list of CGI scripts in the ``cgi`` directory

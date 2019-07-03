@@ -24,6 +24,8 @@ class FrontendTest(unittest.TestCase):
 
         env = DummyEnv()
         env['instdir'] = '/inst/'
+        env['instconfigfile'] = '/inst/frontend.cfg'
+        env['version'] = 'fe-version'
         env['perldir'] = '/inst/lib'
         env['config'] = DummyConfig()
         return saliweb.build._make_frontend(env, name)
@@ -50,6 +52,21 @@ class FrontendTest(unittest.TestCase):
         f.InstallHTML(['myhtml'])
         self.assertEqual(f._env.install_target, '/inst/foo/html')
         self.assertEqual(f._env.install_files, ['myhtml'])
+
+    def test_frontend_install_frontend(self):
+        """Check Frontend.InstallFrontend() method"""
+        f = self.make_frontend('foo')
+        f.InstallFrontend(['myfe'])
+        self.assertEqual(f._env.install_target, '/inst/foo/frontend/foo')
+        self.assertEqual(f._env.install_files, ['myfe'])
+
+    def test_frontend_install_python_frontend(self):
+        """Check Frontend.InstallPythonFrontend() method"""
+        f = self.make_frontend('foo')
+        f.InstallPythonFrontend(['myfe'])
+        self.assertEqual(len(f._env.command_target), 1)
+        self.assertEqual(f._env.command_target[0][0],
+                         '/inst/foo/frontend/foo/myfe')
 
     def test_frontend_install_txt(self):
         """Check Frontend.InstallTXT() method"""

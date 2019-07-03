@@ -168,6 +168,23 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(e.install_target, 'testhtml/mysub')
         self.assertEqual(e.install_files, ['foo', 'baz'])
 
+    def test_install_frontend(self):
+        """Check _InstallFrontend function"""
+        def make_env():
+            e = DummyEnv()
+            e['frontenddir'] = 'testfe'
+            e['service_module'] = 'testmod'
+            return e
+        e = make_env()
+        saliweb.build._InstallFrontend(e, ['foo', 'bar'])
+        self.assertEqual(e.install_target, 'testfe/testmod')
+        self.assertEqual(e.install_files, ['foo', 'bar'])
+
+        e = make_env()
+        saliweb.build._InstallFrontend(e, ['foo', 'baz'], subdir='mysub')
+        self.assertEqual(e.install_target, 'testfe/testmod/mysub')
+        self.assertEqual(e.install_files, ['foo', 'baz'])
+
     def test_install_txt(self):
         """Check _InstallTXT function"""
         def make_env():
@@ -204,6 +221,28 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(len(e.command_target), 2)
         self.assertEqual(e.command_target[0][0], 'testcgi/mysub/foo')
         self.assertEqual(e.command_target[1][0], 'testcgi/mysub/bar')
+
+    def test_install_python_frontend(self):
+        """Check _InstallPythonFrontend function"""
+        def make_env():
+            e = DummyEnv()
+            e['instconfigfile'] = 'testcfg'
+            e['version'] = 'testver'
+            e['service_module'] = 'testmod'
+            e['instdir'] = 'testinst'
+            e['frontenddir'] = 'testfe'
+            return e
+        e = make_env()
+        saliweb.build._InstallPythonFrontend(e, ['foo', 'bar'])
+        self.assertEqual(len(e.command_target), 2)
+        self.assertEqual(e.command_target[0][0], 'testfe/testmod/foo')
+        self.assertEqual(e.command_target[1][0], 'testfe/testmod/bar')
+
+        e = make_env()
+        saliweb.build._InstallPythonFrontend(e, ['foo', 'bar'], subdir='mysub')
+        self.assertEqual(len(e.command_target), 2)
+        self.assertEqual(e.command_target[0][0], 'testfe/testmod/mysub/foo')
+        self.assertEqual(e.command_target[1][0], 'testfe/testmod/mysub/bar')
 
     def test_install_perl(self):
         """Check _InstallPerl function"""
@@ -255,6 +294,36 @@ class InstallTest(unittest.TestCase):
                 self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser', %sbar\n"
                                     "line2\n" % (expver, expfrontend))
                 os.unlink('dummytgt')
+        os.unlink('dummysrc')
+
+    def test_python_subst_install(self):
+        """Check _subst_python_install function"""
+        class DummyNode(object):
+            def __init__(self, contents=None, path=None):
+                self.contents = contents
+                self.path = path
+            def get_contents(self):
+                return self.contents
+        open('dummysrc', 'w').write('line1\nfoo"##CONFIG##"bar\nline2\n')
+        for ver, expver in (('None', "None"), ('r345', "'r345'")):
+            e = DummyEnv()
+            saliweb.build._subst_python_install(
+                e, [DummyNode(path='dummytgt')],
+                [DummyNode(path='dummysrc'), DummyNode(contents='mycfg'),
+                 DummyNode(contents=ver), DummyNode(contents='/frontend/dir'),
+                 DummyNode(contents='dummymodule'),
+                 DummyNode(contents='dummywsgi')])
+            with open('dummytgt') as fh:
+                f = fh.read()
+            self.assertEqual(f, "line1\nfoo'mycfg', %sbar\n"
+                                "line2\n" % expver)
+            with open('dummywsgi') as fh:
+                f = fh.read()
+            self.assertEqual(f,
+                "import sys; sys.path.insert(0, '/frontend/dir')\n"
+                "from dummymodule import app as application\n")
+            os.unlink('dummytgt')
+            os.unlink('dummywsgi')
         os.unlink('dummysrc')
 
 

@@ -80,6 +80,8 @@ def Environment(variables, configfiles, version=None, service_module=None,
     env.AddMethod(_InstallCGIScripts, 'InstallCGIScripts')
     env.AddMethod(_InstallPython, 'InstallPython')
     env.AddMethod(_InstallHTML, 'InstallHTML')
+    env.AddMethod(_InstallFrontend, 'InstallFrontend')
+    env.AddMethod(_InstallPythonFrontend, 'InstallPythonFrontend')
     env.AddMethod(_InstallTXT, 'InstallTXT')
     env.AddMethod(_InstallCGI, 'InstallCGI')
     env.AddMethod(_InstallPerl, 'InstallPerl')
@@ -252,6 +254,7 @@ def _setup_install_directories(env):
     env['confdir'] = os.path.join(env['instdir'], 'conf')
     env['pythondir'] = os.path.join(env['instdir'], 'python')
     env['htmldir'] = os.path.join(env['instdir'], 'html')
+    env['frontenddir'] = os.path.join(env['instdir'], 'frontend')
     env['txtdir'] = os.path.join(env['instdir'], 'txt')
     env['cgidir'] = os.path.join(env['instdir'], 'cgi')
     env['perldir'] = os.path.join(env['instdir'], 'lib')
@@ -809,6 +812,48 @@ def _InstallHTML(env, files, subdir=None):
     env.Install(dir, files)
 
 
+def _InstallFrontend(env, files, subdir=None):
+    dir = os.path.join(env['frontenddir'], env['service_module'])
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    env.Install(dir, files)
+
+
+def _subst_python_install(env, target, source):
+    fin = open(source[0].path, 'r')
+    fout = open(target[0].path, 'w')
+    configfile = source[1].get_contents()
+    version = source[2].get_contents()
+    frontenddir = source[3].get_contents()
+    service_module = source[4].get_contents()
+    wsgi = source[5].get_contents()
+    version = 'None' if version == 'None' else "'%s'" % version
+    for line in fin:
+        line = line.replace('"##CONFIG##"', "'%s', %s" % (configfile, version))
+        fout.write(line)
+    fin.close()
+    fout.close()
+    # Create or touch wsgi file
+    with open(wsgi, 'w') as fh:
+        fh.write("import sys; sys.path.insert(0, %s)\n" % repr(frontenddir))
+        fh.write("from %s import app as application\n" % service_module)
+
+
+def _InstallPythonFrontend(env, files, subdir=None):
+    dir = os.path.join(env['frontenddir'], env['service_module'])
+    if subdir:
+        dir = os.path.join(dir, subdir)
+    wsgi = os.path.join(env['instdir'], env['service_module'] + ".wsgi")
+    for f in files:
+        env.Command(os.path.join(dir, f),
+                    [f, env.Value(env['instconfigfile']),
+                     env.Value(env['version']),
+                     env.Value(env['frontenddir']),
+                     env.Value(env['service_module']),
+                     env.Value(wsgi)],
+                    _subst_python_install)
+
+
 def _InstallTXT(env, files, subdir=None):
     dir = env['txtdir']
     if subdir:
@@ -881,6 +926,7 @@ class _Frontend(object):
 
         e['cgidir'] = os.path.join(env['instdir'], name, 'cgi')
         e['htmldir'] = os.path.join(env['instdir'], name, 'html')
+        e['frontenddir'] = os.path.join(env['instdir'], name, 'frontend')
         e['txtdir'] = os.path.join(env['instdir'], name, 'txt')
         e['service_module'] = name
 
@@ -889,6 +935,12 @@ class _Frontend(object):
 
     def InstallHTML(self, files, subdir=None):
         return _InstallHTML(self._env, files, subdir)
+
+    def InstallFrontend(self, files, subdir=None):
+        return _InstallFrontend(self._env, files, subdir)
+
+    def InstallPythonFrontend(self, files, subdir=None):
+        return _InstallPythonFrontend(self._env, files, subdir)
 
     def InstallTXT(self, files, subdir=None):
         return _InstallTXT(self._env, files, subdir)
