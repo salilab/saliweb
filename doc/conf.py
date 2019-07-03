@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Sali lab web framework'
-copyright = u'2009-2017, Sali Lab'
+copyright = u'2009-2019, Sali Lab'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
