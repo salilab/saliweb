@@ -33,7 +33,7 @@ def _format_timediff(timediff):
     try:
         diff_sec = timediff.total_seconds()
     except AttributeError:  # python 2.6
-        diff_sec = timediff.seconds
+        diff_sec = timediff.days * 24*60*60 + timediff.seconds
     if diff_sec < 0:
         return
     if diff_sec < 120:
