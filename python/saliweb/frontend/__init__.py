@@ -7,6 +7,22 @@ import logging.handlers
 import MySQLdb
 
 
+class ResultsError(Exception):
+    pass
+
+
+class ResultsBadJobError(ResultsError):
+    http_status = 400
+
+
+class ResultsGoneError(ResultsError):
+    http_status = 410
+
+
+class ResultsStillRunningError(ResultsError):
+    http_status = 503
+
+
 def _format_timediff(timediff):
     def _format_unit(df, unit):
         return '%d %s%s' % (df, unit, '' if unit == 1 else 's')
@@ -111,6 +127,12 @@ def make_application(name, config, *args, **kwargs):
     _read_config(app, config)
     _setup_email_logging(app)
     app.register_blueprint(blueprint)
+
+    @app.errorhandler(ResultsError)
+    def handle_custom_error(error):
+        return (flask.render_template('saliweb/error.html', message=str(error)),
+                error.http_status)
+
     return app
 
 
@@ -123,3 +145,19 @@ def get_db():
             unix_socket=app.config['DATABASE_SOCKET'],
             passwd=app.config['DATABASE_PASSWD'])
     return flask.g.db_conn
+
+
+def get_completed_job(name, passwd):
+    conn = get_db()
+    c = MySQLdb.cursors.DictCursor(conn)
+    c.execute('SELECT * FROM jobs WHERE name=%s AND passwd=%s', (name, passwd))
+    job_row = c.fetchone()
+    if not job_row:
+        raise ResultsBadJobError('Job does not exist, or wrong password')
+    else:
+        if job_row['state'] in ('EXPIRED', 'ARCHIVED'):
+            raise ResultsGoneError("Results for job '%s' are no longer available for download" % name)
+        else:
+            if job_row['state'] != 'COMPLETED':
+                raise ResultsStillRunningError("Job '%s' has not yet completed; please check back later" % name)
+    return CompletedJob(job_row)
