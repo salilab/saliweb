@@ -135,16 +135,6 @@ def make_application(name, config, version, static_folder='html', *args,
         return (flask.render_template('saliweb/error.html', message=str(error)),
                 error.http_status)
 
-    @app.route('/queue')
-    def queue():
-        conn = get_db()
-        c = MySQLdb.cursors.DictCursor(conn)
-        c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' AND state != 'EXPIRED' AND state != 'COMPLETED' ORDER BY submit_time DESC")
-        running_jobs = [ QueuedJob(x) for x in c ]
-        c.execute("SELECT * FROM jobs WHERE state='COMPLETED' ORDER BY submit_time DESC")
-        completed_jobs = [ QueuedJob(x) for x in c ]
-        return flask.render_template('saliweb/queue.html', running_jobs=running_jobs, completed_jobs=completed_jobs)
-
     return app
 
 
@@ -173,3 +163,15 @@ def get_completed_job(name, passwd):
             if job_row['state'] != 'COMPLETED':
                 raise ResultsStillRunningError("Job '%s' has not yet completed; please check back later" % name)
     return CompletedJob(job_row)
+
+
+def render_queue_page():
+    """Display a list of all jobs. Typically used in the `/job` route for
+       a GET request."""
+    conn = get_db()
+    c = MySQLdb.cursors.DictCursor(conn)
+    c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' AND state != 'EXPIRED' AND state != 'COMPLETED' ORDER BY submit_time DESC")
+    running_jobs = [ QueuedJob(x) for x in c ]
+    c.execute("SELECT * FROM jobs WHERE state='COMPLETED' ORDER BY submit_time DESC")
+    completed_jobs = [ QueuedJob(x) for x in c ]
+    return flask.render_template('saliweb/queue.html', running_jobs=running_jobs, completed_jobs=completed_jobs)
