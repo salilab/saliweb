@@ -29,19 +29,23 @@ def _format_timediff(timediff):
 
     if not timediff:
         return
-    timediff = (timediff - datetime.datetime.utcnow()).total_seconds()
-    if timediff < 0:
+    timediff = timediff - datetime.datetime.utcnow()
+    try:
+        diff_sec = timediff.total_seconds()
+    except AttributeError:  # python 2.6
+        diff_sec = timediff.seconds
+    if diff_sec < 0:
         return
-    if timediff < 120:
-        return _format_unit(timediff, 'second')
-    timediff /= 60.0
-    if timediff < 120:
-        return _format_unit(timediff, 'minute')
-    timediff /= 60.0
-    if timediff < 48:
-        return _format_unit(timediff, 'hour')
-    timediff /= 24.0
-    return _format_unit(timediff, 'day')
+    if diff_sec < 120:
+        return _format_unit(diff_sec, 'second')
+    diff_sec /= 60.0
+    if diff_sec < 120:
+        return _format_unit(diff_sec, 'minute')
+    diff_sec /= 60.0
+    if diff_sec < 48:
+        return _format_unit(diff_sec, 'hour')
+    diff_sec /= 24.0
+    return _format_unit(diff_sec, 'day')
 
 
 class _QueuedJob(object):
