@@ -7,19 +7,19 @@ import logging.handlers
 import MySQLdb
 
 
-class ResultsError(Exception):
+class _ResultsError(Exception):
     pass
 
 
-class ResultsBadJobError(ResultsError):
+class _ResultsBadJobError(_ResultsError):
     http_status = 400
 
 
-class ResultsGoneError(ResultsError):
+class _ResultsGoneError(_ResultsError):
     http_status = 410
 
 
-class ResultsStillRunningError(ResultsError):
+class _ResultsStillRunningError(_ResultsError):
     http_status = 503
 
 
@@ -45,13 +45,16 @@ def _format_timediff(timediff):
         return _format_unit(timediff, 'day')
 
 
-class QueuedJob(object):
+class _QueuedJob(object):
+    """A job that is in the job queue"""
     def __init__(self, sql_dict):
         for k in ('name', 'submit_time', 'state'):
             setattr(self, k, sql_dict[k])
 
 
 class CompletedJob(object):
+    """A job that has completed. Use :func:`get_completed_job` to create
+       such a job from a URL."""
 
     def __init__(self, sql_dict):
         for k in ('name', 'passwd', 'archive_time', 'directory'):
@@ -76,7 +79,7 @@ class CompletedJob(object):
                           'URL for %s.</p>' % avail)
 
 
-blueprint = flask.Blueprint('saliweb', __name__, template_folder='templates')
+_blueprint = flask.Blueprint('saliweb', __name__, template_folder='templates')
 
 
 def _read_config(app, fname):
@@ -120,20 +123,26 @@ def _setup_email_logging(app):
 
 def make_application(name, config, version, static_folder='html', *args,
                      **kwargs):
-    """Make and return a Flask application.
-       `name` should normally be `__name__`; `config` is the path to the
-       web service config file; `version` is the current version of the
-       web service. Other arguments are passed to the Flask constructor."""
+    """Make and return a new Flask application.
+
+       :param str name: Name of the Python file that owns the app. This should
+              normally be `__name__`.
+       :param str name: Path to the web service configuration file.
+       :param str version: Current version of the web service.
+       :return: A new Flask application.
+
+       .. note:: Any additional arguments are passed to the Flask constructor.
+    """
     app = flask.Flask(name, static_folder=static_folder, *args, **kwargs)
     _read_config(app, config)
     app.config['VERSION'] = version
     _setup_email_logging(app)
-    app.register_blueprint(blueprint)
+    app.register_blueprint(_blueprint)
 
-    @app.errorhandler(ResultsError)
+    @app.errorhandler(_ResultsError)
     def handle_custom_error(error):
-        return (flask.render_template('saliweb/error.html', message=str(error)),
-                error.http_status)
+        return (flask.render_template('saliweb/error.html',
+                                      message=str(error)), error.http_status)
 
     return app
 
@@ -150,18 +159,30 @@ def get_db():
 
 
 def get_completed_job(name, passwd):
+    """Create an return a new :class:`CompletedJob` for a given URL.
+       If the job is not valid (e.g. incorrect password) an exception is
+       raised.
+
+       :param str name: The name of the job.
+       :param str passwd: Password for the job.
+       :return: A new CompletedJob.
+       :rtype: :class:`CompletedJob`
+    """
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
     c.execute('SELECT * FROM jobs WHERE name=%s AND passwd=%s', (name, passwd))
     job_row = c.fetchone()
     if not job_row:
-        raise ResultsBadJobError('Job does not exist, or wrong password')
+        raise _ResultsBadJobError('Job does not exist, or wrong password')
     else:
         if job_row['state'] in ('EXPIRED', 'ARCHIVED'):
-            raise ResultsGoneError("Results for job '%s' are no longer available for download" % name)
+            raise _ResultsGoneError("Results for job '%s' are no "
+                                    "longer available for download" % name)
         else:
             if job_row['state'] != 'COMPLETED':
-                raise ResultsStillRunningError("Job '%s' has not yet completed; please check back later" % name)
+                raise _ResultsStillRunningError(
+                    "Job '%s' has not yet completed; please check back later"
+                    % name)
     return CompletedJob(job_row)
 
 
@@ -170,8 +191,13 @@ def render_queue_page():
        a GET request."""
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
-    c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' AND state != 'EXPIRED' AND state != 'COMPLETED' ORDER BY submit_time DESC")
-    running_jobs = [ QueuedJob(x) for x in c ]
-    c.execute("SELECT * FROM jobs WHERE state='COMPLETED' ORDER BY submit_time DESC")
-    completed_jobs = [ QueuedJob(x) for x in c ]
-    return flask.render_template('saliweb/queue.html', running_jobs=running_jobs, completed_jobs=completed_jobs)
+    c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "
+              "AND state != 'EXPIRED' AND state != 'COMPLETED' "
+              "ORDER BY submit_time DESC")
+    running_jobs = [ _QueuedJob(x) for x in c ]
+    c.execute("SELECT * FROM jobs WHERE state='COMPLETED' "
+              "ORDER BY submit_time DESC")
+    completed_jobs = [ _QueuedJob(x) for x in c ]
+    return flask.render_template('saliweb/queue.html',
+                                 running_jobs=running_jobs,
+                                 completed_jobs=completed_jobs)
