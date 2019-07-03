@@ -9,8 +9,12 @@
 </title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" type="text/css" href="/saliweb/css/server.css" />
-<link rel="stylesheet" type="text/css" href="/modloop/html/modloop.css" />
+{%- block css %}
+{%- endblock %}
+
 <script src="/saliweb/js/salilab.js" type="text/JavaScript"></script>
+{%- block js %}
+{%- endblock %}
 
 {%- if config.GOOGLE_UA %}
 <script type="text/JavaScript">//<![CDATA[
