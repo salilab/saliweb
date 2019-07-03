@@ -41,8 +41,7 @@ def _format_timediff(timediff):
     if timediff < 48:
         return _format_unit(timediff, 'hour')
     timediff /= 24.0
-    if timediff < 48:
-        return _format_unit(timediff, 'day')
+    return _format_unit(timediff, 'day')
 
 
 class _QueuedJob(object):
@@ -133,7 +132,7 @@ def make_application(name, config, version, static_folder='html', *args,
 
        .. note:: Any additional arguments are passed to the Flask constructor.
     """
-    app = flask.Flask(name, static_folder=static_folder, *args, **kwargs)
+    app = flask.Flask(name, *args, static_folder=static_folder, **kwargs)
     _read_config(app, config)
     app.config['VERSION'] = version
     _setup_email_logging(app)

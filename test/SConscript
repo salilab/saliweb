@@ -3,6 +3,7 @@ from tools import html_coverage
 
 test = (env.SConscript('backend/SConscript'),
         env.SConscript('frontend/SConscript'),
+        env.SConscript('pyfrontend/SConscript'),
         env.SConscript('build/SConscript'))
 env.Alias("test", test)
 
