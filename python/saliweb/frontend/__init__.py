@@ -133,6 +133,16 @@ def make_application(name, config, *args, **kwargs):
         return (flask.render_template('saliweb/error.html', message=str(error)),
                 error.http_status)
 
+    @app.route('/queue')
+    def queue():
+        conn = get_db()
+        c = MySQLdb.cursors.DictCursor(conn)
+        c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' AND state != 'EXPIRED' AND state != 'COMPLETED' ORDER BY submit_time DESC")
+        running_jobs = [ QueuedJob(x) for x in c ]
+        c.execute("SELECT * FROM jobs WHERE state='COMPLETED' ORDER BY submit_time DESC")
+        completed_jobs = [ QueuedJob(x) for x in c ]
+        return flask.render_template('saliweb/queue.html', running_jobs=running_jobs, completed_jobs=completed_jobs)
+
     return app
 
 
