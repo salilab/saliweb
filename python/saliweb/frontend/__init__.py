@@ -1,8 +1,10 @@
-from flask import Blueprint, url_for, Markup, Flask
+import flask
+from flask import url_for, Markup
 import datetime
 import ConfigParser
 import os
 import logging.handlers
+import MySQLdb
 
 
 def _format_timediff(timediff):
@@ -58,7 +60,7 @@ class CompletedJob(object):
                           'URL for %s.</p>' % avail)
 
 
-blueprint = Blueprint('saliweb', __name__, template_folder='templates')
+blueprint = flask.Blueprint('saliweb', __name__, template_folder='templates')
 
 
 def _read_config(app, fname):
@@ -105,8 +107,19 @@ def make_application(name, config, *args, **kwargs):
        `name` should normally be `__name__`; `config` is the path to the
        web service config file. Other arguments are passed to the Flask
        constructor."""
-    app = Flask(name, *args, **kwargs)
+    app = flask.Flask(name, *args, **kwargs)
     _read_config(app, config)
     _setup_email_logging(app)
     app.register_blueprint(blueprint)
     return app
+
+
+def get_db():
+    """Get the MySQL database connection"""
+    if not hasattr(flask.g, 'db_conn'):
+        app = flask.current_app
+        flask.g.db_conn = MySQLdb.connect(user=app.config['DATABASE_USER'],
+            db=app.config['DATABASE_DB'],
+            unix_socket=app.config['DATABASE_SOCKET'],
+            passwd=app.config['DATABASE_PASSWD'])
+    return flask.g.db_conn
