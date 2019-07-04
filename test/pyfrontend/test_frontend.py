@@ -68,6 +68,14 @@ class Tests(unittest.TestCase):
                           tf, 'garbage')
         tf("test@test.com")
 
+    def test_check_modeller_key(self):
+        """Test check_modeller_key function"""
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          saliweb.frontend.check_modeller_key, "garbage")
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          saliweb.frontend.check_modeller_key, None)
+        saliweb.frontend.check_modeller_key("@MODELLERKEY@")
+
 
 if __name__ == '__main__':
     unittest.main()

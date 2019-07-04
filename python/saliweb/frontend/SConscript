@@ -2,11 +2,22 @@ import os
 
 Import('env')
 
+def subst_modeller_key(target=None, source=None, env=None):
+    f = str(target[0])
+    with open(f) as fh:
+        contents = fh.read()
+    contents = contents.replace('@MODELLERKEY@', env['modeller_key'])
+    with open(f, 'w') as fh:
+        fh.write(contents)
+
 python_files = [ '__init__.py' ]
 
 # Install .py files:
 instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend')
 pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
+
+# Get real Modeller key and substitute into __init__.py
+env.AddPostAction(pyinst, subst_modeller_key)
 
 SConscript('templates/saliweb/SConscript')

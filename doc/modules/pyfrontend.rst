@@ -20,4 +20,6 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: check_email
 
+.. autofunction:: check_modeller_key
+
 .. autoexception:: InputValidationError

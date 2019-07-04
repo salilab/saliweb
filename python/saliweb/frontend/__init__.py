@@ -238,3 +238,19 @@ def check_email(email, required=False):
           or not re.match(r'[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$', email)):
         raise InputValidationError(
             "Please provide a valid return email address")
+
+
+def _get_modeller_key():
+    return "@MODELLERKEY@"
+
+
+def check_modeller_key(modkey):
+    """Check a provided MODELLER key.
+       If the key is empty or invalid, throw an
+       :exc:`InputValidationError` exception.
+
+       :param str modkey: The MODELLER key to check.
+    """
+    if modkey != _get_modeller_key():
+        raise InputValidationError(
+            "You have entered an invalid MODELLER key: " + str(modkey))
