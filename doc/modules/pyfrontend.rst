@@ -3,7 +3,7 @@
 .. _frontend_module:
 
 The :mod:`saliweb.frontend` Python module
-========================================
+=========================================
 
 .. automodule:: saliweb.frontend
 
