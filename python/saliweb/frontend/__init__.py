@@ -165,6 +165,11 @@ def make_application(name, config, version, static_folder='html', *args,
         return (flask.render_template('saliweb/user_error.html',
                                       message=str(error)), error.http_status)
 
+    @app.teardown_appcontext
+    def close_db(error):
+        if hasattr(flask.g, 'db_conn'):
+            flask.g.db_conn.close()
+
     return app
 
 
