@@ -143,7 +143,7 @@ def make_application(name, config, version, static_folder='html', *args,
 
        :param str name: Name of the Python file that owns the app. This should
               normally be `__name__`.
-       :param str name: Path to the web service configuration file.
+       :param str config: Path to the web service configuration file.
        :param str version: Current version of the web service.
        :return: A new Flask application.
 
@@ -185,7 +185,7 @@ def get_db():
 
 
 def get_completed_job(name, passwd):
-    """Create an return a new :class:`CompletedJob` for a given URL.
+    """Create and return a new :class:`CompletedJob` for a given URL.
        If the job is not valid (e.g. incorrect password) an exception is
        raised.
 
@@ -213,7 +213,7 @@ def get_completed_job(name, passwd):
 
 
 def render_queue_page():
-    """Display a list of all jobs. Typically used in the `/job` route for
+    """Return an HTML list of all jobs. Typically used in the `/job` route for
        a GET request."""
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
@@ -231,10 +231,12 @@ def render_queue_page():
 
 def check_email(email, required=False):
     """Check a user-provided email address for sanity.
+       If the address is invalid, raise an :exc:`InputValidationError`
+       exception.
 
        :param str email: The email address to check.
-       :param bool required: If True, an empty email address will raise
-              an exception (usually it is recommended that the email address
+       :param bool required: If True, an empty email address will also result
+              in an exception (usually it is recommended that the email address
               is optional).
     """
     if not email and not required:
@@ -251,7 +253,7 @@ def _get_modeller_key():
 
 def check_modeller_key(modkey):
     """Check a provided MODELLER key.
-       If the key is empty or invalid, throw an
+       If the key is empty or invalid, raise an
        :exc:`InputValidationError` exception.
 
        :param str modkey: The MODELLER key to check.
