@@ -1,7 +1,10 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ config.SERVICE_NAME }} Error{% endblock %}
+{% block title %}{{ config.SERVICE_NAME }} Results{% endblock %}
 
 {% block body %}
-{{ message }}
+<p>{{ message }}</p>
+
+<p>You can check on the status of all jobs at the
+<a href="{{ url_for("job") }}">queue</a> page.</p>
 {% endblock %}
