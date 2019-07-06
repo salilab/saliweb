@@ -96,6 +96,10 @@ class Tests(unittest.TestCase):
                               "running-job")
         flask.current_app = None
 
+    def test_generate_results_url(self):
+        """Test _generate_results_url function"""
+        url, passwd = submit._generate_results_url("testjob")
+        self.assertEqual(len(passwd), 10)
 
 if __name__ == '__main__':
     unittest.main()

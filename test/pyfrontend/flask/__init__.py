@@ -1,7 +1,8 @@
 # Mock of the Flask module
 
-def url_for(fname, *args):
-    return fname + ";" + str(args)
+def url_for(fname, _external=False, *args, **kwargs):
+    prefix = 'https://' if _external else ''
+    return prefix + fname + ";" + str(args) + str(kwargs)
 
 
 class Markup(object):
