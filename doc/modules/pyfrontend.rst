@@ -10,6 +10,9 @@ The :mod:`saliweb.frontend` Python module
 .. autoclass:: CompletedJob
    :members:
 
+.. autoclass:: IncomingJob
+   :members:
+
 .. autofunction:: make_application
 
 .. autofunction:: get_completed_job

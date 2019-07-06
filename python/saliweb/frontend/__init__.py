@@ -6,6 +6,8 @@ import os
 import re
 import logging.handlers
 import MySQLdb
+from .submit import IncomingJob
+import saliweb.frontend.config
 
 
 class _UserError(Exception):
@@ -102,6 +104,10 @@ def _read_config(app, fname):
     """Read the webservice configuration file and set Flask-style app.config
        from it. Flask config names are all uppercase and have the config
        section (except for [general]) prefixed."""
+
+    # Set defaults for all web services
+    app.config.from_object(saliweb.frontend.config)
+
     config = ConfigParser.SafeConfigParser()
 
     with open(fname) as fh:

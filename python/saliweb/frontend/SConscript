@@ -10,7 +10,7 @@ def subst_modeller_key(target=None, source=None, env=None):
     with open(f, 'w') as fh:
         fh.write(contents)
 
-python_files = [ '__init__.py' ]
+python_files = [ 'submit.py' ]
 
 # Install .py files:
 instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend')
@@ -18,6 +18,8 @@ pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
 
 # Get real Modeller key and substitute into __init__.py
+pyinst = env.Install(instdir, ['__init__.py'])
+env.Alias('install', pyinst)
 env.AddPostAction(pyinst, subst_modeller_key)
 
 SConscript('templates/saliweb/SConscript')
