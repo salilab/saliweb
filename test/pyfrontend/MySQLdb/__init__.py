@@ -19,6 +19,9 @@ class _MockConnection(object):
     def cursor(self):
         return _MockCursor()
 
+    def commit(self):
+        pass
+
 
 def connect(*args, **kwargs):
     return _MockConnection()

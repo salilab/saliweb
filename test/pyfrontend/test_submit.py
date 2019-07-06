@@ -101,5 +101,34 @@ class Tests(unittest.TestCase):
         url, passwd = submit._generate_results_url("testjob")
         self.assertEqual(len(passwd), 10)
 
+    def test_incoming_job(self):
+        """Test IncomingJob objects"""
+        class MockApp(object):
+            def __init__(self, tmpdir, track):
+                self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
+                               'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
+                               'DIRECTORIES_INCOMING': tmpdir,
+                               'TRACK_HOSTNAME': track, 'SOCKET': '/not/exist'}
+        class MockRequest(object):
+            def __init__(self):
+                self.remote_addr = None
+        with util.temporary_directory() as tmpdir:
+            flask.current_app = MockApp(tmpdir, track=False)
+            flask.request = MockRequest()
+            j = submit.IncomingJob("test$!job")
+            self.assertEqual(j.name, "testjob")
+            self.assertEqual(j.directory, os.path.join(tmpdir, "testjob"))
+            fname = j.get_path("test")
+            self.assertEqual(fname, os.path.join(tmpdir, "testjob", "test"))
+            self.assertRaises(ValueError, getattr, j, 'results_url')
+            j.submit()
+            results_url = j.results_url
+            self.assertTrue(results_url.startswith('https://results'))
+
+            flask.current_app = MockApp(tmpdir, track=True)
+            j = submit.IncomingJob("test$!job")
+            j.submit()
+        flask.current_app = None
+
 if __name__ == '__main__':
     unittest.main()
