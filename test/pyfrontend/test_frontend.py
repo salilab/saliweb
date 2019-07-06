@@ -3,6 +3,7 @@ import unittest
 import saliweb.frontend
 import datetime
 import functools
+import flask
 
 
 class Tests(unittest.TestCase):
@@ -78,6 +79,12 @@ class Tests(unittest.TestCase):
 
     def test_get_completed_job(self):
         """Test get_completed_job function"""
+        class MockApp(object):
+            def __init__(self):
+                self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
+                               'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x'}
+        flask.current_app = MockApp()
+
         self.assertRaises(saliweb.frontend._ResultsGoneError,
                           saliweb.frontend.get_completed_job,
                           'expired-job', 'passwd')
@@ -88,6 +95,8 @@ class Tests(unittest.TestCase):
                           saliweb.frontend.get_completed_job,
                           'bad-job', 'passwd')
         j = saliweb.frontend.get_completed_job('completed-job', 'passwd')
+
+        flask.current_app = None
 
 
 if __name__ == '__main__':
