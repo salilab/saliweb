@@ -76,6 +76,19 @@ class Tests(unittest.TestCase):
                           saliweb.frontend.check_modeller_key, None)
         saliweb.frontend.check_modeller_key("@MODELLERKEY@")
 
+    def test_get_completed_job(self):
+        """Test get_completed_job function"""
+        self.assertRaises(saliweb.frontend._ResultsGoneError,
+                          saliweb.frontend.get_completed_job,
+                          'expired-job', 'passwd')
+        self.assertRaises(saliweb.frontend._ResultsStillRunningError,
+                          saliweb.frontend.get_completed_job,
+                          'running-job', 'passwd')
+        self.assertRaises(saliweb.frontend._ResultsBadJobError,
+                          saliweb.frontend.get_completed_job,
+                          'bad-job', 'passwd')
+        j = saliweb.frontend.get_completed_job('completed-job', 'passwd')
+
 
 if __name__ == '__main__':
     unittest.main()

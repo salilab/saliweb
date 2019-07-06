@@ -206,15 +206,12 @@ def get_completed_job(name, passwd):
     job_row = c.fetchone()
     if not job_row:
         raise _ResultsBadJobError('Job does not exist, or wrong password')
-    else:
-        if job_row['state'] in ('EXPIRED', 'ARCHIVED'):
-            raise _ResultsGoneError("Results for job '%s' are no "
-                                    "longer available for download" % name)
-        else:
-            if job_row['state'] != 'COMPLETED':
-                raise _ResultsStillRunningError(
-                    "Job '%s' has not yet completed; please check back later"
-                    % name)
+    elif job_row['state'] in ('EXPIRED', 'ARCHIVED'):
+        raise _ResultsGoneError("Results for job '%s' are no "
+                                "longer available for download" % name)
+    elif job_row['state'] != 'COMPLETED':
+        raise _ResultsStillRunningError(
+            "Job '%s' has not yet completed; please check back later" % name)
     return CompletedJob(job_row)
 
 

@@ -1,7 +1,6 @@
-from __future__ import print_function
-import sys
 # Mock of MySQLdb
 
+from . import cursors
 
 class _MockCursor(object):
     def execute(self, sql, args):
