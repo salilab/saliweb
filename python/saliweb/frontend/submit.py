@@ -102,7 +102,7 @@ class IncomingJob(object):
         """Get the full path to a file in the job's directory.
 
            :param str fname: The file name
-           :return str: Full path to the file in the job's directory.
+           :return: Full path to the file in the job's directory.
         """
         return os.path.join(self.directory, fname)
 
