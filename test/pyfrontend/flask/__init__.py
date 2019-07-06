@@ -16,7 +16,10 @@ class Blueprint(object):
 
 
 current_app = None
-g = {}
+
+class _GlobalObj(object):
+    pass
+g = _GlobalObj()
 
 
 class Flask(object):

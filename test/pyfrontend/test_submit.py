@@ -78,6 +78,24 @@ class Tests(unittest.TestCase):
             self.assertEqual(cur.execute_calls, 2)
         flask.current_app = None
 
+    def test_get_job_name_directory(self):
+        """Test _get_job_name_directory function"""
+        class MockApp(object):
+            def __init__(self, tmpdir):
+                self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
+                               'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
+                               'DIRECTORIES_INCOMING': tmpdir}
+        with util.temporary_directory() as tmpdir:
+            flask.current_app = MockApp(tmpdir)
+            job_name, job_dir = submit._get_job_name_directory("new_!$job")
+            self.assertEqual(job_name, 'new_job')
+
+            # running-job* are in the db; test failure to generate a
+            # unique job name
+            self.assertRaises(ValueError, submit._get_job_name_directory,
+                              "running-job")
+        flask.current_app = None
+
 
 if __name__ == '__main__':
     unittest.main()
