@@ -31,4 +31,6 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: check_modeller_key
 
+.. autofunction:: render_results_template
+
 .. autoexception:: InputValidationError

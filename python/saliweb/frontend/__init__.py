@@ -85,6 +85,7 @@ class CompletedJob(object):
     def __init__(self, sql_dict):
         for k in ('name', 'passwd', 'archive_time', 'directory'):
             setattr(self, k, sql_dict[k])
+        self._record_results = None
 
     def get_results_file_url(self, fname):
         """Return a URL which the user can use to download the passed file.
@@ -94,8 +95,12 @@ class CompletedJob(object):
            ommitted here if desired. (If it is ommitted, the file will be
            automatically decompressed when the user downloads it; otherwise
            the original .gz file is downloaded.)"""
-        return url_for('results_file', name=self.name, fp=fname,
-                       passwd=self.passwd)
+        url = url_for('results_file', name=self.name, fp=fname,
+                       passwd=self.passwd,
+                       _external=self._record_results is not None)
+        if self._record_results is not None:
+            self._record_results.append({'url': url, 'fname': fname})
+        return url
 
     def get_results_available_time(self):
         """Get an HTML fragment stating how long results will be available"""
@@ -360,3 +365,17 @@ def check_modeller_key(modkey):
     if modkey != _get_modeller_key():
         raise InputValidationError(
             "You have entered an invalid MODELLER key: " + str(modkey))
+
+
+def render_results_template(template_name, job, **context):
+    """Render a template for the job results page.
+       This normally functions like `flask.render_template` but will instead
+       return XML if the user requests it (for the REST API)."""
+    if _request_wants_xml():
+        job._record_results = []
+    r = flask.render_template(template_name, job=job, **context)
+    if job._record_results is not None:
+        return flask.render_template('saliweb/results.xml',
+                                     results=job._record_results)
+    else:
+        return r

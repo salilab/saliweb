@@ -76,6 +76,28 @@ class Tests(unittest.TestCase):
         self.assertEqual(str(q.name_link), '<a href="testurl">testname</a>')
         del flask.g.user
 
+    def test_completed_job(self):
+        """Test _CompletedJob object"""
+        j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
+                                           'passwd': 'testpw',
+                                           'archive_time': 'testar',
+                                           'directory': 'testdir'})
+        self.assertEqual(j.name, 'testname')
+        self.assertEqual(j.passwd, 'testpw')
+        self.assertEqual(j.archive_time, 'testar')
+        self.assertEqual(j.directory, 'testdir')
+        self.assertFalse(hasattr(j, 'foo'))
+        self.assertTrue(j.get_results_file_url('foo')
+                        .startswith('results_file;()'))
+        self.assertEqual(j._record_results, None)
+        j._record_results = []
+        self.assertTrue(j.get_results_file_url('foo')
+                        .startswith('https://results_file;()'))
+        self.assertEqual(len(j._record_results), 1)
+        self.assertEqual(j._record_results[0]['fname'], 'foo')
+        self.assertTrue(j._record_results[0]['url']
+                        .startswith('https://results_file;()'))
+
     def test_check_email_required(self):
         """Test check_email with required=True"""
         tf = functools.partial(saliweb.frontend.check_email, required=True)
@@ -211,17 +233,37 @@ class Tests(unittest.TestCase):
         with request_mime_type('application/xml'):
             self.assertTrue(saliweb.frontend._request_wants_xml())
 
-    def test_render_queue_page(self):
+    def test_render_queue_page_html(self):
         """Test render_queue_page (HTML)"""
         with request_mime_type('text/html'):
             r = saliweb.frontend.render_queue_page()
             self.assertTrue(r.startswith('render saliweb/queue.html'))
 
-    def test_render_queue_page(self):
+    def test_render_queue_page_xml(self):
         """Test render_queue_page (XML)"""
         with request_mime_type('application/xml'):
             r = saliweb.frontend.render_queue_page()
             self.assertTrue(r.startswith('render saliweb/help.xml'))
+
+    def test_render_results_template_html(self):
+        """Test render_results_template function (HTML)"""
+        j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
+                                           'passwd': 'testpw',
+                                           'archive_time': 'testar',
+                                           'directory': 'testdir'})
+        with request_mime_type('text/html'):
+            r = saliweb.frontend.render_results_template('results.html', job=j)
+            self.assertTrue(r.startswith('render results.html with ()'))
+
+    def test_render_results_template_xml(self):
+        """Test render_results_template function (XML)"""
+        j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
+                                           'passwd': 'testpw',
+                                           'archive_time': 'testar',
+                                           'directory': 'testdir'})
+        with request_mime_type('application/xml'):
+            r = saliweb.frontend.render_results_template('results.html', job=j)
+            self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
 
 
 if __name__ == '__main__':

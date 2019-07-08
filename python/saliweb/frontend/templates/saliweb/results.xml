@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<saliweb xmlns:xlink="http://www.w3.org/1999/xlink">
+   {%- for result in results %}
+   <results_file xlink:href="{{ result.url }}">{{ result.fname }}</results_file>
+   {%- endfor %}
+</saliweb>
