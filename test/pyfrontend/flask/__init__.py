@@ -8,6 +8,8 @@ def url_for(fname, _external=False, *args, **kwargs):
 class Markup(object):
     def __init__(self, txt):
         self.txt = txt
+    def __str__(self):
+        return self.txt
 
 
 class Blueprint(object):

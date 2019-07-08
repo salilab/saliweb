@@ -5,7 +5,7 @@
 {%- macro show_jobs(jobs, description) %}
   {%- if jobs %}
     {%- for job in jobs %}
-      <tr><td>{{ job.name }}</td> <td>{{ job.submit_time }}</td> <td>{{ job.state }}</td></tr>
+      <tr><td>{{ job.name_link }}</td> <td>{{ job.submit_time }}</td> <td>{{ job.state }}</td></tr>
     {%- endfor %}
   {%- else %}
     <tr><td class="nojobs" colspan="3">No {{ description }} jobs</td></tr>

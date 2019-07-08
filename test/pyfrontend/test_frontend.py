@@ -43,11 +43,21 @@ class Tests(unittest.TestCase):
         """Test _QueuedJob object"""
         q = saliweb.frontend._QueuedJob({'foo': 'bar', 'name': 'testname',
                                          'submit_time': 'testst',
-                                         'state': 'teststate'})
+                                         'state': 'teststate',
+                                         'user': 'testuser',
+                                         'url': 'testurl'})
         self.assertEqual(q.name, 'testname')
         self.assertEqual(q.submit_time, 'testst')
         self.assertEqual(q.state, 'teststate')
+        self.assertEqual(q.user, 'testuser')
+        self.assertEqual(q.url, 'testurl')
         self.assertFalse(hasattr(q, 'foo'))
+        flask.g.user = None
+        self.assertEqual(q.name_link, 'testname')
+        flask.g.user = saliweb.frontend.LoggedInUser(name='testuser',
+                                                     email='testemail')
+        self.assertEqual(str(q.name_link), '<a href="testurl">testname</a>')
+        del flask.g.user
 
     def test_check_email_required(self):
         """Test check_email with required=True"""

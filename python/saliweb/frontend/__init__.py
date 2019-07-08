@@ -66,8 +66,16 @@ def _format_timediff(timediff):
 class _QueuedJob(object):
     """A job that is in the job queue"""
     def __init__(self, sql_dict):
-        for k in ('name', 'submit_time', 'state'):
+        for k in ('name', 'submit_time', 'state', 'user', 'url'):
             setattr(self, k, sql_dict[k])
+
+    @property
+    def name_link(self):
+        """Get job name, linked to results page if user is logged in"""
+        if flask.g.user and self.user == flask.g.user.name:
+            return Markup('<a href="%s">%s</a>' % (self.url, self.name))
+        else:
+            return self.name
 
 
 class CompletedJob(object):
