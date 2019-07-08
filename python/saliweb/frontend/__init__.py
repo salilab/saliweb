@@ -247,12 +247,14 @@ def make_application(name, config, version, parameters=[],
 
     @app.errorhandler(_ResultsError)
     def handle_results_error(error):
-        return (flask.render_template('saliweb/results_error.html',
+        ext = 'xml' if _request_wants_xml() else 'html'
+        return (flask.render_template('saliweb/results_error.%s' % ext,
                                       message=str(error)), error.http_status)
 
     @app.errorhandler(_UserError)
     def handle_user_error(error):
-        return (flask.render_template('saliweb/user_error.html',
+        ext = 'xml' if _request_wants_xml() else 'html'
+        return (flask.render_template('saliweb/user_error.%s' % ext,
                                       message=str(error)), error.http_status)
 
     @app.before_request
