@@ -30,7 +30,8 @@ def mock_sleep(interval):
 class MockURLOpen(object):
     def __init__(self):
         self.numcalls = 0
-    def __call__(self, url):
+    def __call__(self, request):
+        url = request.get_full_url()
         if 'longjob' in url and self.numcalls < 100:
             self.numcalls += 1
             raise urllib2.HTTPError('url', 503, 'msg', [], None)
