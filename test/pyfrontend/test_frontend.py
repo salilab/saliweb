@@ -98,6 +98,70 @@ class Tests(unittest.TestCase):
 
         flask.current_app = None
 
+    def test_get_servers_cookie_info(self):
+        """Test _get_servers_cookie_info function"""
+        class MockRequest(object):
+            def __init__(self):
+                self.cookies = {}
+        flask.request = MockRequest()
+        c = saliweb.frontend._get_servers_cookie_info()
+        self.assertEqual(c, None)
+
+        flask.request.cookies['sali-servers'] = 'foo&bar&bar&baz'
+        c = saliweb.frontend._get_servers_cookie_info()
+        self.assertEqual(c, {'foo': 'bar', 'bar': 'baz'})
+        del flask.request
+
+    def test_logged_in_user(self):
+        """Test LoggedInUser class"""
+        u = saliweb.frontend.LoggedInUser(name='foo', email='bar')
+        self.assertEqual(u.name, 'foo')
+        self.assertEqual(u.email, 'bar')
+
+    def test_get_logged_in_user(self):
+        """Test _get_logged_in_user function"""
+        class MockRequest(object):
+            def __init__(self, scheme):
+                self.scheme = scheme
+                self.cookies = {}
+            def set_servers_cookie(self, d):
+                c = '&'.join('%s&%s' % x for x in d.items())
+                self.cookies['sali-servers'] = c
+
+        # Logins have to be SSL-secured
+        flask.request = MockRequest(scheme='http')
+        u = saliweb.frontend._get_logged_in_user()
+        self.assertEqual(u, None)
+
+        # No logged-in user
+        flask.request = MockRequest(scheme='https')
+        u = saliweb.frontend._get_logged_in_user()
+        self.assertEqual(u, None)
+
+        # Anonymous user
+        flask.request = MockRequest(scheme='https')
+        flask.request.set_servers_cookie({'user_name': 'Anonymous',
+                                          'session': 'pwcrypt'})
+        u = saliweb.frontend._get_logged_in_user()
+        self.assertEqual(u, None)
+
+        # User with wrong password
+        flask.request = MockRequest(scheme='https')
+        flask.request.set_servers_cookie({'user_name': 'testuser',
+                                          'session': 'badpwcrypt'})
+        u = saliweb.frontend._get_logged_in_user()
+        self.assertEqual(u, None)
+
+        # User with correct password
+        flask.request = MockRequest(scheme='https')
+        flask.request.set_servers_cookie({'user_name': 'testuser',
+                                          'session': 'goodpwcrypt'})
+        u = saliweb.frontend._get_logged_in_user()
+        self.assertEqual(u.name, 'testuser')
+        self.assertEqual(u.email, 'testemail')
+
+        del flask.request
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -143,6 +143,50 @@ def _setup_email_logging(app):
         app.logger.addHandler(mail_handler)
 
 
+def _get_servers_cookie_info():
+    """Get the sali-servers login cookie if available, as a dict"""
+    c = flask.request.cookies.get('sali-servers')
+    if c:
+        c = c.split('&')
+        cd = {}
+        while len(c) >= 2:
+            val = c.pop()
+            cd[c.pop()] = val
+        return cd
+
+
+class LoggedInUser(object):
+    """Information about the logged-in user.
+       `g.user` is set to an instance of this class, or None if no user
+       is logged in."""
+
+    #: The name of the user
+    name = None
+
+    #: The contact email address of the user
+    email = None
+
+    def __init__(self, name, email):
+        self.name, self.email = name, email
+
+
+def _get_logged_in_user():
+    """Return a LoggedInUser object for the currently logged-in user, or None"""
+    # Make sure logins are SSL-secured
+    if flask.request.scheme != 'https':
+        return
+    c = _get_servers_cookie_info()
+    if (c and 'user_name' in c and 'session' in c
+        and c['user_name'] != 'Anonymous'):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute('SELECT email FROM servers.users WHERE user_name=%s '
+                    'AND password=%s', (c['user_name'], c['session']))
+        row = cur.fetchone()
+        if row:
+            return LoggedInUser(c['user_name'], row[0])
+
+
 def make_application(name, config, version, static_folder='html', *args,
                      **kwargs):
     """Make and return a new Flask application.
@@ -170,6 +214,10 @@ def make_application(name, config, version, static_folder='html', *args,
     def handle_user_error(error):
         return (flask.render_template('saliweb/user_error.html',
                                       message=str(error)), error.http_status)
+
+    @app.before_request
+    def check_login():
+        flask.g.user = _get_logged_in_user()
 
     @app.teardown_appcontext
     def close_db(error):

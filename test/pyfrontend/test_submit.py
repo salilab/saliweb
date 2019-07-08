@@ -115,6 +115,7 @@ class Tests(unittest.TestCase):
         with util.temporary_directory() as tmpdir:
             flask.current_app = MockApp(tmpdir, track=False)
             flask.request = MockRequest()
+            flask.g.user = None
             j = submit.IncomingJob("test$!job")
             self.assertEqual(j.name, "testjob")
             self.assertEqual(j.directory, os.path.join(tmpdir, "testjob"))

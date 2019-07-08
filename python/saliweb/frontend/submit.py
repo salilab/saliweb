@@ -124,23 +124,23 @@ class IncomingJob(object):
 
         dbh = get_db()
         config = flask.current_app.config
+        user = flask.g.user.name if flask.g.user else None
 
         self._url, self._passwd = _generate_results_url(self.name)
 
         # Insert row into database table
         cur = dbh.cursor()
-        # todo: fill in user
         if config['TRACK_HOSTNAME']:
             cur.execute("INSERT INTO jobs (name,passwd,user,contact_email,"
                         "directory,url,hostname,submit_time) VALUES(%s, %s, "
                         "%s, %s, %s, %s, %s, UTC_TIMESTAMP())",
-                        (self.name, self._passwd, None, email, self.directory,
+                        (self.name, self._passwd, user, email, self.directory,
                          self._url, flask.request.remote_addr))
         else:
             cur.execute("INSERT INTO jobs (name,passwd,user,contact_email,"
                         "directory,url,submit_time) VALUES(%s, %s, "
                         "%s, %s, %s, %s, %s, UTC_TIMESTAMP())",
-                        (self.name, self._passwd, None, email, self.directory,
+                        (self.name, self._passwd, user, email, self.directory,
                          self._url))
         dbh.commit()
 
