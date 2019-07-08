@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<saliweb xmlns:xlink="http://www.w3.org/1999/xlink">
+   <service name="{{ config.SERVICE_NAME }}" />
+   <help>
+<p>
+This URL provides a REST-style interface to the Sali Lab's {{ config.SERVICE_NAME }}
+web service. It is designed to be used for automated job submission
+and collection of job results.
+</p>
+
+<p>
+If you want to use the web interface for this service instead, please
+open {{ config.URLTOP }} in a web browser.
+</p>
+
+<p>
+To submit a job to the service, use the web_service.py tool available
+at https://modbase.compbio.ucsf.edu/web_service.py
+</p>
+
+<p>
+Alternatively, submit an HTTP POST request to
+{{ url_for("job", _external=True) }}
+and request XML output (e.g. by setting the HTTP Accept header
+to "application/xml")
+</p>
+
+<p>
+The POST data should be encoded as multipart/form-data and include the same
+options and uploaded files that are submitted by the web interface. The service
+will return a simple XML file that contains a URL for the completed job, which
+will look like
+{{ url_for("results", name="jobname", _external=True) }}
+</p>
+
+<p>
+If an error occurs, a suitable HTTP status code will be set and the XML
+file will contain a human-readable error string.
+</p>
+
+<p>
+To retrieve job results, submit an HTTP GET request to the previously-obtained
+URL. If the job is not yet complete an HTTP status code is returned; otherwise,
+a simple XML file containing a list of the job's output files is returned.
+Each output file is named with a URL of the form
+{{ url_for("results_file", name="jobname", fp="outputfile", _external=True) }}
+and the file itself can be obtained by a GET request to that URL.
+</p>
+   </help>
+
+   <parameters>
+      {%- for p in config.PARAMETERS %}
+     <{{ p._xml_type }} name="{{ p._name }}"{{' optional="1"'|safe if p._optional}}>{{ p._description }}</{{ p._xml_type }}>
+      {%- endfor %}
+   </parameters>
+</saliweb>

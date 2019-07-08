@@ -40,5 +40,5 @@ class Flask(object):
         pass
 
 
-def render_template(fname, *args):
-    pass
+def render_template(fname, *args, **kwargs):
+    return "render %s with %s, %s" % (fname, str(args), str(kwargs))

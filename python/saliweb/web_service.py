@@ -47,9 +47,9 @@ def _get_cookie_arg(args):
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
     # use curl instead
-    p = subprocess.Popen(['curl', '-s'] + curl_args \
-                          + [url], stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    p = subprocess.Popen(['curl', '-HAccept:application/xml', '-s']
+                         + curl_args + [url], stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
     (out, err) = p.communicate()
     exitval = p.wait()
     if exitval != 0:

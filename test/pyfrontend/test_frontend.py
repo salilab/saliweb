@@ -3,7 +3,24 @@ import unittest
 import saliweb.frontend
 import datetime
 import functools
+import contextlib
 import flask
+
+
+@contextlib.contextmanager
+def request_mime_type(mime):
+    """Temporarily set the HTTP Accept header"""
+    class MockAccept(object):
+        def best_match(self, types):
+            return mime if mime in types else None
+        def __getitem__(self, key):
+            return 1.0 if key == mime else 0.0
+    class MockRequest(object):
+        def __init__(self):
+            self.accept_mimetypes = MockAccept()
+    flask.request = MockRequest()
+    yield
+    del flask.request
 
 
 class Tests(unittest.TestCase):
@@ -171,6 +188,40 @@ class Tests(unittest.TestCase):
         self.assertEqual(u.email, 'testemail')
 
         del flask.request
+
+    def test_parameters(self):
+        """Test Parameter and FileParameter classes"""
+        p = saliweb.frontend.Parameter("foo", "bar")
+        self.assertEqual(p._name, 'foo')
+        self.assertEqual(p._description, 'bar')
+        self.assertEqual(p._xml_type, 'string')
+        self.assertFalse(p._optional)
+
+        p = saliweb.frontend.Parameter("foo", "bar", optional=True)
+        self.assertTrue(p._optional)
+
+        p = saliweb.frontend.FileParameter("foo", "bar")
+        self.assertEqual(p._xml_type, 'file')
+
+    def test_request_wants_xml(self):
+        """Test _request_wants_xml function"""
+        with request_mime_type('text/html'):
+            self.assertFalse(saliweb.frontend._request_wants_xml())
+
+        with request_mime_type('application/xml'):
+            self.assertTrue(saliweb.frontend._request_wants_xml())
+
+    def test_render_queue_page(self):
+        """Test render_queue_page (HTML)"""
+        with request_mime_type('text/html'):
+            r = saliweb.frontend.render_queue_page()
+            self.assertTrue(r.startswith('render saliweb/queue.html'))
+
+    def test_render_queue_page(self):
+        """Test render_queue_page (XML)"""
+        with request_mime_type('application/xml'):
+            r = saliweb.frontend.render_queue_page()
+            self.assertTrue(r.startswith('render saliweb/help.xml'))
 
 
 if __name__ == '__main__':

@@ -195,14 +195,40 @@ def _get_logged_in_user():
             return LoggedInUser(c['user_name'], row[0])
 
 
-def make_application(name, config, version, static_folder='html', *args,
-                     **kwargs):
+class Parameter(object):
+    """Represent a single parameter (with help). This is used to provide
+       help to users of the REST API. See :func:`make_application`.
+
+       :param str name: The name (must match that of the form item).
+       :param str description: Help text about the parameter and its use.
+       :param bool optional: Whether the parameter can be omitted.
+    """
+    _xml_type = 'string'
+
+    def __init__(self, name, description, optional=False):
+        self._name, self._description = name, description
+        self._optional = optional
+
+
+class FileParameter(Parameter):
+    """Represent a single file upload parameter (with help).
+       See :class:`Parameter`.
+    """
+    _xml_type = 'file'
+
+
+def make_application(name, config, version, parameters=[],
+                     static_folder='html', *args, **kwargs):
     """Make and return a new Flask application.
 
        :param str name: Name of the Python file that owns the app. This should
               normally be `__name__`.
        :param str config: Path to the web service configuration file.
        :param str version: Current version of the web service.
+       :param list parameters: The form parameters accepted by the 'submit'
+              page. This should be a list of :class:`Parameter` and/or
+              :class:`FileParameter` objects, and is used to provide help
+              for users of the REST API.
        :return: A new Flask application.
 
        .. note:: Any additional arguments are passed to the Flask constructor.
@@ -210,6 +236,7 @@ def make_application(name, config, version, static_folder='html', *args,
     app = flask.Flask(name, *args, static_folder=static_folder, **kwargs)
     _read_config(app, config)
     app.config['VERSION'] = version
+    app.config['PARAMETERS'] = parameters
     _setup_email_logging(app)
     app.register_blueprint(_blueprint)
 
@@ -271,9 +298,22 @@ def get_completed_job(name, passwd):
     return CompletedJob(job_row)
 
 
+def _request_wants_xml():
+    """Return True if the client asked for XML output rather than HTML.
+       This is done by adding the HTTP header `Accept: application/xml`
+       to the request, and is typically used in the REST API."""
+    accept = flask.request.accept_mimetypes
+    best = accept.best_match(['application/xml', 'text/html'])
+    return best == 'application/xml' and accept[best] > accept['text/html']
+
+
 def render_queue_page():
     """Return an HTML list of all jobs. Typically used in the `/job` route for
        a GET request."""
+    # The /job endpoint is used by the old Perl REST API, so reuse it here
+    # for help on the REST API.
+    if _request_wants_xml():
+        return flask.render_template('saliweb/help.xml')
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
     c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "

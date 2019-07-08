@@ -2,7 +2,7 @@ class DictCursor(object):
     def __init__(self, conn):
         pass
 
-    def execute(self, sql, args):
+    def execute(self, sql, args=()):
         self.sql, self.args = sql, args
 
     def fetchone(self):
@@ -15,3 +15,6 @@ class DictCursor(object):
                 return {'state': 'COMPLETED', 'name': self.args[0],
                         'passwd': self.args[1], 'archive_time': None,
                         'directory': '/test/job'}
+
+    def __iter__(self):
+        return iter([])

@@ -3,7 +3,7 @@
 from . import cursors
 
 class _MockCursor(object):
-    def execute(self, sql, args):
+    def execute(self, sql, args=()):
         self.sql, self.args = sql, args
 
     def fetchone(self):

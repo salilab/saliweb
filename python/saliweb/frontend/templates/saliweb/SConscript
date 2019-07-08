@@ -3,7 +3,7 @@ import os
 Import('env')
 
 templates = ['layout.html', 'queue.html', 'user_error.html',
-             'results_error.html']
+             'results_error.html', 'help.xml']
 
 # Install template files:
 instdir = os.path.join(env['pythondir'], 'saliweb', 'frontend', 'templates',
