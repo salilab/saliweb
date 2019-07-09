@@ -4,6 +4,8 @@ import saliweb.frontend
 import datetime
 import functools
 import contextlib
+import os
+import util
 import flask
 
 
@@ -271,6 +273,54 @@ class Tests(unittest.TestCase):
         with request_mime_type('application/xml'):
             r = saliweb.frontend.render_results_template('results.html', job=j)
             self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
+
+    def test_read_config(self):
+        """Test _read_config function"""
+        class MockConfig(object):
+            def __init__(self):
+                self.d = {}
+            def __setitem__(self, key, value):
+                self.d[key] = value
+            def __getitem__(self, key):
+                return self.d[key]
+            def __contains__(self, key):
+                return key in self.d
+            def from_object(self, obj):
+                pass
+     
+        class MockApp(object):
+            def __init__(self):
+                self.config = MockConfig()
+        app = MockApp()
+        with util.temporary_directory() as tmpdir:
+            fname = os.path.join(tmpdir, 'live.conf')
+            with open(fname, 'w') as fh:
+                fh.write("""
+[general]
+service_name: test_service
+
+[database]
+frontend_config: frontend.conf
+db: test_db
+
+[directories]
+install: test_install
+""")
+            fe_config = os.path.join(tmpdir, 'frontend.conf')
+            with open(fe_config, 'w') as fh:
+                fh.write("""
+[frontend_db]
+user: test_fe_user
+passwd: test_fe_pwd
+""")
+            saliweb.frontend._read_config(app, fname)
+            self.assertEqual(app.config['DATABASE_SOCKET'],
+                             '/var/lib/mysql/mysql.sock')
+            self.assertEqual(app.config['DATABASE_DB'], 'test_db')
+            self.assertEqual(app.config['DATABASE_USER'], 'test_fe_user')
+            self.assertEqual(app.config['DATABASE_PASSWD'], 'test_fe_pwd')
+            self.assertEqual(app.config['DIRECTORIES_INSTALL'], 'test_install')
+            self.assertEqual(app.config['SERVICE_NAME'], 'test_service')
 
 
 if __name__ == '__main__':
