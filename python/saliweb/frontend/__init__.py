@@ -353,10 +353,6 @@ def check_email(email, required=False):
             "Please provide a valid return email address")
 
 
-def _get_modeller_key():
-    return "@MODELLERKEY@"
-
-
 def check_modeller_key(modkey):
     """Check a provided MODELLER key.
        If the key is empty or invalid, raise an
@@ -364,7 +360,7 @@ def check_modeller_key(modkey):
 
        :param str modkey: The MODELLER key to check.
     """
-    if modkey != _get_modeller_key():
+    if modkey != flask.current_app.config['MODELLER_LICENSE_KEY']:
         raise InputValidationError(
             "You have entered an invalid MODELLER key: " + str(modkey))
 

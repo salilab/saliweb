@@ -129,11 +129,16 @@ class Tests(unittest.TestCase):
 
     def test_check_modeller_key(self):
         """Test check_modeller_key function"""
+        class MockApp(object):
+            def __init__(self):
+                self.config = {'MODELLER_LICENSE_KEY': '@MODELLERKEY@'}
+        flask.current_app = MockApp()
         self.assertRaises(saliweb.frontend.InputValidationError,
                           saliweb.frontend.check_modeller_key, "garbage")
         self.assertRaises(saliweb.frontend.InputValidationError,
                           saliweb.frontend.check_modeller_key, None)
         saliweb.frontend.check_modeller_key("@MODELLERKEY@")
+        flask.current_app = None
 
     def test_get_completed_job(self):
         """Test get_completed_job function"""
