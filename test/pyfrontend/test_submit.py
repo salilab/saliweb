@@ -5,7 +5,23 @@ import os
 import re
 from saliweb.frontend import submit
 import saliweb.frontend
+import contextlib
 import util
+from test_frontend import request_mime_type
+
+
+@contextlib.contextmanager
+def mock_app(track=False):
+    class MockApp(object):
+        def __init__(self, tmpdir, track):
+            self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
+                           'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
+                           'DIRECTORIES_INCOMING': tmpdir,
+                           'TRACK_HOSTNAME': track, 'SOCKET': '/not/exist'}
+    with util.temporary_directory() as tmpdir:
+        flask.current_app = MockApp(tmpdir, track=track)
+        yield flask.current_app, tmpdir
+        flask.current_app = None
 
 
 class Tests(unittest.TestCase):
@@ -80,13 +96,7 @@ class Tests(unittest.TestCase):
 
     def test_get_job_name_directory(self):
         """Test _get_job_name_directory function"""
-        class MockApp(object):
-            def __init__(self, tmpdir):
-                self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
-                               'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
-                               'DIRECTORIES_INCOMING': tmpdir}
-        with util.temporary_directory() as tmpdir:
-            flask.current_app = MockApp(tmpdir)
+        with mock_app():
             job_name, job_dir = submit._get_job_name_directory("new_!$job")
             self.assertEqual(job_name, 'new_job')
 
@@ -94,7 +104,6 @@ class Tests(unittest.TestCase):
             # unique job name
             self.assertRaises(ValueError, submit._get_job_name_directory,
                               "running-job")
-        flask.current_app = None
 
     def test_generate_results_url(self):
         """Test _generate_results_url function"""
@@ -103,17 +112,10 @@ class Tests(unittest.TestCase):
 
     def test_incoming_job(self):
         """Test IncomingJob objects"""
-        class MockApp(object):
-            def __init__(self, tmpdir, track):
-                self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
-                               'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
-                               'DIRECTORIES_INCOMING': tmpdir,
-                               'TRACK_HOSTNAME': track, 'SOCKET': '/not/exist'}
         class MockRequest(object):
             def __init__(self):
                 self.remote_addr = None
-        with util.temporary_directory() as tmpdir:
-            flask.current_app = MockApp(tmpdir, track=False)
+        with mock_app(track=False) as (app, tmpdir):
             flask.request = MockRequest()
             flask.g.user = None
             j = submit.IncomingJob("test$!job")
@@ -126,10 +128,31 @@ class Tests(unittest.TestCase):
             results_url = j.results_url
             self.assertTrue(results_url.startswith('https://results'))
 
-            flask.current_app = MockApp(tmpdir, track=True)
+        with mock_app(track=True) as (app, tmpdir):
             j = submit.IncomingJob("test$!job")
             j.submit()
-        flask.current_app = None
+
+    def test_render_submit_template_html(self):
+        """Test render_submit_template (HTML output)"""
+        with request_mime_type('text/html'):
+            with mock_app(track=False) as (app, tmpdir):
+                j = submit.IncomingJob("testjob")
+                j.submit()
+                r = saliweb.frontend.render_submit_template('results.html',
+                                                            job=j)
+                self.assertTrue(r.startswith('render results.html with ()'))
+
+    def test_render_submit_template_xml(self):
+        """Test render_submit_template (XML output)"""
+        with request_mime_type('application/xml'):
+            with mock_app(track=False) as (app, tmpdir):
+                j = submit.IncomingJob("testjob")
+                j.submit()
+                r = saliweb.frontend.render_submit_template('results.html',
+                                                            job=j)
+                self.assertTrue(
+                    r.startswith('render saliweb/submit.xml with ()'))
+
 
 if __name__ == '__main__':
     unittest.main()

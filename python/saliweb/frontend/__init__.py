@@ -381,3 +381,13 @@ def render_results_template(template_name, job, **context):
                                      results=job._record_results)
     else:
         return r
+
+
+def render_submit_template(template_name, job, **context):
+    """Render a template for the job submission page.
+       This normally functions like `flask.render_template` but will instead
+       return XML if the user requests it (for the REST API)."""
+    if _request_wants_xml():
+        return flask.render_template('saliweb/submit.xml', job=job)
+    else:
+        return flask.render_template(template_name, job=job, **context)
