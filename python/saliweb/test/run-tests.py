@@ -22,7 +22,8 @@ class RunAllTests(unittest.TestProgram):
             os.unlink(cov)
         if coverage:
             # Start coverage testing now before we import any modules
-            self.topdir = os.path.abspath(os.path.join(os.getcwd(), 'python'))
+            top = 'frontend' if opts.frontend else 'python'
+            self.topdir = os.path.abspath(os.path.join(os.getcwd(), top))
             self.mods = glob.glob("%s/*/*.py" % self.topdir)
 
             self.cov = coverage.coverage(branch=True, include=self.mods)
@@ -91,7 +92,8 @@ def get_boilerplate_test_case(module_name):
                          "%s is not a Job subclass" % w.db.jobobj)
     return BoilerplateTests(methodName='test_get_web_service')
 
-def regressionTest():
+
+def get_all_tests():
     module_name = sys.argv[1]
     modobjs = []
     for f in sys.argv[2:]:
@@ -102,8 +104,19 @@ def regressionTest():
         sys.path.pop(0)
     tests = [unittest.defaultTestLoader.loadTestsFromModule(o) \
              for o in modobjs]
+    return tests, module_name
+
+
+def regressionTestBackend():
+    tests, module_name = get_all_tests()
     tests.append(get_boilerplate_test_case(module_name))
     return unittest.TestSuite(tests)
+
+
+def regressionTestFrontend():
+    tests, module_name = get_all_tests()
+    return unittest.TestSuite(tests)
+
 
 def parse_options():
     parser = OptionParser()
@@ -113,6 +126,9 @@ def parse_options():
     parser.add_option("--coverage", dest="coverage",
                       default=False, action="store_true",
                       help="preserve output coverage files")
+    parser.add_option("--frontend", dest="frontend",
+                      default=False, action="store_true",
+                      help="test frontend rather than backend")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -120,4 +136,6 @@ if __name__ == "__main__":
     sys.argv = [sys.argv[0]] + args
     # Get directory containing test files
     os.environ['SALIWEB_TESTDIR'] = os.path.abspath(os.path.dirname(args[-1]))
-    RunAllTests(opts, defaultTest="regressionTest", argv=[sys.argv[0], '-v'])
+    end = 'Frontend' if opts.frontend else 'Backend'
+    RunAllTests(opts, defaultTest="regressionTest%s" % end,
+                argv=[sys.argv[0], '-v'])

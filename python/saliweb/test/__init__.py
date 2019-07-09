@@ -2,8 +2,10 @@
 
 import unittest
 import os
+import sys
 import shutil
 import tempfile
+import contextlib
 import saliweb.backend
 
 
@@ -54,7 +56,7 @@ class _DummyDB(object):
 
 
 class TestCase(unittest.TestCase):
-    """Custom TestCase subclass for testing Sali web services"""
+    """Custom TestCase subclass for testing Sali web service backends"""
 
     def make_test_job(self, jobcls, state):
         """Make a test job of the given class in the given state
@@ -80,3 +82,106 @@ class TestCase(unittest.TestCase):
            This can be useful for getting supplemental files needed by tests,
            which can be stored in a subdirectory of the test directory."""
         return os.environ['SALIWEB_TESTDIR']
+
+
+def import_mocked_frontend(pkgname):
+    """Import the named frontend module (e.g. 'modloop'), and return it.
+       This sets up the environment with mocked configuration so that the
+       module can be tested without being installed and without a live
+       database. For this to work properly, it should be called *before*
+       importing `saliweb.frontend`."""
+    if pkgname in sys.modules:
+        return sys.modules[pkgname]
+
+    # Provide a mock MySQL module for access to the database
+    sys.path.insert(0, os.path.dirname(__file__))
+    import MySQLdb
+    mock_db = MySQLdb.connect()
+    def mock_get_db():
+        return mock_db
+
+    import saliweb.frontend
+    import saliweb.frontend.config
+    saliweb.frontend.get_db = mock_get_db
+
+    saliweb.frontend.config.DEBUG = True
+    saliweb.frontend.config.TESTING = True
+    saliweb.frontend.config.MODELLER_LICENSE_KEY = get_modeller_key()
+    t = TempDir()
+    incoming = os.path.join(t.tmpdir, 'incoming')
+    os.mkdir(incoming)
+    config = os.path.join(t.tmpdir, 'test.conf')
+    with open(config, 'w') as fh:
+        fh.write("""
+[general]
+service_name: TestService
+socket: /not/exist
+
+[database]
+frontend_config: frontend.conf
+
+[directories]
+incoming: %s
+""" % incoming)
+    with open(os.path.join(t.tmpdir, 'frontend.conf'), 'w') as fh:
+        fh.write("""
+[frontend_db]
+user: test_user_fe
+passwd: test_pwd_fe
+""")
+
+    # Mock make_application so that it doesn't fall over with the "##CONFIG##"
+    # stuff
+    orig_make_app = saliweb.frontend.make_application
+    def mock_make_app(name, config_and_version, parameters=[], *args, **kwargs):
+        return orig_make_app(name, config, 'testver', parameters, *args,
+                             **kwargs)
+    saliweb.frontend.make_application = mock_make_app
+
+    m = sys.modules[pkgname] = __import__(pkgname)
+    # Make sure temporary directory sticks around
+    saliweb.frontend._test_tmpdir = t
+    return m
+
+
+class MockJob(object):
+    """A temporary job for testing web service results pages.
+       Create by calling :func:`make_frontend_job`.
+    """
+    #: Job name
+    name = None
+
+    #: Temporary directory containing result files (see :meth:`make_file`)
+    directory = None
+
+    #: Password needed to construct URLs for this job
+    passwd = None
+
+    def __init__(self, name, directory):
+        self.name, self.directory = name, directory
+        self.passwd = 'pwgoodcrypt'
+
+    def make_file(self, name, contents=""):
+        """Make a file in the job's directory with the given contents"""
+        with open(os.path.join(self.directory, name), 'w') as fh:
+            fh.write(contents)
+
+
+@contextlib.contextmanager
+def make_frontend_job(name):
+    """Context manager to make a temporary job. See :`MockJob`.
+       This can be used to test the job results page and the
+       download of results files."""
+    import saliweb.frontend
+    tmpdir = tempfile.mkdtemp()
+    j = MockJob(name, tmpdir)
+    db = saliweb.frontend.get_db()
+    db._jobs.append(j)
+    yield j
+    db._jobs.remove(j)
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def get_modeller_key():
+    """Get a valid mock Modeller key for testing"""
+    return "MockModellerKey"

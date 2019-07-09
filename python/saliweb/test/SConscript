@@ -8,3 +8,5 @@ python_files = [ '__init__.py', 'run-tests.py' ]
 instdir = os.path.join(env['pythondir'], 'saliweb', 'test')
 pyinst = env.Install(instdir, python_files)
 env.Alias('install', pyinst)
+
+SConscript('MySQLdb/SConscript')

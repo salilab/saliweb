@@ -89,6 +89,8 @@ def Environment(variables, configfiles, version=None, service_module=None,
     env.Append(BUILDERS={'RunPerlTests': Builder(action=builder_perl_tests)})
     env.Append(BUILDERS={'RunPythonTests': \
                           Builder(action=builder_python_tests)})
+    env.Append(BUILDERS={'RunPythonFrontendTests': \
+                          Builder(action=builder_python_frontend_tests)})
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
@@ -139,6 +141,25 @@ def builder_python_tests(target, source, env):
     app = env['python'] + " " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'python'
+    ret = e.Execute(app)
+    if ret != 0:
+        print("unit tests FAILED")
+        return 1
+
+
+def builder_python_frontend_tests(target, source, env):
+    """Custom builder to run Python frontend tests"""
+    mod = os.path.join(os.path.dirname(saliweb.__file__), 'test',
+                       'run-tests.py')
+    if env.get('html_coverage', None):
+        mod += ' --html_coverage=%s' % env['html_coverage']
+    if env.get('coverage', None):
+        mod += ' --coverage'
+    mod += " " + env['service_module']
+    app = env['python'] + " " + mod + " --frontend " \
+          + " ".join(str(s) for s in source)
+    e = env.Clone()
+    e['ENV']['PYTHONPATH'] = 'frontend'
     ret = e.Execute(app)
     if ret != 0:
         print("unit tests FAILED")

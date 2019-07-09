@@ -6,6 +6,7 @@ import os
 import re
 import logging.handlers
 import MySQLdb
+import MySQLdb.cursors
 from .submit import IncomingJob
 import saliweb.frontend.config
 
@@ -368,6 +369,8 @@ def check_modeller_key(modkey):
 
        :param str modkey: The MODELLER key to check.
     """
+    if not modkey:
+        raise InputValidationError("You must enter a valid MODELLER key")
     if modkey != flask.current_app.config['MODELLER_LICENSE_KEY']:
         raise InputValidationError(
             "You have entered an invalid MODELLER key: " + str(modkey))

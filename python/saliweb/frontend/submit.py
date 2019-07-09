@@ -130,7 +130,7 @@ class IncomingJob(object):
 
         # Insert row into database table
         cur = dbh.cursor()
-        if config['TRACK_HOSTNAME']:
+        if config.get('TRACK_HOSTNAME'):
             cur.execute("INSERT INTO jobs (name,passwd,user,contact_email,"
                         "directory,url,hostname,submit_time) VALUES(%s, %s, "
                         "%s, %s, %s, %s, %s, UTC_TIMESTAMP())",
