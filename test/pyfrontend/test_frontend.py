@@ -322,6 +322,28 @@ passwd: test_fe_pwd
             self.assertEqual(app.config['DIRECTORIES_INSTALL'], 'test_install')
             self.assertEqual(app.config['SERVICE_NAME'], 'test_service')
 
+    def test_setup_email_logging(self):
+        """Test _setup_email_logging function"""
+        class MockLogger(object):
+            def __init__(self):
+                self.handlers = []
+            def addHandler(self, h):
+                self.handlers.append(h)
+        class MockApp(object):
+            def __init__(self, debug):
+                self.debug = debug
+                self.config = {'SERVICE_NAME': 'test_service',
+                               'ADMIN_EMAIL': 'test_admin'}
+                self.logger = MockLogger()
+
+        app = MockApp(debug=True)
+        saliweb.frontend._setup_email_logging(app)
+        self.assertEqual(len(app.logger.handlers), 0)
+
+        app = MockApp(debug=False)
+        saliweb.frontend._setup_email_logging(app)
+        self.assertEqual(len(app.logger.handlers), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
