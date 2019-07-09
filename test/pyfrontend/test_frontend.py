@@ -97,6 +97,13 @@ class Tests(unittest.TestCase):
         self.assertEqual(j._record_results[0]['fname'], 'foo')
         self.assertTrue(j._record_results[0]['url']
                         .startswith('https://results_file;()'))
+        j.archive_time = None
+        self.assertEqual(j.get_results_available_time(), None)
+        j.archive_time = (datetime.datetime.utcnow()
+                          + datetime.timedelta(days=5, hours=1))
+        self.assertEqual(str(j.get_results_available_time()),
+                         '<p>Job results will be available at this URL '
+                         'for 5 days.</p>')
 
     def test_check_email_required(self):
         """Test check_email with required=True"""
