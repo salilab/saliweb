@@ -29,7 +29,7 @@ def _get_trial_job_names(user_job_name):
     user_job_name = _sanitize_job_name(user_job_name)
     yield user_job_name
     for trial in range(50):
-        yield "%s_%d.%d" % (user_job_name, random.randint(0, 100000), trial)
+        yield "%s_%d%d" % (user_job_name, random.randint(0, 100000), trial)
 
 
 def _try_job_name(job_name, cur):

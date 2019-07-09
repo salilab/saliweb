@@ -48,8 +48,8 @@ class Tests(unittest.TestCase):
         """Test _get_trial_job_names"""
         names = list(submit._get_trial_job_names("testjob"))
         self.assertEqual(names[0], 'testjob')
-        self.assertTrue(re.match('testjob_\d+\.0$', names[1]))
-        self.assertTrue(re.match('testjob_\d+\.1$', names[2]))
+        self.assertTrue(re.match('testjob_\d+0$', names[1]))
+        self.assertTrue(re.match('testjob_\d+1$', names[2]))
 
     def test_try_job_name(self):
         """Test _try_job_name function"""
