@@ -87,6 +87,14 @@ class CompletedJob(object):
             setattr(self, k, sql_dict[k])
         self._record_results = None
 
+    def get_path(self, fname):
+        """Get the full path to a file in the job's directory.
+
+           :param str fname: The file name
+           :return: Full path to the file in the job's directory.
+        """
+        return os.path.join(self.directory, fname)
+
     def get_results_file_url(self, fname):
         """Return a URL which the user can use to download the passed file.
            The file must be in the job directory (or a subdirectory of it);
