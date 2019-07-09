@@ -2,12 +2,34 @@
 	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+{%- macro get_navigation_links(links) %}
+{%- if g.user %}
+  <a href="https://modbase.compbio.ucsf.edu/scgi/server.cgi">Current User: {{ g.user.name }}</a>&nbsp;&bull;&nbsp;
+  <a href="https://modbase.compbio.ucsf.edu/scgi/server.cgi?logout=true">Logout</a>&nbsp;&bull;&nbsp;
+{%- else %}
+  <a href="https://modbase.compbio.ucsf.edu/scgi/server.cgi">Login</a>&nbsp;&bull;&nbsp;
+{%- endif %}
+{%- for link in links %}
+  <a href="{{ link[0] }}">{{ link[1] }}</a>
+  {%- if not loop.last -%}
+  &nbsp;&bull;&nbsp;
+  {%- endif -%}
+{%- endfor %}
+{%- endmacro %}
+
+{%- macro get_lab_navigation_links(links) %}
+{%- for link in links %}
+  <a href="{{ link[0] }}">{{ link[1] }}</a>&nbsp;&bull;&nbsp;
+{%- endfor %}
+{%- endmacro %}
 <head>
 <title>
 {%- block title -%}
 {%- endblock -%}
 </title>
+{%- block viewport %}
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+{%- endblock %}
 <link rel="stylesheet" type="text/css" href="/saliweb/css/server.css" />
 {%- block css %}
 {%- endblock %}
@@ -34,9 +56,13 @@
 <body>
 <div id="container">
     <div id="header1"> 
+      {%- block header_page_title %}
         <h3><img src="//salilab.org/img/logo_small.gif" height="40" alt="" />{{ self.title() }}</h3>
+      {%- endblock %}
     </div>
-    <div id="navigation_lab">&bull;&nbsp;<a href="//salilab.org/">Sali Lab Home</a>&nbsp;&bull;&nbsp;
+
+<div id="navigation_lab">
+&bull;&nbsp;<a href="//salilab.org/">Sali Lab Home</a>&nbsp;&bull;&nbsp;
 <a href="//salilab.org/modweb/">ModWeb</a>&nbsp;&bull;&nbsp;
 <a href="//salilab.org/modbase/">ModBase</a>&nbsp;&bull;&nbsp;
 <a href="//salilab.org/evaluation/">ModEval</a>&nbsp;&bull;&nbsp;
@@ -44,10 +70,17 @@
 <a href="//salilab.org/foxs/">FoXS</a>&nbsp;&bull;&nbsp;
 <a href="//integrativemodeling.org/">IMP</a>&nbsp;&bull;&nbsp;
 <a href="//salilab.org/multifit/">MultiFit</a>&nbsp;&bull;&nbsp;
-<a href="//salilab.org/modpipe/">ModPipe</a>&nbsp;&bull;&nbsp;&nbsp;</div>
+<a href="//salilab.org/modpipe/">ModPipe</a>&nbsp;&bull;&nbsp;
+{%- block lab_navigation %}
+{%- endblock %}
+</div>
 
 <div id="navigation_second">
 {%- block navigation %}
+{{ get_navigation_links(
+       [(url_for("index"), config.SERVICE_NAME + " Home"),
+        (url_for("job"), "Current " + config.SERVICE_NAME + " queue")])
+}}
 {%- endblock %}
 </div>
         <div style="clear:both;"></div><div id="bodypart"> 
