@@ -170,8 +170,6 @@ def import_mocked_frontend(pkgname, test_file, topdir):
     saliweb.frontend.config.TESTING = True
     saliweb.frontend.config.MODELLER_LICENSE_KEY = get_modeller_key()
     t = TempDir()
-    incoming = os.path.join(t.tmpdir, 'incoming')
-    os.mkdir(incoming)
     config = os.path.join(t.tmpdir, 'test.conf')
     with open(config, 'w') as fh:
         fh.write("""
@@ -181,10 +179,7 @@ socket: /not/exist
 
 [database]
 frontend_config: frontend.conf
-
-[directories]
-incoming: %s
-""" % incoming)
+""")
     with open(os.path.join(t.tmpdir, 'frontend.conf'), 'w') as fh:
         fh.write("""
 [frontend_db]
@@ -197,8 +192,6 @@ passwd: test_pwd_fe
     os.environ[envpre + "_VERSION"] = 'testver'
 
     m = sys.modules[pkgname] = __import__(pkgname)
-    # Make sure temporary directory sticks around
-    saliweb.frontend._test_tmpdir = t
     return m
 
 
