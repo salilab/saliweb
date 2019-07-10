@@ -305,7 +305,7 @@ class InstallTest(unittest.TestCase):
             def get_contents(self):
                 return self.contents
         open('dummysrc', 'w').write('line1\nfoo"##CONFIG##"bar\nline2\n')
-        for ver, expver in (('None', "None"), ('r345', "'r345'")):
+        for ver, expver in (('None', ''), ('r345', 'r345')):
             e = DummyEnv()
             saliweb.build._subst_python_install(
                 e, [DummyNode(path='dummytgt')],
@@ -315,13 +315,14 @@ class InstallTest(unittest.TestCase):
                  DummyNode(contents='dummywsgi')])
             with open('dummytgt') as fh:
                 f = fh.read()
-            self.assertEqual(f, "line1\nfoo'mycfg', %sbar\n"
-                                "line2\n" % expver)
+            self.assertEqual(f, 'line1\nfoo"##CONFIG##"bar\nline2\n')
             with open('dummywsgi') as fh:
                 f = fh.read()
             self.assertEqual(f,
-                "import sys; sys.path.insert(0, '/frontend/dir')\n"
-                "from dummymodule import app as application\n")
+                "import sys, os; sys.path.insert(0, '/frontend/dir')\n"
+                "os.environ['DUMMYMODULE_CONFIG'] = 'mycfg'\n"
+                "os.environ['DUMMYMODULE_VERSION'] = '%s'\n"
+                "from dummymodule import app as application\n" % expver)
             os.unlink('dummytgt')
             os.unlink('dummywsgi')
         os.unlink('dummysrc')
