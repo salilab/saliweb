@@ -848,15 +848,17 @@ def _subst_python_install(env, target, source):
     frontenddir = source[3].get_contents()
     service_module = source[4].get_contents()
     wsgi = source[5].get_contents()
-    version = 'None' if version == 'None' else "'%s'" % version
+    version = '' if version == 'None' else version
     for line in fin:
-        line = line.replace('"##CONFIG##"', "'%s', %s" % (configfile, version))
         fout.write(line)
     fin.close()
     fout.close()
     # Create or touch wsgi file
     with open(wsgi, 'w') as fh:
-        fh.write("import sys; sys.path.insert(0, %s)\n" % repr(frontenddir))
+        envpre = service_module.upper()
+        fh.write("import sys, os; sys.path.insert(0, %s)\n" % repr(frontenddir))
+        fh.write("os.environ['%s_CONFIG'] = %s\n" % (envpre, repr(configfile)))
+        fh.write("os.environ['%s_VERSION'] = %s\n" % (envpre, repr(version)))
         fh.write("from %s import app as application\n" % service_module)
 
 

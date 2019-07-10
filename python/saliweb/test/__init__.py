@@ -179,13 +179,9 @@ user: test_user_fe
 passwd: test_pwd_fe
 """)
 
-    # Mock make_application so that it doesn't fall over with the "##CONFIG##"
-    # stuff
-    orig_make_app = saliweb.frontend.make_application
-    def mock_make_app(name, config_and_version, parameters=[], *args, **kwargs):
-        return orig_make_app(name, config, 'testver', parameters, *args,
-                             **kwargs)
-    saliweb.frontend.make_application = mock_make_app
+    envpre = pkgname.upper()
+    os.environ[envpre + "_CONFIG"] = config
+    os.environ[envpre + "_VERSION"] = 'testver'
 
     m = sys.modules[pkgname] = __import__(pkgname)
     # Make sure temporary directory sticks around

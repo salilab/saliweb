@@ -3,6 +3,7 @@ from flask import url_for, Markup
 import datetime
 import ConfigParser
 import os
+import sys
 import re
 import logging.handlers
 import MySQLdb
@@ -231,14 +232,12 @@ class FileParameter(Parameter):
     _xml_type = 'file'
 
 
-def make_application(name, config, version, parameters=[],
-                     static_folder='html', *args, **kwargs):
+def make_application(name, parameters=[], static_folder='html',
+                     *args, **kwargs):
     """Make and return a new Flask application.
 
        :param str name: Name of the Python file that owns the app. This should
               normally be `__name__`.
-       :param str config: Path to the web service configuration file.
-       :param str version: Current version of the web service.
        :param list parameters: The form parameters accepted by the 'submit'
               page. This should be a list of :class:`Parameter` and/or
               :class:`FileParameter` objects, and is used to provide help
@@ -247,9 +246,12 @@ def make_application(name, config, version, parameters=[],
 
        .. note:: Any additional arguments are passed to the Flask constructor.
     """
+    # Get environment variable prefix from package name
+    env_name = pkg = sys.modules[name].__package__.split('.')[0].upper()
+
     app = flask.Flask(name, *args, static_folder=static_folder, **kwargs)
-    _read_config(app, config)
-    app.config['VERSION'] = version
+    _read_config(app, os.environ[env_name + "_CONFIG"])
+    app.config['VERSION'] = os.environ[env_name + "_VERSION"]
     app.config['PARAMETERS'] = parameters
     _setup_email_logging(app)
     app.register_blueprint(_blueprint)
