@@ -23,8 +23,12 @@ class RunAllTests(unittest.TestProgram):
             os.unlink(cov)
         if coverage:
             # Start coverage testing now before we import any modules
-            top = 'frontend' if opts.frontend else 'python'
+            top = 'frontend' if opts.frontend else 'backend'
             self.topdir = os.path.abspath(os.path.join(os.getcwd(), top))
+            # Handle old-style backend location if necessary
+            if not os.path.exists(self.topdir):
+                self.topdir = os.path.abspath(os.path.join(os.getcwd(),
+                                                           'python'))
             self.mods = glob.glob("%s/*/*.py" % self.topdir)
 
             self.cov = coverage.coverage(branch=True, include=self.mods,

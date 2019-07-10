@@ -140,7 +140,10 @@ def builder_python_tests(target, source, env):
     mod += " " + env['service_module']
     app = env['python'] + " " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
-    e['ENV']['PYTHONPATH'] = 'python'
+    if os.path.exists('backend'):
+        e['ENV']['PYTHONPATH'] = 'backend'
+    else:
+        e['ENV']['PYTHONPATH'] = 'python'
     ret = e.Execute(app)
     if ret != 0:
         print("unit tests FAILED")
