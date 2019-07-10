@@ -6,10 +6,10 @@ Deploying the web service
 *************************
 
 To actually deploy the web service, it is necessary to package the Python
-classes that implement the backend and the Perl classes that implement the
-frontend, then use the build system to install these classes in the correct
-location, together with other resources such as images, style sheets or
-text files needed by the web interface.
+classes that implement the backend and frontend, then use the build system
+to install these classes in the correct location, together with other
+resources such as images, style sheets or text files needed by the
+web interface.
 
 Prerequisites
 =============
@@ -34,9 +34,8 @@ Every service needs some basic setup:
   frontend can create incoming jobs.
 
 * A sysadmin needs to configure the web server on `modbase` so that the
-  ``html`` and ``cgi`` subdirectories of the directory the service is deployed
-  into are visible to the outside world. They can also password protect the
-  page if it is not yet ready for a full release.
+  web service files are visible to the outside world. They can also password
+  protect the page if it is not yet ready for a full release.
 
 * It is usually a good idea to put the implementation files for a web service
   on GitHub, or in an SVN repository.
@@ -87,9 +86,10 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
 
  #. Bob edits the :ref:`configuration file <configfile>`
     in :file:`conf/live.conf` to adjust install locations, etc. if necessary,
-    and fills in the template Python and Perl modules for the
+    and fills in the template Python modules for the
     :ref:`backend <backend>` and :ref:`frontend <frontend>`, in
-    :file:`python/pepdock/__init__.py` and :file:`lib/pepdock.pm`, respectively.
+    :file:`backend/pepdock/__init__.py` and
+    :file:`frontend/pepdock/__init__.py`, respectively.
 
  #. He writes test cases for both the frontend and backend (see :ref:`testing`)
     and runs them to make sure they work by typing `scons test` in the pepdock
@@ -171,10 +171,10 @@ Backend Python package
 ======================
 
 The backend for the service should be implemented as a Python package in the
-``python`` subdirectory. Its name should be the same as the service, except
+``backend`` subdirectory. Its name should be the same as the service, except
 that it should be all lowercase, and any spaces in the service name should be
 replaced with underscores. For example, the 'ModFoo' web service should be
-implemented by the file :file:`python/modfoo/__init__.py`).
+implemented by the file :file:`backend/modfoo/__init__.py`).
 This package should implement a :class:`Job` subclass and may also
 optionally implement :class:`Database` or :class:`Config` subclasses. It should
 also provide a function `get_web_service` which, given the name of a
@@ -189,18 +189,18 @@ is shown below.
 
 .. _frontend_module:
 
-Frontend Perl module
-====================
+Frontend Python package
+=======================
 
-The frontend for the service should be implemented as a Perl module in the
-``lib`` subdirectory, named as for the :ref:`backend <backend_module>` (e.g.
-the 'ModFoo' web service's frontend should be implemented by the file
-:file:`lib/modfoo.pm`).
+The frontend for the service should be implemented as a Python package in the
+``frontend`` subdirectory, named as for the :ref:`backend <backend_module>`
+(e.g.  the 'ModFoo' web service's frontend should be implemented by the file
+:file:`frontend/modfoo/__init__.py`).
 An example is shown below. For clarity, only the methods are shown, not their
 contents; for full implementations of the methods see the :ref:`frontend` page.
 
-.. literalinclude:: ../examples/frontend-complete.pm
-   :language: perl
+.. literalinclude:: ../examples/frontend-complete.py
+   :language: python
 
 .. _deploy_config:
 
@@ -241,7 +241,6 @@ the web service. For example, the
 :meth:`~saliweb.build.Environment.InstallAdminTools` method installs a set of
 command-line admin tools in the web service's directory (see below).
 *SConscript* files in subdirectories can use similar methods (such as
-:meth:`~saliweb.build.Environment.InstallPerl` or
 :meth:`~saliweb.build.Environment.InstallPython`) to set up the rest of the
 necessary files for the web service.
 
@@ -332,18 +331,19 @@ Unit tests
 ----------
 
 To test the frontend, make a `test/frontend` subdirectory and put one or more
-Perl scripts there. Each script can use the :class:`saliwebTest` class,
-and its :meth:`~saliwebTest.make_frontend` method, to create simple instances
-of the web frontend and test various methods given different inputs, using
-the standard Perl `Test::More` and `Test::Exception` modules. For example,
+Python scripts there. Each script can use the functions and classes in the
+:mod`saliweb.test` module, together with test functionality provided
+by the `Flask framework <http://flask.pocoo.org/docs/1.0/testing/#testing>`_,
+to create simple instances of the web frontend and test various methods
+given different inputs. For example,
 a script to test the :meth:`~saliwebfrontend.get_navigation_links` method might
 look like:
 
-.. literalinclude:: ../examples/test-navigation.pl
+.. literalinclude:: ../examples/test-index.py
    :language: perl
 
 Then write an SConscript file in the same directory to actually run the
-scripts, using the :meth:`~saliweb.build.Environment.RunPerlTests`
+scripts, using the :meth:`~saliweb.build.Environment.RunPythonFrontendTests`
 method. This might look like:
 
 .. literalinclude:: ../examples/SConscript-frontend-test
@@ -376,10 +376,7 @@ System tests
 
 There is currently no rigorous way to carry out system tests other than
 :ref:`deploying the service <quick_start>`,
-providing an implementation for the :meth:`~saliwebfrontend.get_submit_page`
-frontend method, then using the web interface or runnning the `cgi/submit.cgi`
-script (in the web service's installation directory, as the backend user) to
-submit a job.
+then using the web interface to submit a job.
 
 .. _complete_examples:
 
@@ -390,4 +387,4 @@ A simple example of a complete web service is ModLoop. The source code for
 this service can be found at
 https://github.com/salilab/modloop/
 and the service can be seen in action at
-http://salilab.org/modloop/
+https://salilab.org/modloop/

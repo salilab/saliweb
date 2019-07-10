@@ -31,8 +31,9 @@ Prerequisites
 * Python. The backend of the framework, which takes care of running jobs, is implemented in Python. It requires Python 2.6 or
   2.7 (it is not tested with Python 3).
 
-* Perl. The frontend, which handles user submission of jobs and the display of results, is implemented in Perl, and uses a
-  number of Perl modules, most notably CGI and DBI.
+* `Flask <http://flask.pocoo.org/>`_. The frontend, which handles user
+  submission of jobs and the display of results, is implemented in Python,
+  and uses the Flask microframework.
 
 * SGE. The framework expects to be run on a machine that is a submit host to a Sun GridEngine compute cluster
   (or a compatible product, such as `OGE <http://www.oracle.com/us/products/tools/oracle-grid-engine-075549.html>`_
@@ -44,20 +45,26 @@ Prerequisites
   variables appropriately, setting `DRMAA_LIBRARY_PATH` to the location of your :file:`libdrmaa.so` file, setting
   `_runner_name` to a unique value, and setting `_qstat` to the full path to your :file:`qstat` binary.
 
-* `MODELLER <http://salilab.org/modeller/>`_. The framework needs your academic MODELLER license key (in order for
-  the `check_modeller_key() function <http://salilab.org/saliweb/modules/frontend.html#saliweb::frontend.check_modeller_key>`_
-  to work). Provide this with the scons `modeller_key` variable when running
+* `MODELLER <https://salilab.org/modeller/>`_. The framework needs your
+  academic MODELLER license key (in order for the
+  :func:`saliweb.frontend.check_modeller_key` function to work).
+  Provide this with the scons `modeller_key` variable when running
   `scons install`.
 
-* Web server. The frontend consists of Perl CGI scripts which need to be hosted by a web server. Apache is used in the
-  Sali lab, but other web servers would probably work too (the only assumption made in the code is that files uploaded
-  to the web server end up owned by the `apache` user, but this would be easy to change). The web server does not have
-  to run on the same machine as the framework, but it does need access to the same filesystems (see below).
+* Web server. The frontend consists of Python Flask scripts which need to be
+  hosted by a web server. Apache with `mod_wsgi <https://modwsgi.readthedocs.io/en/develop/>`_
+  is used in the Sali lab, but other web servers would probably work too
+  (the only assumption made in the code is that files uploaded to the web
+  server end up owned by the `apache` user, but this would be easy to
+  change). The web server does not have to run on the same machine as the
+  framework, but it does need access to the same filesystems (see below).
 
-* MySQL database. Both the frontend and backend need access to a MySQL database in which the jobs are stored. This requires
-  the Perl DBI and DBD-MySQL packages, plus the Python MySQLdb package. The framework itself needs no special access to the
-  database, but each web service that uses the framework needs its own database. (The MySQL server can reside on a different
-  machine to the framework if desired.)
+* MySQL database. Both the frontend and backend need access to a MySQL
+  database in which the jobs are stored. This requires the Python MySQLdb 
+  package. The framework itself needs no special access to the
+  database, but each web service that uses the framework needs its own
+  database. (The MySQL server can reside on a different machine to the
+  framework if desired.)
   
 * Unix user. Each web service that uses the framework runs under its own user ID, and the jobs are run on the SGE cluster
   using the same ID. Thus, generally admin access to the cluster is required to add these users.

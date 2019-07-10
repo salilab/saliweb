@@ -10,6 +10,6 @@ are documented here.
    backend
    build
    frontend
-   pyfrontend
    test
    perltest
+   perl_frontend

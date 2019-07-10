@@ -4,7 +4,7 @@ The :mod:`saliweb::Test` Perl module
 ====================================
 
 This module provides Perl functions and classes useful for testing
-the web frontend.
+the legacy Perl CGI web frontend.
 
 .. class:: saliwebTest(module_name)
 

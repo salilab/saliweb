@@ -220,7 +220,7 @@ class MockJob(object):
 
 @contextlib.contextmanager
 def make_frontend_job(name):
-    """Context manager to make a temporary job. See :`MockJob`.
+    """Context manager to make a temporary job. See :class:`MockJob`.
        This can be used to test the job results page and the
        download of results files."""
     import saliweb.frontend

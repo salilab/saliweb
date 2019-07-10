@@ -11,7 +11,7 @@ Developers eager to get started may want to jump straight to :ref:`quick_start`.
 
 The framework is split up into four distinct parts:
 
-* The :ref:`frontend <frontend>` consists of HTML pages and Perl-CGI scripts
+* The :ref:`frontend <frontend>` consists of HTML pages and Python scripts
   that provide a web interface to interact with an end user. It also provides an
   XML-based interface to allow automated submission of jobs. It handles the
   uploading of input files, the initial

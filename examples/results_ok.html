@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<p>Job '<b>{{ job.name }}</b>' has completed.</p>
+
+<p><a href="{{ job.get_results_file_url('output.pdb') }}">Download output PDB</a>.</p>
+
+{{ job.get_results_available_time() }}
+{% endblock %}

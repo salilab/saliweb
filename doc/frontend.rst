@@ -1,93 +1,83 @@
-.. currentmodule:: saliweb::frontend
+.. currentmodule:: saliweb.frontend
 
 .. _frontend:
 
 Frontend
 ********
 
-The frontend is a set of Perl classes that displays the web interface, allowing
-a user to upload their input files, start a job, display a list of all jobs
-in the system, and get back job results. The main :class:`saliwebfrontend`
-class must be subclassed for each web service. This class is then used to
-display the web pages using a set of CGI scripts that are set up
-automatically by the build system.
-
-It is probably a good idea to keep your Perl code tidy by using the `perltidy`
-command line tool.
-
-.. note::
-
-   A method in Perl is simply a function that gets a reference to an
-   object, $self, as its first argument. To override a method, simply
-   define a function with the same name as one in the
-   :class:`saliwebfrontend` class, for example
-   :meth:`~saliwebfrontend.get_footer`.
+The frontend is provided by Python code using the
+`Flask microframework <http://flask.pocoo.org/>`_. This displays the web
+interface, allowing a user to upload their input files, start a job, display
+a list of all jobs in the system, and get back job results. This Python code
+uses utility classes and functions in the :mod:`saliweb.frontend` module,
+together with functionality provided by Flask.
 
 Initialization
 ==============
 
-The first step is to create a Perl module that initializes the subclass by
-implementing a custom 'new' method. For a web service 'ModFoo' this should be
-done in the Perl module ``modfoo.pm``. This is fairly standard boilerplate:
+The first step is to create a Python module that creates the web application
+itself, using the :func:`saliweb.frontend.make_application` function (which
+in turn creates a Flask application and configures it).
+For a web service 'ModFoo' this should be done in the Python module
+``frontend/modfoo/__init__.py``. This is fairly standard boilerplate:
 
-.. literalinclude:: ../examples/frontend-new.pm
-   :language: perl
+.. literalinclude:: ../examples/frontend-new.py
+   :language: python
 
-The 'new' method simply creates a new Perl object and passes it configuration
-information ("##CONFIG##" is filled in automatically by the build system).
+The 'parameters' object here is a list of parameters the job requires at
+submission time, and will be :ref:`described later <parameters`.
 
 Web page layout
 ===============
 
-Each web page has a similar layout. Firstly, it contains a standard header
-that is very similar between all lab services. This header contains a set of
-links to lab resources and web services, which can be added to by overriding
-the :meth:`~saliwebfrontend.get_lab_navigation_links` method.
-Secondly, it contains a list of links
-to other pages in the web service, such as help pages and a display of jobs in
-the queue. This list can be customized by overriding the
-:meth:`~saliwebfrontend.get_navigation_links` method, which returns
-a reference to a list of HTML links.
-Thirdly, it contains a 'project menu',
-which can be used to display miscellaneous information such as the authors,
-or in more complex projects to allow results from one job to be used as input
-to a new job. This can be customized by overriding the
-:meth:`~saliwebfrontend.get_project_menu` method, which returns the HTML
-for this menu.
+Each web page has a similar layout (header, footer, links, and so on).
+This is provided by a system-wide `Jinja2 template <http://jinja.pocoo.org/>`_
+called ``saliweb/layout.html``, which can be seen
+`at GitHub <https://github.com/salilab/saliweb/blob/master/python/saliweb/frontend/templates/saliweb/layout.html>`_.
+This system-wide template should be overriden for each web service, by
+providing a file ``frontend/modfoo/templates/layout.html`` that 'extends'
+the system-wide template :
 
-Finally, after the actual page content itself a footer is displayed, in which
-information such as paper references can be placed. This can be customized by
-overriding the :meth:`~saliwebfrontend.get_footer` method, which returns an HTML
-fragment.
+.. literalinclude:: ../examples/layout.html
+   :language: html+jinja
 
-.. literalinclude:: ../examples/frontend-layout.pm
-   :language: perl
+This example demonstrates a few Jinja2 and Flask features:
 
-The :class:`saliwebfrontend` class provides several useful attributes and
-methods to simplify the process of displaying web pages. For example, above
-the :attr:`~saliwebfrontend.cgi` attribute is used to get a standard Perl
-CGI object which can
-format HTML links, paragraphs, etc., access cookies, and process form data.
-The class also provides the URLs of other pages in the system, such as
-:attr:`~saliwebfrontend.queue_url`, which is the page that displays all
-jobs in the web service.
+ - Parts of the base template can be overriden using the ``block`` directive.
+   Here, a custom stylesheet is added, links are added to all pages, and the
+   sidebar and footer (at the left and bottom of the page, which are blank in
+   the system-wide template) are filled in.
+ - Links to other parts of the web service can be provided using the
+   `url_for <http://flask.pocoo.org/docs/1.0/api/#flask.url_for>`_ function.
+   This takes either the name of the Python function that renders the page
+   (see below) or "static" to point to static files (such as stylesheets or
+   images) in the web service's ``html`` subdirectory.
+ - A number of global variables are available which can be substituted in
+   using Jinja2's ``{{ }}`` syntax, most notably ``config`` which stores
+   web service configuration, such as the name and version in
+   ``config.SERVICE_NAME`` and ``config.VERSION`` respectively.
+ - Some helper functions are available. Here the ``get_navigation_links``
+   function is used, which takes a list of (URL, description) pairs.
+
+See the `Jinja2 manual <http://jinja.pocoo.org/docs/2.10/templates/>`_
+for more information on Jinja2 templates.
 
 Displaying standard pages
 =========================
 
-The bulk of the functionality of the frontend is implemented by overriding
-a single method for each page. For a typical web service, the index,
-submission and results pages need to be implemented by overriding the
-:meth:`~saliwebfrontend.get_index_page`,
-:meth:`~saliwebfrontend.get_submit_page` and
-:meth:`~saliwebfrontend.get_results_page` methods respectively.
-Optionally, a download page (to get the software used by the web service to
-run locally, or to download data sets and other information) can be implemented
-by overriding the :meth:`~saliwebfrontend.get_download_page` method.
-(There are also :meth:`~saliwebfrontend.get_queue_page` and
-:meth:`~saliwebfrontend.get_help_page` methods but the default implementations
-already show all jobs in the queue and a simple help page, respectively,
-so do not need to be customized.) These pages will be considered in turn.
+The bulk of the functionality of the frontend is implemented by providing
+Python functions for each page using
+`Flask routes <http://flask.pocoo.org/docs/1.0/quickstart/#routing>`_.
+
+For a typical web service, the index, submission, results and results file
+pages need to be implemented by providing ``index``, ``job``, ``results``,
+and ``results_file`` functions, respectively.
+These pages will be considered in turn.
+
+.. note:: Additional pages (such as page to download the software, or a
+          help page) can be simply implemented by adding more Python
+          functions with appropriate routes (and, if appropriate, adding
+          links to these pages to ``layout.html``).
 
 Index page
 ----------
@@ -95,48 +85,69 @@ Index page
 The index page is the first page seen when using the web service, and typically
 displays a form allowing the user to set parameters and upload input files.
 (In more complex web services this first form can lead to further forms for
-advanced options, etc., but they are all handled by the same 'index page' in
-the web service.) The form is set up to submit to the submission page
-(found at :attr:`~saliwebfrontend.submit_url`), which will then actually run
-the job. The example below overrides the
-:meth:`~saliwebfrontend.get_index_page` method to create a
-simple form allowing the user to upload a single PDB file, as well as pick an
-optional name for their job and an optional email address to be notified when
-the job completes:
+advanced options, etc.) The Python code for this is straightforward - it
+simply defines the ``index`` function which uses the Flask
+`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_
+function to render a Jinja2 template:
 
-.. literalinclude:: ../examples/frontend-index.pm
-   :language: perl
+.. literalinclude:: ../examples/frontend-index.py
+   :language: python
+
+The Jinja2 template in turn looks like:
+
+.. literalinclude:: ../examples/index.html
+   :language: html+jinja
+
+The template extends the previously-defined ``layout.html`` so will get
+the sidebar, footer, etc. defined there.
+
+The form is set up to submit to the submission page
+(``url_for("job")``). It allows the user to upload a single PDB file, as
+well as pick an optional name for their job and an optional email address
+to be notified when the job completes.
 
 Note that the email address is filled in using
-:attr:`saliwebfrontend.email`. If the user is logged in to the webserver,
+``g.user.email``. If the user is logged in to the webserver, ``g.user`` will
+be a :class:`LoggedInUser` object, and
 their email address will be available for use in this fashion (otherwise, the
 user will simply have to input a suitable address if they want to be
-notified). See also :attr:`saliwebfrontend.modeller_key`.
+notified).
+
+.. _parameters:
+
+The names of the form parameters above (``job_name``, ``input_pdb``)
+should also be described in the Python code ``frontend/modloop/__init__.py``
+for automated use of the service (see :ref:`automated`), by passing suitable
+:class:`Parameter` and/or :class:`FileParameter` objects
+when the application is created. Note that ``email`` is omitted because
+automated usage typically does not use email notification:
+
+.. literalinclude:: ../examples/frontend-new-params.py
+   :language: python
 
 Submission page
 ---------------
 
 The submission page is called when the user has input all the information
-needed for the job. It is implemented by overriding the
-:meth:`~saliwebfrontend.get_submit_page`
-method, which should validate the provided information, then
+needed for the job. It is implemented by defining the ``job`` function which
+handles the ``/job`` URL. This serves double duty - an HTTP POST to this URL
+will submit a new job, while a GET will show all jobs in the system (the
+queue).
+
+Showing the queue is handled by the :func:`saliweb.frontend.render_queue_page`
+function. Job submission should validate the provided information, then
 actually submit the job to the backend. If validation fails, it should throw
 an :exc:`InputValidationError` exception; this will be handled by the web
 framework as a message to the user asking them to fix the problem and resubmit.
 (If some kind of internal error occurs, such as a file write failure, in this
-or any other method, an :exc:`InternalError` exception should be raised instead
-which notifies the server admin rather than the end user, since it is probably
-not the end user's fault.)
+or any other method, the user will see an error page and the server admin
+will be notified to fix the problem.)
 
-To submit the job, first call the :meth:`~saliwebfrontend.make_job`
-method. This makes a job directory and returns an
-:class:`IncomingJob` object. Put all necessary input files in that
-directory, then actually run the job by calling :meth:`IncomingJob.submit`.
-(If you must have multiple pages for the job submission process, you can
-call :meth:`~saliwebfrontend.make_job` on the first submission page, and pass
-the job name to subsequent submission pages which in turn call
-:meth:`~saliwebfrontend.resume_job` to continue adding data to the
-job directory.)
+To submit the job, first create a :class:`saliweb.frontend.IncomingJob`
+object, which also creates a new directory for the job files. Put all
+necessary input files in that directory, for example using
+:meth:`IncomingJob.get_path`, then actually run the job by calling
+:meth:`IncomingJob.submit`.
 
 .. note::
 
@@ -150,79 +161,99 @@ job directory.)
    :meth:`~saliweb.backend.Job.preprocess` method) for sanity before
    running anything.
 
-Finally, the submission page should inform the user of the results URL, so
-that they can obtain the results when the job finishes.
-
-You should also override the
-:meth:`~saliwebfrontend.get_submit_parameter_help` method. This is used to
-document the parameters that your submit page accepts (generally, these are
-the same as the names of the form elements on the index page) for automated
-use of the service (see :ref:`automated`).
+Finally, the submission page should inform the user of the results URL
+(:attr:`IncomingJob.results_url`), so that they can obtain the results
+when the job finishes. This uses the function
+:func:`saliweb.frontend.render_submit_template`, which will either
+display an HTML page (similarly to Flask's
+`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_,as before) or XML in the case of automated usage.
 
 The example below reads in the PDB file provided by the user on the index page,
 checks to make sure it contains at least one ATOM record, then writes it into
 the job directory and finally submits the job:
 
-.. literalinclude:: ../examples/frontend-submit.pm
-   :language: perl
+.. literalinclude:: ../examples/frontend-submit.py
+   :language: python
+
+It uses the following template, providing the ``job`` and ``email`` variables,
+to notify the user:
+
+.. literalinclude:: ../examples/submit.html
+   :language: html+jinja
 
 Results page
 ------------
 
 The results page is used to display the results of a job, and is implemented
-by overriding the :meth:`~saliwebfrontend.get_results_page` method. Unlike
-the other methods, it is passed an additional parameter which is a
-:class:`CompletedJob` object, which contains information about the job.
-It is also run in the job's directory, so that output files can be read
-in directly. The method can either display the job results directly, or it can
+by providing a ``results`` function.
+The function can either display the job results directly, or it can
 display links to allow output files to be downloaded. In the latter case,
 URLs to these files can be generated by calling
-:meth:`CompletedJob.get_results_file_url`. The framework will then
-automatically handle downloads of these files. Note that if the backend
-generates additional files in the job directory which should not be downloaded, the :meth:`~saliwebfrontend.allow_file_download` method can be overridden to
-control which files the end user is allowed to download. Note also that if
-some files are not text files, the :meth:`~saliwebfrontend.get_file_mime_type`
-method may also need to be overridden to specify the MIME type.
+:meth:`CompletedJob.get_results_file_url`.
 
-The example below assumes the backend generates a log file ``log`` and a
-single output file, ``output.pdb``, and allows the user to download these files
-(and only these files). The :meth:`CompletedJob.get_results_available_time`
-method is used to tell the user how long the results page will be available
-for. If the output file is not produced, the user is informed
-that a problem occurred.
+The example below assumes the backend generates a single output file on
+success, ``output.pdb``, and a log file, ``log``, on failure.
+It uses the utility function :func:`saliweb.frontend.get_completed_job` to get a
+:class:`CompletedJob` object from the URL (this will show an error message
+if the job has not completed, or the password is invalid) and then looks for
+files in the job directory using the :meth:`CompletedJob.get_path` method:
 
-.. literalinclude:: ../examples/frontend-results.pm
-   :language: perl
+.. literalinclude:: ../examples/frontend-results.py
+   :language: python
 
-Help page
----------
+This also uses the function
+:func:`saliweb.frontend.render_results_template`, which as before will either
+display an HTML page (similarly to Flask's
+`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_,
+or XML in the case of automated usage.
 
-The help page is used to display basic help, contact details, frequently-asked
-questions, links, an about page, or news. It is probably unnecessary to
-customize this method, as by default it will simply display a similarly-named
-text file (``txt/help.txt``, ``txt/contact.txt``, ``txt/faq.txt``,
-``txt/links.txt``, ``txt/about.txt``, or ``txt/news.txt``).
-See :meth:`~saliwebfrontend.get_help_page` for more details.
+On successful job completion, it shows the ``results_ok.html`` Jinja template,
+which uses the :meth:`CompletedJob.get_results_file_url` to show a link to
+download ``output.pdb`` and the
+:attr`CompletedJob.get_results_available_time` text
+to tell the user how long the results page will be available for:
 
-Download page
--------------
+.. literalinclude:: ../examples/results_ok.html
+   :language: html+jinja
 
-The download page is optional, and can be used to allow the user to download
-the software used by the web service to run locally, or to download data sets
-and other information. (This is distinct from the results page, which is used
-to download the results of a user-submitted calculation.)
-See :meth:`~saliwebfrontend.get_download_page` for more details.
+On failure it shows a similar page that links to the log file:
+
+.. literalinclude:: ../examples/results_failed.html
+   :language: html+jinja
+
+Results file pages
+------------------
+
+If individual results files can be downloaded, a ``results_file`` function
+should be provided. Similar to the results page, this looks up the job
+information using the URL, then sends it to the user using Flask's
+`send_from_directory <http://flask.pocoo.org/docs/1.0/api/#flask.send_from_directory`_
+function. The user is prevented from downloading other files that may be
+present in the job directory, getting an HTTP 404 (file not found) error
+instead, using the Flask `abort <http://flask.pocoo.org/docs/1.0/api/#flask.abort>`_ function:
+
+.. literalinclude:: ../examples/frontend-results-file.py
+   :language: python
+
+Additional pages
+----------------
+
+Additional pages can be added if desired, simply by adding more Python
+function with appropriate routes (and adding the names of the functions to
+the ``get_navigation_links`` function in the ``layout.html`` Jinja template).
+Typically these just use ``render_template`` to show some content:
+
+.. literalinclude:: ../examples/frontend-additional.py
+   :language: python
 
 Controlling page access
 =======================
 
 By default, all pages can be viewed by both anonymous and logged-in users.
 This can be modified, for example to restrict access only to named users, by
-modifying the :meth:`~saliwebfrontend.check_page_access` method. This method
-is given the type of the page (index, submit, queue etc.) and can also query
-other attributes, such as :attr:`saliwebfrontend.user_name`, to make its
-decision. If access should be denied, simply throw an :exc:`AccessDeniedError`
-exception.
+checking the value of ``flask.g.user`` in any function, which
+is either a :class:`LoggedInUser` object or ``None``.
 
-.. literalinclude:: ../examples/frontend-check-access.pm
-   :language: perl
+If access should be denied, simply call 
+`flask.abort <http://flask.pocoo.org/docs/1.0/api/#flask.abort>`_
+with a suitable HTTP error code, e.g. 401 (for "unauthorized").

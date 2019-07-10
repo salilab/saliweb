@@ -1,0 +1,24 @@
+{% extends "saliweb/layout.html" %}
+
+{%- block css %}
+<link rel="stylesheet" type="text/css" href="{{ url_for("static", filename='modfoo.css') }}" />
+{%- endblock %}
+
+{% block navigation %}
+{{ get_navigation_links(
+       [(url_for("index"), "ModFoo Home"),
+        (url_for("job"), "Current ModFoo queue"),
+        (url_for("help"), "Help"),
+        (url_for("contact"), "Contact")])
+}}
+{% endblock %}
+
+{% block sidebar %}
+<p><i>Version <a href="https://github.com/salilab/modfoo">{{ config.VERSION }}</a></i></p>
+{% endblock %}
+
+{% block footer %}
+<p>
+Please cite Bob et. al, JMB 2008.
+</p>
+{% endblock %}

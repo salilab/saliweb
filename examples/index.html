@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<form method="post" action="{{ url_for("job") }}"
+ enctype="multipart/form-data" name="modfooform">
+
+  <p>Job name (optional)</p>
+  <input type="text" name="job_name" />
+
+  <p>Email address (optional)</p>
+  <input type="text" name="email" value="{{ g.user.email }}" />
+
+  <p>Upload PDB file</p>
+  <input type="file" name="input_pdb" />
+</form>
+{% endblock %}
