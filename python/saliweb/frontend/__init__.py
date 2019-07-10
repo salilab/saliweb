@@ -8,7 +8,7 @@ import logging.handlers
 import MySQLdb
 import MySQLdb.cursors
 from .submit import IncomingJob
-from . import config as global_config
+import saliweb.frontend.config
 
 
 class _UserError(Exception):
@@ -128,7 +128,7 @@ def _read_config(app, fname):
        section (except for [general]) prefixed."""
 
     # Set defaults for all web services
-    app.config.from_object(global_config)
+    app.config.from_object(saliweb.frontend.config)
 
     config = ConfigParser.SafeConfigParser()
 
