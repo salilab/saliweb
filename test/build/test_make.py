@@ -91,7 +91,8 @@ class MakeTest(unittest.TestCase):
                                              DummySource(ver)])
             f = open('dummytgt').read()
             self.assert_(re.match("config = 'mycfg'.*pydir = 'mypydir'.*"
-                                  "import mymodname.*ws = mymodname\.get_web.*"
+                                  "import mymodname\.backend as.*"
+                                  "import mymodname as.*ws = backend\.get_web.*"
                                   "ws\.%s" % expver, f, re.DOTALL),
                          'regex match failed on ' + f)
             os.unlink('dummytgt')
