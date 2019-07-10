@@ -332,12 +332,11 @@ Unit tests
 
 To test the frontend, make a `test/frontend` subdirectory and put one or more
 Python scripts there. Each script can use the functions and classes in the
-:mod`saliweb.test` module, together with test functionality provided
+:mod:`saliweb.test` module, together with test functionality provided
 by the `Flask framework <http://flask.pocoo.org/docs/1.0/testing/#testing>`_,
 to create simple instances of the web frontend and test various methods
 given different inputs. For example,
-a script to test the :meth:`~saliwebfrontend.get_navigation_links` method might
-look like:
+a script to test the index page might look like:
 
 .. literalinclude:: ../examples/test-index.py
    :language: perl

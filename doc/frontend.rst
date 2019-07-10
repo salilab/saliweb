@@ -25,7 +25,7 @@ For a web service 'ModFoo' this should be done in the Python module
    :language: python
 
 The 'parameters' object here is a list of parameters the job requires at
-submission time, and will be :ref:`described later <parameters`.
+submission time, and will be :ref:`described later <parameters>`.
 
 Web page layout
 ===============
@@ -36,7 +36,7 @@ called ``saliweb/layout.html``, which can be seen
 `at GitHub <https://github.com/salilab/saliweb/blob/master/python/saliweb/frontend/templates/saliweb/layout.html>`_.
 This system-wide template should be overriden for each web service, by
 providing a file ``frontend/modfoo/templates/layout.html`` that 'extends'
-the system-wide template :
+the template:
 
 .. literalinclude:: ../examples/layout.html
    :language: html+jinja
@@ -44,10 +44,11 @@ the system-wide template :
 This example demonstrates a few Jinja2 and Flask features:
 
  - Parts of the base template can be overriden using the ``block`` directive.
-   Here, a custom stylesheet is added, links are added to all pages, and the
+   Here, a custom stylesheet is added, links are added to all pages to the
+   navigation bar at the top of the page, and the
    sidebar and footer (at the left and bottom of the page, which are blank in
    the system-wide template) are filled in.
- - Links to other parts of the web service can be provided using the
+ - Links to other parts of the web service can be provided using Flask's
    `url_for <http://flask.pocoo.org/docs/1.0/api/#flask.url_for>`_ function.
    This takes either the name of the Python function that renders the page
    (see below) or "static" to point to static files (such as stylesheets or
@@ -86,9 +87,10 @@ The index page is the first page seen when using the web service, and typically
 displays a form allowing the user to set parameters and upload input files.
 (In more complex web services this first form can lead to further forms for
 advanced options, etc.) The Python code for this is straightforward - it
-simply defines the ``index`` function which uses the Flask
+simply defines an ``index`` function which uses the Flask
 `render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_
-function to render a Jinja2 template:
+function to render a Jinja2 template, and is turn decorated to tell Flask
+to use this function to service the '/' URL:
 
 .. literalinclude:: ../examples/frontend-index.py
    :language: python
@@ -107,7 +109,9 @@ well as pick an optional name for their job and an optional email address
 to be notified when the job completes.
 
 Note that the email address is filled in using
-``g.user.email``. If the user is logged in to the webserver, ``g.user`` will
+``g.user.email``. (``g`` is used by Flask to store
+`global data <http://flask.pocoo.org/docs/1.0/api/#flask.g>`_.)
+If the user is logged in to the webserver, ``g.user`` will
 be a :class:`LoggedInUser` object, and
 their email address will be available for use in this fashion (otherwise, the
 user will simply have to input a suitable address if they want to be
@@ -166,7 +170,8 @@ Finally, the submission page should inform the user of the results URL
 when the job finishes. This uses the function
 :func:`saliweb.frontend.render_submit_template`, which will either
 display an HTML page (similarly to Flask's
-`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_,as before) or XML in the case of automated usage.
+`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_,
+as before) or XML in the case of automated usage.
 
 The example below reads in the PDB file provided by the user on the index page,
 checks to make sure it contains at least one ATOM record, then writes it into
@@ -204,13 +209,13 @@ files in the job directory using the :meth:`CompletedJob.get_path` method:
 This also uses the function
 :func:`saliweb.frontend.render_results_template`, which as before will either
 display an HTML page (similarly to Flask's
-`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_,
+`render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_),
 or XML in the case of automated usage.
 
 On successful job completion, it shows the ``results_ok.html`` Jinja template,
-which uses the :meth:`CompletedJob.get_results_file_url` to show a link to
-download ``output.pdb`` and the
-:attr`CompletedJob.get_results_available_time` text
+which uses the :meth:`CompletedJob.get_results_file_url` method to show a
+link to download ``output.pdb`` and the
+:meth:`CompletedJob.get_results_available_time` method
 to tell the user how long the results page will be available for:
 
 .. literalinclude:: ../examples/results_ok.html
@@ -221,13 +226,13 @@ On failure it shows a similar page that links to the log file:
 .. literalinclude:: ../examples/results_failed.html
    :language: html+jinja
 
-Results file pages
-------------------
+Results files
+-------------
 
 If individual results files can be downloaded, a ``results_file`` function
 should be provided. Similar to the results page, this looks up the job
 information using the URL, then sends it to the user using Flask's
-`send_from_directory <http://flask.pocoo.org/docs/1.0/api/#flask.send_from_directory`_
+`send_from_directory <http://flask.pocoo.org/docs/1.0/api/#flask.send_from_directory>`_
 function. The user is prevented from downloading other files that may be
 present in the job directory, getting an HTTP 404 (file not found) error
 instead, using the Flask `abort <http://flask.pocoo.org/docs/1.0/api/#flask.abort>`_ function:
@@ -235,11 +240,18 @@ instead, using the Flask `abort <http://flask.pocoo.org/docs/1.0/api/#flask.abor
 .. literalinclude:: ../examples/frontend-results-file.py
    :language: python
 
+.. note::
+
+   The "results files" don't have to actually exist as real files in the
+   job directory. Files can also be constructed on the fly and their contents
+   returned to the user in a custom Flask
+   `Response <http://flask.pocoo.org/docs/1.0/api/#flask.make_response>`_ object.
+
 Additional pages
 ----------------
 
 Additional pages can be added if desired, simply by adding more Python
-function with appropriate routes (and adding the names of the functions to
+functions with appropriate URLs (and adding the names of the functions to
 the ``get_navigation_links`` function in the ``layout.html`` Jinja template).
 Typically these just use ``render_template`` to show some content:
 

@@ -3,5 +3,7 @@
 {% block body %}
 <p>Your job '<b>{{ job.name }}</b>' failed to produce any output models.</p>
 
-<p>For more information, you can <a href="{{ job.get_results_file_url('log') }}">download the log file</a>.
+<p>For more information, you can
+<a href="{{ job.get_results_file_url('log') }}">download the log file</a>.
+</p>
 {% endblock %}
