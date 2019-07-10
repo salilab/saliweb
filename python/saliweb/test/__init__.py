@@ -128,14 +128,27 @@ def _add_unittest_methods():
     unittest.TestCase.assertRegexpMatches = assertRegexpMatches
 
 
-def import_mocked_frontend(pkgname):
+def import_mocked_frontend(pkgname, test_file, topdir):
     """Import the named frontend module (e.g. 'modloop'), and return it.
        This sets up the environment with mocked configuration so that the
        module can be tested without being installed and without a live
        database. For this to work properly, it should be called *before*
-       importing `saliweb.frontend`."""
+       importing `saliweb.frontend`.
+
+       :param str pkgname: The name of the web service frontend Python
+              module to import.
+       :param str test_file: File name of the test file (usually `__file__`).
+       :param str topdir: Relative path from the test file to the top-level
+              Python directory, i.e. that from which 'import pkgname' will
+              work.
+    """
     if pkgname in sys.modules:
         return sys.modules[pkgname]
+
+    # Add search path to import pkgname
+    pth = os.path.abspath(os.path.join(os.path.dirname(test_file), topdir))
+    if sys.path[0] != pth:
+        sys.path.insert(0, pth)
 
     # If we're using Python 2.6, add in more modern unittest convenience
     # methods
