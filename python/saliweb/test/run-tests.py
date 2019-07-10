@@ -18,7 +18,8 @@ class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, opts, *args, **keys):
         self.opts = opts
-        for cov in glob.glob('.coverage*'):
+        data = '.coverage.frontend' if opts.frontend else '.coverage'
+        for cov in glob.glob(data + '*'):
             os.unlink(cov)
         if coverage:
             # Start coverage testing now before we import any modules
@@ -26,7 +27,9 @@ class RunAllTests(unittest.TestProgram):
             self.topdir = os.path.abspath(os.path.join(os.getcwd(), top))
             self.mods = glob.glob("%s/*/*.py" % self.topdir)
 
-            self.cov = coverage.coverage(branch=True, include=self.mods)
+            self.cov = coverage.coverage(branch=True, include=self.mods,
+                                         data_file=data)
+
             self.cov.start()
 
         # Run the tests
