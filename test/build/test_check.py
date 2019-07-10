@@ -76,10 +76,10 @@ class CheckTest(unittest.TestCase):
         """Check _install_check function"""
         e = []
         m = MockEnvFunctions(saliweb.build,
-                             ('_check_perl_import', '_check_python_import',
+                             ('_check_frontend_import', '_check_python_import',
                               '_check_filesystem_sanity'))
         saliweb.build._install_check(None, None, e)
-        self.assertEqual(e, ['_check_perl_import', '_check_python_import',
+        self.assertEqual(e, ['_check_frontend_import', '_check_python_import',
                              '_check_filesystem_sanity'])
 
     def test_check_directories(self):

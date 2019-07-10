@@ -27,22 +27,34 @@ class DummyEnv(dict):
 class InstallTest(unittest.TestCase):
     """Check install functions"""
 
-    def test_check_perl_import(self):
-        """Check to make sure check_perl_import works"""
+    def test_check_frontend_import(self):
+        """Check to make sure check_frontend_import works"""
         env = DummyEnv({'service_module': 'testmodule',
+                        'frontenddir': '/my/test/fedir',
                         'perldir': '/my/test/perldir'})
-        ret, warns = run_catch_warnings(saliweb.build._check_perl_import, env)
+        ret, warns = run_catch_warnings(saliweb.build._check_frontend_import,
+                                        env)
         self.assertEqual(len(warns), 1)
-        self.assert_(re.search('Perl module.*\/my\/test\/perldir\/testmodule'
-                               '\.pm does not.*frontend will probably not '
-                               'work.*Perl module is named \'testmodule\'.*'
-                               'InstallPerl.*SConscript',
-                               warns[0][0].args[0], re.DOTALL),
-                     'regex did not match ' + warns[0][0].args[0])
+        self.assert_(re.search(
+            'file \/my\/test\/fedir\/testmodule\/__init__\.py does not.*'
+            'legacy Perl module, \/my\/test\/perldir\/testmodule\.pm.*'
+            'frontend will probably not work.*Python module is '
+            'named \'testmodule\'.*InstallPythonFrontend.*SConscript',
+            warns[0][0].args[0], re.DOTALL),
+            'regex did not match ' + warns[0][0].args[0])
 
         env = DummyEnv({'service_module': 'testmodule',
+                        'frontenddir': '/my/test/okfedir',
+                        'perldir': '/my/test/perldir'})
+        ret, warns = run_catch_warnings(saliweb.build._check_frontend_import,
+                                        env)
+        self.assertEqual(len(warns), 0)
+
+        env = DummyEnv({'service_module': 'testmodule',
+                        'frontenddir': '/my/test/fedir',
                         'perldir': '/my/test/okperldir'})
-        ret, warns = run_catch_warnings(saliweb.build._check_perl_import, env)
+        ret, warns = run_catch_warnings(saliweb.build._check_frontend_import,
+                                        env)
         self.assertEqual(len(warns), 0)
 
     def test_check_python_import(self):

@@ -171,22 +171,26 @@ def builder_python_frontend_tests(target, source, env):
 
 def _install_check(target, source, env):
     """Check the final installation for sanity"""
-    _check_perl_import(env)
+    _check_frontend_import(env)
     _check_python_import(env)
     _check_filesystem_sanity(env)
 
 
-def _check_perl_import(env):
-    """Check to make sure Perl import of modname will work"""
+def _check_frontend_import(env):
+    """Check to make sure frontend import of modname will work"""
     modname = env['service_module']
-    modfile = '%s/%s.pm' % (env['perldir'], modname)
-    glob_modfile = env.Glob(modfile, ondisk=False)
-    if len(glob_modfile) != 1:
-        warnings.warn("The Perl module file %s does not appear to be set "
-                      "up for installation. Thus, the frontend will probably "
-                      "not work. Make sure that the Perl module is named '%s' "
-                      "and there is an InstallPerl call somewhere in the "
-                      "SConscripts to install it. " % (modfile, modname))
+    pl_modfile = '%s/%s.pm' % (env['perldir'], modname)
+    py_modfile = '%s/%s/__init__.py' % (env['frontenddir'], modname)
+    glob_modfile = (env.Glob(pl_modfile, ondisk=False)
+                    + env.Glob(py_modfile, ondisk=False))
+    if len(glob_modfile) == 0:
+        warnings.warn("The frontend module file %s does not appear to be set "
+                      "up for installation (and neither is the legacy Perl "
+                      "module, %s). Thus, the frontend will probably not "
+                      "work. Make sure that the Python module is named '%s' "
+                      "and there is an InstallPythonFrontend call somewhere "
+                      "in the SConscripts to install it. "
+                      % (py_modfile, pl_modfile, modname))
 
 
 def _check_python_import(env):
