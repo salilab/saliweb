@@ -18,7 +18,7 @@ class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, opts, *args, **keys):
         self.opts = opts
-        data = '.coverage.frontend' if opts.frontend else '.coverage'
+        data = '.coverage.frontend' if opts.frontend else '.coverage.backend'
         for cov in glob.glob(data + '*'):
             os.unlink(cov)
         if coverage:
