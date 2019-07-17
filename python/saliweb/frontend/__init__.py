@@ -256,6 +256,11 @@ def make_application(name, parameters=[], static_folder='html',
     _setup_email_logging(app)
     app.register_blueprint(_blueprint)
 
+    @app.errorhandler(500)
+    def handle_internal_error(error):
+        ext = 'xml' if _request_wants_xml() else 'html'
+        return flask.render_template('saliweb/internal_error.%s' % ext), 500
+
     @app.errorhandler(_ResultsError)
     def handle_results_error(error):
         ext = 'xml' if _request_wants_xml() else 'html'
