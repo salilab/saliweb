@@ -139,7 +139,7 @@ class IncomingJob(object):
         else:
             cur.execute("INSERT INTO jobs (name,passwd,user,contact_email,"
                         "directory,url,submit_time) VALUES(%s, %s, "
-                        "%s, %s, %s, %s, %s, UTC_TIMESTAMP())",
+                        "%s, %s, %s, %s, UTC_TIMESTAMP())",
                         (self.name, self._passwd, user, email, self.directory,
                          self._url))
         dbh.commit()
