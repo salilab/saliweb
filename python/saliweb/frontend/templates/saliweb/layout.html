@@ -85,15 +85,24 @@
 </div>
         <div style="clear:both;"></div><div id="bodypart"> 
 
+{%- if self.sidebar()|trim %}
 <div id="left">
+{%- endif %}
 {%- block sidebar %}
 {%- endblock %}
+{%- if self.sidebar()|trim %}
 </div>
+<div id="right">
+{%- endif %}
 
-<div id="right"><div id="fullpart"><div id="resulttable">
+<div id="fullpart"><div id="resulttable">
 {%- block body %}
 {%- endblock %}
-</div></div></div><div style="clear:both;"></div>
+</div>
+{%- if self.sidebar()|trim %}
+</div>
+{%- endif %}
+</div><div style="clear:both;"></div>
 
 {%- block footer %}
 {%- endblock %}
