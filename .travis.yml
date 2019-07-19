@@ -16,10 +16,11 @@ cache:
 install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libtest-exception-perl libtest-output-perl libdevel-cover-perl acl cpanminus
-  - pip install codecov
+  - pip install codecov flask pytest-cov pytest-pep8
   - sudo cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov
 script:
   - scons python=$(which python) test
+  - py.test --cov=account/account --cov-branch --pep8 account
 after_success:
   - coverage combine && codecov
   - cd test/frontend && cover -report codecov

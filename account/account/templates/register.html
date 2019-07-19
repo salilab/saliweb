@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h4>Account Setup</h4>
+
+<form method="post" action="server.cgi?create=y" enctype="multipart/form-data">
+<table><tr><td colspan="5"><hr /></td></tr> <tr><th colspan="2">Create an Account <a onclick="launchHelp('display.cgi?server=server&amp;amp;style=helplink&amp;amp;type=help#account'); return false;" border="0" href="display.cgi?server=server&amp;amp;style=helplink&amp;amp;type=help#account"><img border="0" valign="bottom" src="/img/help.jpg" /></a></th></tr> <tr><td>Choose Username (max 25 characters):</td> <td><input type="text" name="user_name"  size="10" maxlength="25" /></td></tr> <tr><td>Choose Password (max 25 characters):</td> <td><input type="password" name="password"  size="10" maxlength="25" /></td></tr> <tr><td>Re-enter Password:</td> <td><input type="password" name="passwordcheck"  size="10" maxlength="25" /></td></tr> <tr><td>First Name <input type="hidden" name="create" value="y"  /></td> <td><input type="text" name="first_name"  size="20" maxlength="40" /></td></tr> <tr><td>Last Name</td> <td><input type="text" name="last_name"  size="20" maxlength="40" /></td></tr> <tr><td>Institution</td> <td><input type="text" name="institution"  size="20" maxlength="40" /></td></tr> <tr><td>Email Address</td> <td><input type="text" name="email"  size="20" maxlength="40" /></td></tr> <tr><td align="center" colspan="2"><div class=standout> <label><input type="checkbox" name="academic" value="on" />I am a non-profit/academic user 
+	                and this server will be used solely for educational 
+	                purposes or for basic research intended to advance 
+	                scientific knowledge. </label> </div></td></tr> <tr><td align="center" colspan="2"><label><input type="checkbox" name="permanent" value="on" checked="checked" />Check if you want to log on permanently on this computer</label></td></tr> <tr><td><input type="submit" name=".submit" value="Create Account" action="server.cgi?create=y" onclick="saveModBaseCookie()" /></td> <td><input type="reset" /></td></tr> <tr><td colspan="5"><hr width="100%" /></td></tr></table>
+</form>
+{% endblock %}
