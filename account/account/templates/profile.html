@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<p>User name: {{ g.user.name }}</p>
+
+<p>Email: {{ g.user.email }}</p>
+
+<p>Full name: {{ g.user.first_name }} {{ g.user.last_name }}</p>
+
+<p>Institution: {{ g.user.institution }}</p>
+{% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request, redirect, url_for, flash
 import logging.handlers
 import saliweb.frontend
 
@@ -29,9 +29,36 @@ def close_db(error):
         g.db_conn.close()
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    error = None
+    cookie = None
+    if request.method == 'POST':
+        user = request.form['user_name']
+        passwd = request.form['password']
+        dbh = saliweb.frontend.get_db()
+        cur = dbh.cursor()
+        cur.execute('SELECT password FROM servers.users WHERE user_name=%s '
+                    'AND password=PASSWORD(%s)', (user, passwd))
+        row = cur.fetchone()
+        if row:
+            pwhash = row[0]
+            resp = redirect(url_for("profile"))
+            age = 60*60*24*365 if request.form.get('permanent') else None
+            resp.set_cookie(key='sali-servers',
+                            value='user_name&%s&session&%s' % (user, pwhash),
+                            secure=True, max_age=age)
+            return resp
+        else:
+            error = "Invalid username or password"
+    elif g.user:
+        return redirect(url_for("profile"))
+    return render_template('index.html', error=error)
+
+
+@app.route('/profile')
+def profile():
+    return render_template('profile.html')
 
 
 @app.route('/help')
@@ -47,3 +74,12 @@ def contact():
 @app.route('/register')
 def register():
     return render_template('register.html')
+
+
+@app.route('/logout')
+def logout():
+    flash("You have been logged out.")
+    resp = redirect(url_for("index"))
+    resp.set_cookie(key='sali-servers', value='user_name&Anonymous&session&',
+                    secure=True, max_age=None)
+    return resp

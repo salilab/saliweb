@@ -183,14 +183,25 @@ class LoggedInUser(object):
        `g.user` is set to an instance of this class, or None if no user
        is logged in."""
 
-    #: The name of the user
+    #: The login name of the user
     name = None
+
+    #: The first name of the user
+    first_name = None
+
+    #: The last name of the user
+    last_name = None
 
     #: The contact email address of the user
     email = None
 
-    def __init__(self, name, email):
-        self.name, self.email = name, email
+    #: The user's institution
+    institution = None
+
+    def __init__(self, name, rd):
+        self.name = name
+        for k in ('first_name', 'last_name', 'email', 'institution'):
+            setattr(self, k, rd[k])
 
 
 def _get_logged_in_user():
@@ -202,12 +213,13 @@ def _get_logged_in_user():
     if (c and 'user_name' in c and 'session' in c
         and c['user_name'] != 'Anonymous'):
         dbh = get_db()
-        cur = dbh.cursor()
-        cur.execute('SELECT email FROM servers.users WHERE user_name=%s '
+        cur = MySQLdb.cursors.DictCursor(dbh)
+        cur.execute('SELECT first_name,last_name,email,institution '
+                    'FROM servers.users WHERE user_name=%s '
                     'AND password=%s', (c['user_name'], c['session']))
         row = cur.fetchone()
         if row:
-            return LoggedInUser(c['user_name'], row[0])
+            return LoggedInUser(c['user_name'], row)
 
 
 class Parameter(object):

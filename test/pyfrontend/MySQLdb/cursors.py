@@ -15,6 +15,12 @@ class DictCursor(object):
                 return {'state': 'COMPLETED', 'name': self.args[0],
                         'passwd': self.args[1], 'archive_time': None,
                         'directory': '/test/job'}
+        elif (self.sql == 'SELECT first_name,last_name,email,institution '
+                          'FROM servers.users WHERE user_name=%s '
+                          'AND password=%s'):
+            if self.args[1] == 'goodpwcrypt':
+                return {'email': 'testemail', 'first_name': 'foo',
+                        'last_name': 'bar', 'institution': 'testin'}
 
     def __iter__(self):
         return iter([])

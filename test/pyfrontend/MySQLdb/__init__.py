@@ -12,10 +12,6 @@ class _MockCursor(object):
                 return [1]
             else:
                 return [0]
-        if (self.sql == 'SELECT email FROM servers.users WHERE user_name=%s '
-                        'AND password=%s'):
-            if self.args[1] == 'goodpwcrypt':
-                return ['testemail']
 
 
 class _MockConnection(object):
