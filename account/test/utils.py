@@ -1,7 +1,7 @@
 import flask
 import sys
 import os
-import md5
+import hashlib
 
 
 # Make reading flask config a noop
@@ -44,6 +44,6 @@ def set_logged_in_user(username):
 
 
 def set_servers_cookie(client, user, passwd):
-    hashpw = md5.md5(passwd).hexdigest()
+    hashpw = hashlib.md5(passwd).hexdigest()
     client.set_cookie('localhost', 'sali-servers',
                       'user_name&%s&session&%s' % (user, hashpw))

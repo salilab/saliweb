@@ -1,7 +1,7 @@
 # Mock for database access; use sqlite3 in memory rather than MySQL
 
 import sqlite3
-import md5
+import hashlib
 
 
 MOCK_DB_SETUP = [
@@ -48,7 +48,7 @@ class MockCursor(object):
 
 def _sqlite_password(p):
     """Provide a simple (insecure!) implementation of PASSWORD for sqlite"""
-    return md5.md5(p).hexdigest()
+    return hashlib.md5(p).hexdigest()
 
 
 class MockConnection(object):
