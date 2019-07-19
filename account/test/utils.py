@@ -14,8 +14,11 @@ def _set_search_paths(fname):
     """Set search paths so that we can import Python modules and use mocks"""
     # Path to mocks
     sys.path.insert(0, os.path.join(os.path.dirname(fname), 'mock'))
-    # Path to top level
+    # Path to top level for 'account'
     sys.path.insert(0, os.path.join(os.path.dirname(fname), '..'))
+    # Path to top level for 'saliweb.frontend'
+    sys.path.insert(0, os.path.join(os.path.dirname(fname), '..', '..',
+                                    'python'))
 
 
 def import_mocked_account(fname):
