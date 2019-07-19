@@ -22,5 +22,6 @@ script:
   - scons python=$(which python) test
   - py.test --cov=account/account --cov-branch --pep8 account
 after_success:
-  - coverage combine && codecov
+  - coverage combine
+  - codecov
   - cd test/frontend && cover -report codecov
