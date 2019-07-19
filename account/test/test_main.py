@@ -46,9 +46,9 @@ def test_good_log_in_temporary():
                    'Profile.*'
                    'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
-    assert (rv.headers['Set-Cookie']
-            == 'sali-servers=user_name&authuser&session&'
-               '46650befec4c54b4443d4b8a1ad5135a; Secure; Path=/')
+    assert (rv.headers['Set-Cookie'] ==
+            'sali-servers=user_name&authuser&session&'
+            '46650befec4c54b4443d4b8a1ad5135a; Secure; Path=/')
 
 
 def test_good_log_in_permanent():
