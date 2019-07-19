@@ -63,7 +63,7 @@ def test_good_log_in_permanent():
                    'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
     assert 'Expires=' in rv.headers['Set-Cookie']
-    assert 'Max-Age=31536000.0' in rv.headers['Set-Cookie']
+    assert 'Max-Age=31536000' in rv.headers['Set-Cookie']
 
 
 def test_get_servers():
