@@ -1,6 +1,7 @@
 from flask import Flask, g, render_template, request, redirect, url_for, flash
 import logging.handlers
 import saliweb.frontend
+import datetime
 
 
 app = Flask(__name__, instance_relative_config=True)
@@ -44,10 +45,15 @@ def index():
         if row:
             pwhash = row[0]
             resp = redirect(url_for("profile"))
-            age = 60*60*24*365 if request.form.get('permanent') else None
+            if request.form.get('permanent'):
+                age = datetime.timedelta(days=365)
+                expires = datetime.datetime.now() + age
+                age = age.total_seconds()
+            else:
+                age = expires = None
             resp.set_cookie(key='sali-servers',
                             value='user_name&%s&session&%s' % (user, pwhash),
-                            secure=True, max_age=age)
+                            secure=True, max_age=age, expires=expires)
             return resp
         else:
             error = "Invalid username or password"
