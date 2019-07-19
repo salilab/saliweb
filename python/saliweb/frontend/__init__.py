@@ -212,14 +212,18 @@ def _get_logged_in_user():
     c = _get_servers_cookie_info()
     if (c and 'user_name' in c and 'session' in c
         and c['user_name'] != 'Anonymous'):
-        dbh = get_db()
-        cur = MySQLdb.cursors.DictCursor(dbh)
-        cur.execute('SELECT first_name,last_name,email,institution '
-                    'FROM servers.users WHERE user_name=%s '
-                    'AND password=%s', (c['user_name'], c['session']))
-        row = cur.fetchone()
-        if row:
-            return LoggedInUser(c['user_name'], row)
+        return _get_user_from_cookie(c)
+
+
+def _get_user_from_cookie(c):
+    dbh = get_db()
+    cur = MySQLdb.cursors.DictCursor(dbh)
+    cur.execute('SELECT first_name,last_name,email,institution '
+                'FROM servers.users WHERE user_name=%s '
+                'AND password=%s', (c['user_name'], c['session']))
+    row = cur.fetchone()
+    if row:
+        return LoggedInUser(c['user_name'], row)
 
 
 class Parameter(object):

@@ -1,4 +1,5 @@
-from flask import Flask, g, render_template, request, redirect, url_for, flash
+from flask import (Flask, g, render_template, request, redirect, url_for,
+                   flash, after_this_request)
 import logging.handlers
 import saliweb.frontend
 import datetime
@@ -33,7 +34,6 @@ def close_db(error):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     error = None
-    cookie = None
     if request.method == 'POST':
         user = request.form['user_name']
         passwd = request.form['password']
@@ -44,27 +44,33 @@ def index():
         row = cur.fetchone()
         if row:
             pwhash = row[0]
-            resp = redirect(url_for("profile"))
-            if request.form.get('permanent'):
-                age = datetime.timedelta(days=365)
-                expires = datetime.datetime.now() + age
-                age = age.total_seconds()
-            else:
-                age = expires = None
-            resp.set_cookie(key='sali-servers',
-                            value='user_name&%s&session&%s' % (user, pwhash),
-                            secure=True, max_age=age, expires=expires)
-            return resp
+            cookie = {'user_name': user, 'session': row[0]}
+            set_servers_cookie_info(cookie, request.form.get('permanent'))
+            g.user = saliweb.frontend._get_user_from_cookie(cookie)
+            if not g.user:
+                raise RuntimeError("Could not look up user info")
         else:
             error = "Invalid username or password"
-    elif g.user:
-        return redirect(url_for("profile"))
-    return render_template('index.html', error=error)
+    return render_template('logged_in.html' if g.user else 'logged_out.html',
+                           error=error)
 
 
-@app.route('/profile')
-def profile():
-    return render_template('profile.html')
+def set_servers_cookie_info(cookie, permanent):
+    if permanent:
+        age = datetime.timedelta(days=365)
+        expires = datetime.datetime.now() + age
+        age = age.total_seconds()
+    else:
+        age = expires = None
+    user = cookie['user_name']
+    pwhash = cookie['session']
+
+    @after_this_request
+    def add_cookie(response):
+        response.set_cookie(key='sali-servers',
+                            value='user_name&%s&session&%s' % (user, pwhash),
+                            secure=True, max_age=age, expires=expires)
+        return response
 
 
 @app.route('/help')
@@ -85,7 +91,5 @@ def register():
 @app.route('/logout')
 def logout():
     flash("You have been logged out.")
-    resp = redirect(url_for("index"))
-    resp.set_cookie(key='sali-servers', value='user_name&Anonymous&session&',
-                    secure=True, max_age=None)
-    return resp
+    set_servers_cookie_info({'user_name': 'Anonymous', 'session': ''}, False)
+    return redirect(url_for("index"))
