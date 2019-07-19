@@ -6,18 +6,21 @@ import saliweb.frontend
 import datetime
 
 
+def setup_logging(app):
+    if not app.debug and 'MAIL_SERVER' in app.config:
+        mail_handler = logging.handlers.SMTPHandler(
+            mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
+            fromaddr=app.config['MAIL_FROM'],
+            toaddrs=app.config['MAIL_TO'],
+            subject='Web server account page error')
+        mail_handler.setLevel(logging.ERROR)
+        app.logger.addHandler(mail_handler)
+
+
 app = Flask(__name__, instance_relative_config=True)
 app.config['DATABASE_DB'] = 'servers'
 app.config.from_pyfile('account.cfg')
-
-if not app.debug and 'MAIL_SERVER' in app.config:
-    mail_handler = logging.handlers.SMTPHandler(
-        mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
-        fromaddr=app.config['MAIL_FROM'],
-        toaddrs=app.config['MAIL_TO'], subject='Web server account page error')
-    mail_handler.setLevel(logging.ERROR)
-    app.logger.addHandler(mail_handler)
-
+setup_logging(app)
 app.register_blueprint(saliweb.frontend._blueprint)
 
 
