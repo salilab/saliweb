@@ -1,5 +1,6 @@
 from flask import (Flask, g, render_template, request, redirect, url_for,
                    flash, after_this_request)
+import MySQLdb.cursors
 import logging.handlers
 import saliweb.frontend
 import datetime
@@ -51,8 +52,23 @@ def index():
                 raise RuntimeError("Could not look up user info")
         else:
             error = "Invalid username or password"
-    return render_template('logged_in.html' if g.user else 'logged_out.html',
-                           error=error)
+    if g.user:
+        return render_template('logged_in.html', servers=get_servers())
+    else:
+        return render_template('logged_out.html', error=error)
+
+
+def get_servers():
+    """Get all servers that the current user can access"""
+    dbh = saliweb.frontend.get_db()
+    cur = MySQLdb.cursors.DictCursor(dbh)
+    cur.execute("SELECT server FROM access WHERE user_name=%s "
+                "OR user_name='Anonymous'", (g.user.name,))
+    available = frozenset(row['server'] for row in cur)
+
+    cur.execute("SELECT server,url,title,short_title FROM servers "
+                "ORDER BY short_title")
+    return [row for row in cur if row['server'] in available]
 
 
 def set_servers_cookie_info(cookie, permanent):

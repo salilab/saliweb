@@ -1,11 +1,22 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<p>User name: {{ g.user.name }}</p>
+<h4>Server availability for user {{ g.user.name }}</h4>
 
-<p>Email: {{ g.user.email }}</p>
+<ul>
+  {%- for server in servers %}
+  <li><a href="{{ server.url }}">{{ server.short_title }}, {{ server.title }}</a></li>
+  {%- endfor %}
+</ul>
 
-<p>Full name: {{ g.user.first_name }} {{ g.user.last_name }}</p>
+<h4>Profile</h4>
 
-<p>Institution: {{ g.user.institution }}</p>
+<p>
+<b>Login:</b> {{ g.user.name }}<br />
+<b>First name:</b> {{ g.user.first_name }}<br />
+<b>Last name:</b> {{ g.user.last_name }}<br />
+<b>Email address:</b> {{ g.user.email }}<br />
+<b>Institution:</b> {{ g.user.institution }}<br />
+</p>
+
 {% endblock %}
