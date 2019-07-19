@@ -76,9 +76,12 @@ def get_servers():
 
 def set_servers_cookie_info(cookie, permanent):
     if permanent:
-        age = datetime.timedelta(days=365)
-        expires = datetime.datetime.now() + age
-        age = age.total_seconds()
+        delta = datetime.timedelta(days=365)
+        expires = datetime.datetime.now() + delta
+        try:
+            age = delta.total_seconds()
+        except AttributeError:  # python 2.6
+            age = delta.days * 24*60*60 + delta.seconds
     else:
         age = expires = None
     user = cookie['user_name']
