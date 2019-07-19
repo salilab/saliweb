@@ -92,7 +92,7 @@ def test_help():
 def test_contact():
     """Test contact page"""
     c = account.app.test_client()
-    rv = c.get('/help')
+    rv = c.get('/contact')
     r = re.compile('Contact.*modbase.*salilab\.org',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
