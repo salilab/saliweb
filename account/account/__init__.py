@@ -105,9 +105,47 @@ def contact():
     return render_template('contact.html')
 
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    return render_template('register.html')
+    error = None
+    if request.method == 'POST':
+        error = create_account()
+        if not error:
+            flash("Account successfully created.")
+            return redirect(url_for('index'))
+    return render_template('register.html', error=error, form=request.form)
+
+
+def create_account():
+    """Create a new account using form parameters"""
+    f = request.form
+    if not f.get('academic'):
+        return "The Sali Lab servers are only open for the academic community."
+    if len(f['password']) < 8:
+        return "Passwords should be at least 8 characters long."
+    if f['password'] != f['passwordcheck']:
+        return "Password check failed. The two passwords are not identical."
+    if not all((f['user_name'], f['first_name'], f['last_name'],
+                f['institution'], f['email'])):
+        return "Please fill out all form fields."
+    dbh = saliweb.frontend.get_db()
+    cur = dbh.cursor()
+    cur.execute('SELECT user_name FROM servers.users WHERE user_name=%s',
+                (f['user_name'],))
+    if cur.fetchone():
+        return ("User name %s already exists. Please choose a "
+                "different one." % f['user_name'])
+    cur.execute('INSERT INTO servers.users (user_name,password,ip_addr,'
+                'first_name,last_name,email,institution,date_added) VALUES '
+                '(%s, PASSWORD(%s), %s, %s, %s, %s, %s, %s)',
+                (f['user_name'], f['password'], request.remote_addr,
+                 f['first_name'], f['last_name'], f['email'],
+                 f['institution'], datetime.datetime.now()))
+    # Get password hash to set the login cookie
+    cur.execute('SELECT password FROM servers.users WHERE user_name=%s',
+                (f['user_name'],))
+    cookie = {'user_name': f['user_name'], 'session': cur.fetchone()[0]}
+    set_servers_cookie_info(cookie, f.get('permanent'))
 
 
 @app.route('/logout')

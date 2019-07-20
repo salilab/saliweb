@@ -107,6 +107,83 @@ def test_register():
     assert r.search(rv.data)
 
 
+def test_register_not_academic():
+    """Test registration failure (not academic)"""
+    c = account.app.test_client()
+    rv = c.post('/register', data={})
+    r = re.compile('Error:.*only open for the academic community.*'
+                   'Create an Account',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_register_short_password():
+    """Test registration failure (password too short)"""
+    c = account.app.test_client()
+    rv = c.post('/register', data={'academic': 'on', 'password': 'short'})
+    r = re.compile('Error:.*Passwords should be at least 8 characters long.*'
+                   'Create an Account',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_register_mismatched_password():
+    """Test registration failure (mismatched password)"""
+    c = account.app.test_client()
+    rv = c.post('/register', data={'academic': 'on', 'password': '12345678',
+                                   'passwordcheck': 'not12345678'})
+    r = re.compile('Error:.*The two passwords are not identical.*'
+                   'Create an Account',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_register_missing_fields():
+    """Test registration failure (missing fields)"""
+    c = account.app.test_client()
+    data = {'academic': 'on', 'password': '12345678',
+            'passwordcheck': '12345678'}
+    needed_fields = ('user_name', 'first_name', 'last_name',
+                     'institution', 'email')
+    for field in needed_fields:
+        for f in needed_fields:
+            data[f] = 'foo'
+        data[field] = ''
+        rv = c.post('/register', data=data)
+        r = re.compile('Error:.*Please fill out all form fields.*'
+                       'Create an Account',
+                       re.DOTALL | re.MULTILINE)
+        assert r.search(rv.data)
+
+
+def test_register_existing_user():
+    """Test registration failure (user name already exists)"""
+    c = account.app.test_client()
+    data = {'academic': 'on', 'password': '12345678',
+            'passwordcheck': '12345678', 'user_name': 'authuser',
+            'first_name': 'foo', 'last_name': 'foo', 'institution': 'foo',
+            'email': 'foo'}
+    rv = c.post('/register', data=data)
+    r = re.compile('Error:.*User name authuser already exists.*'
+                   'Create an Account',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_register_ok():
+    """Test successful registration"""
+    c = account.app.test_client()
+    data = {'academic': 'on', 'password': '12345678',
+            'passwordcheck': '12345678', 'user_name': 'newuser',
+            'first_name': 'foo', 'last_name': 'foo', 'institution': 'foo',
+            'email': 'foo'}
+    rv = c.post('/register', data=data)
+    assert rv.status_code == 302  # redirect to index page
+    assert (rv.headers['Set-Cookie'] ==
+            'sali-servers=user_name&newuser&session&'
+            '25d55ad283aa400af464c76d713c07ad; Secure; Path=/')
+
+
 def test_logout():
     """Test logout page"""
     c = account.app.test_client()
