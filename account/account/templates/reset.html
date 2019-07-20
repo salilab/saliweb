@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h4>Password Reset</h4>
+
+{%- if error %}
+<p class=error><strong>Error:</strong> {{ error }}</p>
+{%- endif %}
+
+<p>To reset the password for your web server account, please enter the
+email address associated with that account, below. A temporary link
+to reset your password will be emailed to that account.</p>
+
+<form method="post" enctype="multipart/form-data">
+  <table>
+    <tr>
+      <td>Email:</td>
+      <td><input type="text" name="email" size="10" /></td>
+    </tr>
+    <tr>
+      <td><input type="submit" name=".submit" value="Send reset email" /></td>
+      <td><a href="{{ url_for("index") }}">Cancel</a></td>
+    </tr>
+  </table>
+</form>
+{% endblock %}

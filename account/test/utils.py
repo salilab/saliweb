@@ -30,6 +30,9 @@ def import_mocked_account(fname):
     account.app.config['DATABASE_SOCKET'] = '/not/exist'
     account.app.config['DATABASE_PASSWD'] = 'testpwd'
     account.app.config['SECRET_KEY'] = 'test-secret-key'
+    account.app.config['MAIL_SERVER'] = 'localhost'
+    account.app.config['MAIL_PORT'] = 25
+    account.app.config['MAIL_FROM'] = 'noreply@localhost'
     return account
 
 

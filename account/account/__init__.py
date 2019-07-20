@@ -4,6 +4,10 @@ import MySQLdb.cursors
 import logging.handlers
 import saliweb.frontend
 import datetime
+import string
+import random
+import smtplib
+import email.mime.text
 
 
 def setup_logging(app):
@@ -223,3 +227,90 @@ def check_password(password, passwordcheck):
         return "Passwords should be at least 8 characters long."
     if password != passwordcheck:
         return "Password check failed. The two passwords are not identical."
+
+
+@app.route('/reset', methods=['GET', 'POST'])
+def reset():
+    error = None
+    if request.method == 'POST':
+        email = request.form['email']
+        error = send_reset_email(email)
+        if not error:
+            return render_template("reset-sent.html", email=email)
+    return render_template('reset.html', error=error)
+
+
+@app.route('/reset/<int:user_id>/<reset_key>', methods=['GET', 'POST'])
+def reset_link(user_id, reset_key):
+    error = None
+    dbh = saliweb.frontend.get_db()
+    cur = dbh.cursor()
+    cur.execute('SELECT user_name FROM servers.users WHERE user_id=%s '
+                'AND reset_key IS NOT NULL AND reset_key=%s AND '
+                'reset_key_expires > %s',
+                (user_id, reset_key, datetime.datetime.now()))
+    row = cur.fetchone()
+    if not row:
+        return render_template("reset-link-error.html")
+    user_name = row[0]
+
+    if request.method == 'POST':
+        f = request.form
+        error = check_password(f['password'], f['passwordcheck'])
+        if not error:
+            cur.execute('UPDATE servers.users SET password=PASSWORD(%s) '
+                        'WHERE user_name=%s', (f['password'], user_name))
+            update_login_cookie(cur, user_name, request.form.get('permanent'))
+            cur.execute('UPDATE servers.users SET reset_key=NULL '
+                        'WHERE user_id=%s', (user_id,))
+            flash("Password reset successfully. You are now logged in.")
+            return redirect(url_for('index'))
+    else:
+        permanent = True
+    return render_template('reset-link.html', error=error, user_name=user_name,
+                           permanent=True)
+
+
+def send_reset_email(email):
+    dbh = saliweb.frontend.get_db()
+    cur = dbh.cursor()
+    cur.execute('SELECT user_id FROM servers.users WHERE email=%s', (email,))
+    row = cur.fetchone()
+    if not row:
+        return "No account found with email %s" % email
+    user_id = row[0]
+    reset_key = _generate_random_password(30)
+    expires = datetime.datetime.now() + datetime.timedelta(days=2)
+    cur.execute('UPDATE servers.users SET reset_key=%s, reset_key_expires=%s '
+                ' WHERE user_id=%s', (reset_key, expires, user_id))
+    s = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+    mail_from = app.config['MAIL_FROM']
+    msg = get_reset_email_body(user_id, reset_key)
+    msg['From'] = mail_from
+    msg['To'] = email
+    s.sendmail(mail_from, email, msg.as_string())
+    s.quit()
+
+
+def get_reset_email_body(user_id, reset_key):
+    body = """
+Please use the link below to reset your password for Sali Lab web
+services at https://salilab.org/.
+
+This is a temporary link, and will expire in 2 days.
+
+Reset link:
+%s
+
+If you did not request this password reset, feel free to ignore this email.
+""" % url_for("reset_link", user_id=user_id,
+              reset_key=reset_key, _external=True)
+    msg = email.mime.text.MIMEText(body)
+    msg['Subject'] = 'Password reset for Sali Lab web services'
+    return msg
+
+
+def _generate_random_password(length):
+    """Generate a random alphanumeric password of the given length"""
+    valid = string.ascii_lowercase + string.ascii_uppercase + string.digits
+    return ''.join(random.choice(valid) for _ in range(length))

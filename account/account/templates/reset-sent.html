@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h4>Password Reset</h4>
+
+<p>A password reset link has been sent to {{ email }}.
+This link will expire in 2 days.</p>
+
+<p>If you don't get the email, or encounter other issues with your account,
+please <a href="{{ url_for("contact") }}">contact us</a>.</p>
+
+{% endblock %}

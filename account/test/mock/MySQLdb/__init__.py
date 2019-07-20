@@ -2,6 +2,15 @@
 
 import sqlite3
 import hashlib
+import calendar
+import datetime
+
+
+# sqlite doesn't have a datetime type, so we use float
+# instead (UTC seconds-since-epoch) for testing
+def adapt_datetime(ts):
+    return calendar.timegm(ts.timetuple())
+sqlite3.register_adapter(datetime.datetime, adapt_datetime)
 
 
 MOCK_DB_SETUP = [
@@ -12,7 +21,7 @@ MOCK_DB_SETUP = [
     "CREATE TABLE servers.users (user_id INT, user_name TEXT, password TEXT, "
     "    ip_addr TEXT, login_time INT, first_name TEXT, last_name TEXT, "
     "    email TEXT, admin TEXT, date_added TEXT, last_modified INT, "
-    "    institution TEXT)",
+    "    institution TEXT, reset_key TEXT, reset_key_expires FLOAT)",
     "INSERT INTO servers (server,access,url,title,short_title) VALUES "
     "    ('public', 'academic', 'https://serv1', 'long title1', 'short1')",
     "INSERT INTO servers (server,access,url,title,short_title) VALUES "
@@ -23,8 +32,11 @@ MOCK_DB_SETUP = [
     "    institution) VALUES (1, 'authuser', PASSWORD('authpw00'), 'Auth', "
     "    'User', 'authuser@test.com', 'Test In1')",
     "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
-    "    institution) VALUES (2, 'unauthuser', PASSWORD('unauthpw'), "
-    "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2')",
+    "    institution,reset_key,reset_key_expires) "
+    "    VALUES (2, 'unauthuser', PASSWORD('unauthpw'), "
+    "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2', "
+    "    'unauthkey', %s)" % adapt_datetime(datetime.datetime.now()
+                                            + datetime.timedelta(days=2)),
 ]
 
 

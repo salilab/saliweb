@@ -328,3 +328,79 @@ def test_password_ok():
             'passwordcheck': 'authpw00'}
     rv = c.post('/password', data=data, base_url='https://localhost')
     assert rv.status_code == 302  # redirect to index page
+
+
+def test_reset_input():
+    """Test reset page, asking for email input"""
+    c = account.app.test_client()
+    rv = c.get('/reset')
+    r = re.compile('Password Reset.*'
+                   'To reset the password.*'
+                   'Email:.*Send reset email',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_send_mail_fail():
+    """Test reset send email failure (no account matches)"""
+    c = account.app.test_client()
+    rv = c.post('/reset', data={'email': 'bademail@test.com'})
+    r = re.compile('Password Reset.*'
+                   'Error:.*No account found with email bademail@test\.com.*'
+                   'To reset the password.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_send_mail_ok():
+    """Test reset send email success"""
+    c = account.app.test_client()
+    rv = c.post('/reset', data={'email': 'authuser@test.com'})
+    r = re.compile('Password Reset.*'
+                   'reset link has been sent to authuser@test\.com.*'
+                   'This link will expire in 2 days',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_link_input_fail():
+    """Test reset link input page fail"""
+    c = account.app.test_client()
+    rv = c.get('/reset/3/unauthkey')
+    r = re.compile('Password Reset.*'
+                   'Error.*Invalid password reset link',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_link_input_ok():
+    """Test reset link input page success"""
+    c = account.app.test_client()
+    rv = c.get('/reset/2/unauthkey')
+    r = re.compile('Password Reset.*'
+                   'Choose new password for user unauthuser.*'
+                   'Choose Password.*'
+                   'Re-enter Password.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_link_password_fail():
+    """Test reset link failure, bad password"""
+    c = account.app.test_client()
+    rv = c.post('/reset/2/unauthkey',
+                data={'password': 'abc', 'passwordcheck': 'abc'})
+    r = re.compile('Password Reset.*'
+                   'Error:.*Passwords should be at least 8 characters long.*'
+                   'Choose Password.*'
+                   'Re-enter Password.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_reset_link_password_ok():
+    """Test reset link set password success"""
+    c = account.app.test_client()
+    rv = c.post('/reset/2/unauthkey',
+                data={'password': 'unauthpw', 'passwordcheck': 'unauthpw'})
+    assert rv.status_code == 302  # redirect to index page
