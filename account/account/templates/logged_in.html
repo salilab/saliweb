@@ -28,6 +28,7 @@
 <b>Last name:</b> {{ g.user.last_name }}<br />
 <b>Email address:</b> {{ g.user.email }}<br />
 <b>Institution:</b> {{ g.user.institution }}<br />
+<b>Password:</b> ******** <a href="{{ url_for("password") }}">[change]</a><br />
 </p>
 
 {% endblock %}

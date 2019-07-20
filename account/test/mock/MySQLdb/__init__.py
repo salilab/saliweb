@@ -20,7 +20,7 @@ MOCK_DB_SETUP = [
     "INSERT INTO access (user_name,server) VALUES ('Anonymous', 'public')",
     "INSERT INTO access (user_name,server) VALUES ('authuser', 'private')",
     "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
-    "    institution) VALUES (1, 'authuser', PASSWORD('authpw'), 'Auth', "
+    "    institution) VALUES (1, 'authuser', PASSWORD('authpw00'), 'Auth', "
     "    'User', 'authuser@test.com', 'Test In1')",
     "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
     "    institution) VALUES (2, 'unauthuser', PASSWORD('unauthpw'), "

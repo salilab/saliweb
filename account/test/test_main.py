@@ -16,7 +16,7 @@ def test_logged_out_index():
 def test_logged_in_index():
     """Test logged-in index page"""
     c = account.app.test_client()
-    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
     rv = c.get('/', base_url='https://localhost')  # force HTTPS
     r = re.compile('Server availability for user authuser.*'
                    'short1, long title1.*'
@@ -39,7 +39,7 @@ def test_bad_log_in():
 def test_good_log_in_temporary():
     """Test successful log in with temporary cookie"""
     c = account.app.test_client()
-    rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw'})
+    rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw00'})
     r = re.compile('Server availability for user authuser.*'
                    'short1, long title1.*'
                    'short2, long title2.*'
@@ -48,13 +48,13 @@ def test_good_log_in_temporary():
     assert r.search(rv.data)
     assert (rv.headers['Set-Cookie'] ==
             'sali-servers=user_name&authuser&session&'
-            '46650befec4c54b4443d4b8a1ad5135a; Secure; Path=/')
+            'bce42b481e4c5f9012ad7da17c7c141b; Secure; Path=/')
 
 
 def test_good_log_in_permanent():
     """Test successful log in with permanent cookie"""
     c = account.app.test_client()
-    rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw',
+    rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw00',
                            'permanent': 'on'})
     r = re.compile('Server availability for user authuser.*'
                    'short1, long title1.*'
@@ -120,7 +120,8 @@ def test_register_not_academic():
 def test_register_short_password():
     """Test registration failure (password too short)"""
     c = account.app.test_client()
-    rv = c.post('/register', data={'academic': 'on', 'password': 'short'})
+    rv = c.post('/register', data={'academic': 'on', 'password': 'short',
+                                   'passwordcheck': 'short'})
     r = re.compile('Error:.*Passwords should be at least 8 characters long.*'
                    'Create an Account',
                    re.DOTALL | re.MULTILINE)
@@ -219,7 +220,7 @@ def test_logged_out_profile():
 def test_profile():
     """Test show of edit-profile page"""
     c = account.app.test_client()
-    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
     rv = c.get('/profile', base_url='https://localhost')  # force HTTPS
     r = re.compile('Edit Profile.*'
                    'first_name.*Auth.*'
@@ -233,7 +234,7 @@ def test_profile():
 def test_profile_missing_fields():
     """Test edit-profile failure (missing fields)"""
     c = account.app.test_client()
-    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
     data = {}
     needed_fields = ('first_name', 'last_name',
                      'institution', 'email')
@@ -251,9 +252,79 @@ def test_profile_missing_fields():
 def test_profile_ok():
     """Test successful edit-profile"""
     c = account.app.test_client()
-    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
     # No change in data
     data = {'first_name': 'Auth', 'last_name': 'User',
             'institution': 'Test In1', 'email': 'authuser@test.com'}
     rv = c.post('/profile', data=data, base_url='https://localhost')
+    assert rv.status_code == 302  # redirect to index page
+
+
+def test_logged_out_password():
+    """Test fail to change password when logged-out"""
+    c = account.app.test_client()
+    rv = c.get('/password')
+    assert rv.status_code == 403
+
+
+def test_password():
+    """Test show of change-password page"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    rv = c.get('/password', base_url='https://localhost')  # force HTTPS
+    r = re.compile('Change Password.*'
+                   'Current Password:.*'
+                   'New Password.*'
+                   'Re-enter Password:.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_password_wrong_old():
+    """Test change-password failure (wrong old password)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    data = {'oldpassword': 'notauthpw', 'newpassword': '12345678',
+            'passwordcheck': '12345678'}
+    rv = c.post('/password', data=data, base_url='https://localhost')
+    r = re.compile('Change Password.*'
+                   'Error:.*Incorrect old password entered.',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_password_too_short():
+    """Test change-password failure (new password too short)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    data = {'oldpassword': 'authpw00', 'newpassword': '1234',
+            'passwordcheck': '1234'}
+    rv = c.post('/password', data=data, base_url='https://localhost')
+    r = re.compile('Change Password.*'
+                   'Error:.*Passwords should be at least 8 characters',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_password_mismatch():
+    """Test change-password failure (new passwords do not match)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    data = {'oldpassword': 'authpw00', 'newpassword': '12345678',
+            'passwordcheck': 'not12345678'}
+    rv = c.post('/password', data=data, base_url='https://localhost')
+    r = re.compile('Change Password.*'
+                   'Error:.*The two passwords are not identical',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_password_ok():
+    """Test change-password success"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    # new password = old password
+    data = {'oldpassword': 'authpw00', 'newpassword': 'authpw00',
+            'passwordcheck': 'authpw00'}
+    rv = c.post('/password', data=data, base_url='https://localhost')
     assert rv.status_code == 302  # redirect to index page

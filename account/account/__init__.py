@@ -121,10 +121,9 @@ def create_account():
     f = request.form
     if not f.get('academic'):
         return "The Sali Lab servers are only open for the academic community."
-    if len(f['password']) < 8:
-        return "Passwords should be at least 8 characters long."
-    if f['password'] != f['passwordcheck']:
-        return "Password check failed. The two passwords are not identical."
+    error = check_password(f['password'], f['passwordcheck'])
+    if error:
+        return error
     if not all((f['user_name'], f['first_name'], f['last_name'],
                 f['institution'], f['email'])):
         return "Please fill out all form fields."
@@ -141,11 +140,7 @@ def create_account():
                 (f['user_name'], f['password'], request.remote_addr,
                  f['first_name'], f['last_name'], f['email'],
                  f['institution'], datetime.datetime.now()))
-    # Get password hash to set the login cookie
-    cur.execute('SELECT password FROM servers.users WHERE user_name=%s',
-                (f['user_name'],))
-    cookie = {'user_name': f['user_name'], 'session': cur.fetchone()[0]}
-    set_servers_cookie_info(cookie, f.get('permanent'))
+    update_login_cookie(cur, f['user_name'], f.get('permanent'))
 
 
 @app.route('/logout')
@@ -180,3 +175,51 @@ def profile():
             flash("Profile updated.")
             return redirect(url_for('index'))
     return render_template('profile.html', error=error, form=form)
+
+
+@app.route('/password', methods=['GET', 'POST'])
+def password():
+    # User needs to be logged in
+    if not g.user:
+        abort(403)
+    error = None
+    if request.method == 'POST':
+        error = change_password()
+        if not error:
+            flash("Password changed successfully.")
+            return redirect(url_for('index'))
+    return render_template('password.html', error=error)
+
+
+def change_password():
+    """Change password of logged-in user"""
+    f = request.form
+    dbh = saliweb.frontend.get_db()
+    cur = dbh.cursor()
+    cur.execute('SELECT user_name FROM servers.users WHERE user_name=%s '
+                'AND password=PASSWORD(%s)', (g.user.name, f['oldpassword']))
+    if not cur.fetchone():
+        return "Incorrect old password entered."
+    error = check_password(f['newpassword'], f['passwordcheck'])
+    if error:
+        return error
+    cur.execute('UPDATE servers.users SET password=PASSWORD(%s) '
+                'WHERE user_name=%s', (f['newpassword'], g.user.name))
+    # todo: inherit age from previous login cookie
+    update_login_cookie(cur, g.user.name, permanent=True)
+
+
+def update_login_cookie(cur, user_name, permanent):
+    # Get password hash to set the login cookie
+    cur.execute('SELECT password FROM servers.users WHERE user_name=%s',
+                (user_name,))
+    cookie = {'user_name': user_name, 'session': cur.fetchone()[0]}
+    set_servers_cookie_info(cookie, permanent)
+
+
+def check_password(password, passwordcheck):
+    """Do basic sanity checks on a password entered in a form"""
+    if len(password) < 8:
+        return "Passwords should be at least 8 characters long."
+    if password != passwordcheck:
+        return "Password check failed. The two passwords are not identical."
