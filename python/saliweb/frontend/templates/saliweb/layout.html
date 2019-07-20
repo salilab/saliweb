@@ -22,6 +22,11 @@
   <a href="{{ link[0] }}">{{ link[1] }}</a>&nbsp;&bull;&nbsp;
 {%- endfor %}
 {%- endmacro %}
+
+{%- macro help_link(anchor) -%}
+<a class="helplink" href="{{ url_for("help", _anchor=anchor) }}"><img class="helplink" src="/saliweb/img/help.jpg" alt="help" /></a>
+{%- endmacro %}
+
 <head>
 <title>
 {%- block title -%}

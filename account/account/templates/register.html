@@ -10,7 +10,7 @@
 <form method="post" enctype="multipart/form-data">
   <table>
     <tr><td colspan="5"><hr /></td></tr>
-    <tr><th colspan="2">Create an Account <a onclick="launchHelp('display.cgi?server=server&amp;amp;style=helplink&amp;amp;type=help#account'); return false;" border="0" href="display.cgi?server=server&amp;amp;style=helplink&amp;amp;type=help#account"><img border="0" valign="bottom" src="/img/help.jpg" /></a></th></tr> 
+    <tr><th colspan="2">Create an Account {{ help_link("account") }}</th></tr>
     <tr><td>Choose Username (max 25 characters):</td> <td><input type="text" name="user_name" value="{{ form.user_name }}" size="10" maxlength="25" /></td></tr>
     <tr><td>Choose Password (max 25 characters):</td> <td><input type="password" name="password"  size="10" maxlength="25" /></td></tr>
     <tr><td>Re-enter Password:</td> <td><input type="password" name="passwordcheck"  size="10" maxlength="25" /></td></tr>

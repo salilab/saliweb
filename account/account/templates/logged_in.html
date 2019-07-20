@@ -12,7 +12,7 @@
   {%- endif %}
 {%- endwith %}
 
-<h4>Server availability for user {{ g.user.name }}</h4>
+<h4>Server availability for user {{ g.user.name }}: {{ help_link("access") }}</h4>
 
 <ul>
   {%- for server in servers %}
