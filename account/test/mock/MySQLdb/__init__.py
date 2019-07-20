@@ -35,8 +35,8 @@ MOCK_DB_SETUP = [
     "    institution,reset_key,reset_key_expires) "
     "    VALUES (2, 'unauthuser', PASSWORD('unauthpw'), "
     "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2', "
-    "    'unauthkey', %s)" % adapt_datetime(datetime.datetime.now()
-                                            + datetime.timedelta(days=2)),
+    "    'unauthkey', %s)" % adapt_datetime(datetime.datetime.now() +
+                                            datetime.timedelta(days=2)),
 ]
 
 
