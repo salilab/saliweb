@@ -6,9 +6,7 @@ SaliLab Web Server Account Management
 
 {% block navigation %}
 {{ get_navigation_links(
-       [(url_for("index"), "Home"),
-        (url_for("help"), "Help"),
-        (url_for("contact"), "Contact"),
-        (url_for("logout"), "NEW LOGOUT")])
+       [(url_for("help"), "Help"),
+        (url_for("contact"), "Contact")])
 }}
 {% endblock %}

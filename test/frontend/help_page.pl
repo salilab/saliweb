@@ -75,7 +75,7 @@ END {
          '<body>.*' .
          "<div id=\"fullpart\">test news text.*" .
          "</body>.*</html>/s", 'check news page, helplink style');
-    unlike($out, "/scgi\/server.cgi/",
+    unlike($out, "/account\/",
            '                                (no header)');
 
     $cls = get_help_obj('contact', 'garbage');
@@ -83,7 +83,7 @@ END {
     like($out,
          "/^Content\-Type:.*<!DOCTYPE html.*<html.*<head>.*" .
          "<title>test server Contact</title>.*server\.css.*</head>.*" .
-         '<body.*scgi\/server.cgi.*' .
+         '<body.*account\/.*' .
          "<div id=\"fullpart\">test contact text.*" .
          "</body>.*</html>/s", 'check contact page, regular style');
 }

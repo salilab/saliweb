@@ -836,14 +836,14 @@ sub get_header {
     if ($self->{'user_info'}) {
         my $user_name = $self->{'user_name'};
         unshift @$navigation_links,
-              $q->a({-href=>"https://$web_server/scgi/server.cgi?logout=true"},
+              $q->a({-href=>"https://$web_server/account/logout"},
                     "Logout");
         unshift @$navigation_links,
-                $q->a({-href=>"https://$web_server/scgi/server.cgi"},
+                $q->a({-href=>"https://$web_server/account/"},
                       "Current User: " . $q->escapeHTML($user_name));
     } else {
         unshift @$navigation_links,
-                $q->a({-href=>"https://$web_server/scgi/server.cgi"},
+                $q->a({-href=>"https://$web_server/account/"},
                       "Login");
     }
     my $lab_navigation = "<div id=\"navigation_lab\">" .
