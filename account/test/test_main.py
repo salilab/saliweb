@@ -207,3 +207,53 @@ def test_setup_logging():
     mock_app = MockApp()
     account.setup_logging(mock_app)
     assert mock_app.logger.h is not None
+
+
+def test_logged_out_profile():
+    """Test fail to edit profile when logged-out"""
+    c = account.app.test_client()
+    rv = c.get('/profile')
+    assert rv.status_code == 403
+
+
+def test_profile():
+    """Test show of edit-profile page"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    rv = c.get('/profile', base_url='https://localhost')  # force HTTPS
+    r = re.compile('Edit Profile.*'
+                   'first_name.*Auth.*'
+                   'last_name.*User.*'
+                   'institution.*Test In1.*'
+                   'email.*authuser@test\.com.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_profile_missing_fields():
+    """Test edit-profile failure (missing fields)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    data = {}
+    needed_fields = ('first_name', 'last_name',
+                     'institution', 'email')
+    for field in needed_fields:
+        for f in needed_fields:
+            data[f] = 'foo'
+        data[field] = ''
+        rv = c.post('/profile', data=data, base_url='https://localhost')
+        r = re.compile('Edit Profile.*'
+                       'Error:.*Please fill out all form fields.*',
+                       re.DOTALL | re.MULTILINE)
+        assert r.search(rv.data)
+
+
+def test_profile_ok():
+    """Test successful edit-profile"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw')
+    # No change in data
+    data = {'first_name': 'Auth', 'last_name': 'User',
+            'institution': 'Test In1', 'email': 'authuser@test.com'}
+    rv = c.post('/profile', data=data, base_url='https://localhost')
+    assert rv.status_code == 302  # redirect to index page

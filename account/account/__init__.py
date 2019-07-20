@@ -1,5 +1,5 @@
 from flask import (Flask, g, render_template, request, redirect, url_for,
-                   flash, after_this_request)
+                   flash, after_this_request, abort)
 import MySQLdb.cursors
 import logging.handlers
 import saliweb.frontend
@@ -153,3 +153,30 @@ def logout():
     flash("You have been logged out.")
     set_servers_cookie_info({'user_name': 'Anonymous', 'session': ''}, False)
     return redirect(url_for("index"))
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    # User needs to be logged in
+    if not g.user:
+        abort(403)
+    error = None
+    if request.method == 'GET':
+        # Populate form variables from logged-in user
+        form = g.user
+    else:
+        # Form variables from last cycle
+        form = request.form
+        if not all((form['first_name'], form['last_name'],
+                    form['institution'], form['email'])):
+            error = "Please fill out all form fields."
+        else:
+            dbh = saliweb.frontend.get_db()
+            cur = dbh.cursor()
+            cur.execute('UPDATE servers.users SET first_name=%s,last_name=%s,'
+                        'email=%s,institution=%s WHERE user_name=%s',
+                        (form['first_name'], form['last_name'], form['email'],
+                         form['institution'], g.user.name))
+            flash("Profile updated.")
+            return redirect(url_for('index'))
+    return render_template('profile.html', error=error, form=form)
