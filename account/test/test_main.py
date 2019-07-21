@@ -404,3 +404,30 @@ def test_reset_link_password_ok():
     rv = c.post('/reset/2/unauthkey',
                 data={'password': 'unauthpw', 'passwordcheck': 'unauthpw'})
     assert rv.status_code == 302  # redirect to index page
+
+
+def test_internal_error_handler():
+    """Test that internal errors yield a custom 500 error page"""
+    # Patch app to force an error
+    old_rt = account.render_template
+
+    def mock_render_template(fname, *args, **kwargs):
+        if 'saliweb' in fname:
+            return old_rt(fname, *args, **kwargs)
+        else:
+            raise ValueError()
+
+    try:
+        account.app.testing = False  # don't disable error handlers
+        account.render_template = mock_render_template
+        c = account.app.test_client()
+        rv = c.get('/')
+        assert rv.status_code == 500
+        r = re.compile('500 Internal Server Error.*'
+                       'A fatal internal error occurred in this web service.*'
+                       'Apologies for the inconvenience',
+                       re.DOTALL | re.MULTILINE)
+        assert r.search(rv.data)
+    finally:
+        account.render_template = old_rt
+        account.app.testing = True

@@ -28,6 +28,11 @@ setup_logging(app)
 app.register_blueprint(saliweb.frontend._blueprint)
 
 
+@app.errorhandler(500)
+def handle_internal_error(error):
+    return render_template('saliweb/internal_error.html'), 500
+
+
 @app.before_request
 def check_login():
     g.user = saliweb.frontend._get_logged_in_user()
