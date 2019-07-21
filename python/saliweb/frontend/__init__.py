@@ -198,10 +198,17 @@ class LoggedInUser(object):
     #: The user's institution
     institution = None
 
+    #: The user's MODELLER license key
+    modeller_key = None
+
     def __init__(self, name, rd):
         self.name = name
-        for k in ('first_name', 'last_name', 'email', 'institution'):
+        for k in ('first_name', 'last_name', 'email', 'institution',
+                  'modeller_key'):
             setattr(self, k, rd[k])
+        # Don't display literal "None" on webpages
+        if self.modeller_key is None:
+            self.modeller_key = ''
 
 
 def _get_logged_in_user():
@@ -218,7 +225,7 @@ def _get_logged_in_user():
 def _get_user_from_cookie(c):
     dbh = get_db()
     cur = MySQLdb.cursors.DictCursor(dbh)
-    cur.execute('SELECT first_name,last_name,email,institution '
+    cur.execute('SELECT first_name,last_name,email,institution,modeller_key '
                 'FROM servers.users WHERE user_name=%s '
                 'AND password=%s', (c['user_name'], c['session']))
     row = cur.fetchone()

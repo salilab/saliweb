@@ -74,7 +74,7 @@ class Tests(unittest.TestCase):
         flask.g.user = None
         self.assertEqual(q.name_link, 'testname')
         rd = {'email': 'testemail', 'first_name': 'foo', 'last_name': 'bar',
-              'institution': 'testin'}
+              'institution': 'testin', 'modeller_key': 'modkey'}
         flask.g.user = saliweb.frontend.LoggedInUser('testuser', rd)
         self.assertEqual(str(q.name_link), '<a href="testurl">testname</a>')
         del flask.g.user
@@ -180,13 +180,17 @@ class Tests(unittest.TestCase):
     def test_logged_in_user(self):
         """Test LoggedInUser class"""
         rd = {'email': 'testemail', 'first_name': 'foo', 'last_name': 'bar',
-              'institution': 'testin'}
+              'institution': 'testin', 'modeller_key': 'modkey'}
         u = saliweb.frontend.LoggedInUser('foo', rd)
         self.assertEqual(u.name, 'foo')
         self.assertEqual(u.email, 'testemail')
         self.assertEqual(u.first_name, 'foo')
         self.assertEqual(u.last_name, 'bar')
         self.assertEqual(u.institution, 'testin')
+        self.assertEqual(u.modeller_key, 'modkey')
+        rd['modeller_key'] = None
+        u = saliweb.frontend.LoggedInUser('foo', rd)
+        self.assertEqual(u.modeller_key, '')
 
     def test_get_logged_in_user(self):
         """Test _get_logged_in_user function"""

@@ -21,7 +21,8 @@ MOCK_DB_SETUP = [
     "CREATE TABLE servers.users (user_id INT, user_name TEXT, password TEXT, "
     "    ip_addr TEXT, login_time INT, first_name TEXT, last_name TEXT, "
     "    email TEXT, admin TEXT, date_added TEXT, last_modified INT, "
-    "    institution TEXT, reset_key TEXT, reset_key_expires FLOAT)",
+    "    institution TEXT, modeller_key TEXT, reset_key TEXT, "
+    "    reset_key_expires FLOAT)",
     "INSERT INTO servers (server,access,url,title,short_title) VALUES "
     "    ('public', 'academic', 'https://serv1', 'long title1', 'short1')",
     "INSERT INTO servers (server,access,url,title,short_title) VALUES "
@@ -29,12 +30,13 @@ MOCK_DB_SETUP = [
     "INSERT INTO access (user_name,server) VALUES ('Anonymous', 'public')",
     "INSERT INTO access (user_name,server) VALUES ('authuser', 'private')",
     "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
-    "    institution) VALUES (1, 'authuser', PASSWORD('authpw00'), 'Auth', "
-    "    'User', 'authuser@test.com', 'Test In1')",
+    "    institution,modeller_key) VALUES (1, 'authuser', "
+    "    PASSWORD('authpw00'), 'Auth', 'User', 'authuser@test.com', "
+    "    'Test In1', 'authusermodkey')",
     "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
-    "    institution,reset_key,reset_key_expires) "
+    "    institution,modeller_key,reset_key,reset_key_expires) "
     "    VALUES (2, 'unauthuser', PASSWORD('unauthpw'), "
-    "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2', "
+    "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2', 'modkey', "
     "    'unauthkey', %s)" % adapt_datetime(datetime.datetime.now() +
                                             datetime.timedelta(days=2)),
 ]

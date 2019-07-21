@@ -95,23 +95,26 @@ sub validate_user {
     my $server=shift @_;
     my ($query,$sth,@row,$hash);
     my %userinfo;
-    my ($first,$last,$email);
+    my ($first,$last,$email,$modkey);
 
     if ($user_name ne "Anonymous") {
         if ($type eq "password") {
-            $query="select user_name,password,first_name,last_name,email from "
+            $query="select user_name,password,first_name,last_name,email,"
+                  ."modeller_key from "
                   ."$database.users where user_name=? and "
                   ." password=password(?) limit 1";
         } elsif ($type eq "hash") {
-            $query="select user_name,password,first_name,last_name,email from "
-            ."$database.users where user_name=? and password=? limit 1";
+            $query="select user_name,password,first_name,last_name,email,"
+                  ."modeller_key from $database.users where user_name=? "
+                  ."and password=? limit 1";
         }
         $sth=$dbh->prepare($query) or die "cannot prepare: " .$dbh->errstr;
         $sth->execute($user_name, $password); # or die "cannot execute: " .$dbh->errstr;
-        ($user_name,$hash,$first,$last,$email)=$sth->fetchrow_array();
+        ($user_name,$hash,$first,$last,$email,$modkey)=$sth->fetchrow_array();
         if (defined($user_name)) {
             $userinfo{'name'}="$first $last";
             $userinfo{'email'}="$email";
+            $userinfo{'modeller_key'}=$modkey;
         } else {
             $user_name = "Anonymous";
         }

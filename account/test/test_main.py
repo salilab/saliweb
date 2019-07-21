@@ -143,7 +143,7 @@ def test_register_missing_fields():
     """Test registration failure (missing fields)"""
     c = account.app.test_client()
     data = {'academic': 'on', 'password': '12345678',
-            'passwordcheck': '12345678'}
+            'passwordcheck': '12345678', 'modeller_key': 'modkey'}
     needed_fields = ('user_name', 'first_name', 'last_name',
                      'institution', 'email')
     for field in needed_fields:
@@ -151,7 +151,7 @@ def test_register_missing_fields():
             data[f] = 'foo'
         data[field] = ''
         rv = c.post('/register', data=data)
-        r = re.compile('Error:.*Please fill out all form fields.*'
+        r = re.compile('Error:.*Please fill out all required form fields.*'
                        'Create an Account',
                        re.DOTALL | re.MULTILINE)
         assert r.search(rv.data)
@@ -177,7 +177,7 @@ def test_register_ok():
     data = {'academic': 'on', 'password': '12345678',
             'passwordcheck': '12345678', 'user_name': 'newuser',
             'first_name': 'foo', 'last_name': 'foo', 'institution': 'foo',
-            'email': 'foo'}
+            'email': 'foo', 'modeller_key': 'modkey'}
     rv = c.post('/register', data=data)
     assert rv.status_code == 302  # redirect to index page
     assert (rv.headers['Set-Cookie'] ==
@@ -226,7 +226,8 @@ def test_profile():
                    'first_name.*Auth.*'
                    'last_name.*User.*'
                    'institution.*Test In1.*'
-                   'email.*authuser@test\.com.*',
+                   'email.*authuser@test\.com.*'
+                   'license key.*authusermodkey',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -235,7 +236,7 @@ def test_profile_missing_fields():
     """Test edit-profile failure (missing fields)"""
     c = account.app.test_client()
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
-    data = {}
+    data = {'modeller_key': ''}
     needed_fields = ('first_name', 'last_name',
                      'institution', 'email')
     for field in needed_fields:
@@ -244,7 +245,7 @@ def test_profile_missing_fields():
         data[field] = ''
         rv = c.post('/profile', data=data, base_url='https://localhost')
         r = re.compile('Edit Profile.*'
-                       'Error:.*Please fill out all form fields.*',
+                       'Error:.*Please fill out all required form fields.*',
                        re.DOTALL | re.MULTILINE)
         assert r.search(rv.data)
 
@@ -255,7 +256,8 @@ def test_profile_ok():
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
     # No change in data
     data = {'first_name': 'Auth', 'last_name': 'User',
-            'institution': 'Test In1', 'email': 'authuser@test.com'}
+            'institution': 'Test In1', 'email': 'authuser@test.com',
+            'modeller_key': 'authusermodkey'}
     rv = c.post('/profile', data=data, base_url='https://localhost')
     assert rv.status_code == 302  # redirect to index page
 

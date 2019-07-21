@@ -135,7 +135,7 @@ def create_account():
         return error
     if not all((f['user_name'], f['first_name'], f['last_name'],
                 f['institution'], f['email'])):
-        return "Please fill out all form fields."
+        return "Please fill out all required form fields."
     dbh = saliweb.frontend.get_db()
     cur = dbh.cursor()
     cur.execute('SELECT user_name FROM servers.users WHERE user_name=%s',
@@ -144,11 +144,12 @@ def create_account():
         return ("User name %s already exists. Please choose a "
                 "different one." % f['user_name'])
     cur.execute('INSERT INTO servers.users (user_name,password,ip_addr,'
-                'first_name,last_name,email,institution,date_added) VALUES '
-                '(%s, PASSWORD(%s), %s, %s, %s, %s, %s, %s)',
+                'first_name,last_name,email,institution,modeller_key,'
+                'date_added) VALUES '
+                '(%s, PASSWORD(%s), %s, %s, %s, %s, %s, %s, %s)',
                 (f['user_name'], f['password'], request.remote_addr,
                  f['first_name'], f['last_name'], f['email'],
-                 f['institution'], datetime.datetime.now()))
+                 f['institution'], f['modeller_key'], datetime.datetime.now()))
     update_login_cookie(cur, f['user_name'], f.get('permanent'))
 
 
@@ -173,14 +174,16 @@ def profile():
         form = request.form
         if not all((form['first_name'], form['last_name'],
                     form['institution'], form['email'])):
-            error = "Please fill out all form fields."
+            error = "Please fill out all required form fields."
         else:
             dbh = saliweb.frontend.get_db()
             cur = dbh.cursor()
             cur.execute('UPDATE servers.users SET first_name=%s,last_name=%s,'
-                        'email=%s,institution=%s WHERE user_name=%s',
+                        'email=%s,institution=%s,modeller_key=%s WHERE '
+                        'user_name=%s',
                         (form['first_name'], form['last_name'], form['email'],
-                         form['institution'], g.user.name))
+                         form['institution'], form['modeller_key'],
+                         g.user.name))
             flash("Profile updated.")
             return redirect(url_for('index'))
     return render_template('profile.html', error=error, form=form)

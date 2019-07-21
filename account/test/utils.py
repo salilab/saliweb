@@ -42,7 +42,7 @@ def set_logged_in_user(username):
         flask.g.user = None
     else:
         rd = {'email': 'testemail', 'first_name': 'foo', 'last_name': 'bar',
-              'institution': 'testin'}
+              'institution': 'testin', 'modeller_key': 'modkey'}
         flask.g.user = saliweb.frontend.LoggedInUser(username, rd)
 
 

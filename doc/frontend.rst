@@ -115,7 +115,8 @@ If the user is logged in to the webserver, ``g.user`` will
 be a :class:`LoggedInUser` object, and
 their email address will be available for use in this fashion (otherwise, the
 user will simply have to input a suitable address if they want to be
-notified).
+notified). Similarly, ``g.user.modeller_key`` provides the MODELLER license
+key of the logged-in user.
 
 .. _parameters:
 

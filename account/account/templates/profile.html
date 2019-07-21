@@ -13,6 +13,7 @@
     <tr><td>Last Name</td> <td><input type="text" name="last_name" value="{{ form.last_name }}" size="20" maxlength="40" /></td></tr>
     <tr><td>Institution</td> <td><input type="text" name="institution" value="{{ form.institution }}" size="20" maxlength="40" /></td></tr>
     <tr><td>Email Address</td> <td><input type="text" name="email" value="{{ form.email }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><a href="https://salilab.org/modeller/" title="If you have a MODELLER license key, you can save it here; it will be provided automatically to any web service that needs it.">MODELLER license key</a> (optional)</td> <td><input type="text" name="modeller_key" value="{{ form.modeller_key }}" size="20" maxlength="40" /></td></tr>
     <tr><td><input type="submit" name=".submit" value="Update" /></td>
         <td><a href="{{ url_for("index") }}">Cancel</a></td></tr>
   </table>

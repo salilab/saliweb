@@ -616,9 +616,12 @@ sub email {
 }
 
 sub modeller_key {
-    # Right now user_info does not contain the Modeller key, but when it does,
-    # this should function like email(), above.
-    return undef;
+    my $self = shift;
+    if (defined($self->{'user_info'})) {
+        return $self->{'user_info'}->{'modeller_key'};
+    } else {
+        return undef;
+    }
 }
 
 sub index_url {
