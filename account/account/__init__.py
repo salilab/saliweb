@@ -155,12 +155,11 @@ def reset_link(user_id, reset_key):
         f = request.form
         error = util.check_password(f['password'], f['passwordcheck'])
         if not error:
-            cur.execute('UPDATE servers.users SET password=PASSWORD(%s) '
-                        'WHERE user_name=%s', (f['password'], user_name))
+            cur.execute('UPDATE servers.users SET password=PASSWORD(%s), '
+                        'reset_key=NULL WHERE user_name=%s',
+                        (f['password'], user_name))
             util.update_login_cookie(cur, user_name,
                                      request.form.get('permanent'))
-            cur.execute('UPDATE servers.users SET reset_key=NULL '
-                        'WHERE user_id=%s', (user_id,))
             flash("Password reset successfully. You are now logged in.")
             return redirect(url_for('index'))
     else:
