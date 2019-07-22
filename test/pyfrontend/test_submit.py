@@ -2,6 +2,7 @@ from __future__ import print_function
 import flask
 import unittest
 import os
+import socket
 import re
 from saliweb.frontend import submit
 import saliweb.frontend
@@ -11,15 +12,15 @@ from test_frontend import request_mime_type
 
 
 @contextlib.contextmanager
-def mock_app(track=False):
+def mock_app(track=False, socket='/not/exist'):
     class MockApp(object):
-        def __init__(self, tmpdir, track):
+        def __init__(self, tmpdir, track, socket):
             self.config = {'DATABASE_USER': 'x', 'DATABASE_DB': 'x',
                            'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
                            'DIRECTORIES_INCOMING': tmpdir,
-                           'TRACK_HOSTNAME': track, 'SOCKET': '/not/exist'}
+                           'TRACK_HOSTNAME': track, 'SOCKET': socket}
     with util.temporary_directory() as tmpdir:
-        flask.current_app = MockApp(tmpdir, track=track)
+        flask.current_app = MockApp(tmpdir, track=track, socket=socket)
         yield flask.current_app, tmpdir
         flask.current_app = None
 
@@ -131,6 +132,19 @@ class Tests(unittest.TestCase):
         with mock_app(track=True) as (app, tmpdir):
             j = submit.IncomingJob("test$!job")
             j.submit()
+
+        # Test with active backend socket
+        with util.temporary_directory() as sockdir:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sockpth = os.path.join(sockdir, 'test.socket')
+            s.bind(sockpth)
+            s.listen(5)
+            with mock_app(track=False, socket=sockpth) as (app, tmpdir):
+                j = submit.IncomingJob("test$!job")
+                j.submit()
+            conn, addr = s.accept()
+            self.assertEqual(conn.recv(1024), 'INCOMING testjob\n')
+            s.close()
 
     def test_render_submit_template_html(self):
         """Test render_submit_template (HTML output)"""
