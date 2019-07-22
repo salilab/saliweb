@@ -6,6 +6,7 @@ import os
 import sys
 import re
 import logging.handlers
+import shutil
 import MySQLdb
 import MySQLdb.cursors
 from .submit import IncomingJob
@@ -304,6 +305,13 @@ def make_application(name, parameters=[], static_folder='html',
     def close_db(error):
         if hasattr(flask.g, 'db_conn'):
             flask.g.db_conn.close()
+
+    @app.teardown_request
+    def _cleanup_incoming_jobs(error=None):
+        if hasattr(flask.g, 'incoming_jobs'):
+            for job in flask.g.incoming_jobs:
+                if not job._submitted:
+                    shutil.rmtree(job.directory, ignore_errors=True)
 
     return app
 

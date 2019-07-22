@@ -97,6 +97,8 @@ class IncomingJob(object):
     # todo: cleanup if submit() didn't get called
     def __init__(self, given_name=None):
         self.name, self.directory = _get_job_name_directory(given_name)
+        self._submitted = False
+        _add_incoming_job(self)
 
     def get_path(self, fname):
         """Get the full path to a file in the job's directory.
@@ -144,6 +146,7 @@ class IncomingJob(object):
                          self._url))
         dbh.commit()
 
+        self._submitted = True
         self._inform_backend(config)
 
     def _inform_backend(self, config):
@@ -157,3 +160,10 @@ class IncomingJob(object):
         s.sendall("INCOMING %s\n" % self.name)
         fcntl.flock(s, fcntl.LOCK_UN)
         s.close()
+
+
+def _add_incoming_job(job):
+    """Keep track of all incoming jobs, so we can clean up failed ones"""
+    if not hasattr(flask.g, 'incoming_jobs'):
+        flask.g.incoming_jobs = []
+    flask.g.incoming_jobs.append(job)
