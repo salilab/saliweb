@@ -101,6 +101,9 @@
 {%- endif %}
 
 <div id="fullpart"><div id="resulttable">
+{%- if not self.sidebar()|trim %}
+  <p>&nbsp;</p>
+{%- endif %}
 {%- block body %}
 {%- endblock %}
 </div></div>
