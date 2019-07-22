@@ -17,13 +17,13 @@
     <tr><td>First Name <input type="hidden" name="create" value="y"  /></td> <td><input type="text" name="first_name" value="{{ form.first_name }}" size="20" maxlength="40" /></td></tr>
     <tr><td>Last Name</td> <td><input type="text" name="last_name" value="{{ form.last_name }}" size="20" maxlength="40" /></td></tr>
     <tr><td>Institution</td> <td><input type="text" name="institution" value="{{ form.institution }}" size="20" maxlength="40" /></td></tr>
-    <tr><td>Email Address</td> <td><input type="text" name="email" value="{{ form.email }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><span class="tooltip" title="This will be used to notify you of completed jobs, and to reset your password if you forget it. It will not be used for any other purpose.">Email Address</span></td> <td><input type="text" name="email" value="{{ form.email }}" size="20" maxlength="40" /></td></tr>
     <tr><td><a href="https://salilab.org/modeller/" title="If you have a MODELLER license key, you can save it here; it will be provided automatically to any web service that needs it.">MODELLER license key</a> (optional)</td> <td><input type="text" name="modeller_key" value="{{ form.modeller_key }}" size="20" maxlength="40" /></td></tr>
-    <tr><td align="center" colspan="2"><div class=standout> <label><input type="checkbox" name="academic" value="on" {{ 'checked="checked"' if form.academic }} />I am a non-profit/academic user 
+    <tr><td align="center" colspan="2"><div class=standout> <label><input type="checkbox" name="academic" value="on" {{ 'checked="checked"' if form.academic }} />I am a <span class="tooltip" title="Sali Lab web server accounts are currently only available for non-profit or academic users.">non-profit/academic user</span>
 	                and this server will be used solely for educational 
 	                purposes or for basic research intended to advance 
 	                scientific knowledge. </label> </div></td></tr>
-    <tr><td align="center" colspan="2"><label><input type="checkbox" name="permanent" value="on" {{ 'checked="checked"' if form.permanent or not form.user_name }} />Check if you want to log on permanently on this computer</label></td></tr>
+    <tr><td align="center" colspan="2"><label><input type="checkbox" name="permanent" value="on" {{ 'checked="checked"' if form.permanent or not form.user_name }} />Check if you want to <span class="tooltip" title="If set, the logon cookie will expire after one year rather than at the end of your browser session.">log on permanently</span> on this computer</label></td></tr>
     <tr><td><input type="submit" name=".submit" value="Create Account" /></td> <td><input type="reset" /></td></tr>
     <tr><td colspan="5"><hr width="100%" /></td></tr>
   </table>

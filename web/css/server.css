@@ -378,6 +378,11 @@ h5 {
   width: 95%;
 }
 
+span.tooltip {
+  border-bottom: 1px dotted;
+  cursor: default;
+}
+
 @media only screen and (max-device-width: 970px) {
   html {
     max-width: 970px;

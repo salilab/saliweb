@@ -23,7 +23,7 @@
     <tr><td nowrap colspan="1">Sali Lab Web Server Login {{ help_link("account") }}</td></tr>
     <tr><td width="20%" align="right" colspan="1">Username:</td> <td align="left" colspan="1"><input type="text" name="user_name"  size="10" maxlength="25" /></td> <td align="right" colspan="1"><input type="submit" name=".submit" value="Login" action="server.cgi" onclick="saveModBaseCookie()" /></td></tr>
     <tr><td align="right" colspan="1">Password:</td> <td align="left" colspan="1"><input type="password" name="password"  size="10" maxlength="25" /></td> <td align="right"><input type="reset" /></td></tr>
-    <tr><td align="center" colspan="2"><label><input type="checkbox" name="permanent" value="on" checked="checked" />Check if you want to log on permanently on this computer</label></td></tr>
+    <tr><td align="center" colspan="2"><label><input type="checkbox" name="permanent" value="on" checked="checked" />Check if you want to <span class="tooltip" title="If set, the logon cookie will expire after one year rather than at the end of your browser session.">log on permanently</span> on this computer</label></td></tr>
     <tr><td align="left" colspan="2"><br /> <a href="{{ url_for("reset") }}">Forgot Username or Password?</a></td></tr>
     <tr><td align="left" colspan="2"><br /> <a href="{{ url_for("register") }}">Create Account</a></td></tr>
     <tr><td colspan="5"><hr width="100%" /></td></tr>
