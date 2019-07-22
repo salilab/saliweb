@@ -96,8 +96,7 @@ def change_password():
         return error
     cur.execute('UPDATE servers.users SET password=PASSWORD(%s) '
                 'WHERE user_name=%s', (f['newpassword'], g.user.name))
-    # todo: inherit age from previous login cookie
-    update_login_cookie(cur, g.user.name, permanent=True)
+    update_login_cookie(cur, g.user.name, f.get('permanent'))
 
 
 def update_login_cookie(cur, user_name, permanent):
