@@ -71,12 +71,12 @@ def test_get_servers():
     with account.app.app_context():
         # Authorized user can see both public and private servers
         utils.set_logged_in_user('authuser')
-        servers = account.get_servers()
+        servers = account.util.get_servers()
         assert [s['server'] for s in servers] == ['public', 'private']
 
         # Unauthorized user can only see public servers
         utils.set_logged_in_user('unauthuser')
-        servers = account.get_servers()
+        servers = account.util.get_servers()
         assert [s['server'] for s in servers] == ['public']
 
 
@@ -206,7 +206,7 @@ def test_setup_logging():
                            'MAIL_TO': 'test@localhost'}
             self.logger = MockLogger()
     mock_app = MockApp()
-    account.setup_logging(mock_app)
+    account.util.setup_logging(mock_app)
     assert mock_app.logger.h is not None
 
 
