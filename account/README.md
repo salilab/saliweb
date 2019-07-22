@@ -1,7 +1,7 @@
 This is a simple [Flask](http://flask.pocoo.org/) application to manage
 user accounts for web services hosted at https://modbase.compbio.ucsf.edu/
 
-== Configuration ==
+## Configuration
 
 1. Create a file `Makefile.include` in the same directory as `Makefile` that
    sets the `WEBTOP` variable to a directory readable by Apache.
@@ -23,7 +23,7 @@ user accounts for web services hosted at https://modbase.compbio.ucsf.edu/
 3. Add a suitable `WSGIScriptAlias` rule to the Apache configuration pointing
    `/account` to `<WEBTOP>/account.wsgi`.
 
-== Deployment ==
+## Deployment
 
 Use `make test` to test changes to the application, and `make install` to
 deploy it (this will install the files to the `WEBTOP` directory).
