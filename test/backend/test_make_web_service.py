@@ -134,6 +134,7 @@ class MakeWebServiceTests(unittest.TestCase):
                   'SConstruct', 'frontend/modfoo/SConscript',
                   'frontend/modfoo/templates/SConscript',
                   'backend/modfoo/SConscript',
+                  'test/frontend/test_frontend.py',
                   'test/SConscript', 'test/frontend/SConscript',
                   'test/backend/SConscript'):
             os.unlink('modfoo/' + f)

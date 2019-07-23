@@ -118,6 +118,7 @@ class MakeWebService(object):
         self._make_frontend()
         self._make_backend()
         self._make_templates()
+        self._make_tests()
         self.source_control.commit()
         self._print_completion()
 
@@ -311,6 +312,30 @@ def get_web_service(config_file):
     config = saliweb.backend.Config(config_file)
     return saliweb.backend.WebService(config, db)
 """, file=f)
+
+    def _make_tests(self):
+        with open(os.path.join(self.topdir, 'test', 'frontend',
+                               'test_frontend.py'), 'w') as f:
+            print("""import unittest
+import saliweb.test
+
+# Import the %s frontend with mocks
+%s = saliweb.test.import_mocked_frontend("%s", __file__,
+                                           '../../frontend')
+
+
+class Tests(saliweb.test.TestCase):
+
+    def test_index(self):
+        "Test index page"
+        c = %s.app.test_client()
+        rv = c.get('/')
+        self.assertIn('Main Page', rv.data)
+
+
+if __name__ == '__main__':
+    unittest.main()
+""" % ((self.short_name,)*4), file=f)
 
     def _make_templates(self):
         template_dir = os.path.join(self.topdir, 'frontend',
