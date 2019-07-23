@@ -25,16 +25,40 @@ class _GlobalObj(object):
 g = _GlobalObj()
 
 
+class _MockConfig(dict):
+    def from_object(self, obj):
+        pass
+
+
 class Flask(object):
     def __init__(self, name, *args, **kwargs):
         self.name, self.args, self.kwargs = name, args, kwargs
         self.debug = True
-        self.config = {}
+        self.config = _MockConfig()
         global current_app
         current_app = self
+        self.before_request_handlers = []
+        self.error_handlers = {}
+        self.teardown_app_handlers = []
+        self.teardown_request_handlers = []
 
-    def errorhandler(self, meth):
-        return meth
+    def errorhandler(self, code_or_exception):
+        def real_decorator(func):
+            self.error_handlers[code_or_exception] = func
+            return func
+        return real_decorator
+
+    def before_request(self, f):
+        self.before_request_handlers.append(f)
+        return f
+
+    def teardown_appcontext(self, f):
+        self.teardown_app_handlers.append(f)
+        return f
+
+    def teardown_request(self, f):
+        self.teardown_request_handlers.append(f)
+        return f
 
     def register_blueprint(self, bp):
         pass

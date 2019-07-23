@@ -21,6 +21,9 @@ class _MockConnection(object):
     def commit(self):
         pass
 
+    def close(self):
+        pass
+
 
 def connect(*args, **kwargs):
     return _MockConnection()

@@ -360,6 +360,82 @@ passwd: test_fe_pwd
         saliweb.frontend._setup_email_logging(app)
         self.assertEqual(len(app.logger.handlers), 1)
 
+    def test_make_application(self):
+        """Test make_application function"""
+        import mock_application
+
+        mime = 'text/html'
+        class MockAccept(object):
+            def best_match(self, types):
+                return mime if mime in types else None
+            def __getitem__(self, key):
+                return 1.0 if key == mime else 0.0
+        class MockRequest(object):
+            def __init__(self, scheme):
+                self.scheme = scheme
+                self.cookies = {}
+                self.accept_mimetypes = MockAccept()
+        # Logins have to be SSL-secured
+        flask.request = MockRequest(scheme='https')
+
+        with util.temporary_directory() as tmpdir:
+            fname = os.path.join(tmpdir, 'live.conf')
+            os.environ['MOCK_APPLICATION_CONFIG'] = fname
+            with open(fname, 'w') as fh:
+                fh.write("""
+[general]
+service_name: test_service
+
+[database]
+frontend_config: frontend.conf
+db: test_db
+
+[directories]
+install: test_install
+""")
+            fe_config = os.path.join(tmpdir, 'frontend.conf')
+            with open(fe_config, 'w') as fh:
+                fh.write("""
+[frontend_db]
+user: test_fe_user
+passwd: test_fe_pwd
+""")
+            os.environ['MOCK_APPLICATION_VERSION'] = '1.0'
+            f = saliweb.frontend.make_application("mock_application")
+            # Now check the Flask handlers
+            for h in f.before_request_handlers:
+                h()
+            for h in f.teardown_app_handlers:
+                h('noerror')
+            for h in f.teardown_request_handlers:
+                h('noerror')
+            # Test cleanup of incoming jobs
+            indir = os.path.join(tmpdir, 'incoming-dir')
+            class MockIncomingJob(object):
+                _submitted = False
+                directory = indir
+            flask.g.incoming_jobs = [MockIncomingJob()]
+            for h in f.teardown_request_handlers:
+                h('noerror')
+            del flask.g.incoming_jobs
+            # Test internal error handler
+            out = f.error_handlers[500]('MockError')
+            self.assertEqual(out,
+                ('render saliweb/internal_error.html with (), {}', 500))
+            # Test results error handler
+            err = saliweb.frontend._ResultsGoneError("foo")
+            out = f.error_handlers[saliweb.frontend._ResultsError](err)
+            self.assertEqual(out,
+                ("render saliweb/results_error.html with (), "
+                 "{'message': 'foo'}", 410))
+            # Test user error handler
+            err = saliweb.frontend.InputValidationError("foo")
+            out = f.error_handlers[saliweb.frontend._UserError](err)
+            self.assertEqual(out,
+                ("render saliweb/user_error.html with (), "
+                 "{'message': 'foo'}", 400))
+        del flask.request
+
 
 if __name__ == '__main__':
     unittest.main()
