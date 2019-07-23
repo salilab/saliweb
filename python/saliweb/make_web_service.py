@@ -132,13 +132,9 @@ and adding lines such as
 ben     modbase=(%(user)s) ALL
 
 2. Make accounts for %(user)s on the cluster(s) if it's going
-to run cluster jobs.
+to run cluster jobs, and make the the /wynton/home/sali/%(user)s directory.
 
-3. Make the /netapp/sali/%(user)s directory by running on sortinghat:
-/usr/bin/sudo mkdir /netapp/sali/%(user)s
-/usr/bin/sudo chown %(uid)d:%(uid)d /netapp/sali/%(user)s
-
-4. Change into the %(topdir)s directory and run
+3. Change into the %(topdir)s directory and run
 /usr/bin/sudo -u %(user)s scons
 until it works.
 """ % {'user': self.user, 'topdir': self.topdir, 'uid': uid}, file=sys.stderr)
@@ -250,7 +246,7 @@ db: %(db)s
 [directories]
 install: %(install)s
 incoming: %(install)s/incoming/
-preprocessing: /netapp/sali/%(user)s/running/
+preprocessing: /wynton/home/sali/%(user)s/running/
 completed: %(install)s/completed/
 failed: %(install)s/failed/
 
