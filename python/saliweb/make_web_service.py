@@ -67,7 +67,7 @@ class GitSourceControl(object):
                 + list_dir(os.path.join('frontend', self.short_name,
                                         'templates')) \
                 + list_dir(os.path.join('backend', self.short_name)) \
-                + ['SConstruct', '.gitignore',
+                + ['SConstruct', 'test/SConscript', '.gitignore',
                    'conf/.gitignore', 'conf/live.conf']
         self._run_git_command(['add'] + files, cwd=self.topdir)
         self._run_git_command(['commit', '-m', 'Initial setup'],
