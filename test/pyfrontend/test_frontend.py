@@ -5,6 +5,7 @@ import datetime
 import functools
 import contextlib
 import os
+import gzip
 import util
 import flask
 
@@ -23,6 +24,15 @@ def request_mime_type(mime):
     flask.request = MockRequest()
     yield
     del flask.request
+
+
+def make_test_pdb(tmpdir):
+    os.mkdir(os.path.join(tmpdir, 'xy'))
+    with gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wb') as fh:
+        fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
+                 "1.00 23.91           N\n")
+        fh.write("ATOM      1  N   ALA D   1      27.932  14.488   4.257  "
+                 "1.00 23.91           N\n")
 
 
 class Tests(unittest.TestCase):
@@ -435,6 +445,25 @@ passwd: test_fe_pwd
                 ("render saliweb/user_error.html with (), "
                  "{'message': 'foo'}", 400))
         del flask.request
+
+    def test_get_pdb_code(self):
+        """Test get_pdb_code function"""
+        class MockApp(object):
+            def __init__(self, tmpdir):
+                self.config = {'PDB_ROOT': tmpdir}
+        with util.temporary_directory() as tmpdir:
+            make_test_pdb(tmpdir)
+            flask.current_app = MockApp(tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_code, "1@bc", tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_code, "1aaaaaa", tmpdir)
+            self.assertFalse(saliweb.frontend.pdb_code_exists('1aaaaaa'))
+            self.assertTrue(saliweb.frontend.pdb_code_exists('1xyz'))
+            p = saliweb.frontend.get_pdb_code('1xyz', tmpdir)
+            self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
+            os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
+            flask.current_app = None
 
 
 if __name__ == '__main__':

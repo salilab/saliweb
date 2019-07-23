@@ -7,6 +7,7 @@ import sys
 import re
 import logging.handlers
 import shutil
+import gzip
 import MySQLdb
 import MySQLdb.cursors
 from .submit import IncomingJob
@@ -412,6 +413,47 @@ def check_modeller_key(modkey):
     if modkey != flask.current_app.config['MODELLER_LICENSE_KEY']:
         raise InputValidationError(
             "You have entered an invalid MODELLER key: " + str(modkey))
+
+
+def _get_pdb_paths(code):
+    root = flask.current_app.config['PDB_ROOT']
+    code = code.lower()  # PDB codes are case insensitive
+    return (os.path.join(root, code[1:3], 'pdb%s.ent.gz' % code),
+            'pdb%s.ent' % code)
+
+
+def pdb_code_exists(code):
+    """Return true iff the PDB code (e.g. 1abc) exists in our local
+       copy of the PDB."""
+    inpdb, outpdb = _get_pdb_paths(code)
+    return os.path.exists(inpdb)
+
+
+def get_pdb_code(code, outdir):
+    """Look up the PDB code (e.g. 1abc) in our local copy of the PDB, and
+       copy it into the given directory (usually an incoming job directory).
+       The file will be named in standard PDB fashion, e.g. ``pdb1abc.ent``.
+       The full path to the file is returned. If the code is invalid or
+       does not exist, raise an :exc:`InputValidationError` exception.
+
+       :param str code: The PDB code to access (e.g. 1abc)
+       :param str outdir: The directory to copy the PDB file into
+       :return: The full path to the new file in ``outdir``
+    """
+    if not re.match('([A-Za-z0-9]+)$', code):
+        raise InputValidationError(
+            "You have entered an invalid PDB code; valid codes "
+            "contain only letters and numbers, e.g. 1abc")
+    in_pdb, out_pdb = _get_pdb_paths(code)
+    if not os.path.exists(in_pdb):
+        raise InputValidationError(
+            "PDB code '%s' does not exist in our copy of the PDB database.",
+            code)
+    out_pdb = os.path.join(outdir, out_pdb)
+    with gzip.open(in_pdb, 'rb') as fh_in:
+        with open(out_pdb, 'wb') as fh_out:
+            shutil.copyfileobj(fh_in, fh_out)
+    return out_pdb
 
 
 def render_results_template(template_name, job, **context):
