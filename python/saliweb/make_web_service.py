@@ -267,7 +267,7 @@ passwd: %s""" % (end, user, passwd), file=f)
     def _make_frontend(self):
         with open(os.path.join(self.topdir, 'frontend', self.short_name,
                                '__init__.py'), 'w') as f:
-            print("""from flask import render_template
+            print("""from flask import render_template, request
 import saliweb.frontend
 
 parameters = []
