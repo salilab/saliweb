@@ -28,11 +28,12 @@ def request_mime_type(mime):
 
 def make_test_pdb(tmpdir):
     os.mkdir(os.path.join(tmpdir, 'xy'))
-    with gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wb') as fh:
-        fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
-                 "1.00 23.91           N\n")
-        fh.write("ATOM      1  N   ALA D   1      27.932  14.488   4.257  "
-                 "1.00 23.91           N\n")
+    fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wb')
+    fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
+             "1.00 23.91           N\n")
+    fh.write("ATOM      1  N   ALA D   1      27.932  14.488   4.257  "
+             "1.00 23.91           N\n")
+    fh.close()
 
 
 class Tests(unittest.TestCase):
