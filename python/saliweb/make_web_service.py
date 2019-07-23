@@ -231,7 +231,7 @@ SConscript('frontend/SConscript')""", file=f)
 admin_email: %(user)s@salilab.org
 socket: %(install)s/%(short_name)s.socket
 service_name: %(service_name)s
-urltop: http://modbase.compbio.ucsf.edu/%(short_name)s
+urltop: https://modbase.compbio.ucsf.edu/%(short_name)s
 
 [backend]
 user: %(short_name)s
