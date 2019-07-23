@@ -63,10 +63,12 @@ class GitSourceControl(object):
             files = os.listdir(os.path.join(self.topdir, subdir))
             return [os.path.join(subdir, f) for f in files]
         files = list_dir('test/frontend') + list_dir('test/backend') \
-                + list_dir('txt') \
-                + list_dir(os.path.join('python', self.short_name)) \
-                + list_dir('lib') + ['SConstruct', '.gitignore',
-                                     'conf/.gitignore', 'conf/live.conf']
+                + list_dir(os.path.join('frontend', self.short_name)) \
+                + list_dir(os.path.join('frontend', self.short_name,
+                                        'templates')) \
+                + list_dir(os.path.join('backend', self.short_name)) \
+                + ['SConstruct', '.gitignore',
+                   'conf/.gitignore', 'conf/live.conf']
         self._run_git_command(['add'] + files, cwd=self.topdir)
         self._run_git_command(['commit', '-m', 'Initial setup'],
                               cwd=self.topdir)
@@ -115,7 +117,7 @@ class MakeWebService(object):
         self._make_config()
         self._make_frontend()
         self._make_backend()
-        self._make_txt()
+        self._make_templates()
         self.source_control.commit()
         self._print_completion()
 
@@ -163,10 +165,13 @@ https://salilab.org/internal/wiki/SysAdmin/UID
         return os.path.join(dir, 'service')
 
     def _make_directories(self):
-        for subdir in ('conf', 'lib', 'python', 'txt', 'test',
+        for subdir in ('conf', 'frontend', 'backend', 'test',
                        'test/frontend', 'test/backend'):
             os.mkdir(os.path.join(self.topdir, subdir))
-        os.mkdir(os.path.join(self.topdir, 'python', self.short_name))
+        os.mkdir(os.path.join(self.topdir, 'frontend', self.short_name))
+        os.mkdir(os.path.join(self.topdir, 'frontend', self.short_name,
+                              'templates'))
+        os.mkdir(os.path.join(self.topdir, 'backend', self.short_name))
 
     def _make_sconstruct(self):
         envmodule = ", service_module='%s'" % self.short_name
@@ -178,30 +183,34 @@ env = saliweb.build.Environment(vars, ['conf/live.conf']%s)
 Help(vars.GenerateHelpText(env))
 
 env.InstallAdminTools()
-env.InstallCGIScripts()
 
 Export('env')
-SConscript('python/%s/SConscript')
-SConscript('lib/SConscript')
-SConscript('txt/SConscript')
-SConscript('test/SConscript')""" % (envmodule, self.short_name), file=f)
+SConscript('frontend/%s/SConscript')
+SConscript('backend/%s/SConscript')
+SConscript('test/SConscript')""" % (envmodule, self.short_name,
+                                    self.short_name), file=f)
 
     def _make_sconscripts(self):
-        with open(os.path.join(self.topdir, 'python', self.short_name,
+        with open(os.path.join(self.topdir, 'backend', self.short_name,
                                'SConscript'), 'w') as f:
             print("""Import('env')
 
 env.InstallPython(['__init__.py'])""", file=f)
 
-        with open(os.path.join(self.topdir, 'lib', 'SConscript'), 'w') as f:
+        with open(os.path.join(self.topdir, 'frontend', self.short_name,
+                               'SConscript'), 'w') as f:
             print("""Import('env')
 
-env.InstallPerl(['%s.pm'])""" % self.short_name, file=f)
+SConscript('templates/SConscript')
 
-        with open(os.path.join(self.topdir, 'txt', 'SConscript'), 'w') as f:
+env.InstallPythonFrontend(['__init__.py'])""", file=f)
+
+        with open(os.path.join(self.topdir, 'frontend', self.short_name,
+                               'templates', 'SConscript'), 'w') as f:
             print("""Import('env')
 
-env.InstallTXT(['help.txt', 'contact.txt'])""", file=f)
+env.InstallFrontend(['layout.html', 'index.html', 'help.html', 'contact.html'],
+                    'templates')""", file=f)
 
         with open(os.path.join(self.topdir, 'test', 'backend',
                                'SConscript'), 'w') as f:
@@ -213,7 +222,7 @@ env.RunPythonTests(Glob("*.py"))""", file=f)
                                'SConscript'), 'w') as f:
             print("""Import('env')
 
-env.RunPerlTests(Glob("*.pl"))""", file=f)
+env.RunPythonFrontendTests(Glob("*.py"))""", file=f)
 
         with open(os.path.join(self.topdir, 'test',
                                'SConscript'), 'w') as f:
@@ -259,53 +268,31 @@ passwd: %s""" % (end, user, passwd), file=f)
             os.chmod(fname, 0o600)
 
     def _make_frontend(self):
-        with open(os.path.join(self.topdir, 'lib',
-                                '%s.pm' % self.short_name), 'w') as f:
-            print("""package %(short_name)s;
-use saliweb::frontend;
-use strict;
+        with open(os.path.join(self.topdir, 'frontend', self.short_name,
+                               '__init__.py'), 'w') as f:
+            print("""from flask import render_template
+import saliweb.frontend
 
-our @ISA = "saliweb::frontend";
+parameters = []
+app = saliweb.frontend.make_application(__name__, parameters)
 
-sub new {
-    return saliweb::frontend::new(@_, "##CONFIG##");
-}
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-sub get_navigation_links {
-    my $self = shift;
-    my $q = $self->cgi;
-    return [
-        $q->a({-href=>$self->index_url}, "%(service_name)s Home"),
-        $q->a({-href=>$self->queue_url}, "%(service_name)s Current queue"),
-        $q->a({-href=>$self->help_url}, "%(service_name)s Help"),
-        $q->a({-href=>$self->contact_url}, "%(service_name)s Contact")
-        ];
-}
 
-sub get_project_menu {
-    # TODO
-}
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
-sub get_footer {
-    # TODO
-}
 
-sub get_index_page {
-    # TODO
-}
-
-sub get_submit_page {
-    # TODO
-}
-
-sub get_results_page {
-    # TODO
-}
-
-1;""" % self.__dict__, file=f)
+@app.route('/help')
+def help():
+    return render_template('help.html')
+""", file=f)
 
     def _make_backend(self):
-        with open(os.path.join(self.topdir, 'python', self.short_name,
+        with open(os.path.join(self.topdir, 'backend', self.short_name,
                                '__init__.py'), 'w') as f:
             print("""import saliweb.backend
 
@@ -321,14 +308,60 @@ def get_web_service(config_file):
     return saliweb.backend.WebService(config, db)
 """, file=f)
 
-    def _make_txt(self):
-        with open(os.path.join(self.topdir, 'txt', 'contact.txt'), 'w') as f:
-            print("""<p>Please address inquiries to:<br />
-<script type="text/javascript">escramble('%s','salilab.org')</script></p>
-""" % self.user, file=f)
+    def _make_templates(self):
+        template_dir = os.path.join(self.topdir, 'frontend',
+                                    self.short_name, 'templates')
+        with open(os.path.join(template_dir, 'layout.html'), 'w') as f:
+            print("""{% extends "saliweb/layout.html" %}
 
-        with open(os.path.join(self.topdir, 'txt', 'help.txt'), 'w') as f:
-            print("<h1>Help</h1>", file=f)
+{% block navigation %}
+{{ get_navigation_links(
+       [(url_for("index"), "Home"),
+        (url_for("job"), "Queue"),
+        (url_for("help"), "Help"),
+        (url_for("contact"), "Contact")])
+}}
+{% endblock %}
+
+{% block sidebar %}
+<p>Sidebar</p>
+{% endblock %}
+
+{% block footer %}
+<p>Footer</p>
+{% endblock %}
+""", file=f)
+
+        with open(os.path.join(template_dir, 'index.html'), 'w') as f:
+            print("""{%% extends "layout.html" %%}
+
+{%% block title %%}%s{%% endblock %%}
+
+{%% block body %%}
+<h1>Main Page</h1>
+{%% endblock %%}
+""" % self.service_name, file=f)
+
+        with open(os.path.join(template_dir, 'contact.html'), 'w') as f:
+            print("""{%% extends "layout.html" %%}
+
+{%% block title %%}%s Contact{%% endblock %%}
+
+{%% block body %%}
+<p>Please address inquiries to:<br />
+<script type="text/javascript">escramble('%s','salilab.org')</script></p>
+{%% endblock %%}
+""" % (self.service_name, self.user), file=f)
+
+        with open(os.path.join(template_dir, 'help.html'), 'w') as f:
+            print("""{%% extends "layout.html" %%}
+
+{%% block title %%}%s Help{%% endblock %%}
+
+{%% block body %%}
+<h1>Help</h1>
+{%% endblock %%}
+""" % self.service_name, file=f)
 
 
 def get_options():

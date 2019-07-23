@@ -89,9 +89,10 @@ class MakeWebServiceTests(unittest.TestCase):
 
         # Check for generated files
         for f in ('conf/live.conf', 'conf/frontend.conf', 'conf/backend.conf',
-                  'lib/modfoo.pm', 'python/modfoo/__init__.py', 'txt/help.txt',
-                  'txt/contact.txt', 'SConstruct', 'lib/SConscript',
-                  'python/modfoo/SConscript', 'txt/SConscript',
+                  'frontend/modfoo/__init__.py', 'backend/modfoo/__init__.py',
+                  'SConstruct', 'backend/modfoo/SConscript',
+                  'frontend/modfoo/SConscript',
+                  'frontend/modfoo/templates/SConscript',
                   'test/SConscript', 'test/frontend/SConscript',
                   'test/backend/SConscript'):
             os.unlink('modfoo/' + f)
@@ -124,9 +125,15 @@ class MakeWebServiceTests(unittest.TestCase):
 
         # Check for generated files
         for f in ('conf/live.conf', 'conf/frontend.conf', 'conf/backend.conf',
-                  'lib/modfoo.pm', 'python/modfoo/__init__.py', 'txt/help.txt',
-                  'txt/contact.txt', 'SConstruct', 'lib/SConscript',
-                  'python/modfoo/SConscript', 'txt/SConscript',
+                  'frontend/modfoo/__init__.py',
+                  'backend/modfoo/__init__.py',
+                  'frontend/modfoo/templates/layout.html',
+                  'frontend/modfoo/templates/index.html',
+                  'frontend/modfoo/templates/help.html',
+                  'frontend/modfoo/templates/contact.html',
+                  'SConstruct', 'frontend/modfoo/SConscript',
+                  'frontend/modfoo/templates/SConscript',
+                  'backend/modfoo/SConscript',
                   'test/SConscript', 'test/frontend/SConscript',
                   'test/backend/SConscript'):
             os.unlink('modfoo/' + f)
