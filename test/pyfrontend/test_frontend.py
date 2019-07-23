@@ -465,6 +465,51 @@ passwd: test_fe_pwd
             os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
             flask.current_app = None
 
+    def test_get_pdb_chains(self):
+        """Test get_pdb_chains function"""
+        class MockApp(object):
+            def __init__(self, tmpdir):
+                self.config = {'PDB_ROOT': tmpdir}
+        with util.temporary_directory() as tmpdir:
+            make_test_pdb(tmpdir)
+            flask.current_app = MockApp(tmpdir)
+            # No chains specified
+            p = saliweb.frontend.get_pdb_chains('1xyz', tmpdir)
+            self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
+            os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
+
+            # "-" chain requested
+            p = saliweb.frontend.get_pdb_chains('1xyz:-', tmpdir)
+            self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
+            os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
+
+            # Invalid chain requested
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:\t",
+                              tmpdir)
+
+            # One chain (E) not in PDB
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:CDE",
+                              tmpdir)
+
+            # Multiple chains (E,F) not in PDB
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:CDEF",
+                              tmpdir)
+
+            # One OK chain requested
+            p = saliweb.frontend.get_pdb_chains('1xyz:C', tmpdir)
+            self.assertEqual(p, os.path.join(tmpdir, '1xyzC.pdb'))
+            os.unlink(os.path.join(tmpdir, '1xyzC.pdb'))
+
+            # Two OK chains requested
+            p = saliweb.frontend.get_pdb_chains('1xyz:Cd', tmpdir)
+            self.assertEqual(p, os.path.join(tmpdir, '1xyzCD.pdb'))
+            os.unlink(os.path.join(tmpdir, '1xyzCD.pdb'))
+
+            flask.current_app = None
+
 
 if __name__ == '__main__':
     unittest.main()

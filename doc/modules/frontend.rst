@@ -38,6 +38,8 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: get_pdb_code
 
+.. autofunction:: get_pdb_chains
+
 .. autofunction:: render_results_template
 
 .. autofunction:: render_submit_template
