@@ -285,6 +285,14 @@ def contact():
 @app.route('/help')
 def help():
     return render_template('help.html')
+
+
+@app.route('/job', methods=['GET', 'POST'])
+def job():
+    if request.method == 'GET':
+        return saliweb.frontend.render_queue_page()
+    else:
+        pass  # todo
 """, file=f)
 
     def _make_backend(self):
