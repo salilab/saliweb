@@ -594,8 +594,7 @@ class Database(object):
         if after_time is not None:
             wheres.append(after_time + ' IS NOT NULL')
             wheres.append(after_time + ' < UTC_TIMESTAMP()')
-        if wheres:
-            query += ' WHERE ' + ' AND '.join(wheres)
+        query += ' WHERE ' + ' AND '.join(wheres)
         if order_by:
             query += ' ORDER BY ' + order_by
 
