@@ -61,6 +61,43 @@ class BuilderTest(unittest.TestCase):
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
 
+    def test_builder_python_frontend_tests(self):
+        """Test builder_python_frontend_tests function"""
+        e = DummyEnv(0)
+        t = saliweb.build.builder_python_frontend_tests('dummytgt',
+                                                        ['foo.py', 'bar.py'], e)
+        self.assertEqual(t, None)
+
+        e = DummyEnv(1)
+        t = saliweb.build.builder_python_frontend_tests('dummytgt',
+                                                        ['foo.py', 'bar.py'], e)
+        self.assertEqual(e.env['ENV'], {'PYTHONPATH': 'frontend'})
+        regex = '.*python .*/run\-tests\.py testser --frontend foo\.py bar\.py$'
+        m = re.match(regex, e.exec_str)
+        self.assertNotEqual(m, None, 'String %s does not match regex %s' \
+                            % (e.exec_str, regex))
+        self.assertEqual(t, 1)
+
+        e = DummyEnv(0)
+        e.env['coverage'] = 'True'
+        t = saliweb.build.builder_python_frontend_tests('dummytgt',
+                                                        ['foo.py', 'bar.py'], e)
+        regex = '.*python .*/run\-tests\.py --coverage testser --frontend ' \
+                  + 'foo\.py bar\.py$'
+        m = re.match(regex, e.exec_str)
+        self.assertNotEqual(m, None, 'String %s does not match regex %s' \
+                            % (e.exec_str, regex))
+
+        e = DummyEnv(0)
+        e.env['html_coverage'] = 'testcov'
+        t = saliweb.build.builder_python_frontend_tests('dummytgt',
+                                                        ['foo.py', 'bar.py'], e)
+        regex = '.*python .*/run\-tests\.py --html_coverage=testcov ' \
+                  + 'testser --frontend foo\.py bar\.py$'
+        m = re.match(regex, e.exec_str)
+        self.assertNotEqual(m, None, 'String %s does not match regex %s' \
+                            % (e.exec_str, regex))
+
     def test_fixup_perl(self):
         """Test _fixup_perl_html_coverage function"""
         tmpdir = tempfile.mkdtemp()

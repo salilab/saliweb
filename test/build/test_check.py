@@ -462,6 +462,13 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         env = DummyEnv('testuser')
         dbfields = []
         conf = DummyConf()
+        conf.track_hostname = True
+        ret, stderr = run_catch_stderr(
+                         saliweb.build._check_mysql_schema, env, conf, dbfields,
+                         'jobs')
+        self.assertEqual(ret, None)
+        self.assertEqual(env.exitval, 1)
+
         conf.track_hostname = False
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_schema, env, conf, dbfields,

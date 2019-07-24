@@ -29,6 +29,7 @@ def request_mime_type(mime):
 def make_test_pdb(tmpdir):
     os.mkdir(os.path.join(tmpdir, 'xy'))
     fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wb')
+    fh.write("REMARK  6  TEST REMARK\n")
     fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
              "1.00 23.91           N\n")
     fh.write("ATOM      1  N   ALA D   1      27.932  14.488   4.257  "
@@ -303,6 +304,18 @@ class Tests(unittest.TestCase):
 
     def test_read_config(self):
         """Test _read_config function"""
+        config_template = """
+[general]
+service_name: test_service
+
+[database]
+frontend_config: frontend.conf
+db: test_db
+%s
+
+[directories]
+install: test_install
+"""
         class MockConfig(object):
             def __init__(self):
                 self.d = {}
@@ -322,17 +335,7 @@ class Tests(unittest.TestCase):
         with util.temporary_directory() as tmpdir:
             fname = os.path.join(tmpdir, 'live.conf')
             with open(fname, 'w') as fh:
-                fh.write("""
-[general]
-service_name: test_service
-
-[database]
-frontend_config: frontend.conf
-db: test_db
-
-[directories]
-install: test_install
-""")
+                fh.write(config_template % "")
             fe_config = os.path.join(tmpdir, 'frontend.conf')
             with open(fe_config, 'w') as fh:
                 fh.write("""
@@ -348,6 +351,11 @@ passwd: test_fe_pwd
             self.assertEqual(app.config['DATABASE_PASSWD'], 'test_fe_pwd')
             self.assertEqual(app.config['DIRECTORIES_INSTALL'], 'test_install')
             self.assertEqual(app.config['SERVICE_NAME'], 'test_service')
+
+            with open(fname, 'w') as fh:
+                fh.write(config_template % "socket: /foo/bar")
+            saliweb.frontend._read_config(app, fname)
+            self.assertEqual(app.config['DATABASE_SOCKET'], '/foo/bar')
 
     def test_setup_email_logging(self):
         """Test _setup_email_logging function"""
@@ -420,12 +428,18 @@ passwd: test_fe_pwd
                 h('noerror')
             for h in f.teardown_request_handlers:
                 h('noerror')
+            # Check teardown with no database handle
+            del flask.g.db_conn
+            for h in f.teardown_app_handlers:
+                h('noerror')
             # Test cleanup of incoming jobs
             indir = os.path.join(tmpdir, 'incoming-dir')
             class MockIncomingJob(object):
-                _submitted = False
                 directory = indir
-            flask.g.incoming_jobs = [MockIncomingJob()]
+                def __init__(self, submitted):
+                    self._submitted = submitted
+            flask.g.incoming_jobs = [MockIncomingJob(True),
+                                     MockIncomingJob(False)]
             for h in f.teardown_request_handlers:
                 h('noerror')
             del flask.g.incoming_jobs
