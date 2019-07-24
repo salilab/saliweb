@@ -6,6 +6,7 @@ import datetime
 import tempfile
 import time
 import sys
+import contextlib
 from test_database import make_test_jobs
 from memory_database import MemoryDatabase
 from config import Config
@@ -55,6 +56,19 @@ class LoggingJob(Job):
     def _sanity_check(self): job_log.append((self.name, 'sanity_check'))
 
 
+@contextlib.contextmanager
+def mock_setfacl(tmpdir, fail=False):
+    setfacl = os.path.join(tmpdir, 'setfacl')
+    with open(setfacl, 'w') as fh:
+        fh.write('#!/bin/bash\n')
+        fh.write('exit %d\n' % (1 if fail else 0))
+    os.chmod(setfacl, 0700)
+    orig_path = os.environ['PATH']
+    os.environ['PATH'] = tmpdir + ':' + os.environ['PATH']
+    yield
+    os.environ['PATH'] = orig_path
+
+
 class WebServiceTest(unittest.TestCase):
     """Check WebService class"""
 
@@ -77,6 +91,20 @@ class WebServiceTest(unittest.TestCase):
         # Test with hostname tracking
         conf.track_hostname = True
         ws3 = WebService(conf, db)
+
+    def test_make_close_socket(self):
+        """Check WebService make and close socket"""
+        db = MemoryDatabase(Job)
+        conf = Config(StringIO(basic_config % {'directory': '/'}))
+        with testutil.temp_dir() as tmpdir:
+            sockfile = os.path.join(tmpdir, 'test.socket')
+            conf.socket = sockfile
+            ws = WebService(conf, db)
+            with mock_setfacl(tmpdir, fail=True):
+                self.assertRaises(OSError, ws._make_socket)
+            with mock_setfacl(tmpdir):
+                sock = ws._make_socket()
+            ws._close_socket(sock)
 
     def test_register(self):
         """Check WebService._register()"""

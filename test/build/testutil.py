@@ -36,6 +36,14 @@ def temp_working_dir():
     os.chdir(origdir)
     shutil.rmtree(tmpdir, ignore_errors=True)
 
+
+@contextlib.contextmanager
+def temp_dir():
+    """Simple context manager to make a temporary directory"""
+    tmpdir = tempfile.mkdtemp()
+    yield tmpdir
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
 def run_in_tempdir(func):
     """Decorate a test method to run it entirely in a temporary directory"""
     def wrapper(*args, **kwargs):
