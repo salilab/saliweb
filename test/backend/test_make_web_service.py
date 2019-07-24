@@ -29,13 +29,17 @@ class MakeWebServiceTests(unittest.TestCase):
         self.assertNotEqual(p.wait(), 0)
         self.assertTrue('for a new web service' in err, msg=err)
 
+    def test_get_install_dir_fail(self):
+        """Check failure of MakeWebService.get_install_dir() """
+        m = MakeWebService('root', 'Test Service', git=False)
+        m.user = 'user-not-exist'
+        self.assertRaises(SystemExit, m._get_install_dir)
+
     def test_init(self):
         """Check creation of MakeWebService object"""
         m = MakeWebService('root', 'Test Service', git=False)
         self.assertEqual(m.service_name, 'Test Service')
         self.assertEqual(m.short_name, 'root')
-        self.assertEqual(m.user, 'root')
-        self.assertEqual(m.db, 'root')
 
     def test_make_password(self):
         """Check MakeWebService._make_password method"""
@@ -60,6 +64,13 @@ class MakeWebServiceTests(unittest.TestCase):
         """Check _run_command"""
         _run_command('svn', ['help'], cwd='/')
         self.assertRaises(OSError, _run_command, 'svn', ['garbage'], '/')
+
+    def test_run_svn_git_command(self):
+        """Check run_svn and run_git command"""
+        msc = SVNSourceControl('modfoo', 'modfoo')
+        msc._run_svn_command(['help'], cwd='/')
+        msc = GitSourceControl('modfoo', 'modfoo')
+        msc._run_git_command(['help'], cwd='/')
 
     @testutil.run_in_tempdir
     def test_make(self):

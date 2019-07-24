@@ -506,6 +506,8 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('COMPLETED', 'job1')
         compjobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
         self.assertEqual(job.directory, compjobdir)
+        # Check job attributes
+        self.assertEqual(id(job.config), id(conf))
         # New fields should have been populated in the database
         self.assertEqual(job._metadata['testfield'], 'complete')
         self.assertNotEqual(job._metadata['postprocess_time'], None)

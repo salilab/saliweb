@@ -1646,9 +1646,8 @@ class SGERunner(Runner):
         """Generate an SGE script in the job directory and run it.
            Return the SGE job ID."""
         script = os.path.join(self._directory, 'sge-script.sh')
-        fh = open(script, 'w')
-        self._write_sge_script(fh)
-        fh.close()
+        with open(script, 'w') as fh:
+            self._write_sge_script(fh)
         return self._qsub(script, webservice)
 
     def _write_sge_script(self, fh):

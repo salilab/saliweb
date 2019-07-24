@@ -92,6 +92,15 @@ echo foo
 echo "DONE" > ${_SALI_JOB_DIR}/job-state
 """
             self.assertEqual(sio.getvalue(), expected)
+            r = runner('echo foo', interpreter='/bin/oddshell')
+            sio = StringIO()
+            r._write_sge_script(sio)
+            expected = """#!/bin/oddshell
+#$ -S /bin/oddshell
+#$ -cwd
+echo foo
+"""
+            self.assertEqual(sio.getvalue(), expected)
 
     @testutil.run_in_tempdir
     def test_check_completed(self):
@@ -139,7 +148,7 @@ else:
         del sys.modules['drmaa']
 
     def test_check_run(self):
-        """Check SGERunner._qsub()"""
+        """Check SGERunner._qsub() and _run()"""
         class DummyWebService(object):
             def __init__(self):
                 self._event_queue = saliweb.backend.events._EventQueue()
@@ -152,14 +161,17 @@ else:
         self.assertEqual(jt.remoteCommand, 'test.sh')
         self.assertEqual(jt.workingDirectory, r._directory)
 
-        r = TestRunner('echo foo')
-        r.set_sge_options('-t 2-10:2')
-        jobid2 = r._qsub('test.sh', ws)
-        self.assertEqual(jobid2, 'dummyJob.2-10:2')
-        jt = DummyDRMAASession.deleted_template
-        self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -w n -b no')
-        self.assertEqual(jt.remoteCommand, 'test.sh')
-        self.assertEqual(jt.workingDirectory, r._directory)
+        with testutil.temp_dir() as tmpdir:
+            r = TestRunner('echo foo')
+            r._directory = tmpdir
+            r.set_sge_options('-t 2-10:2')
+            jobid2 = r._run(ws)
+            self.assertEqual(jobid2, 'dummyJob.2-10:2')
+            jt = DummyDRMAASession.deleted_template
+            self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -w n -b no')
+            self.assertEqual(jt.remoteCommand,
+                             os.path.join(tmpdir, 'sge-script.sh'))
+            self.assertEqual(jt.workingDirectory, r._directory)
 
         # Make sure the waiter threads get time to finish
         time.sleep(0.1)

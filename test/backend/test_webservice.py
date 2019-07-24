@@ -92,6 +92,13 @@ class WebServiceTest(unittest.TestCase):
         conf.track_hostname = True
         ws3 = WebService(conf, db)
 
+    def test_get_oldjob_interval(self):
+        """Check WebService._get_oldjob_interval()"""
+        db = MemoryDatabase(Job)
+        conf = Config(StringIO(basic_config % {'directory': '/'}))
+        ws = WebService(conf, db)
+        self.assertEqual(ws._get_oldjob_interval(), 259200)
+
     def test_make_close_socket(self):
         """Check WebService make and close socket"""
         db = MemoryDatabase(Job)
