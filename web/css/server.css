@@ -79,7 +79,6 @@ h2 {
    font-family: Verdana, Arial, Helvetica, sans-serif;
    font-weight: bold;
    font-size: 1.4em;
-   margin-top: -20px;
    margin-bottom: 0;
    color: #E2A361;
 }
@@ -236,7 +235,6 @@ h5 {
 
 #right {
         position: relative;
-        top: 20px;
         float: right;
         width: 740px;
 }
