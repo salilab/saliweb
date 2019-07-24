@@ -10,6 +10,7 @@ basic_config = """
 admin_email: test@salilab.org
 service_name: test_service
 socket: test.socket
+%s
 
 [backend]
 user: test
@@ -39,9 +40,9 @@ expire: %s
 """
 
 def get_config(archive='3h', expire='90d', extra='', extradir='',
-               config_class=Config):
-    return config_class(StringIO(basic_config % (extradir, archive,
-                                                 expire) + extra))
+               config_class=Config, general_extra=''):
+    return config_class(StringIO(basic_config % (general_extra, extradir,
+                                                 archive, expire) + extra))
 
 class ConfigTest(unittest.TestCase):
     """Check Config class"""
@@ -57,12 +58,18 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.admin_email, 'test@salilab.org')
         self.assertEqual(conf.limits['running'], 5)
         self.assertFalse('concurrent_tasks' in conf.limits)
+        self.assertFalse(conf.track_hostname)
         self.assertEqual(len(conf.frontends.keys()), 2)
         self.assertEqual(conf.frontends['foo']['service_name'], 'Foo')
         self.assertEqual(conf.frontends['bar']['service_name'], 'Bar')
 
-        conf = get_config(extra='[limits]\nrunning: 10')
-        self.assertEqual(conf.limits['running'], 10)
+        conf = get_config(general_extra='track_hostname: True')
+        self.assertTrue(conf.track_hostname)
+        conf = get_config(general_extra='track_hostname: False')
+        self.assertFalse(conf.track_hostname)
+
+        conf = get_config(extra='[limits]\nconcurrent_tasks: 10')
+        self.assertEqual(conf.limits['concurrent_tasks'], 10)
 
         conf = get_config(extra='[limits]\nconcurrent_tasks: 10')
         self.assertEqual(conf.limits['concurrent_tasks'], 10)
