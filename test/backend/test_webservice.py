@@ -74,6 +74,9 @@ class WebServiceTest(unittest.TestCase):
         self.assertEqual(ws.version, None)
         # OK to make multiple WebService instances
         ws2 = WebService(conf, db)
+        # Test with hostname tracking
+        conf.track_hostname = True
+        ws3 = WebService(conf, db)
 
     def test_register(self):
         """Check WebService._register()"""
