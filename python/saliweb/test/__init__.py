@@ -9,6 +9,56 @@ import contextlib
 import saliweb.backend
 
 
+def _add_unittest_methods():
+    """Add more modern unittest methods to Python 2.6"""
+    def assertRegexpMatches(self, text, regexp, msg=None):
+        if isinstance(regexp, basestring):
+            regexp = re.compile(regexp)
+        self.assertTrue(regexp.search(text),
+            "%s: %r not found in %r" % (msg or "Regexp didn't match",
+                                        regexp.pattern, text))
+    def assertIn(self, member, container, msg=None):
+        return self.assertTrue(member in container,
+                        msg or '%s not found in %s' % (member, container))
+    def assertNotIn(self, member, container, msg=None):
+        return self.assertTrue(member not in container,
+                        msg or '%s unexpectedly found in %s'
+                        % (member, container))
+    def assertIsInstance(self, obj, cls, msg=None):
+        return self.assertTrue(isinstance(obj, cls),
+                        msg or '%s is not an instance of %s' % (obj, cls))
+    def assertLess(self, a, b, msg=None):
+        return self.assertTrue(a < b, msg or '%s not less than %s' % (a, b))
+    def assertGreater(self, a, b, msg=None):
+        return self.assertTrue(a > b, msg or '%s not greater than %s' % (a, b))
+    def assertLessEqual(self, a, b, msg=None):
+        return self.assertTrue(a <= b,
+                        msg or '%s not less than or equal to %s' % (a, b))
+    def assertGreaterEqual(self, a, b, msg=None):
+        return self.assertTrue(a >= b,
+                        msg or '%s not greater than or equal to %s' % (a, b))
+    def assertIsNone(self, obj, msg=None):
+        return self.assertTrue(obj is None, msg or '%s is not None' % obj)
+    def assertIsNotNone(self, obj, msg=None):
+        return self.assertTrue(obj is not None, msg or 'unexpectedly None')
+    unittest.TestCase.assertIn = assertIn
+    unittest.TestCase.assertNotIn = assertNotIn
+    unittest.TestCase.assertIsInstance = assertIsInstance
+    unittest.TestCase.assertLess = assertLess
+    unittest.TestCase.assertGreater = assertGreater
+    unittest.TestCase.assertLessEqual = assertLessEqual
+    unittest.TestCase.assertGreaterEqual = assertGreaterEqual
+    unittest.TestCase.assertIsNone = assertIsNone
+    unittest.TestCase.assertIsNotNone = assertIsNotNone
+    unittest.TestCase.assertRegexpMatches = assertRegexpMatches
+
+
+# If we're using Python 2.6, add in more modern unittest convenience
+# methods
+if not hasattr(unittest.TestCase, 'assertIn'):
+    _add_unittest_methods()
+
+
 class RunInDir(object):
     """Change to the given directory, and change back when this object
        goes out of scope."""
@@ -84,50 +134,6 @@ class TestCase(unittest.TestCase):
         return os.environ['SALIWEB_TESTDIR']
 
 
-def _add_unittest_methods():
-    """Add more modern unittest methods to Python 2.6"""
-    def assertRegexpMatches(self, text, regexp, msg=None):
-        if isinstance(regexp, basestring):
-            regexp = re.compile(regexp)
-        self.assertTrue(regexp.search(text),
-            "%s: %r not found in %r" % (msg or "Regexp didn't match",
-                                        regexp.pattern, text))
-    def assertIn(self, member, container, msg=None):
-        return self.assertTrue(member in container,
-                        msg or '%s not found in %s' % (member, container))
-    def assertNotIn(self, member, container, msg=None):
-        return self.assertTrue(member not in container,
-                        msg or '%s unexpectedly found in %s'
-                        % (member, container))
-    def assertIsInstance(self, obj, cls, msg=None):
-        return self.assertTrue(isinstance(obj, cls),
-                        msg or '%s is not an instance of %s' % (obj, cls))
-    def assertLess(self, a, b, msg=None):
-        return self.assertTrue(a < b, msg or '%s not less than %s' % (a, b))
-    def assertGreater(self, a, b, msg=None):
-        return self.assertTrue(a > b, msg or '%s not greater than %s' % (a, b))
-    def assertLessEqual(self, a, b, msg=None):
-        return self.assertTrue(a <= b,
-                        msg or '%s not less than or equal to %s' % (a, b))
-    def assertGreaterEqual(self, a, b, msg=None):
-        return self.assertTrue(a >= b,
-                        msg or '%s not greater than or equal to %s' % (a, b))
-    def assertIsNone(self, obj, msg=None):
-        return self.assertTrue(obj is None, msg or '%s is not None' % obj)
-    def assertIsNotNone(self, obj, msg=None):
-        return self.assertTrue(obj is not None, msg or 'unexpectedly None')
-    unittest.TestCase.assertIn = assertIn
-    unittest.TestCase.assertNotIn = assertNotIn
-    unittest.TestCase.assertIsInstance = assertIsInstance
-    unittest.TestCase.assertLess = assertLess
-    unittest.TestCase.assertGreater = assertGreater
-    unittest.TestCase.assertLessEqual = assertLessEqual
-    unittest.TestCase.assertGreaterEqual = assertGreaterEqual
-    unittest.TestCase.assertIsNone = assertIsNone
-    unittest.TestCase.assertIsNotNone = assertIsNotNone
-    unittest.TestCase.assertRegexpMatches = assertRegexpMatches
-
-
 def import_mocked_frontend(pkgname, test_file, topdir):
     """Import the named frontend module (e.g. 'modloop'), and return it.
        This sets up the environment with mocked configuration so that the
@@ -149,11 +155,6 @@ def import_mocked_frontend(pkgname, test_file, topdir):
     pth = os.path.abspath(os.path.join(os.path.dirname(test_file), topdir))
     if sys.path[0] != pth:
         sys.path.insert(0, pth)
-
-    # If we're using Python 2.6, add in more modern unittest convenience
-    # methods
-    if not hasattr(unittest.TestCase, 'assertIn'):
-        _add_unittest_methods()
 
     # Provide a mock MySQL module for access to the database
     sys.path.insert(0, os.path.dirname(__file__))
