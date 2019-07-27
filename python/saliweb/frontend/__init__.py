@@ -324,7 +324,8 @@ def get_db():
         flask.g.db_conn = MySQLdb.connect(user=app.config['DATABASE_USER'],
             db=app.config['DATABASE_DB'],
             unix_socket=app.config['DATABASE_SOCKET'],
-            passwd=app.config['DATABASE_PASSWD'])
+            passwd=app.config['DATABASE_PASSWD'],
+            charset='utf8mb4', use_unicode=True)
     return flask.g.db_conn
 
 
