@@ -1,0 +1,5 @@
+These files are taken from the gnuplot distribution and should be updated
+whenever our copy of gnuplot is (currently 5.0.5).
+
+The sole exception is gnuplot_foxs.js, which adds a couple of extra functions
+which are used by FoXS plots.

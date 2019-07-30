@@ -1,3 +1,4 @@
 SConscript('css/SConscript')
 SConscript('js/SConscript')
 SConscript('img/SConscript')
+SConscript('gnuplot5/SConscript')

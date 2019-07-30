@@ -1,0 +1,12 @@
+import os
+
+Import('env')
+
+web_files = [ 'canvasmath.js', 'canvastext.js', 'gnuplot_common.js',
+              'gnuplot_dashedlines.js', 'gnuplot_mouse.js', 'gnuplot_svg.js',
+              'gnuplot_foxs.js' ]
+
+# Install web files:
+instdir = os.path.join(env['webdir'], 'gnuplot5')
+webinst = env.Install(instdir, web_files)
+env.Alias('install', webinst)
