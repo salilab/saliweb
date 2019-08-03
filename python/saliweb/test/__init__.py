@@ -41,6 +41,19 @@ def _add_unittest_methods():
         return self.assertTrue(obj is None, msg or '%s is not None' % obj)
     def assertIsNotNone(self, obj, msg=None):
         return self.assertTrue(obj is not None, msg or 'unexpectedly None')
+    def assertAlmostEqual(self, first, second, places=None, msg=None,
+                          delta=None):
+        if delta is not None and places is not None:
+            raise TypeError("specify delta or places not both")
+        if delta is not None:
+            return self.assertTrue(abs(first - second) <= delta,
+                msg or '%s != %s within %s delta' % (str(first), str(second),
+                                                     str(delta)))
+        else:
+            return self.assertTrue(round(abs(first - second), places) == 0,
+                msg or '%s != %s within %s places' % (str(first), str(second),
+                                                      str(delta)))
+        return self.assertTrue(obj is not None, msg or 'unexpectedly None')
     unittest.TestCase.assertIn = assertIn
     unittest.TestCase.assertNotIn = assertNotIn
     unittest.TestCase.assertIsInstance = assertIsInstance
@@ -51,6 +64,7 @@ def _add_unittest_methods():
     unittest.TestCase.assertIsNone = assertIsNone
     unittest.TestCase.assertIsNotNone = assertIsNotNone
     unittest.TestCase.assertRegexpMatches = assertRegexpMatches
+    unittest.TestCase.assertAlmostEqual = assertAlmostEqual
 
 
 # If we're using Python 2.6, add in more modern unittest convenience
