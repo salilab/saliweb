@@ -66,11 +66,15 @@ def _generate_random_password(length):
     return ''.join(random.choice(valid) for _ in range(length))
 
 
-def _generate_results_url(job_name):
+def _generate_results_url(job_name, force_xml=False):
     passwd = _generate_random_password(10)
+    kwargs = {}
+    if force_xml:
+        kwargs['force_xml'] = True
     # _external=True gives us a full URL (url_for usually returns a
     # relative URL)
-    url = flask.url_for("results", name=job_name, passwd=passwd, _external=True)
+    url = flask.url_for("results", name=job_name, passwd=passwd,
+                        _external=True, **kwargs)
     return url, passwd
 
 
@@ -117,10 +121,14 @@ class IncomingJob(object):
         else:
             raise ValueError("Cannot get results URL before job is submitted")
 
-    def submit(self, email=None):
+    def submit(self, email=None, force_results_xml=False):
         """Submits the job to the backend to run on the cluster.
            If an email address is provided, it is notified when the
-           job completes."""
+           job completes.
+           If `force_results_xml` is True, `force_xml=True` is passed to
+           the results URL, which can be used to force XML output even without
+           the HTTP Accept header being set (used for backwards
+           compatibility)."""
 
         from . import get_db
 
@@ -128,7 +136,8 @@ class IncomingJob(object):
         config = flask.current_app.config
         user = flask.g.user.name if flask.g.user else None
 
-        self._url, self._passwd = _generate_results_url(self.name)
+        self._url, self._passwd = _generate_results_url(self.name,
+                                                        force_results_xml)
 
         # Insert row into database table
         cur = dbh.cursor()

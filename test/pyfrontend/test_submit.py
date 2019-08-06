@@ -146,6 +146,19 @@ class Tests(unittest.TestCase):
             self.assertEqual(conn.recv(1024), 'INCOMING testjob\n')
             s.close()
 
+    def test_incoming_job_force_xml(self):
+        """Test IncomingJob objects with force_results_xml=True"""
+        class MockRequest(object):
+            def __init__(self):
+                self.remote_addr = None
+        with mock_app(track=False) as (app, tmpdir):
+            flask.request = MockRequest()
+            flask.g.user = None
+            j = submit.IncomingJob("test$!job")
+            j.submit(force_results_xml=True)
+            results_url = j.results_url
+            self.assertIn("'force_xml': True", results_url)
+
     def test_render_submit_template_html(self):
         """Test render_submit_template (HTML output)"""
         with request_mime_type('text/html'):
