@@ -520,14 +520,21 @@ def get_pdb_chains(pdb_chain, outdir):
     return out_pdb_file
 
 
-def render_results_template(template_name, job, **context):
+def render_results_template(template_name, job, extra_xml_outputs=[],
+                            **context):
     """Render a template for the job results page.
        This normally functions like `flask.render_template` but will instead
-       return XML if the user requests it (for the REST API)."""
+       return XML if the user requests it (for the REST API). The XML file
+       will include download links to any file mentioned in the template
+       with :meth:`CompletedJob.get_results_file_url`. Extra downloadable files
+       can be added to the XML output by listing them in `extra_xml_outputs`.
+    """
     if _request_wants_xml():
         job._record_results = []
     r = flask.render_template(template_name, job=job, **context)
     if job._record_results is not None:
+        for o in extra_xml_outputs:
+            job.get_results_file_url(o)
         return flask.render_template('saliweb/results.xml',
                                      results=job._record_results)
     else:

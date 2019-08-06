@@ -302,6 +302,19 @@ class Tests(unittest.TestCase):
             r = saliweb.frontend.render_results_template('results.html', job=j)
             self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
 
+    def test_render_results_template_xml_extra(self):
+        """Test render_results_template function (XML, with extra files)"""
+        j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
+                                           'passwd': 'testpw',
+                                           'archive_time': 'testar',
+                                           'directory': 'testdir'})
+        with request_mime_type('application/xml'):
+            r = saliweb.frontend.render_results_template('results.html', job=j,
+                extra_xml_outputs=['foo', 'bar'])
+            self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
+            self.assertEqual([r['fname'] for r in j._record_results],
+                             ['foo', 'bar'])
+
     def test_read_config(self):
         """Test _read_config function"""
         config_template = """
