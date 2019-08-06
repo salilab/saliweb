@@ -1,6 +1,7 @@
 import contextlib
 import tempfile
 import shutil
+import saliweb.test  # for python 2.6 support
 
 
 @contextlib.contextmanager
