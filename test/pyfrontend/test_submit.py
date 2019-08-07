@@ -157,7 +157,7 @@ class Tests(unittest.TestCase):
             j = submit.IncomingJob("test$!job")
             j.submit(force_results_xml=True)
             results_url = j.results_url
-            self.assertIn("'force_xml': True", results_url)
+            self.assertIn("'force_xml': '1'", results_url)
 
     def test_render_submit_template_html(self):
         """Test render_submit_template (HTML output)"""

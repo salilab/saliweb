@@ -70,7 +70,7 @@ def _generate_results_url(job_name, force_xml=False):
     passwd = _generate_random_password(10)
     kwargs = {}
     if force_xml:
-        kwargs['force_xml'] = True
+        kwargs['force_xml'] = '1'
     # _external=True gives us a full URL (url_for usually returns a
     # relative URL)
     url = flask.url_for("results", name=job_name, passwd=passwd,
