@@ -48,8 +48,12 @@ class Tests(unittest.TestCase):
         gone_job = saliweb.frontend._ResultsGoneError()
         self.assertEqual(gone_job.http_status, 410)
 
-        running_job = saliweb.frontend._ResultsStillRunningError()
+        running_job = saliweb.frontend._ResultsStillRunningError(
+            "testmsg", "testjob", "testtemplate")
         self.assertEqual(running_job.http_status, 503)
+        self.assertEqual(str(running_job), 'testmsg')
+        self.assertEqual(running_job.job, 'testjob')
+        self.assertEqual(running_job.template, 'testtemplate')
 
     def test_format_timediff(self):
         """Check _format_timediff"""
@@ -396,19 +400,20 @@ passwd: test_fe_pwd
         """Test make_application function"""
         import mock_application
 
-        mime = 'text/html'
         class MockAccept(object):
+            def __init__(self, mime):
+                self.mime = mime
             def best_match(self, types):
-                return mime if mime in types else None
+                return self.mime if self.mime in types else None
             def __getitem__(self, key):
-                return 1.0 if key == mime else 0.0
+                return 1.0 if key == self.mime else 0.0
         class MockRequest(object):
-            def __init__(self, scheme):
+            def __init__(self, scheme, mime):
                 self.scheme = scheme
                 self.cookies = {}
-                self.accept_mimetypes = MockAccept()
+                self.accept_mimetypes = MockAccept(mime)
         # Logins have to be SSL-secured
-        flask.request = MockRequest(scheme='https')
+        flask.request = MockRequest(scheme='https', mime='text/html')
 
         with util.temporary_directory() as tmpdir:
             fname = os.path.join(tmpdir, 'live.conf')
@@ -466,6 +471,20 @@ passwd: test_fe_pwd
             self.assertEqual(out,
                 ("render saliweb/results_error.html with (), "
                  "{'message': 'foo'}", 410))
+            # Test job-still-running error handler
+            err = saliweb.frontend._ResultsStillRunningError(
+                "foo", "testjob", "testtemplate")
+            out = f.error_handlers[
+                         saliweb.frontend._ResultsStillRunningError](err)
+            self.assertIn("render testtemplate with ()", out[0])
+            self.assertEqual(out[1], 503)
+            # Test XML output
+            flask.request.accept_mimetypes.mime = 'application/xml'
+            out = f.error_handlers[
+                         saliweb.frontend._ResultsStillRunningError](err)
+            self.assertIn("render saliweb/results_error.xml", out[0])
+            self.assertEqual(out[1], 503)
+            flask.request.accept_mimetypes.mime = 'text/html'
             # Test user error handler
             err = saliweb.frontend.InputValidationError("foo")
             out = f.error_handlers[saliweb.frontend._UserError](err)

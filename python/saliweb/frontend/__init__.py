@@ -41,6 +41,11 @@ class _ResultsGoneError(_ResultsError):
 class _ResultsStillRunningError(_ResultsError):
     http_status = 503
 
+    def __init__(self, msg, job, template):
+        super(_ResultsStillRunningError, self).__init__(msg)
+        self.job = job
+        self.template = template
+
 
 def _format_timediff(timediff):
     def _format_unit(df, unit):
@@ -80,6 +85,23 @@ class _QueuedJob(object):
             return Markup('<a href="%s">%s</a>' % (self.url, self.name))
         else:
             return self.name
+
+
+class StillRunningJob(object):
+    """A job that is still running. See the `still_running_template` argument
+       to :func:`get_completed_job`."""
+
+    #: The name of the job
+    name = None
+
+    #: The password needed to access the job web pages
+    passwd = None
+
+    #: Email address used to notify the user of job completion
+    email = None
+
+    def __init__(self, name, passwd, email):
+        self.name, self.passwd, self.email = name, passwd, email
 
 
 class CompletedJob(object):
@@ -286,6 +308,15 @@ def make_application(name, parameters=[], static_folder='html',
         ext = 'xml' if _request_wants_xml() else 'html'
         return flask.render_template('saliweb/internal_error.%s' % ext), 500
 
+    @app.errorhandler(_ResultsStillRunningError)
+    def handle_results_still_running_error(error):
+        if _request_wants_xml():
+            template = 'saliweb/results_error.xml'
+        else:
+            template = error.template or 'saliweb/results_error.html'
+        return (flask.render_template(template, message=str(error),
+                                      job=error.job), error.http_status)
+
     @app.errorhandler(_ResultsError)
     def handle_results_error(error):
         ext = 'xml' if _request_wants_xml() else 'html'
@@ -329,13 +360,17 @@ def get_db():
     return flask.g.db_conn
 
 
-def get_completed_job(name, passwd):
+def get_completed_job(name, passwd, still_running_template=None):
     """Create and return a new :class:`CompletedJob` for a given URL.
        If the job is not valid (e.g. incorrect password) an exception is
        raised.
 
        :param str name: The name of the job.
        :param str passwd: Password for the job.
+       :param str still_running_template: If given, the name of a Jinja2
+              template that will be used to report the 'job is still running'
+              error; it is passed the error message as ``message`` and a
+              :class:`StillRunningJob` object as ``job``.
        :return: A new CompletedJob.
        :rtype: :class:`CompletedJob`
     """
@@ -349,8 +384,10 @@ def get_completed_job(name, passwd):
         raise _ResultsGoneError("Results for job '%s' are no "
                                 "longer available for download" % name)
     elif job_row['state'] != 'COMPLETED':
+        job = StillRunningJob(name, passwd, job_row['contact_email'])
         raise _ResultsStillRunningError(
-            "Job '%s' has not yet completed; please check back later" % name)
+            "Job '%s' has not yet completed; please check back later" % name,
+            job, still_running_template)
     return CompletedJob(job_row)
 
 

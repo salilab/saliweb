@@ -16,6 +16,9 @@ The :mod:`saliweb.frontend` Python module
 .. autoclass:: IncomingJob
    :members:
 
+.. autoclass:: StillRunningJob
+   :members:
+
 .. autoclass:: Parameter
    :members:
 

@@ -10,7 +10,7 @@ class DictCursor(object):
             if self.args[0] == 'expired-job':
                 return {'state': 'EXPIRED'}
             elif self.args[0] == 'running-job':
-                return {'state': 'RUNNING'}
+                return {'state': 'RUNNING', 'contact_email': 'test@test.com'}
             elif self.args[0] == 'completed-job':
                 return {'state': 'COMPLETED', 'name': self.args[0],
                         'passwd': self.args[1], 'archive_time': None,
