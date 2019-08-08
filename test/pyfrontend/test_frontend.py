@@ -172,6 +172,19 @@ class Tests(unittest.TestCase):
         self.assertRaises(saliweb.frontend._ResultsStillRunningError,
                           saliweb.frontend.get_completed_job,
                           'running-job', 'passwd')
+        try:
+            saliweb.frontend.get_completed_job('running-job', 'passwd')
+        except saliweb.frontend._ResultsStillRunningError as err:
+            pass
+        # Test the StillRunningJob object returned
+        j = err.job
+        self.assertEqual(j.name, 'running-job')
+        self.assertEqual(j.email, 'test@test.com')
+        self.assertEqual(j.get_refresh_time(1000), 1000)
+        # Test job claims to be submitted 10 seconds ago, so result should
+        # be approximately that
+        self.assertAlmostEqual(j.get_refresh_time(1), 10, delta=1.0)
+
         self.assertRaises(saliweb.frontend._ResultsBadJobError,
                           saliweb.frontend.get_completed_job,
                           'bad-job', 'passwd')

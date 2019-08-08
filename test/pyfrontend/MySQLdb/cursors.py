@@ -1,3 +1,6 @@
+import datetime
+
+
 class DictCursor(object):
     def __init__(self, conn):
         pass
@@ -10,7 +13,9 @@ class DictCursor(object):
             if self.args[0] == 'expired-job':
                 return {'state': 'EXPIRED'}
             elif self.args[0] == 'running-job':
-                return {'state': 'RUNNING', 'contact_email': 'test@test.com'}
+                return {'state': 'RUNNING', 'contact_email': 'test@test.com',
+                        'submit_time': datetime.datetime.utcnow()
+                                       - datetime.timedelta(seconds=10)}
             elif self.args[0] == 'completed-job':
                 return {'state': 'COMPLETED', 'name': self.args[0],
                         'passwd': self.args[1], 'archive_time': None,

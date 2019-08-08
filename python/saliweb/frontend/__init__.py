@@ -47,6 +47,14 @@ class _ResultsStillRunningError(_ResultsError):
         self.template = template
 
 
+def _timediff_in_seconds(timediff):
+    """Convert a datetime.timedelta to total number of seconds"""
+    try:
+        return int(timediff.total_seconds())
+    except AttributeError:  # python 2.6
+        return timediff.days * 24*60*60 + timediff.seconds
+
+
 def _format_timediff(timediff):
     def _format_unit(df, unit):
         return '%d %s%s' % (df, unit, '' if unit == 1 else 's')
@@ -54,10 +62,7 @@ def _format_timediff(timediff):
     if not timediff:
         return
     timediff = timediff - datetime.datetime.utcnow()
-    try:
-        diff_sec = timediff.total_seconds()
-    except AttributeError:  # python 2.6
-        diff_sec = timediff.days * 24*60*60 + timediff.seconds
+    diff_sec = _timediff_in_seconds(timediff)
     if diff_sec < 0:
         return
     if diff_sec < 120:
@@ -100,8 +105,18 @@ class StillRunningJob(object):
     #: Email address used to notify the user of job completion
     email = None
 
-    def __init__(self, name, passwd, email):
+    #: The time (as a datetime.datetime object) when this job was submitted
+    submit_time = None
+
+    def __init__(self, name, passwd, email, submit_time):
         self.name, self.passwd, self.email = name, passwd, email
+        self.submit_time = submit_time
+
+    def get_refresh_time(self, minseconds):
+        """Get a suitable time, in seconds, to wait to refresh the
+           'job is still running' page. It will be at least `minseconds`."""
+        timediff = datetime.datetime.utcnow() - self.submit_time
+        return max(_timediff_in_seconds(timediff), minseconds)
 
 
 class CompletedJob(object):
@@ -384,7 +399,8 @@ def get_completed_job(name, passwd, still_running_template=None):
         raise _ResultsGoneError("Results for job '%s' are no "
                                 "longer available for download" % name)
     elif job_row['state'] != 'COMPLETED':
-        job = StillRunningJob(name, passwd, job_row['contact_email'])
+        job = StillRunningJob(name, passwd, job_row['contact_email'],
+                              job_row['submit_time'])
         raise _ResultsStillRunningError(
             "Job '%s' has not yet completed; please check back later" % name,
             job, still_running_template)
