@@ -8,6 +8,9 @@ class _MockCursor(object):
 
     def execute(self, sql, args=()):
         self.sql, self.args = sql, args
+        if sql.startswith('INSERT INTO jobs (name,passwd,user,contact_email,'):
+            j = {'name': args[0], 'passwd': args[1], 'email': args[3]}
+            self.conn._incoming_jobs.append(j)
 
     def fetchone(self):
         if self.sql == 'SELECT COUNT(name) FROM jobs WHERE name=%s':
@@ -24,6 +27,7 @@ class _MockCursor(object):
 class _MockConnection(object):
     def __init__(self):
         self._jobs = []
+        self._incoming_jobs = []
 
     def cursor(self):
         return _MockCursor(self)

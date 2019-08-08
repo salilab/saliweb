@@ -9,6 +9,7 @@ class DictCursor(object):
 
     def fetchone(self):
         if self.sql == 'SELECT * FROM jobs WHERE name=%s AND passwd=%s':
+            # Check completed jobs
             for j in self.conn._jobs:
                 if self.args == (j.name, j.passwd):
                     return {'state': 'COMPLETED', 'name': j.name,
@@ -16,6 +17,11 @@ class DictCursor(object):
                             'archive_time': datetime.datetime(year=2099,
                                                               month=1, day=1),
                             'directory': j.directory}
+            # Check incoming jobs
+            for j in self.conn._incoming_jobs:
+                if self.args == (j['name'], j['passwd']):
+                    return {'state': 'INCOMING', 'name': j['name'],
+                            'contact_email': j['email']}
 
     def __iter__(self):
         return iter([])
