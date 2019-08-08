@@ -581,8 +581,33 @@ def render_results_template(template_name, job, extra_xml_outputs=[],
 def render_submit_template(template_name, job, **context):
     """Render a template for the job submission page.
        This normally functions like `flask.render_template` but will instead
-       return XML if the user requests it (for the REST API)."""
+       return XML if the user requests it (for the REST API).
+
+       For very quick jobs that take only a few seconds to run, consider using
+       :func:`redirect_to_results_page` instead.
+    """
     if _request_wants_xml():
         return flask.render_template('saliweb/submit.xml', job=job)
     else:
         return flask.render_template(template_name, job=job, **context)
+
+
+def redirect_to_results_page(job):
+    """Perform a redirect from the job-submission page to the job-results page.
+       This normally functions like `flask.redirect`, but will instead return
+       an XML document if the user requests it (for the REST API).
+
+       This can be used instead of :func:`render_submit_template` for a
+       just-submitted job. (This is more appropriate for jobs that take only
+       a few seconds to run.) The job results page should in turn call
+       :func:`get_completed_job` with the ``still_running_template``
+       parameter to provide information on the job submission.
+
+       :param job: The just-submitted job.
+       :type job: :class:`IncomingJob`
+    """
+    if _request_wants_xml():
+        return flask.render_template('saliweb/submit.xml', job=job)
+    else:
+        return flask.redirect(url_for("results", name=job.name,
+                                      passwd=job._passwd))

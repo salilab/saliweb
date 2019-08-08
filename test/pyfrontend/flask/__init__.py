@@ -66,3 +66,7 @@ class Flask(object):
 
 def render_template(fname, *args, **kwargs):
     return "render %s with %s, %s" % (fname, str(args), str(kwargs))
+
+
+def redirect(endpoint, code=302):
+    return "redirect to %s, code %d" % (endpoint, code)

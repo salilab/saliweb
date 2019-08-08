@@ -180,6 +180,26 @@ class Tests(unittest.TestCase):
                 self.assertTrue(
                     r.startswith('render saliweb/submit.xml with ()'))
 
+    def test_redirect_to_results_page_html(self):
+        """Test redirect_to_results_page (HTML output)"""
+        with request_mime_type('text/html'):
+            with mock_app(track=False) as (app, tmpdir):
+                j = submit.IncomingJob("testjob")
+                j.submit()
+                r = saliweb.frontend.redirect_to_results_page(j)
+                self.assertIn('redirect to results;', r)
+                self.assertIn('code 302', r)
+
+    def test_redirect_to_results_page_xml(self):
+        """Test redirect_to_results_page (XML output)"""
+        with request_mime_type('application/xml'):
+            with mock_app(track=False) as (app, tmpdir):
+                j = submit.IncomingJob("testjob")
+                j.submit()
+                r = saliweb.frontend.redirect_to_results_page(j)
+                self.assertTrue(
+                    r.startswith('render saliweb/submit.xml with ()'))
+
 
 if __name__ == '__main__':
     unittest.main()
