@@ -166,7 +166,10 @@ class IncomingJob(object):
         except socket.error:
             return  # skip if backend is not running
         fcntl.flock(s, fcntl.LOCK_EX)
-        s.sendall("INCOMING %s\n" % self.name)
+        try:
+            s.sendall("INCOMING %s\n" % self.name)
+        except socket.error:
+            pass  # ignore broken pipe errors
         fcntl.flock(s, fcntl.LOCK_UN)
         s.close()
 
