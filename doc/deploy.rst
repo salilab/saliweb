@@ -108,16 +108,15 @@ For example, the user 'bob' wants to set up a web service for peptide docking.
 
  #. Whenever Bob makes changes to the service in his `pepdock` directory, he
     simply runs `scons test` to make sure the changes didn't break anything,
-    then `scons` to update the live copy of the service, then `svn up` and
-    `svn ci` to store his changes in the Subversion repository (or `git commit`
-    and `git push` if using git).
+    then `scons` to update the live copy of the service, then `git commit`
+    and `git push` to publish the changes at GitHub.
     (The backend will also need to restarted when he does this, but `scons`
     will show a suitable command line to achieve this.)
 
  #. If Bob wants to share development of the service with another user, Joe,
     they should ask a sysadmin to give Joe `sudo` access to the `pepdock`
-    account. Joe can then set up his own `pepdock` directory by checking out
-    from Subversion and then developing in the same way as Bob, above.
+    account. Joe can then set up his own `pepdock` directory by cloning the
+    repository from GitHub and then developing in the same way as Bob, above.
 
 .. note::
    Development of the service should generally be done by the regular ('bob')
