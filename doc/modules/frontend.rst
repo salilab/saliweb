@@ -47,4 +47,6 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: render_submit_template
 
+.. autofunction:: redirect_to_results_page
+
 .. autoexception:: InputValidationError

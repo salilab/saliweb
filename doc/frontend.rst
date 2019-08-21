@@ -44,14 +44,16 @@ the template:
 This example demonstrates a few Jinja2 and Flask features:
 
  - Parts of the base template can be overriden using the ``block`` directive.
-   Here, a custom stylesheet is added, links are added to all pages to the
-   navigation bar at the top of the page, and the
-   sidebar and footer (at the left and bottom of the page, which are blank in
-   the system-wide template) are filled in.
+   Here, a custom stylesheet is added (by overriding the ``css`` block),
+   links are added to all pages to the navigation bar at the top of the
+   page (``navigation`` block), and the sidebar and footer (at the left
+   and bottom of the page, which are blank in the system-wide template)
+   are filled in.
  - Links to other parts of the web service can be provided using Flask's
    `url_for <http://flask.pocoo.org/docs/1.0/api/#flask.url_for>`_ function.
    This takes either the name of the Python function that renders the page
-   (see below) or "static" to point to static files (such as stylesheets or
+   (such as "index"; :ref:`see below <std_pages>`) or "static" to point
+   to static files (such as stylesheets or
    images) in the web service's ``html`` subdirectory.
  - A number of global variables are available which can be substituted in
    using Jinja2's ``{{ }}`` syntax, most notably ``config`` which stores
@@ -62,6 +64,8 @@ This example demonstrates a few Jinja2 and Flask features:
 
 See the `Jinja2 manual <http://jinja.pocoo.org/docs/2.10/templates/>`_
 for more information on Jinja2 templates.
+
+.. _std_pages:
 
 Displaying standard pages
 =========================
@@ -89,8 +93,9 @@ displays a form allowing the user to set parameters and upload input files.
 advanced options, etc.) The Python code for this is straightforward - it
 simply defines an ``index`` function which uses the Flask
 `render_template <http://flask.pocoo.org/docs/1.0/api/#flask.render_template>`_
-function to render a Jinja2 template, and is turn decorated to tell Flask
-to use this function to service the '/' URL:
+function to render a Jinja2 template, and is then
+`decorated using app.route <https://flask.palletsprojects.com/en/1.0.x/api/#flask.Flask.route>`_
+to tell Flask to use this function to service the '/' URL:
 
 .. literalinclude:: ../examples/frontend-index.py
    :language: python
@@ -146,7 +151,7 @@ an :exc:`InputValidationError` exception; this will be handled by the web
 framework as a message to the user asking them to fix the problem and resubmit.
 (If some kind of internal error occurs, such as a file write failure, in this
 or any other method, the user will see an error page and the server admin
-will be notified to fix the problem.)
+will be notified by email to fix the problem.)
 
 To submit the job, first create a :class:`saliweb.frontend.IncomingJob`
 object, which also creates a new directory for the job files. Put all
@@ -166,6 +171,15 @@ necessary input files in that directory, for example using
    :meth:`~saliweb.backend.Job.preprocess` method) for sanity before
    running anything.
 
+.. note::
+
+   When taking files as input, you can simply write them into the job directory
+   using their `save method <https://werkzeug.palletsprojects.com/en/0.15.x/datastructures/#werkzeug.datastructures.FileStorage.save>`_.
+   But never trust the filename provided by the user! Ideally, save with a
+   fixed generic name (e.g. ``input.pdb``). If this is not possible, use
+   `secure_filename <https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.secure_filename>`_
+   to get a safe version of the filename.
+
 Finally, the submission page should inform the user of the results URL
 (:attr:`IncomingJob.results_url`), so that they can obtain the results
 when the job finishes. This uses the function
@@ -181,8 +195,8 @@ the job directory and finally submits the job:
 .. literalinclude:: ../examples/frontend-submit.py
    :language: python
 
-It uses the following template, providing the ``job`` and ``email`` variables,
-to notify the user:
+It uses the following template as ``submit.html``, providing the ``job``
+and ``email`` variables, to notify the user:
 
 .. literalinclude:: ../examples/submit.html
    :language: html+jinja
@@ -247,6 +261,34 @@ instead, using the Flask `abort <http://flask.pocoo.org/docs/1.0/api/#flask.abor
    job directory. Files can also be constructed on the fly and their contents
    returned to the user in a custom Flask
    `Response <http://flask.pocoo.org/docs/1.0/api/#flask.make_response>`_ object.
+
+Alternative submit/results page for short jobs
+----------------------------------------------
+
+For short jobs, it may not be desirable for job submission to pop up a page
+containing a 'results' link that the user then needs to click on (as the job
+may be complete by that point). In this case, the job submission page can
+redirect straight to the job results page using
+:func:`saliweb.frontend.redirect_to_results_page`. To avoid the user seeing
+an uninformative 'job is still running' page, the results page should be
+overridden using the ``still_running_template`` argument to
+:func:`saliweb.frontend.get_completed_job`. (Normally this would display
+something very similar to the submit page, but can auto-refresh if desired
+using :meth:`saliweb.frontend.StillRunningJob.get_refresh_time`.) The resulting
+logic would look similar to:
+
+.. literalinclude:: ../examples/frontend-submit-redirect.py
+   :language: python
+
+It uses the following template as ``running.html``, providing the ``job``
+variable (which is a :class:`saliweb.frontend.StillRunningJob` object),
+to notify the user and auto-refresh:
+
+.. literalinclude:: ../examples/running.html
+   :language: html+jinja
+
+See LigScore at https://github.com/salilab/ligscore/ for a web service that
+uses this submit/results logic.
 
 Additional pages
 ----------------

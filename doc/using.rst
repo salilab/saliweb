@@ -50,11 +50,14 @@ an HTTP error is returned and the request can be retried later.
 Finally, the job results files can be downloaded using the provided URLs.
 
 There is a simple Python interface to all Sali Lab services that use the
-framework, installed on `modbase`, that takes care of XML parsing and error
+framework, available on all Sali lab machines,
+that takes care of XML parsing and error
 handling for you. It can be used to submit jobs and collect results either
 from the command line or from other Python scripts. For example, to run a job
 on the fictional ModFoo service and wait for results, you can run from the
-command line on `modbase` something like::
+command line on a lab machine something like::
+
+    module load web_service
 
     web_service.py run https://modbase.compbio.ucsf.edu/modfoo/job \
                        input_pdb=@input.pdb job_name=testjob
@@ -69,7 +72,7 @@ Alternatively, you can do the same thing from Python with a script like:
 (Note that you can also submit jobs to a web service from another one using
 the :class:`SaliWebServiceRunner` class.)
 
-Although `/usr/bin/web_service.py` is only installed on `modbase`, you can
-`download a copy <https://modbase.compbio.ucsf.edu/web_service.py>`_ and
+Although `/usr/bin/web_service.py` is only installed on Sali lab machines,
+you can `download a copy <https://modbase.compbio.ucsf.edu/web_service.py>`_ and
 run it on any machine that has network access and has Python and
 curl installed.

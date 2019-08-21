@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block meta %}
+<meta http-equiv="refresh" content="{{ job.get_refresh_time(10) }}" />
+{% endblock %}
+
+{% block body %}
+<p>Your job {{ job.name }} has been submitted.</p>
+
+<p>The job is currently running. When it is complete, results will be found
+here - simply refresh or bookmark this page.</p>
+
+{%- if job.email %}
+<p>You will be notified at {{ job.email }} when the job has finished.</p>
+{%- endif %}
+{% endblock %}
