@@ -83,6 +83,7 @@ These pages will be considered in turn.
           help page) can be simply implemented by adding more Python
           functions with appropriate routes (and, if appropriate, adding
           links to these pages to ``layout.html``).
+          :ref:`See below <add_pages>`.
 
 Index page
 ----------
@@ -176,9 +177,9 @@ necessary input files in that directory, for example using
    When taking files as input, you can simply write them into the job directory
    using their `save method <https://werkzeug.palletsprojects.com/en/0.15.x/datastructures/#werkzeug.datastructures.FileStorage.save>`_.
    But never trust the filename provided by the user! Ideally, save with a
-   fixed generic name (e.g. ``input.pdb``). If this is not possible, use
+   fixed generic name (e.g. ``input.pdb``). If this is not possible, use the
    `secure_filename <https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.secure_filename>`_
-   to get a safe version of the filename.
+   function to get a safe version of the filename.
 
 Finally, the submission page should inform the user of the results URL
 (:attr:`IncomingJob.results_url`), so that they can obtain the results
@@ -270,7 +271,7 @@ containing a 'results' link that the user then needs to click on (as the job
 may be complete by that point). In this case, the job submission page can
 redirect straight to the job results page using
 :func:`saliweb.frontend.redirect_to_results_page`. To avoid the user seeing
-an uninformative 'job is still running' page, the results page should be
+an uninformative 'job is still running' page, this page should be
 overridden using the ``still_running_template`` argument to
 :func:`saliweb.frontend.get_completed_job`. (Normally this would display
 something very similar to the submit page, but can auto-refresh if desired
@@ -289,6 +290,8 @@ to notify the user and auto-refresh:
 
 See LigScore at https://github.com/salilab/ligscore/ for a web service that
 uses this submit/results logic.
+
+.. _add_pages:
 
 Additional pages
 ----------------
