@@ -39,6 +39,10 @@ MOCK_DB_SETUP = [
     "    'Unauth', 'User', 'unauthuser@test.com', 'Test In2', 'modkey', "
     "    'unauthkey', %s)" % adapt_datetime(datetime.datetime.now() +
                                             datetime.timedelta(days=2)),
+    "INSERT INTO users (user_id,user_name,password,first_name,last_name,email,"
+    "    institution,modeller_key) VALUES (3, 'badrecipuser', "
+    "    PASSWORD('authpw02'), 'Auth', 'User', 'badrecip@test.com', "
+    "    'Test In3', 'authusermodkey')",
 ]
 
 

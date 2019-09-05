@@ -354,6 +354,18 @@ def test_reset_send_mail_fail():
     assert r.search(rv.data)
 
 
+def test_reset_send_mail_fail_bad_recipient():
+    """Test reset send email failure (bad recipient)"""
+    c = account.app.test_client()
+    rv = c.post('/reset', data={'email': 'badrecip@test.com'})
+    r = re.compile('Password Reset.*'
+                   'Error:.*Failed to send a password reset email.*'
+                   'Please contact us so we can reset your password.*'
+                   'To reset the password.*',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
 def test_reset_send_mail_ok():
     """Test reset send email success"""
     c = account.app.test_client()

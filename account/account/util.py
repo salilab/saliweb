@@ -132,7 +132,12 @@ def send_reset_email(email, app):
     msg = get_reset_email_body(user_id, reset_key)
     msg['From'] = mail_from
     msg['To'] = email
-    s.sendmail(mail_from, email, msg.as_string())
+    try:
+        s.sendmail(mail_from, email, msg.as_string())
+    except smtplib.SMTPRecipientsRefused:
+        return ("Failed to send a password reset email. This may be because "
+                "your account's email address is invalid. Please contact us "
+                "so we can reset your password for you.")
     s.quit()
 
 
