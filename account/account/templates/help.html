@@ -1,21 +1,20 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<a name=account><h4>Account Information</h4></a>
-<p>A Sali Lab Server account allows a user to:
-  <ul>
-    <li>Easily access job results for any web server (results pages are
-        hyperlinked from the queue page)</li>
-    <li>Use advanced features in some web servers</li>
-    <li>Automatically provide email and/or MODELLER license keys to servers
-        that need them</li>
-  </ul>
-</p>
+<h4><a name="account">Account Information</a></h4>
+<p>A Sali Lab Server account allows a user to:</p>
+<ul>
+  <li>Easily access job results for any web server (results pages are
+      hyperlinked from the queue page)</li>
+  <li>Use advanced features in some web servers</li>
+  <li>Automatically provide email and/or MODELLER license keys to servers
+      that need them</li>
+</ul>
 
-<a name=access><h4>Web Server Access Control</h4></a>
+<h4><a name="access">Web Server Access Control</a></h4>
 <p>New users automatically gain assess to all Sali Lab servers that are
 available for the academic community. Some new servers are restricted
 during development to specific user groups. If you think you should have
-access to a group,
-please email <script>escramble("modbase","salilab.org")</script>.</p>
+access to a group, please email
+<script type="text/javascript">escramble("modbase","salilab.org")</script>.</p>
 {% endblock %}
