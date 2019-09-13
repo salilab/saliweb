@@ -18,16 +18,16 @@ class BuildTest(unittest.TestCase):
         # If user = sudouser, or sudo is not being used,
         # display the command as-is
         os.environ['SUDO_USER'] = 'testuser'
-        self.assertEquals(saliweb.build._format_shell_command(env, 'foo'),
-                          'foo')
+        self.assertEqual(saliweb.build._format_shell_command(env, 'foo'),
+                         'foo')
         del os.environ['SUDO_USER']
-        self.assertEquals(saliweb.build._format_shell_command(env, 'foo'),
-                          'foo')
+        self.assertEqual(saliweb.build._format_shell_command(env, 'foo'),
+                         'foo')
 
         # If user != sudouser, add suitable sudo invocation
         os.environ['SUDO_USER'] = 'otheruser'
-        self.assertEquals(saliweb.build._format_shell_command(env, 'foo'),
-                          '/usr/bin/sudo -u testuser foo')
+        self.assertEqual(saliweb.build._format_shell_command(env, 'foo'),
+                         '/usr/bin/sudo -u testuser foo')
         del os.environ['SUDO_USER']
 
 if __name__ == '__main__':

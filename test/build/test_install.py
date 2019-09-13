@@ -35,7 +35,7 @@ class InstallTest(unittest.TestCase):
         ret, warns = run_catch_warnings(saliweb.build._check_frontend_import,
                                         env)
         self.assertEqual(len(warns), 1)
-        self.assert_(re.search(
+        self.assertTrue(re.search(
             'file \/my\/test\/fedir\/testmodule\/__init__\.py does not.*'
             'legacy Perl module, \/my\/test\/perldir\/testmodule\.pm.*'
             'frontend will probably not work.*Python module is '
@@ -63,7 +63,7 @@ class InstallTest(unittest.TestCase):
                         'pythondir': '/my/test/pythondir'})
         ret, warns = run_catch_warnings(saliweb.build._check_python_import, env)
         self.assertEqual(len(warns), 1)
-        self.assert_(re.search('Python module.*\/my\/test\/pythondir\/'
+        self.assertTrue(re.search('Python module.*\/my\/test\/pythondir\/'
                                'testmodule\/__init__\.py does not.*backend '
                                'will probably not work.*Python package is '
                                'named \'testmodule\'.*'
@@ -289,7 +289,8 @@ class InstallTest(unittest.TestCase):
                 self.path = path
             def get_contents(self):
                 return self.contents
-        open('dummysrc', 'w').write('line1\nfoo"##CONFIG##"bar\nline2\n')
+        with open('dummysrc', 'w') as fh:
+            fh.write('line1\nfoo"##CONFIG##"bar\nline2\n')
         for ver, expver in (('None', "undef"), ('r345', "'r345'")):
             for frontend, expfrontend in (('', 'undef'),
                                           ('dummyfront', "'dummyfront'")):
@@ -301,8 +302,9 @@ class InstallTest(unittest.TestCase):
                                               DummyNode(contents='myser'),
                                               DummyNode(contents=frontend)])
                 self.assertEqual(e.execute_target.target.path, 'dummytgt')
-                self.assertEqual(e.execute_target.mode, 0755)
-                f = open('dummytgt').read()
+                self.assertEqual(e.execute_target.mode, 0o755)
+                with open('dummytgt') as fh:
+                    f = fh.read()
                 self.assertEqual(f, "line1\nfoo'mycfg', %s, 'myser', %sbar\n"
                                     "line2\n" % (expver, expfrontend))
                 os.unlink('dummytgt')
@@ -316,7 +318,8 @@ class InstallTest(unittest.TestCase):
                 self.path = path
             def get_contents(self):
                 return self.contents
-        open('dummysrc', 'w').write('line1\nfoo"##CONFIG##"bar\nline2\n')
+        with open('dummysrc', 'w') as fh:
+            fh.write('line1\nfoo"##CONFIG##"bar\nline2\n')
         for ver, expver in (('None', ''), ('r345', 'r345')):
             e = DummyEnv()
             saliweb.build._subst_python_install(

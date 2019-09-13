@@ -3,7 +3,11 @@ import sys
 from saliweb.backend import InvalidStateError
 from saliweb.backend.deljob import check_valid_state, get_options, delete_job
 from saliweb.backend.deljob import main
-import StringIO
+
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 class DummyWeb(object):
     def __init__(self, pid):
@@ -35,7 +39,7 @@ class DelJobTest(unittest.TestCase):
             old = sys.argv
             oldstderr = sys.stderr
             try:
-                sys.stderr = StringIO.StringIO()
+                sys.stderr = StringIO()
                 sys.argv = ['testprogram'] + args
                 return get_options()
             finally:
@@ -67,7 +71,7 @@ class DelJobTest(unittest.TestCase):
             oldout = sys.stdout
             oldin = sys.stdin
             try:
-                sio = StringIO.StringIO()
+                sio = StringIO()
                 sys.stdout = sio
                 sys.stdin = DummyStdin(answer)
                 delete_job(job, force)
@@ -116,7 +120,7 @@ class DelJobTest(unittest.TestCase):
         old = sys.argv
         olderr = sys.stderr
         try:
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['-f', 'FAILED', 'badjob']
@@ -124,7 +128,7 @@ class DelJobTest(unittest.TestCase):
             self.assertEqual(sio.getvalue(), 'Could not find job badjob\n')
             self.assertEqual(mod.job_deleted, False)
 
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['-f', 'FAILED', 'testjob']

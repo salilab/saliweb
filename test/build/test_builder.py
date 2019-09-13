@@ -124,8 +124,10 @@ class BuilderTest(unittest.TestCase):
             frontends = []
         shutil.rmtree('lib', ignore_errors=True)
         os.mkdir('lib')
-        open('lib/testser.pm', 'w').write('line1\n"##CONFIG##"\nline2\n')
-        open('lib/other.pm', 'w')
+        with open('lib/testser.pm', 'w') as fh:
+            fh.write('line1\n"##CONFIG##"\nline2\n')
+        with open('lib/other.pm', 'w') as fh:
+            pass
         e = DummyEnv(0)
         e.env['config'] = DummyConfig()
         t = saliweb.build.builder_perl_tests('dummytgt',
@@ -136,7 +138,7 @@ class BuilderTest(unittest.TestCase):
         e.env['config'] = DummyConfig()
         t = saliweb.build.builder_perl_tests('dummytgt',
                                              ['foo.pl', 'bar.pl'], e)
-        self.assert_('PERL5LIB' in e.env['ENV'])
+        self.assertTrue('PERL5LIB' in e.env['ENV'])
         self.assertEqual(e.exec_str, "prove foo.pl bar.pl")
         self.assertEqual(t, 1)
 
@@ -151,8 +153,8 @@ class BuilderTest(unittest.TestCase):
                                                  ['foo.pl', 'bar.pl'], e)
         finally:
             saliweb.build._fixup_perl_html_coverage = old
-        self.assert_('PERL5LIB' in e.env['ENV'])
-        self.assert_('HARNESS_PERL_SWITCHES' in e.env['ENV'])
+        self.assertTrue('PERL5LIB' in e.env['ENV'])
+        self.assertTrue('HARNESS_PERL_SWITCHES' in e.env['ENV'])
 
         os.unlink('lib/other.pm')
         os.unlink('lib/testser.pm')

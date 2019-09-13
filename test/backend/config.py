@@ -3,6 +3,8 @@ import saliweb.backend
 import tempfile
 import os
 import shutil
+import sys
+
 
 class Config(saliweb.backend.Config):
     """Custom subclass of Config that captures email rather than sending it"""
@@ -12,11 +14,12 @@ class Config(saliweb.backend.Config):
         self._mailer = os.path.join(self.__tmpdir, 'mailer')
         self.__mailoutput = os.path.join(self.__tmpdir, 'output')
         with open(self._mailer, 'w') as f:
-            print("""#!/usr/bin/python
+            print("""#!%s
 import sys
-open('%s', 'w').write(sys.stdin.read())
-""" % self.__mailoutput, file=f)
-        os.chmod(self._mailer, 0755)
+with open('%s', 'w') as fh:
+    fh.write(sys.stdin.read())
+""" % (sys.executable, self.__mailoutput), file=f)
+        os.chmod(self._mailer, 0o755)
 
     def __del__(self):
         try:
@@ -26,7 +29,8 @@ open('%s', 'w').write(sys.stdin.read())
 
     def get_mail_output(self):
         try:
-            return open(self.__mailoutput).read()
+            with open(self.__mailoutput) as fh:
+                return fh.read()
         except IOError:
             return None
 

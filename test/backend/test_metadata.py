@@ -18,11 +18,9 @@ class MetadataTest(unittest.TestCase):
         self.assertEqual(m.get('nokey', 'bar'), 'bar')
         self.assertEqual(m.get('nokey'), None)
         self.assertRaises(KeyError, m.__getitem__, 'nokey')
-        k = m.keys()
-        k.sort()
+        k = sorted(m.keys())
         self.assertEqual(k, ['key1', 'key2'])
-        v = m.values()
-        v.sort()
+        v = sorted(m.values())
         self.assertEqual(v, ['value1', 'value2'])
 
     def test_set(self):

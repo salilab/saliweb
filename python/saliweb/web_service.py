@@ -33,7 +33,10 @@ import os
 from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
-import urllib2
+try:
+    import urllib.request as urllib2  # python 3
+except ImportError:
+    import urllib2  # python 2
 import time
 
 def _get_cookie_arg(args):
@@ -49,7 +52,8 @@ def _curl_rest_page(url, curl_args):
     # use curl instead
     p = subprocess.Popen(['curl', '-HAccept:application/xml', '-s']
                          + curl_args + [url], stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+                         stderr=subprocess.PIPE,
+                         universal_newlines=True)
     (out, err) = p.communicate()
     exitval = p.wait()
     if exitval != 0:
@@ -119,6 +123,9 @@ def show_info(url, cookie=None):
         pstr = " ".join(x.get_full_arg() for x in parameters)
     else:
         pstr = "[name1=ARG] [name2=@FILENAME] ..."
+    if sys.version_info[0] == 2:
+        service = service.encode('utf-8')
+        pstr = pstr.encode('utf-8')
     print("\nSali Lab %s web service." % service)
     print("\nTo submit a job to this web service, run:\n")
     print("%s submit %s " % (progname, url) + pstr)
@@ -127,7 +134,10 @@ def show_info(url, cookie=None):
     print("file to upload (note the '@' prefix).")
     if parameters:
         for x in parameters:
-            print("   " + x.get_help())
+            h = x.get_help()
+            if sys.version_info[0] == 2:
+                h = h.encode('utf-8')
+            print("   " + h)
     else:
         print("""
 To determine name1, name2 etc., view the HTML source of the regular web
@@ -162,6 +172,8 @@ def submit_job(url, args, cookie=None):
     p, out = _curl_rest_page(url, curl_args)
     for results in p.getElementsByTagName('job'):
         url = results.getAttribute('xlink:href')
+        if sys.version_info[0] == 2:
+            url = url.encode('utf-8')
         print("Job submitted: results will be found at " + url)
         return url
     raise IOError("Could not submit job: " + out)
@@ -187,6 +199,8 @@ def get_results(url):
     top = dom.getElementsByTagName('saliweb')[0]
     for results in top.getElementsByTagName('results_file'):
         url = results.getAttribute('xlink:href')
+        if sys.version_info[0] == 2:
+            url = url.encode('utf-8')
         urls.append(url)
         print("   " + url)
     dom.unlink()

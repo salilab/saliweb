@@ -4,7 +4,11 @@ from saliweb.backend.service import get_options, kill_pid, status, stop
 from saliweb.backend.service import start, condstart, restart, main
 from saliweb.backend import StateFileError
 import saliweb.backend.service
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class DummyService(object):
     def __init__(self, pid):
@@ -30,7 +34,7 @@ class ServiceTest(unittest.TestCase):
             old = sys.argv
             oldstderr = sys.stderr
             try:
-                sys.stderr = StringIO.StringIO()
+                sys.stderr = StringIO()
                 sys.argv = ['testprogram'] + args
                 return get_options()
             finally:
@@ -65,13 +69,13 @@ class ServiceTest(unittest.TestCase):
         """Test service status()"""
         old = sys.stdout
         try:
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             w = DummyService(1234)
             status(w)
             self.assertEqual(sio.getvalue(),
                              'testservice (pid 1234) is running...\n')
 
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             w = DummyService(None)
             self.assertRaises(SystemExit, status, w)
             self.assertEqual(sio.getvalue(), 'testservice is stopped\n')
@@ -87,18 +91,18 @@ class ServiceTest(unittest.TestCase):
         try:
             saliweb.backend.service.kill_pid = dummy_kill_pid
 
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             w = DummyService(None)
             self.assertRaises(SystemExit, stop, w)
             self.assertEqual(sio.getvalue(),
                              'Stopping testservice: FAILED; not running\n')
 
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             w = DummyService(1234)
             stop(w)
             self.assertEqual(sio.getvalue(), 'Stopping testservice: OK\n')
 
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             w = DummyService(9999)
             self.assertRaises(SystemExit, stop, w)
             self.assertEqual(sio.getvalue(),
@@ -113,12 +117,12 @@ class ServiceTest(unittest.TestCase):
         old = sys.stdout
         try:
             w = DummyService('bad_state')
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             self.assertRaises(StateFileError, start, w)
             self.assertEqual(sio.getvalue(), 'Starting testservice: ')
 
             # condstart should swallow, but report, the exception
-            sys.stdout = sio = StringIO.StringIO()
+            sys.stdout = sio = StringIO()
             condstart(w)
             self.assertEqual(sio.getvalue(),
                              'Starting testservice: not started: bad state\n')
@@ -126,7 +130,7 @@ class ServiceTest(unittest.TestCase):
             # other exceptions should not be swallowed
             w = DummyService('other_error')
             for meth in start, condstart:
-                sys.stdout = sio = StringIO.StringIO()
+                sys.stdout = sio = StringIO()
                 self.assertRaises(ValueError, meth, w)
                 self.assertEqual(sio.getvalue(), 'Starting testservice: ')
         finally:

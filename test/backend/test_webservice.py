@@ -12,7 +12,10 @@ from memory_database import MemoryDatabase
 from config import Config
 from saliweb.backend import WebService, Job, StateFileError, SanityError
 import saliweb.backend
-from StringIO import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 import testutil
 
 basic_config = """
@@ -62,7 +65,7 @@ def mock_setfacl(tmpdir, fail=False):
     with open(setfacl, 'w') as fh:
         fh.write('#!/bin/bash\n')
         fh.write('exit %d\n' % (1 if fail else 0))
-    os.chmod(setfacl, 0700)
+    os.chmod(setfacl, 0o700)
     orig_path = os.environ['PATH']
     os.environ['PATH'] = tmpdir + ':' + os.environ['PATH']
     yield
@@ -136,10 +139,10 @@ class WebServiceTest(unittest.TestCase):
         web._register(False)
 
         up, addr = s.accept()
-        self.assertEqual(up.recv(4096), '1/test/install/bin/service.py')
+        self.assertEqual(up.recv(4096), b'1/test/install/bin/service.py')
 
         down, addr = s.accept()
-        self.assertEqual(down.recv(4096), '0/test/install/bin/service.py')
+        self.assertEqual(down.recv(4096), b'0/test/install/bin/service.py')
 
         del s
         os.unlink('test-socket')
@@ -238,12 +241,13 @@ class WebServiceTest(unittest.TestCase):
         db, conf, web = self._setup_webservice()
         try:
             raise TestFatalError("fatal error to be handled")
-        except TestFatalError, detail:
+        except TestFatalError as detail:
             # handler should reraise error
             self.assertRaises(TestFatalError, web._handle_fatal_error, detail)
         # WebService should leave a state file to prevent further
         # processes from running
-        x = open('state_file').read().rstrip('\r\n')
+        with open('state_file') as fh:
+            x = fh.read().rstrip('\r\n')
         os.unlink('state_file')
         self.assert_(re.search('FAILED: Traceback.*fatal error to be handled',
                                x, flags=re.DOTALL),

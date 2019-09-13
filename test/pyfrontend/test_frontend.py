@@ -5,6 +5,7 @@ import datetime
 import functools
 import contextlib
 import os
+import sys
 import gzip
 import util
 import flask
@@ -28,7 +29,8 @@ def request_mime_type(mime):
 
 def make_test_pdb(tmpdir):
     os.mkdir(os.path.join(tmpdir, 'xy'))
-    fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wb')
+    fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'),
+                   'wt' if sys.version_info[0] >= 3 else 'wb')
     fh.write("REMARK  6  TEST REMARK\n")
     fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
              "1.00 23.91           N\n")
@@ -175,9 +177,8 @@ class Tests(unittest.TestCase):
         try:
             saliweb.frontend.get_completed_job('running-job', 'passwd')
         except saliweb.frontend._ResultsStillRunningError as err:
-            pass
-        # Test the StillRunningJob object returned
-        j = err.job
+            # Test the StillRunningJob object returned
+            j = err.job
         self.assertEqual(j.name, 'running-job')
         self.assertEqual(j.email, 'test@test.com')
         self.assertEqual(j.get_refresh_time(1000), 1000)

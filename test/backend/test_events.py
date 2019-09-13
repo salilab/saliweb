@@ -154,7 +154,7 @@ class EventsTest(unittest.TestCase):
         t.start()
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect('test.sock')
-        s.send("new job")
+        s.send(b"new job")
         time.sleep(0.05)
         # Should have added 1 event
         x = q.get(timeout=0.)

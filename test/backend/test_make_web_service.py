@@ -10,7 +10,11 @@ from saliweb.make_web_service import MakeWebService, get_options
 from saliweb.make_web_service import SVNSourceControl, _run_command
 from saliweb.make_web_service import GitSourceControl
 import saliweb.backend
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class MakeWebServiceTests(unittest.TestCase):
     """Test the make_web_service module."""
@@ -24,7 +28,8 @@ class MakeWebServiceTests(unittest.TestCase):
             mp = mp[:-1]
         p = subprocess.Popen([sys.executable, mp],
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
         out, err = p.communicate()
         self.assertNotEqual(p.wait(), 0)
         self.assertTrue('for a new web service' in err, msg=err)
@@ -89,7 +94,7 @@ class MakeWebServiceTests(unittest.TestCase):
         msc.cmds = []
         oldstderr = sys.stderr
         try:
-            sys.stderr = StringIO.StringIO()
+            sys.stderr = StringIO()
             m.make()
         finally:
             sys.stderr = oldstderr
@@ -125,7 +130,7 @@ class MakeWebServiceTests(unittest.TestCase):
         msc.cmds = []
         oldstderr = sys.stderr
         try:
-            sys.stderr = StringIO.StringIO()
+            sys.stderr = StringIO()
             m.make()
         finally:
             sys.stderr = oldstderr
@@ -156,7 +161,7 @@ class MakeWebServiceTests(unittest.TestCase):
             old = sys.argv
             oldstderr = sys.stderr
             try:
-                sys.stderr = StringIO.StringIO()
+                sys.stderr = StringIO()
                 sys.argv = ['testprogram'] + args
                 return get_options()
             finally:

@@ -1,7 +1,11 @@
 import unittest
 import sys
 from saliweb.backend.resubmit import main
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class ResubmitTest(unittest.TestCase):
     """Check resubmit script"""
@@ -30,12 +34,12 @@ class ResubmitTest(unittest.TestCase):
         old = sys.argv
         olderr = sys.stderr
         try:
-            sys.stderr = StringIO.StringIO()
+            sys.stderr = StringIO()
             mod = DummyModule()
             sys.argv = ['testprogram']
             self.assertRaises(SystemExit, main, mod)
 
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['badjob']
@@ -43,7 +47,7 @@ class ResubmitTest(unittest.TestCase):
             self.assertEqual(sio.getvalue(), 'Could not find job badjob\n')
             self.assertEqual(mod.job_resub, False)
 
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['testjob']

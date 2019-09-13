@@ -44,7 +44,8 @@ def _add_build_variable(vars, configs):
     vars.Add(SCons.Script.EnumVariable('build',
                "Select which web service configuration to build (e.g. to "
                "set up either a test version or the live version of the web "
-               "service)""", default=default, allowed_values=buildmap.keys()))
+               "service)""", default=default,
+               allowed_values=list(buildmap.keys())))
     return buildmap
 
 
@@ -234,7 +235,8 @@ def _run_version_binary(env, cmd, args):
     if fullcmd:
         try:
             p = subprocess.Popen([fullcmd] + args, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                                 stderr=subprocess.PIPE,
+                                 universal_newlines=True)
             ret = p.communicate()
             if p.returncode:
                 raise OSError("returned exit code %d, stdout %s, "
@@ -339,7 +341,8 @@ def _check_directory_permissions(env):
             continue
         out, err = subprocess.Popen(['/usr/bin/getfacl', dir],
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE).communicate()
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True).communicate()
         if not re.search('^# owner: ' + backend_user, out,
                          re.MULTILINE | re.DOTALL):
             print("""
@@ -370,7 +373,8 @@ def _check_incoming_directory_permissions(env):
         return
     out, err = subprocess.Popen(['/usr/bin/getfacl', incoming],
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE).communicate()
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True).communicate()
     lines = [x for x in out.split('\n')[1:] if x != '']
     expected_lines = [ '# owner: ' + backend_user,
                        '# group: ' + backend_group,
@@ -462,7 +466,8 @@ def _check_permissions(env):
             continue
         out, err = subprocess.Popen(['/usr/bin/getfacl', conf],
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE).communicate()
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True).communicate()
         if not re.search('^group::\-\-\-.*^other::\-\-\-', out,
                          re.MULTILINE | re.DOTALL):
             print("""
@@ -644,9 +649,11 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies to '%(frontend_us
        'frontend_passwd': frontend['passwd'],
        'schema': ', '.join(x.get_schema() for x in d._fields),
        'depschema': ', '.join(x.get_schema() for x in d._dependfields)}
+    if sys.version_info[0] >= 3:
+        commands = commands.encode('ascii')
     os.write(fd, commands)
     os.close(fd)
-    os.chmod(outfile, 0600)
+    os.chmod(outfile, 0o600)
     return outfile
 
 
@@ -712,19 +719,19 @@ def _install_config(env):
 
 def _install_directories(env):
     config = env['config']
-    dirs = config.directories.keys()
+    dirs = list(config.directories.keys())
     dirs.remove('install')
     dirs.remove('INCOMING')
     for key in dirs:
         env.Command(config.directories[key], None,
                     [Mkdir(config.directories[key]),
-                     Chmod(config.directories[key], 0755)])
+                     Chmod(config.directories[key], 0o755)])
     # Set permissions for incoming directory: both backend and frontend can
     # write to this directory and any newly-created subdirectories (-d)
     backend_user = env['config'].backend['user']
     env.Command(config.directories['INCOMING'], None,
                 [Mkdir(config.directories['INCOMING']),
-                 Chmod(config.directories['INCOMING'], 0755),
+                 Chmod(config.directories['INCOMING'], 0o755),
                  "setfacl -d -m u:%s:rwx $TARGET" % frontend_user,
                  "setfacl -d -m u:%s:rwx $TARGET" % backend_user,
                  "setfacl -m u:%s:rwx $TARGET" % frontend_user])
@@ -750,7 +757,7 @@ def _make_script(env, target, source):
         print("import webservice", file=f)
         print("import saliweb.backend." + name, file=f)
         print("saliweb.backend.%s.main(webservice)" % name, file=f)
-    env.Execute(Chmod(target[0], 0700))
+    env.Execute(Chmod(target[0], 0o700))
 
 
 def _make_cgi_script(env, target, source):
@@ -776,7 +783,7 @@ def _make_cgi_script(env, target, source):
         else:
             print("my $m = new %s;" % modname, file=f)
             print("$m->display_%s_page();" % name, file=f)
-    env.Execute(Chmod(target[0], 0755))
+    env.Execute(Chmod(target[0], 0o755))
 
 
 def _make_web_service(env, target, source):
@@ -915,7 +922,7 @@ def _subst_install(env, target, source):
         fout.write(line)
     fin.close()
     fout.close()
-    env.Execute(Chmod(target[0], 0755))
+    env.Execute(Chmod(target[0], 0o755))
 
 
 def _InstallCGI(env, files, subdir=None):

@@ -1,8 +1,15 @@
 import unittest
 from saliweb.backend import Config, ConfigError
-from StringIO import StringIO
+import sys
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 import config
-from email.MIMEText import MIMEText
+try:
+    from email.mime.text import MIMEText  # python3
+except ImportError:
+    from email.MIMEText import MIMEText  # python2
 import re
 
 basic_config = """

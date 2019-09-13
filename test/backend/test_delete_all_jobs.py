@@ -2,7 +2,11 @@ import unittest
 import sys
 from saliweb.backend import StateFileError
 from saliweb.backend.delete_all_jobs import main, check_not_running
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class DummyWeb(object):
     def __init__(self, pid, err=False):
@@ -39,7 +43,7 @@ class DelJobTest(unittest.TestCase):
             oldout = sys.stdout
             oldin = sys.stdin
             try:
-                sio = StringIO.StringIO()
+                sio = StringIO()
                 sys.stdout = sio
                 sys.stdin = DummyStdin(answer)
                 main(mod)

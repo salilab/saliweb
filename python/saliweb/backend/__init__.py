@@ -8,23 +8,36 @@ import os.path
 import datetime
 import shutil
 import time
-import ConfigParser
+try:
+    import configparser
+except ImportError:  # python 2.6
+    import ConfigParser as configparser
 import traceback
 import select
 import signal
 import socket
 import logging
 import threading
-import urllib
-import urlparse
+try:
+    import urllib.request as urllib2 # python 3
+except ImportError:
+    import urllib2  # python 2
+try:
+    import urlparse  # python 2
+except ImportError:
+    import urllib.parse as urlparse  # python 3
 import saliweb.web_service
 import saliweb.backend.events
 import saliweb.backend.sge
 from saliweb.backend.events import _JobThread
-from email.MIMEText import MIMEText
+try:
+    from email.MIMEText import MIMEText  # python 2
+except ImportError:
+    from email.mime.text import MIMEText  # python 3
+
 
 # Version check; we need 2.4 for subprocess, decorators, generator expressions
-if sys.version_info[0:2] < [2, 4]:
+if sys.version_info[0:2] < (2, 4):
     raise ImportError("This module requires Python 2.4 or later")
 
 
@@ -209,7 +222,7 @@ class Config(object):
     _mailer = '/usr/sbin/sendmail'
 
     def __init__(self, fh):
-        config = ConfigParser.SafeConfigParser()
+        config = configparser.SafeConfigParser()
         if not hasattr(fh, 'read'):
             self._config_dir = os.path.dirname(os.path.abspath(fh))
             config.readfp(open(fh), fh)
@@ -221,7 +234,7 @@ class Config(object):
 
     def populate(self, config):
         """Populate data structures using the passed `config`, which is a
-           :class:`ConfigParser.SafeConfigParser` object.
+           :class:`configparser.SafeConfigParser` object.
            This can be overridden in subclasses to read additional
            service-specific information from the configuration file."""
         self._populate_database(config)
@@ -262,7 +275,7 @@ class Config(object):
 
         # Send email via sendmail binary
         p = subprocess.Popen([self._mailer, '-oi'] + to,
-                             stdin=subprocess.PIPE)
+                             stdin=subprocess.PIPE, universal_newlines=True)
         p.stdin.write(msg.as_string())
         p.stdin.close()
         p.wait()  # ignore return code for now
@@ -272,7 +285,7 @@ class Config(object):
         self.database['db'] = config.get('database', 'db')
         try:
             self.database['socket'] = config.get('database', 'socket')
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             self.database['socket'] = '/var/lib/mysql/mysql.sock'
         for key in ('backend_config', 'frontend_config'):
             fname = config.get('database', key)
@@ -292,7 +305,7 @@ class Config(object):
 
     def _read_db_auth(self, end='back'):
         filename = self.database[end + 'end_config']
-        config = ConfigParser.SafeConfigParser()
+        config = configparser.SafeConfigParser()
         config.readfp(open(filename), filename)
         for key in ('user', 'passwd'):
             self.database[key] = config.get(end + 'end_db', key)
@@ -623,7 +636,7 @@ class Database(object):
                 + ', '.join(x + '=' + self._placeholder \
                             for x in metadata.keys()) \
                 + ' WHERE name=' + self._placeholder
-        self._execute(query, metadata.values() + [metadata['name']])
+        self._execute(query, list(metadata.values()) + [metadata['name']])
         if state == 'COMPLETED':
             self._remove_dependency_on(metadata['name'])
         self.conn.commit()
@@ -640,10 +653,10 @@ class Database(object):
            updating the job (as if :meth:`_update_job` were called)."""
         query = 'UPDATE ' + self._jobtable + ' SET ' \
                 + ', '.join(x + '=' + self._placeholder \
-                            for x in metadata.keys() + ['state']) \
+                            for x in list(metadata.keys()) + ['state']) \
                 + ' WHERE name=' + self._placeholder
         c = self._execute(query,
-                          metadata.values() + [newstate, metadata['name']])
+            list(metadata.values()) + [newstate, metadata['name']])
         self.conn.commit()
         metadata.mark_synced()
 
@@ -845,6 +858,8 @@ have done this, delete the state file (%s) to reenable runs.
             msg = '0' + script_name
         try:
             s.connect(self._system_socket_file)
+            if sys.version_info[0] >= 3:
+                msg = msg.encode('utf-8')
             s.send(msg)
         except socket.error:
             # Swallow exception
@@ -913,7 +928,7 @@ have done this, delete the state file (%s) to reenable runs.
                               "database. Please remove these directories, "
                               "since their presence may interfere with the "
                               "correct operation of the service: %s" \
-                              % ", ".join(jobdirs.iterkeys()))
+                              % ", ".join(jobdirs.keys()))
 
     def _make_socket(self):
         """Create the socket used by the frontend to talk to us."""
@@ -1722,7 +1737,8 @@ class SGERunner(Runner):
         m = re.match('(\S+)\.(\d+)\-(\d+):(\d+)$', jobid)
         jobid = m.group(1)
         p = subprocess.Popen([cls._qstat, '-j', jobid], stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, env=cls._env)
+                             stderr=subprocess.STDOUT, env=cls._env,
+                             universal_newlines=True)
         out = p.stdout.readlines()
         ret = p.wait()
         if ret == 0:
@@ -1866,7 +1882,7 @@ class SaliWebServiceResult(object):
         """Download the result file. If `fh` is given, it should be a Python
            file-like object, to which the file is written. Otherwise, the file
            is written into the job directory with the same name."""
-        fin = urllib.urlopen(self.url)
+        fin = urllib2.urlopen(self.url)
         if fh is None:
             fh = open(self.get_filename(), 'w')
         for line in fin:

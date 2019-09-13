@@ -141,7 +141,7 @@ until it works.
 """ % {'user': self.user, 'topdir': self.topdir, 'uid': uid}, file=sys.stderr)
 
     def _make_password(self, length):
-        return "".join(random.choice(string.letters + string.digits) \
+        return "".join(random.choice(string.ascii_letters + string.digits) \
                for x in range(length))
 
     def _get_install_dir(self):

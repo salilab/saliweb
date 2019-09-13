@@ -2,7 +2,11 @@ import unittest
 import sys
 from saliweb.backend import InvalidStateError
 from saliweb.backend.list_jobs import check_valid_state, get_options, main
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class Tests(unittest.TestCase):
 
@@ -19,7 +23,7 @@ class Tests(unittest.TestCase):
             old = sys.argv
             oldstderr = sys.stderr
             try:
-                sys.stderr = StringIO.StringIO()
+                sys.stderr = StringIO()
                 sys.argv = ['testprogram'] + args
                 return get_options()
             finally:
@@ -56,7 +60,7 @@ class Tests(unittest.TestCase):
         old = sys.argv
         oldout = sys.stdout
         try:
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stdout = sio
             mod = DummyModule()
             sys.argv = ['testprogram', 'FAILED', 'RUNNING']
@@ -65,7 +69,7 @@ class Tests(unittest.TestCase):
 'foo                                                          FAILED\n'
 'bar                                                          FAILED\n'
 'baz                                                          RUNNING\n')
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stdout = sio
             mod = DummyModule()
             sys.argv = ['testprogram']

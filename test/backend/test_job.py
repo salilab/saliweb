@@ -11,7 +11,12 @@ from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Job, InvalidStateError, Runner
 from saliweb.backend import MySQLField
 from config import Config
-from StringIO import StringIO
+import sys
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 Job._state_file_wait_time = 0.01
 

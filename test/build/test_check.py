@@ -4,7 +4,7 @@ import sys
 import os
 import pwd
 import grp
-import StringIO
+import io
 import re
 import shutil
 import testutil
@@ -32,7 +32,7 @@ class MockEnvFunctions(object):
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
-    sio = StringIO.StringIO()
+    sio = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
     oldstderr = sys.stderr
     try:
         sys.stderr = sio
@@ -147,17 +147,18 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\nThe backend user.*invalid user ID \(%d\).*'
-                              'between %d and %d' % (uid, uid+10, uid+20),
-                              stderr, re.DOTALL),
-                              'regex match failed on ' + stderr)
+        self.assertTrue(re.match('\nThe backend user.*invalid user ID \(%d\).*'
+                                 'between %d and %d' % (uid, uid+10, uid+20),
+                                 stderr, re.DOTALL),
+                                 'regex match failed on ' + stderr)
 
         # Not OK if current user != backend user
         env = DummyEnv('bin')  # bin user exists but hopefully is not us!
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\nscons must be run as the backend user, which '
+        self.assertTrue(re.match(
+                              '\nscons must be run as the backend user, which '
                               'is \'bin\'.*config file, test\.conf.*'
                               'Please run again.*sudo -u bin scons"\n',
                               stderr, re.DOTALL),
@@ -168,11 +169,12 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\nThe backend user is \'#baduser\' according.*'
+        self.assertTrue(re.match(
+                              '\nThe backend user is \'#baduser\' according.*'
                               'config file, test\.conf.*user does not exist.*'
                               'Please check.*ask a\nsysadmin.*sudo\' access',
                               stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+                        'regex match failed on ' + stderr)
 
     def test_check_sql_username_length(self):
         """Check _check_sql_username_length function"""
@@ -189,10 +191,10 @@ class CheckTest(unittest.TestCase):
                                        env, auth, 'mytest')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\n\*\* The database username for the '
-                              'mytestend user is too long',
-                              stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.match('\n\*\* The database username for the '
+                                 'mytestend user is too long',
+                                 stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
     def test_check_ownership(self):
         """Check _check_ownership function"""
@@ -202,10 +204,10 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_ownership, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\nThe directory.*also the backend user.*'
-                              'please maintain these files.*regular user',
-                              stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.match('\nThe directory.*also the backend user.*'
+                                 'please maintain these files.*regular user',
+                                 stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
         # OK if directory owner != backend
         env = DummyEnv('bin')
@@ -218,8 +220,9 @@ class CheckTest(unittest.TestCase):
     def test_check_permissions(self):
         """Check _check_permissions function"""
         conf = 'test.conf'
-        open(conf, 'w').write('test')
-        os.chmod(conf, 0600)
+        with open(conf, 'w') as fh:
+            fh.write('test')
+        os.chmod(conf, 0o600)
         os.mkdir('.scons')
         def make_env():
             env = DummyEnv('testuser')
@@ -228,19 +231,19 @@ class CheckTest(unittest.TestCase):
             return env
 
         # Group- or world-readable config files should cause an error
-        for perm in (0640, 0604):
+        for perm in (0o640, 0o604):
             env = make_env()
             os.chmod(conf, perm)
             ret, stderr = run_catch_stderr(saliweb.build._check_permissions,
                                            env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
-            self.assert_(re.search('The database configuration file '
-                                   'test\.conf.*readable or writable.*'
-                                   'To fix this.*chmod 0600 test\.conf',
-                                   stderr, re.DOTALL),
-                         'regex match failed on ' + stderr)
-        os.chmod(conf, 0600)
+            self.assertTrue(re.search('The database configuration file '
+                                      'test\.conf.*readable or writable.*'
+                                      'To fix this.*chmod 0600 test\.conf',
+                                      stderr, re.DOTALL),
+                            'regex match failed on ' + stderr)
+        os.chmod(conf, 0o600)
 
         # Everything should work OK here
         env = make_env()
@@ -251,44 +254,46 @@ class CheckTest(unittest.TestCase):
 
         # If .scons is not writable, a warning should be printed
         env = make_env()
-        os.chmod('.scons', 0555)
+        os.chmod('.scons', 0o555)
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('Cannot write to \.scons directory:.*'
-                               'Permission denied.*The backend user needs to '
-                               'be able to write.*To fix this problem.*'
-                               'setfacl -m u:testuser:rwx \.scons', stderr,
-                               re.DOTALL), 'regex match failed on ' + stderr)
-        os.chmod('.scons', 0755)
+        self.assertTrue(re.search('Cannot write to \.scons directory:.*'
+                                  'Permission denied.*The backend user needs '
+                                  'to be able to write.*To fix this problem.*'
+                                  'setfacl -m u:testuser:rwx \.scons', stderr,
+                                  re.DOTALL), 'regex match failed on ' + stderr)
+        os.chmod('.scons', 0o755)
 
         # If config files are not readable, warnings should be printed
         env = make_env()
-        os.chmod(conf, 0200)
+        os.chmod(conf, 0o200)
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.match('\n\*\* Cannot read database configuration '
-                              'file:.*Permission denied.*The backend user '
-                              'needs to be able to read.*To fix this problem.*'
-                              'setfacl -m u:testuser:r test.conf', stderr,
-                              re.DOTALL), 'regex match failed on ' + stderr)
-        os.chmod(conf, 0600)
+        self.assertTrue(re.match('\n\*\* Cannot read database configuration '
+                                 'file:.*Permission denied.*The backend user '
+                                 'needs to be able to read.*'
+                                 'To fix this problem.*'
+                                 'setfacl -m u:testuser:r test.conf', stderr,
+                                 re.DOTALL), 'regex match failed on ' + stderr)
+        os.chmod(conf, 0o600)
 
         # If config files are under SVN control, warnings should be printed
         env = make_env()
         os.mkdir('.svn')
         os.mkdir('.svn/text-base')
-        open('.svn/text-base/test.conf.svn-base', 'w')
+        with open('.svn/text-base/test.conf.svn-base', 'w') as fh:
+            pass
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('The database configuration file test\.conf '
-                               'appears to be under SVN.*To fix this.*'
-                               'svn rm test\.conf; svn ci test\.conf.*'
-                               'Then recreate test\.conf using a '
-                               'fresh password', stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search('The database configuration file test\.conf '
+                                  'appears to be under SVN.*To fix this.*'
+                                  'svn rm test\.conf; svn ci test\.conf.*'
+                                  'Then recreate test\.conf using a '
+                                  'fresh password', stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
         shutil.rmtree('.svn', ignore_errors=True)
 
     def test_check_directory_locations(self):
@@ -353,13 +358,13 @@ class CheckTest(unittest.TestCase):
                            saliweb.build._check_directory_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('Install directory / is not owned by the '
-                               'backend user', stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search('Install directory / is not owned by the '
+                                  'backend user', stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
         # Backend *does* own this directory
         os.mkdir('test')
-        os.chmod('test', 493) # 493 = 0755
+        os.chmod('test', 0o755)
 
         env = make_env('test')
         ret, stderr = run_catch_stderr(
@@ -369,17 +374,17 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(stderr, '')
 
         # Group- or world-writable directories should cause an error
-        for perm in (0775, 0757):
+        for perm in (0o775, 0o757):
             os.chmod('test', perm)
             env = make_env('test')
             ret, stderr = run_catch_stderr(
                            saliweb.build._check_directory_permissions, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
-            self.assert_(re.search('Install directory test appears to be '
-                                   'group\- or world\-writable.*fix this.*'
-                                   'chmod 755 test', stderr, re.DOTALL),
-                         'regex match failed on ' + stderr)
+            self.assertTrue(re.search('Install directory test appears to be '
+                                      'group\- or world\-writable.*fix this.*'
+                                      'chmod 755 test', stderr, re.DOTALL),
+                            'regex match failed on ' + stderr)
 
     @testutil.run_in_tempdir
     def test_check_incoming_directory_permissions(self):
@@ -399,18 +404,18 @@ class CheckTest(unittest.TestCase):
 
         # Test should fail if the directory doesn't have correct ACLs
         os.mkdir('test')
-        os.chmod('test', 493) # 493 = 0755
+        os.chmod('test', 0o755)
 
         env = make_env('test')
         ret, stderr = run_catch_stderr(
                       saliweb.build._check_incoming_directory_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('Wrong permissions on incoming directory.*'
-                               'rerun scons to recreate it.*'
-                               'Expected permissions.*Actual permissions',
-                               stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search('Wrong permissions on incoming directory.*'
+                                  'rerun scons to recreate it.*'
+                                  'Expected permissions.*Actual permissions',
+                                  stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
         # Test should pass if the ACLs are correct
         env = make_env('test')
@@ -438,9 +443,10 @@ class CheckTest(unittest.TestCase):
         backend = {'user': 'backuser', 'passwd': 'backpwd'}
         o = saliweb.build._generate_admin_mysql_script('testdb', backend,
                                                        frontend)
-        self.assertEqual(os.stat(o).st_mode, 0100600)
-        contents = open(o).read()
-        self.assertEquals(contents, \
+        self.assertEqual(os.stat(o).st_mode, 0o100600)
+        with open(o) as fh:
+            contents = fh.read()
+        self.assertEqual(contents, \
 """CREATE DATABASE testdb;
 GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
 CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED','FINALIZING') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, finalize_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
@@ -475,12 +481,13 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                          'jobs')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search("'jobs' database table schema does not match.*"
-                               'it has 0 fields, while the backend has 17 '
-                               'fields.*entire table schema should look like.*'
-                               'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
-                               "DEFAULT ''", stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search(
+                            "'jobs' database table schema does not match.*"
+                            'it has 0 fields, while the backend has 17 '
+                            'fields.*entire table schema should look like.*'
+                            'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                            "DEFAULT ''", stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
         # Field definition differs
         env = DummyEnv('testuser')
@@ -490,19 +497,19 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                          'dependencies')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search("'dependencies' database table schema does "
-                               'not match.*'
-                               'mismatch has been found in the \'child\' '
-                               'field.*'
-                               'Database schema for \'child\' field:.*'
-                               'child VARCHAR\(30\).*'
-                               'Should be modified.*'
-                               'child VARCHAR\(40\).*'
-                               'entire table schema.*'
-                               'child VARCHAR\(40\) NOT NULL '
-                               'DEFAULT \'\',.*parent VARCHAR\(40\)',
-                               stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search("'dependencies' database table schema does "
+                                  'not match.*'
+                                  'mismatch has been found in the \'child\' '
+                                  'field.*'
+                                  'Database schema for \'child\' field:.*'
+                                  'child VARCHAR\(30\).*'
+                                  'Should be modified.*'
+                                  'child VARCHAR\(40\).*'
+                                  'entire table schema.*'
+                                  'child VARCHAR\(40\) NOT NULL '
+                                  'DEFAULT \'\',.*parent VARCHAR\(40\)',
+                                  stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
         # Fields match between DB and backend
         env = DummyEnv('testuser')
@@ -582,11 +589,11 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                          'testdb', 'testuser', 'DROP')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assert_(re.search('The testuser user does not appear to have.*'
-                               'admin run the following.*'
-                               'GRANT DROP ON `testdb`.* TO '
-                               "'testuser'@'localhost'", stderr, re.DOTALL),
-                     'regex match failed on ' + stderr)
+        self.assertTrue(re.search('The testuser user does not appear to have.*'
+                                  'admin run the following.*'
+                                  'GRANT DROP ON `testdb`.* TO '
+                                  "'testuser'@'localhost'", stderr, re.DOTALL),
+                        'regex match failed on ' + stderr)
 
 if __name__ == '__main__':
     unittest.main()

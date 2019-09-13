@@ -2,7 +2,11 @@ import unittest
 import sys
 from saliweb.backend.failjob import check_daemon_running, get_options, fail_job
 from saliweb.backend.failjob import main
-import StringIO
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class DummyWeb(object):
     def __init__(self, pid):
@@ -27,7 +31,7 @@ class FailJobTest(unittest.TestCase):
             old = sys.argv
             oldstderr = sys.stderr
             try:
-                sys.stderr = StringIO.StringIO()
+                sys.stderr = StringIO()
                 sys.argv = ['testprogram'] + args
                 return get_options()
             finally:
@@ -64,7 +68,7 @@ class FailJobTest(unittest.TestCase):
             oldout = sys.stdout
             oldin = sys.stdin
             try:
-                sio = StringIO.StringIO()
+                sio = StringIO()
                 sys.stdout = sio
                 sys.stdin = DummyStdin(answer)
                 fail_job(job, force, email)
@@ -116,7 +120,7 @@ class FailJobTest(unittest.TestCase):
         old = sys.argv
         olderr = sys.stderr
         try:
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['-f', 'badjob']
@@ -124,7 +128,7 @@ class FailJobTest(unittest.TestCase):
             self.assertEqual(sio.getvalue(), 'Could not find job badjob\n')
             self.assertEqual(mod.job_failed, False)
 
-            sio = StringIO.StringIO()
+            sio = StringIO()
             sys.stderr = sio
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['-f', 'testjob']

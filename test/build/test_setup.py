@@ -7,13 +7,13 @@ import tempfile
 import shutil
 import os
 import re
-import StringIO
+import io
 import testutil
 from testutil import run_catch_warnings
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
-    sio = StringIO.StringIO()
+    sio = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
     oldstderr = sys.stderr
     try:
         sys.stderr = sio
@@ -102,7 +102,7 @@ class SetupTest(unittest.TestCase):
             tmpfile = os.path.join(tmpdir, name)
             with open(tmpfile, 'w') as fh:
                 print("#!/usr/bin/python\n" + script, file=fh)
-            os.chmod(tmpfile, 0755)
+            os.chmod(tmpfile, 0o755)
             return BrokenEnv(tmpfile)
 
         with testutil.temp_working_dir():
@@ -124,9 +124,12 @@ class SetupTest(unittest.TestCase):
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 1)
-            self.assertEqual(warns[0][0].args,
-                             ("Could not run /not/exist/svnversion: [Errno 2] "
-                              "No such file or directory",))
+            self.assertEqual(len(warns[0][0].args), 1)
+            # Check start of error message (python3 adds the filename to the
+            # end of the message; python2 does not)
+            self.assertEqual(warns[0][0].args[0][:72],
+                             "Could not run /not/exist/svnversion: [Errno 2] "
+                              "No such file or directory")
             self.assertEqual(env, {'version': None})
     
             # No number provided; svnversion binary reports 'exported'
@@ -205,7 +208,7 @@ else:
         env = DummyEnv()
         env['config'] = DummyConfig()
         with testutil.temp_working_dir():
-            os.chmod('.', 0555)
+            os.chmod('.', 0o555)
             ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)

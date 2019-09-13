@@ -2,7 +2,10 @@ from __future__ import print_function
 import unittest
 import tempfile
 import shutil
-import urllib2
+try:
+    import urllib.request as urllib2  # python3
+except ImportError:
+    import urllib2  # python2
 import os
 import sys
 import time
@@ -10,7 +13,8 @@ from saliweb import web_service
 from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
-from cStringIO import StringIO
+import io
+
 
 class MockURL(object):
     ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
@@ -49,7 +53,8 @@ class WebServiceTests(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.tmpdir = tempfile.mkdtemp()
         curl = os.path.join(self.tmpdir, 'curl')
-        open(curl, 'w').write("""#!/usr/bin/python
+        with open(curl, 'w') as fh:
+           fh.write("#!" + sys.executable + """
 from __future__ import print_function
 import sys
 url = sys.argv[-1]
@@ -74,7 +79,7 @@ else:
           '<parameters><string name="foo">bar</string>'
           '</parameters></saliweb>')
 """)
-        os.chmod(curl, 0700)
+        os.chmod(curl, 0o700)
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']
         self.orig_urlopen = urllib2.urlopen
         urllib2.urlopen = MockURLOpen()
@@ -168,7 +173,8 @@ else:
             mp = mp[:-1]
         p = subprocess.Popen([sys.executable, mp] + args,
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE,
+                             universal_newlines=True)
         out, err = p.communicate()
         return out, err, p.wait()
 
@@ -178,8 +184,8 @@ else:
         orig_stdout = sys.stdout
         orig_stderr = sys.stderr
         orig_argv = sys.argv
-        out = StringIO()
-        err = StringIO()
+        out = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
+        err = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
         exitval = 0
         try:
             sys.stdout = out
@@ -187,7 +193,7 @@ else:
             sys.argv = ['web_service.py'] + args
             try:
                 web_service.main()
-            except SystemExit, detail:
+            except SystemExit as detail:
                 exitval = detail.code
         finally:
             sys.stdout = orig_stdout

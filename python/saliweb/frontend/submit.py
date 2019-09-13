@@ -5,6 +5,7 @@ import random
 import socket
 import fcntl
 import string
+import sys
 
 
 def _get_job_directory(job_name):
@@ -167,7 +168,10 @@ class IncomingJob(object):
             return  # skip if backend is not running
         fcntl.flock(s, fcntl.LOCK_EX)
         try:
-            s.sendall("INCOMING %s\n" % self.name)
+            ss = "INCOMING %s\n" % self.name
+            if sys.version_info[0] >= 3:
+                ss = ss.encode('utf-8')
+            s.sendall(ss)
         except socket.error:
             pass  # ignore broken pipe errors
         fcntl.flock(s, fcntl.LOCK_UN)

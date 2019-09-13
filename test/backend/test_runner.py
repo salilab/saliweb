@@ -1,10 +1,13 @@
 from __future__ import print_function
 import unittest
-from StringIO import StringIO
+import sys
+if sys.version_info[0] >= 3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, SaliSGERunner, WyntonSGERunner, Job
 import testutil
-import sys
 import re
 import os
 import time
@@ -120,7 +123,7 @@ else:
     print("job info")
 """)
         qstat.close()
-        os.chmod('qstat', 0755)
+        os.chmod('qstat', 0o755)
         TestRunner._qstat = os.path.join(os.getcwd(), 'qstat')
         self.assertEqual(TestRunner._check_completed('donejob', ''), True)
         self.assertEqual(TestRunner._check_completed('runningjob', ''), False)

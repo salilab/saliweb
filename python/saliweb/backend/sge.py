@@ -56,8 +56,9 @@ class _SGETasks(object):
         else:
             self.first = 0
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.first != 0
+    __nonzero__ = __bool__  # python2
 
     def get_run_id(self, jobids):
         """Get a run ID that represents all of the tasks in this job"""

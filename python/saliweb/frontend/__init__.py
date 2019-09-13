@@ -1,7 +1,10 @@
 import flask
 from flask import url_for, Markup
 import datetime
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import os
 import sys
 import re
@@ -170,7 +173,7 @@ def _read_config(app, fname):
     # Set defaults for all web services
     app.config.from_object(saliweb.frontend.config)
 
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
 
     with open(fname) as fh:
         config.readfp(fh, fname)

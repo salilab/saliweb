@@ -2,7 +2,7 @@ import unittest
 import re
 import os
 import saliweb.build
-from StringIO import StringIO
+from io import StringIO
 
 class MakeTest(unittest.TestCase):
     """Check make* functions"""
@@ -16,10 +16,11 @@ class MakeTest(unittest.TestCase):
             path = 'dummytgt'
 
         saliweb.build._make_readme(None, [DummyTarget()], [DummySource()])
-        f = open('dummytgt').read()
-        self.assert_(re.match('Do not edit.*source files for the testser '
-                              'service,.*and run \'scons\' to install them', f,
-                               re.DOTALL), 'regex match failed on ' + f)
+        with open('dummytgt') as fh:
+            f = fh.read()
+        self.assertTrue(re.match('Do not edit.*source files for the testser '
+                                 'service,.*and run \'scons\' to install them',
+                                 f, re.DOTALL), 'regex match failed on ' + f)
         os.unlink('dummytgt')
 
     def test_make_script(self):
@@ -35,14 +36,15 @@ class MakeTest(unittest.TestCase):
             e = DummyEnv()
             saliweb.build._make_script(e, [DummyTarget()], [])
             self.assertEqual(e.cmd.target.path, t)
-            self.assertEqual(e.cmd.mode, 0700)
+            self.assertEqual(e.cmd.mode, 0o700)
 
-            f = open(t).read()
-            self.assert_(re.match('#!/usr/bin/python.*'
-                                  'import saliweb\.backend\.mytest$.*'
-                                  'backend\.mytest\.main', f,
-                                   re.DOTALL | re.MULTILINE),
-                         'regex match failed on ' + f)
+            with open(t) as fh:
+                f = fh.read()
+            self.assertTrue(re.match('#!/usr/bin/python.*'
+                                     'import saliweb\.backend\.mytest$.*'
+                                     'backend\.mytest\.main', f,
+                                     re.DOTALL | re.MULTILINE),
+                            'regex match failed on ' + f)
             os.unlink(t)
 
     def test_make_cgi_script(self):
@@ -66,11 +68,12 @@ class MakeTest(unittest.TestCase):
             saliweb.build._make_cgi_script(e, [DummyTarget()],
                                            [DummySource(), DummySource()])
             self.assertEqual(e.cmd.target.path, t)
-            self.assertEqual(e.cmd.mode, 0755)
+            self.assertEqual(e.cmd.mode, 0o755)
 
-            f = open(t).read()
-            self.assert_(re.match('#!/usr/bin/perl \-w.*' + r, f, re.DOTALL),
-                         'regex match failed on ' + f)
+            with open(t) as fh:
+                f = fh.read()
+            self.assertTrue(re.match('#!/usr/bin/perl \-w.*' + r, f, re.DOTALL),
+                            'regex match failed on ' + f)
             os.unlink(t)
 
     def test_make_web_service(self):
@@ -89,12 +92,14 @@ class MakeTest(unittest.TestCase):
                                              DummySource('mymodname'),
                                              DummySource('mypydir'),
                                              DummySource(ver)])
-            f = open('dummytgt').read()
-            self.assert_(re.match("config = 'mycfg'.*pydir = 'mypydir'.*"
-                                  "import mymodname\.backend as.*"
-                                  "import mymodname as.*ws = backend\.get_web.*"
-                                  "ws\.%s" % expver, f, re.DOTALL),
-                         'regex match failed on ' + f)
+            with open('dummytgt') as fh:
+                f = fh.read()
+            self.assertTrue(re.match(
+                "config = 'mycfg'.*pydir = 'mypydir'.*"
+                "import mymodname\.backend as.*"
+                "import mymodname as.*ws = backend\.get_web.*"
+                "ws\.%s" % expver, f, re.DOTALL),
+                'regex match failed on ' + f)
             os.unlink('dummytgt')
 
 

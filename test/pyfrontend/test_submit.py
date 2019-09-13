@@ -143,7 +143,7 @@ class Tests(unittest.TestCase):
                 j = submit.IncomingJob("test$!job")
                 j.submit()
             conn, addr = s.accept()
-            self.assertEqual(conn.recv(1024), 'INCOMING testjob\n')
+            self.assertEqual(conn.recv(1024), b'INCOMING testjob\n')
             s.close()
 
     def test_incoming_job_force_xml(self):
