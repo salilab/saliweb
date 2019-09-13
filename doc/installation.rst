@@ -28,8 +28,9 @@ used in other environments with some modification.
 Prerequisites
 -------------
 
-* Python. The backend of the framework, which takes care of running jobs, is implemented in Python. It requires Python 2.6 or
-  2.7 (it is not tested with Python 3).
+* Python. The backend of the framework, which takes care of running jobs,
+  is implemented in Python. It requires Python 2.6 or later (it should
+  also work with Python 3).
 
 * `Flask <http://flask.pocoo.org/>`_. The frontend, which handles user
   submission of jobs and the display of results, is implemented in Python,
