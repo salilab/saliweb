@@ -12,7 +12,7 @@ class Tests(saliweb.test.TestCase):
         """Test index page"""
         c = modfoo.app.test_client()
         rv = c.get('/')
-        self.assertIn('ModFoo: Modeling using Foo', rv.data)
+        self.assertIn(b'ModFoo: Modeling using Foo', rv.data)
 
 
 if __name__ == '__main__':
