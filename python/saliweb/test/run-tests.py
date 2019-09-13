@@ -95,8 +95,8 @@ def get_boilerplate_test_case(module_name):
                 saliweb.backend.Config.__init__ = old_config
                 saliweb.backend.WebService.__init__ = old_ws
             self.assertEqual(w.config.configfile, 'testconfig')
-            self.assert_(issubclass(w.db.jobobj, saliweb.backend.Job),
-                         "%s is not a Job subclass" % w.db.jobobj)
+            self.assertTrue(issubclass(w.db.jobobj, saliweb.backend.Job),
+                            "%s is not a Job subclass" % w.db.jobobj)
     return BoilerplateTests(methodName='test_get_web_service')
 
 
