@@ -4,6 +4,7 @@ import sqlite3
 import hashlib
 import calendar
 import datetime
+import sys
 
 
 # sqlite doesn't have a datetime type, so we use float
@@ -66,6 +67,8 @@ class MockCursor(object):
 
 def _sqlite_password(p):
     """Provide a simple (insecure!) implementation of PASSWORD for sqlite"""
+    if sys.version_info[0] >= 3:
+        p = p.encode('utf-8')
     return hashlib.md5(p).hexdigest()
 
 

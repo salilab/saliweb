@@ -8,8 +8,8 @@ def test_logged_out_index():
     """Test logged-out index page"""
     c = account.app.test_client()
     rv = c.get('/')
-    r = re.compile('Sali Lab Web Server Login.*Username:.*Password.*'
-                   'log on permanently', re.DOTALL | re.MULTILINE)
+    r = re.compile(b'Sali Lab Web Server Login.*Username:.*Password.*'
+                   b'log on permanently', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
 
@@ -18,11 +18,11 @@ def test_logged_in_index():
     c = account.app.test_client()
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
     rv = c.get('/', base_url='https://localhost')  # force HTTPS
-    r = re.compile('Server availability for user authuser.*'
-                   'short1, long title1.*'
-                   'short2, long title2.*'
-                   'Profile.*'
-                   'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
+    r = re.compile(b'Server availability for user authuser.*'
+                   b'short1, long title1.*'
+                   b'short2, long title2.*'
+                   b'Profile.*'
+                   b'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
 
@@ -30,8 +30,8 @@ def test_bad_log_in():
     """Test failure to log in"""
     c = account.app.test_client()
     rv = c.post('/', data={'user_name': 'baduser', 'password': 'badpasswd'})
-    r = re.compile('Error:.*Invalid username or password.*'
-                   'Sali Lab Web Server Login',
+    r = re.compile(b'Error:.*Invalid username or password.*'
+                   b'Sali Lab Web Server Login',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -40,11 +40,11 @@ def test_good_log_in_temporary():
     """Test successful log in with temporary cookie"""
     c = account.app.test_client()
     rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw00'})
-    r = re.compile('Server availability for user authuser.*'
-                   'short1, long title1.*'
-                   'short2, long title2.*'
-                   'Profile.*'
-                   'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
+    r = re.compile(b'Server availability for user authuser.*'
+                   b'short1, long title1.*'
+                   b'short2, long title2.*'
+                   b'Profile.*'
+                   b'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
     assert (rv.headers['Set-Cookie'] ==
             'sali-servers=user_name&authuser&session&'
@@ -56,11 +56,11 @@ def test_good_log_in_permanent():
     c = account.app.test_client()
     rv = c.post('/', data={'user_name': 'authuser', 'password': 'authpw00',
                            'permanent': 'on'})
-    r = re.compile('Server availability for user authuser.*'
-                   'short1, long title1.*'
-                   'short2, long title2.*'
-                   'Profile.*'
-                   'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
+    r = re.compile(b'Server availability for user authuser.*'
+                   b'short1, long title1.*'
+                   b'short2, long title2.*'
+                   b'Profile.*'
+                   b'Login:.*authuser.*', re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
     assert 'Expires=' in rv.headers['Set-Cookie']
     assert 'Max-Age=31536000' in rv.headers['Set-Cookie']
@@ -84,7 +84,7 @@ def test_help():
     """Test help page"""
     c = account.app.test_client()
     rv = c.get('/help')
-    r = re.compile('Account Information.*Access Control',
+    r = re.compile(b'Account Information.*Access Control',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -93,7 +93,7 @@ def test_contact():
     """Test contact page"""
     c = account.app.test_client()
     rv = c.get('/contact')
-    r = re.compile('Contact.*modbase.*salilab\.org',
+    r = re.compile(b'Contact.*modbase.*salilab\\.org',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -102,7 +102,7 @@ def test_register():
     """Test register page"""
     c = account.app.test_client()
     rv = c.get('/register')
-    r = re.compile('Create an Account.*log on permanently',
+    r = re.compile(b'Create an Account.*log on permanently',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -111,8 +111,8 @@ def test_register_not_academic():
     """Test registration failure (not academic)"""
     c = account.app.test_client()
     rv = c.post('/register', data={})
-    r = re.compile('Error:.*only open for the academic community.*'
-                   'Create an Account',
+    r = re.compile(b'Error:.*only open for the academic community.*'
+                   b'Create an Account',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -122,8 +122,8 @@ def test_register_short_password():
     c = account.app.test_client()
     rv = c.post('/register', data={'academic': 'on', 'password': 'short',
                                    'passwordcheck': 'short'})
-    r = re.compile('Error:.*Passwords should be at least 8 characters long.*'
-                   'Create an Account',
+    r = re.compile(b'Error:.*Passwords should be at least 8 characters long.*'
+                   b'Create an Account',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -133,8 +133,8 @@ def test_register_mismatched_password():
     c = account.app.test_client()
     rv = c.post('/register', data={'academic': 'on', 'password': '12345678',
                                    'passwordcheck': 'not12345678'})
-    r = re.compile('Error:.*The two passwords are not identical.*'
-                   'Create an Account',
+    r = re.compile(b'Error:.*The two passwords are not identical.*'
+                   b'Create an Account',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -151,8 +151,8 @@ def test_register_missing_fields():
             data[f] = 'foo'
         data[field] = ''
         rv = c.post('/register', data=data)
-        r = re.compile('Error:.*Please fill out all required form fields.*'
-                       'Create an Account',
+        r = re.compile(b'Error:.*Please fill out all required form fields.*'
+                       b'Create an Account',
                        re.DOTALL | re.MULTILINE)
         assert r.search(rv.data)
 
@@ -165,8 +165,8 @@ def test_register_existing_user():
             'first_name': 'foo', 'last_name': 'foo', 'institution': 'foo',
             'email': 'foo'}
     rv = c.post('/register', data=data)
-    r = re.compile('Error:.*User name authuser already exists.*'
-                   'Create an Account',
+    r = re.compile(b'Error:.*User name authuser already exists.*'
+                   b'Create an Account',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -222,12 +222,12 @@ def test_profile():
     c = account.app.test_client()
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
     rv = c.get('/profile', base_url='https://localhost')  # force HTTPS
-    r = re.compile('Edit Profile.*'
-                   'first_name.*Auth.*'
-                   'last_name.*User.*'
-                   'institution.*Test In1.*'
-                   'email.*authuser@test\.com.*'
-                   'license key.*authusermodkey',
+    r = re.compile(b'Edit Profile.*'
+                   b'first_name.*Auth.*'
+                   b'last_name.*User.*'
+                   b'institution.*Test In1.*'
+                   b'email.*authuser@test\\.com.*'
+                   b'license key.*authusermodkey',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -244,8 +244,8 @@ def test_profile_missing_fields():
             data[f] = 'foo'
         data[field] = ''
         rv = c.post('/profile', data=data, base_url='https://localhost')
-        r = re.compile('Edit Profile.*'
-                       'Error:.*Please fill out all required form fields.*',
+        r = re.compile(b'Edit Profile.*'
+                       b'Error:.*Please fill out all required form fields.*',
                        re.DOTALL | re.MULTILINE)
         assert r.search(rv.data)
 
@@ -274,10 +274,10 @@ def test_password():
     c = account.app.test_client()
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
     rv = c.get('/password', base_url='https://localhost')  # force HTTPS
-    r = re.compile('Change Password.*'
-                   'Current Password:.*'
-                   'New Password.*'
-                   'Re-enter Password:.*',
+    r = re.compile(b'Change Password.*'
+                   b'Current Password:.*'
+                   b'New Password.*'
+                   b'Re-enter Password:.*',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -289,8 +289,8 @@ def test_password_wrong_old():
     data = {'oldpassword': 'notauthpw', 'newpassword': '12345678',
             'passwordcheck': '12345678'}
     rv = c.post('/password', data=data, base_url='https://localhost')
-    r = re.compile('Change Password.*'
-                   'Error:.*Incorrect old password entered.',
+    r = re.compile(b'Change Password.*'
+                   b'Error:.*Incorrect old password entered.',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -302,8 +302,8 @@ def test_password_too_short():
     data = {'oldpassword': 'authpw00', 'newpassword': '1234',
             'passwordcheck': '1234'}
     rv = c.post('/password', data=data, base_url='https://localhost')
-    r = re.compile('Change Password.*'
-                   'Error:.*Passwords should be at least 8 characters',
+    r = re.compile(b'Change Password.*'
+                   b'Error:.*Passwords should be at least 8 characters',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -315,8 +315,8 @@ def test_password_mismatch():
     data = {'oldpassword': 'authpw00', 'newpassword': '12345678',
             'passwordcheck': 'not12345678'}
     rv = c.post('/password', data=data, base_url='https://localhost')
-    r = re.compile('Change Password.*'
-                   'Error:.*The two passwords are not identical',
+    r = re.compile(b'Change Password.*'
+                   b'Error:.*The two passwords are not identical',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -336,9 +336,9 @@ def test_reset_input():
     """Test reset page, asking for email input"""
     c = account.app.test_client()
     rv = c.get('/reset')
-    r = re.compile('Password Reset.*'
-                   'To reset the password.*'
-                   'Email:.*Send reset email',
+    r = re.compile(b'Password Reset.*'
+                   b'To reset the password.*'
+                   b'Email:.*Send reset email',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -347,9 +347,9 @@ def test_reset_send_mail_fail():
     """Test reset send email failure (no account matches)"""
     c = account.app.test_client()
     rv = c.post('/reset', data={'email': 'bademail@test.com'})
-    r = re.compile('Password Reset.*'
-                   'Error:.*No account found with email bademail@test\.com.*'
-                   'To reset the password.*',
+    r = re.compile(b'Password Reset.*'
+                   b'Error:.*No account found with email bademail@test\\.com.*'
+                   b'To reset the password.*',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -358,10 +358,10 @@ def test_reset_send_mail_fail_bad_recipient():
     """Test reset send email failure (bad recipient)"""
     c = account.app.test_client()
     rv = c.post('/reset', data={'email': 'badrecip@test.com'})
-    r = re.compile('Password Reset.*'
-                   'Error:.*Failed to send a password reset email.*'
-                   'Please contact us so we can reset your password.*'
-                   'To reset the password.*',
+    r = re.compile(b'Password Reset.*'
+                   b'Error:.*Failed to send a password reset email.*'
+                   b'Please contact us so we can reset your password.*'
+                   b'To reset the password.*',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -370,9 +370,9 @@ def test_reset_send_mail_ok():
     """Test reset send email success"""
     c = account.app.test_client()
     rv = c.post('/reset', data={'email': 'authuser@test.com'})
-    r = re.compile('Password Reset.*'
-                   'reset link has been sent to authuser@test\.com.*'
-                   'This link will expire in 2 days',
+    r = re.compile(b'Password Reset.*'
+                   b'reset link has been sent to authuser@test\\.com.*'
+                   b'This link will expire in 2 days',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -381,8 +381,8 @@ def test_reset_link_input_fail():
     """Test reset link input page fail"""
     c = account.app.test_client()
     rv = c.get('/reset/3/unauthkey')
-    r = re.compile('Password Reset.*'
-                   'Error.*Invalid password reset link',
+    r = re.compile(b'Password Reset.*'
+                   b'Error.*Invalid password reset link',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -391,10 +391,10 @@ def test_reset_link_input_ok():
     """Test reset link input page success"""
     c = account.app.test_client()
     rv = c.get('/reset/2/unauthkey')
-    r = re.compile('Password Reset.*'
-                   'Choose new password for user unauthuser.*'
-                   'Choose Password.*'
-                   'Re-enter Password.*',
+    r = re.compile(b'Password Reset.*'
+                   b'Choose new password for user unauthuser.*'
+                   b'Choose Password.*'
+                   b'Re-enter Password.*',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -404,10 +404,10 @@ def test_reset_link_password_fail():
     c = account.app.test_client()
     rv = c.post('/reset/2/unauthkey',
                 data={'password': 'abc', 'passwordcheck': 'abc'})
-    r = re.compile('Password Reset.*'
-                   'Error:.*Passwords should be at least 8 characters long.*'
-                   'Choose Password.*'
-                   'Re-enter Password.*',
+    r = re.compile(b'Password Reset.*'
+                   b'Error:.*Passwords should be at least 8 characters long.*'
+                   b'Choose Password.*'
+                   b'Re-enter Password.*',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -437,9 +437,9 @@ def test_internal_error_handler():
         c = account.app.test_client()
         rv = c.get('/')
         assert rv.status_code == 500
-        r = re.compile('500 Internal Server Error.*'
-                       'A fatal internal error occurred in this web service.*'
-                       'Apologies for the inconvenience',
+        r = re.compile(b'500 Internal Server Error.*'
+                       b'A fatal internal error occurred in this web service.*'
+                       b'Apologies for the inconvenience',
                        re.DOTALL | re.MULTILINE)
         assert r.search(rv.data)
     finally:

@@ -47,6 +47,8 @@ def set_logged_in_user(username):
 
 
 def set_servers_cookie(client, user, passwd):
+    if sys.version_info[0] >= 3:
+        passwd = passwd.encode('utf-8')
     hashpw = hashlib.md5(passwd).hexdigest()
     client.set_cookie('localhost', 'sali-servers',
                       'user_name&%s&session&%s' % (user, hashpw))
