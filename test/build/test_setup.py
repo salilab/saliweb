@@ -151,10 +151,11 @@ sys.exit(1)""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 1)
-            self.assert_(re.match('Could not run \S+\/errscript: returned exit '
-                                  'code 1, stdout output text\n, '
-                                  'stderr error text\n$', warns[0][0].args[0]),
-                         "%s does not match re" % warns[0][0].args[0])
+            self.assertTrue(
+                re.match('Could not run \S+\/errscript: returned exit '
+                         'code 1, stdout output text\n, '
+                         'stderr error text\n$', warns[0][0].args[0]),
+                "%s does not match re" % warns[0][0].args[0])
             self.assertEqual(env, {'version': None})
     
             # No number provided; svnversion binary works
@@ -212,12 +213,13 @@ else:
             ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
-            self.assert_(re.search('Cannot make \.scons directory:.*'
-                                   'Permission denied.*Please first make it '
-                                   'manually, with a command like.*'
-                                   'mkdir \.scons', stderr,
-                                   re.DOTALL),
-                         'regex match failed on ' + stderr)
+            self.assertTrue(
+                re.search('Cannot make \.scons directory:.*'
+                          'Permission denied.*Please first make it '
+                          'manually, with a command like.*'
+                          'mkdir \.scons', stderr,
+                          re.DOTALL),
+                'regex match failed on ' + stderr)
 
 
 if __name__ == '__main__':
