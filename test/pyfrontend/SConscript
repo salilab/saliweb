@@ -10,7 +10,8 @@ if e.get('coverage', False):
 def builder_unit_test(target, source, env):
     app = "%s %s -v > /dev/null" % (e['python'], source[0])
     if e.Execute(app) == 0:
-        file(str(target[0]), 'w').write('PASSED\n')
+        with open(str(target[0]), 'w') as fh:
+            fh.write('PASSED\n')
     else:
         print("unit tests FAILED")
         return 1

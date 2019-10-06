@@ -13,7 +13,8 @@ def builder_unit_test(target, source, env):
     else:
         app = "cd %s && prove *.pl" % dir
     if e.Execute(app) == 0:
-        file(str(target[0]), 'w').write('PASSED\n')
+        with open(str(target[0]), 'w') as fh:
+            fh.write('PASSED\n')
     else:
         print("unit tests FAILED")
         return 1
