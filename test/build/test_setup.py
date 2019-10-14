@@ -101,7 +101,7 @@ class SetupTest(unittest.TestCase):
         def get_broken_env_pyscript(name, script):
             tmpfile = os.path.join(tmpdir, name)
             with open(tmpfile, 'w') as fh:
-                print("#!/usr/bin/python\n" + script, file=fh)
+                print("#!" + sys.executable + "\n" + script, file=fh)
             os.chmod(tmpfile, 0o755)
             return BrokenEnv(tmpfile)
 
