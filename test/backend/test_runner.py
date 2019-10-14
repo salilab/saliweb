@@ -110,7 +110,7 @@ echo foo
         """Check SGERunner._check_completed()"""
         TestRunner._waited_jobs.add('waitedjob')
         qstat = open('qstat', 'w')
-        qstat.write("""#!/usr/bin/python
+        qstat.write("""#!%s
 from __future__ import print_function
 import sys
 if sys.argv[2].startswith('badbulk'):
@@ -121,7 +121,7 @@ elif sys.argv[2].startswith('donebulk'):
     sys.exit(1)
 else:
     print("job info")
-""")
+""" % sys.executable)
         qstat.close()
         os.chmod('qstat', 0o755)
         TestRunner._qstat = os.path.join(os.getcwd(), 'qstat')
