@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Simple functions to run jobs on Sali Lab REST web services.
 
