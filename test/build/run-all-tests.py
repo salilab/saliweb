@@ -35,7 +35,6 @@ class RunAllTests(unittest.TestProgram):
         if coverage:
             self.cov.stop()
             self.cov.combine()
-            self.cov.use_cache(True)
             print("\nPython coverage report\n", file=sys.stderr)
 
             if hasattr(coverage.files, 'RELATIVE_DIR'):

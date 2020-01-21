@@ -54,7 +54,6 @@ atexit.register(_coverage_cleanup, _cov)
             shutil.rmtree(self.tmpdir)
             self.cov.stop()
             self.cov.combine()
-            self.cov.use_cache(True)
             print("\nPython coverage report\n", file=sys.stderr)
 
             if hasattr(coverage.files, 'RELATIVE_DIR'):
