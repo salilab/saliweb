@@ -29,6 +29,14 @@ backend_group = None
 backend_uid_range = [11800, 11900]
 
 
+if sys.version_info[0] >= 3:
+    def _get_value_contents(value_node):
+        return value_node.get_contents().decode('utf-8')
+else:
+    def _get_value_contents(value_node):
+        return value_node.get_contents()
+
+
 def _add_build_variable(vars, configs):
     if not isinstance(configs, (list, tuple)):
         configs = [configs]
@@ -95,7 +103,7 @@ def Environment(variables, configfiles, version=None, service_module=None,
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
-    env.Requires(install, env['config'].directories.values())
+    env.Requires(install, list(env['config'].directories.values()))
     env.Default(install)
     return env
 
@@ -741,7 +749,7 @@ def _install_directories(env):
 
 
 def _make_readme(env, target, source):
-    service_name = source[0].get_contents()
+    service_name = _get_value_contents(source[0])
     with open(target[0].path, 'w') as f:
         print("Do not edit files in this directory directly!", file=f)
         print("Instead, check out the source files for the %s service,"
@@ -753,7 +761,7 @@ def _make_script(env, target, source):
     if name.endswith('.py'):
         name = name[:-3]
     with open(target[0].path, 'w') as f:
-        print("#!/usr/bin/python", file=f)
+        print("#!/usr/bin/python%d" % sys.version_info[0], file=f)
         print("import webservice", file=f)
         print("import saliweb.backend." + name, file=f)
         print("saliweb.backend.%s.main(webservice)" % name, file=f)
@@ -762,8 +770,8 @@ def _make_script(env, target, source):
 
 def _make_cgi_script(env, target, source):
     name = os.path.basename(str(target[0]))
-    modname = source[0].get_contents()
-    perldir = source[1].get_contents()
+    modname = _get_value_contents(source[0])
+    perldir = _get_value_contents(source[1])
     if name.endswith('.cgi'):
         name = name[:-4]
     with open(target[0].path, 'w') as f:
@@ -787,10 +795,11 @@ def _make_cgi_script(env, target, source):
 
 
 def _make_web_service(env, target, source):
-    config = source[0].get_contents()
-    modname = source[1].get_contents()
-    pydir = source[2].get_contents()
-    version = source[3].get_contents()
+    config = _get_value_contents(source[0])
+    modname = _get_value_contents(source[1])
+    pydir = _get_value_contents(source[2])
+    version = _get_value_contents(source[3])
+
     if version != 'None':
         version = "r'%s'" % version
     else:
@@ -860,11 +869,11 @@ def _InstallFrontend(env, files, subdir=None):
 def _subst_python_install(env, target, source):
     fin = open(source[0].path, 'r')
     fout = open(target[0].path, 'w')
-    configfile = source[1].get_contents()
-    version = source[2].get_contents()
-    frontenddir = source[3].get_contents()
-    service_module = source[4].get_contents()
-    wsgi = source[5].get_contents()
+    configfile = _get_value_contents(source[1])
+    version = _get_value_contents(source[2])
+    frontenddir = _get_value_contents(source[3])
+    service_module = _get_value_contents(source[4])
+    wsgi = _get_value_contents(source[5])
     version = '' if version == 'None' else version
     for line in fin:
         fout.write(line)
@@ -904,14 +913,14 @@ def _InstallTXT(env, files, subdir=None):
 def _subst_install(env, target, source):
     fin = open(source[0].path, 'r')
     fout = open(target[0].path, 'w')
-    configfile = source[1].get_contents()
-    version = source[2].get_contents()
+    configfile = _get_value_contents(source[1])
+    version = _get_value_contents(source[2])
     if version != 'None':
         version = "'%s'" % version
     else:
         version = 'undef'
-    service_name = source[3].get_contents()
-    frontend = source[4].get_contents()
+    service_name = _get_value_contents(source[3])
+    frontend = _get_value_contents(source[4])
     if frontend == '':
         frontend = 'undef'
     else:
