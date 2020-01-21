@@ -1410,7 +1410,10 @@ class Job(object):
             try:
                 s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 s.connect(self._db.config.socket)
-                s.send("INCOMING %s" % self.name)
+                msg = "INCOMING %s" % self.name
+                if sys.version_info[0] >= 3:
+                    msg = msg.encode('utf-8')
+                s.send(msg)
                 s.close()
             except socket.error:
                 pass
