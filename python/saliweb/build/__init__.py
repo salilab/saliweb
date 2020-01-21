@@ -31,7 +31,11 @@ backend_uid_range = [11800, 11900]
 
 if sys.version_info[0] >= 3:
     def _get_value_contents(value_node):
-        return value_node.get_contents().decode('utf-8')
+        contents = value_node.get_contents()
+        if isinstance(contents, bytes):
+            return contents.decode('utf-8')
+        else:
+            return contents
 else:
     def _get_value_contents(value_node):
         return value_node.get_contents()
