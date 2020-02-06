@@ -338,10 +338,10 @@ def _check_directory_locations(env):
             env.Exit(1)
 
     running = env['config'].directories['RUNNING']
-    if not running.startswith('/netapp') and not running.startswith('/wynton'):
+    if not running.startswith('/wynton'):
         print("""
 ** The RUNNING directory is set to %s.
-** It must be on a cluster-accessible disk (i.e. /netapp or /wynton).
+** It must be on a cluster-accessible disk (i.e. /wynton).
 """ % running, file=sys.stderr)
         env.Exit(1)
 
@@ -468,7 +468,7 @@ def _check_permissions(env):
 ** Cannot write to .scons directory: %s
 ** The backend user needs to be able to write to this directory.
 ** To fix this problem, make sure that your checkout is on a local disk
-** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
+** (e.g. /modbase1, /modbase2, etc., not /wynton) and run
    setfacl -m u:%s:rwx .scons
 """ % (str(detail), env['config'].backend['user']), file=sys.stderr)
         env.Exit(1)
@@ -508,7 +508,7 @@ def _check_permissions(env):
 ** Cannot read database configuration file: %s
 ** The backend user needs to be able to read this file.
 ** To fix this problem, make sure that your checkout is on a local disk
-** (e.g. /modbase1, /modbase2, etc., not /netapp) and run
+** (e.g. /modbase1, /modbase2, etc., not /wynton) and run
    setfacl -m u:%s:r %s
 """ % (str(detail), env['config'].backend['user'], conf), file=sys.stderr)
             env.Exit(1)

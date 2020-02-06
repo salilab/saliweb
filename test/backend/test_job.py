@@ -766,7 +766,7 @@ class JobTest(unittest.TestCase):
         # Can only resubmit FAILED jobs
         self.assertRaises(InvalidStateError, job.resubmit)
         # Resubmitted FAILED jobs actually go into the PREPROCESSING directory
-        # (to avoid a potentially expensive move from netapp to modbase
+        # (to avoid a potentially expensive move from Wynton to modbase
         # and back again)
         prejobdir = os.path.join(conf.directories['PREPROCESSING'], 'job1')
         self.assertEqual(job.directory, prejobdir)

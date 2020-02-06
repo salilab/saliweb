@@ -308,7 +308,7 @@ class CheckTest(unittest.TestCase):
         # Incoming/install on local disk, running on cluster disk is OK
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5'):
-            for cluster in ('/netapp/ok', '/wynton/home/ok'):
+            for cluster in ('/wynton/home/ok',):
                 env = make_env(disk, disk, cluster)
                 ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
@@ -317,9 +317,9 @@ class CheckTest(unittest.TestCase):
                 self.assertEqual(stderr, '')
 
         # Incoming/install on a network disk is NOT OK
-        for disk in ('/guitar1', '/netapp', '/salilab'):
-            env1 = make_env('/var', disk, '/netapp/ok')
-            env2 = make_env(disk, '/var', '/netapp/ok')
+        for disk in ('/guitar1', '/wynton', '/salilab'):
+            env1 = make_env('/var', disk, '/wynton/ok')
+            env2 = make_env(disk, '/var', '/wynton/ok')
             for (name, env) in (('INCOMING', env1), ('install', env2)):
                 ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
@@ -330,7 +330,7 @@ class CheckTest(unittest.TestCase):
                                  '.\n** It must be on a local disk '
                                  '(e.g. /modbase1).\n\n')
 
-        # Running on a non-netapp disk is NOT OK
+        # Running on a non-Wynton disk is NOT OK
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5', '/guitar1',
                      '/salilab'):
@@ -342,7 +342,7 @@ class CheckTest(unittest.TestCase):
             self.assertEqual(stderr, '\n** The RUNNING directory is set to ' \
                              + disk + \
                              '.\n** It must be on a cluster-accessible disk '
-                             '(i.e. /netapp or /wynton).\n\n')
+                             '(i.e. /wynton).\n\n')
 
     @testutil.run_in_tempdir
     def test_check_directory_permissions(self):

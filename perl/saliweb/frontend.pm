@@ -370,7 +370,7 @@ require Exporter;
              sanitize_filename);
 
 # Location of our PDB mirror.
-our $pdb_root = "/netapp/database/pdb/remediated/pdb/";
+our $pdb_root = "/wynton/home/database/pdb/remediated/pdb/";
 
 use File::Spec;
 use DBI;

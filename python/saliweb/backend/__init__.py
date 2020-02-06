@@ -1327,9 +1327,9 @@ class Job(object):
                 # The only way to go into INCOMING state is from the FAILED
                 # state (via resubmit). Since it's going to go from there back
                 # to running, and the failed/running directories are often
-                # on netapp (while incoming has to be on modbase) avoid
-                # a potentially expensive copy from netapp to modbase and
-                # then back to netapp by cheating and putting the job in
+                # on cluster storage (while incoming has to be on modbase) avoid
+                # a potentially expensive copy from network to modbase and
+                # then back to network by cheating and putting the job in
                 # the PREPROCESSING directory already.
                 directory = os.path.join(
                                  self._db.config.directories['PREPROCESSING'],
