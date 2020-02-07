@@ -97,6 +97,30 @@ class Tests(unittest.TestCase):
         self.assertEqual(str(q.name_link), '<a href="testurl">testname</a>')
         del flask.g.user
 
+    def test_check_cluster_running(self):
+        """Test _check_cluster_running function"""
+        with util.temporary_directory() as tmpdir:
+            queue_job = os.path.join(tmpdir, 'job1')
+            run_job = os.path.join(tmpdir, 'job2')
+            os.mkdir(queue_job)
+            os.mkdir(run_job)
+            with open(os.path.join(run_job, 'job-state'), 'w') as fh:
+                pass
+            # Queued job, should be changed to QUEUED
+            j = {'state': 'RUNNING', 'directory': queue_job}
+            jnew = saliweb.frontend._check_cluster_running(j)
+            self.assertEqual(jnew['state'], 'QUEUED')
+
+            # Job really is running, should be unchanged
+            j = {'state': 'RUNNING', 'directory': run_job}
+            jnew = saliweb.frontend._check_cluster_running(j)
+            self.assertEqual(jnew, j)
+
+            # Completed job, should be unchanged
+            j = {'state': 'COMPLETED'}
+            jnew = saliweb.frontend._check_cluster_running(j)
+            self.assertEqual(jnew, j)
+
     def test_completed_job(self):
         """Test _CompletedJob object"""
         j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',

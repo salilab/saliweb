@@ -419,6 +419,14 @@ def _request_wants_xml():
     return best == 'application/xml' and accept[best] > accept['text/html']
 
 
+def _check_cluster_running(j):
+    """Modify job state from RUNNING to QUEUED if it hasn't started yet"""
+    if j['state'] == 'RUNNING':
+        state_file = os.path.join(j['directory'], 'job-state')
+        if not os.path.exists(state_file):
+            j['state'] = 'QUEUED'
+    return j
+
 def render_queue_page():
     """Return an HTML list of all jobs. Typically used in the `/job` route for
        a GET request."""
@@ -431,7 +439,7 @@ def render_queue_page():
     c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "
               "AND state != 'EXPIRED' AND state != 'COMPLETED' "
               "ORDER BY submit_time DESC")
-    running_jobs = [ _QueuedJob(x) for x in c ]
+    running_jobs = [ _QueuedJob(_check_cluster_running(x)) for x in c ]
     c.execute("SELECT * FROM jobs WHERE state='COMPLETED' "
               "ORDER BY submit_time DESC")
     completed_jobs = [ _QueuedJob(x) for x in c ]
