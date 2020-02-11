@@ -30,6 +30,7 @@ as if it failed "normally". This can be suppressed with the -n option.
 def fail_job(job, force, email):
     if not force:
         sys.stdout.write("Fail job %s? " % job.name)
+        sys.stdout.flush()
         reply = sys.stdin.readline()
         if len(reply) < 1 or reply[0].upper() != 'Y':
             return
