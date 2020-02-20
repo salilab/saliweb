@@ -42,7 +42,11 @@ def _try_job_name(job_name, cur):
 
     job_dir = _get_job_directory(job_name)
     if not os.path.exists(job_dir) and not is_job_in_db():
-        os.mkdir(job_dir)
+        try:
+            os.mkdir(job_dir)
+        except FileExistsError:
+            # Directory may have been made between exists() check and mkdir()
+            return None
         if not is_job_in_db():  # avoid race condition
             return job_dir
 
