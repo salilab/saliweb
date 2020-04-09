@@ -26,6 +26,7 @@ Jobs in other states can only be deleted if the backend is stopped first.
 def delete_job(job, force):
     if not force:
         sys.stdout.write("Delete job %s? " % job.name)
+        sys.stdout.flush()
         reply = sys.stdin.readline()
         if len(reply) < 1 or reply[0].upper() != 'Y':
             return
