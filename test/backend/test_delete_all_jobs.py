@@ -26,11 +26,11 @@ class DelJobTest(unittest.TestCase):
     def test_check_not_running(self):
         """Test check_not_running function"""
         web = DummyWeb(None)
-        self.assertEqual(check_not_running(web), None)
+        self.assertIsNone(check_not_running(web))
         web = DummyWeb(99)
         self.assertRaises(ValueError, check_not_running, web)
         web = DummyWeb(None, err=True)
-        self.assertEqual(check_not_running(web), None)
+        self.assertIsNone(check_not_running(web))
 
     def test_main(self):
         """Test delete_all_jobs main()"""

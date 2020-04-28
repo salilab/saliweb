@@ -10,12 +10,12 @@ class EventsTest(unittest.TestCase):
     def test_event_queue(self):
         """Check the _EventQueue class"""
         e = saliweb.backend.events._EventQueue()
-        self.assertEqual(e.get(0), None)
+        self.assertIsNone(e.get(0))
         e.put('a')
         e.put('b')
         self.assertEqual(e.get(), 'a')
         self.assertEqual(e.get(), 'b')
-        self.assertEqual(e.get(0), None)
+        self.assertIsNone(e.get(0))
 
     def test_incoming_jobs_event(self):
         """Check the _IncomingJobsEvent class"""
@@ -59,7 +59,7 @@ class EventsTest(unittest.TestCase):
         ws = DummyWebService()
         ev = saliweb.backend.events._CompletedJobEvent(ws, None, 'good', None)
         ev.process()
-        self.assertEqual(ws.run_exception, None)
+        self.assertIsNone(ws.run_exception)
 
         ws = DummyWebService()
         ev = saliweb.backend.events._CompletedJobEvent(ws, None, 'good', 'foo')
@@ -85,8 +85,8 @@ class EventsTest(unittest.TestCase):
         # Should have added 2 events
         for i in range(2):
             x = q.get(timeout=0.)
-            self.assert_(isinstance(x, saliweb.backend.events._OldJobsEvent))
-        self.assertEqual(q.get(timeout=0.), None)
+            self.assertIsInstance(x, saliweb.backend.events._OldJobsEvent)
+        self.assertIsNone(q.get(timeout=0.))
 
     def test_periodic_check(self):
         """Check the _PeriodicCheck class"""
@@ -103,9 +103,9 @@ class EventsTest(unittest.TestCase):
         # Should have added 2 events
         for i in range(2):
             x = q.get(timeout=0.)
-            self.assert_(isinstance(x,
-                                 saliweb.backend.events._PeriodicCheckEvent))
-        self.assertEqual(q.get(timeout=0.), None)
+            self.assertIsInstance(x,
+                                 saliweb.backend.events._PeriodicCheckEvent)
+        self.assertIsNone(q.get(timeout=0.))
 
     def test_periodic_check_event(self):
         """Check the _PeriodicCheckEvent class"""
@@ -131,9 +131,9 @@ class EventsTest(unittest.TestCase):
         # Should have added 2 events
         for i in range(2):
             x = q.get(timeout=0.)
-            self.assert_(isinstance(x,
-                         saliweb.backend.events._CleanupIncomingJobsEvent))
-        self.assertEqual(q.get(timeout=0.), None)
+            self.assertIsInstance(x,
+                         saliweb.backend.events._CleanupIncomingJobsEvent)
+        self.assertIsNone(q.get(timeout=0.))
 
     def test_incoming_jobs(self):
         """Check the _IncomingJobs class"""
@@ -158,8 +158,8 @@ class EventsTest(unittest.TestCase):
         time.sleep(0.05)
         # Should have added 1 event
         x = q.get(timeout=0.)
-        self.assert_(isinstance(x, saliweb.backend.events._IncomingJobsEvent))
-        self.assertEqual(q.get(timeout=0.), None)
+        self.assertIsInstance(x, saliweb.backend.events._IncomingJobsEvent)
+        self.assertIsNone(q.get(timeout=0.))
         os.unlink('test.sock')
 
 if __name__ == '__main__':

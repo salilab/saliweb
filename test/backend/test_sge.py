@@ -13,7 +13,7 @@ class SGETest(unittest.TestCase):
         """Check the _SGETasks class with no subtasks"""
         for s in ('', '-o foo -p bar'):
             t = _SGETasks(s)
-            self.assert_(not t)
+            self.assertTrue(not t)
 
     def test_sge_tasks_invalid(self):
         """Check the _SGETasks class with invalid input"""
@@ -80,7 +80,7 @@ class SGETest(unittest.TestCase):
         time.sleep(0.1)
         e = ws._event_queue.get(timeout=0.)
         self.assertEqual(e.runid, 'jobN.1-2:1')
-        self.assertEqual(e.run_exception, None)
+        self.assertIsNone(e.run_exception)
         self.assertEqual(events,
                 ['add job dict jobN.1-2:1', 'get drmaa',
                  "sync ['jobN.1', 'jobN.2'] timeout forever cleanup False",
@@ -95,7 +95,7 @@ class SGETest(unittest.TestCase):
         time.sleep(0.1)
         e = ws._event_queue.get(timeout=0.)
         self.assertEqual(e.runid, 'jobN.1-2:1')
-        self.assert_(isinstance(e.run_exception, saliweb.backend.RunnerError))
+        self.assertIsInstance(e.run_exception, saliweb.backend.RunnerError)
         self.assertEqual(events,
                 ['add job dict jobN.1-2:1', 'get drmaa',
                  "sync ['jobN.1', 'jobN.fail'] timeout forever cleanup False",
@@ -115,7 +115,7 @@ class SGETest(unittest.TestCase):
         sys.modules['drmaa'] = DummyDRMAA()
         d = _DRMAAWrapper({})
         self.assertEqual(d.module, sys.modules['drmaa'])
-        self.assert_(isinstance(d.session, DummyDRMAA.Session))
+        self.assertIsInstance(d.session, DummyDRMAA.Session)
         self.assertEqual(events, ['drmaa session init'])
         del d
         self.assertEqual(events, ['drmaa session init', 'drmaa session exit'])

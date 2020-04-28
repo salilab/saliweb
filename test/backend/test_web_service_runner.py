@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
                 url = r._run(ws)
                 self.assertEqual(url, 'jobid')
                 event1 = ws._event_queue.get()
-                self.assertEqual(event1.run_exception, None)
+                self.assertIsNone(event1.run_exception)
                 self.assertEqual(event1.runid, 'jobid')
                 self.assertEqual(event1.runner, r)
                 self.assertEqual(event1.webservice, ws)

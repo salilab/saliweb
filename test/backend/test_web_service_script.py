@@ -154,7 +154,7 @@ else:
 
     def test_get_results(self):
         """Test get_results()"""
-        self.assertEqual(web_service.get_results('http://notdone/'), None)
+        self.assertIsNone(web_service.get_results('http://notdone/'))
         self.assertRaises(urllib2.HTTPError, web_service.get_results,
                           'http://badurl/')
         urls = web_service.get_results('http://jobresults/')

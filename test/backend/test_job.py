@@ -282,7 +282,7 @@ class JobTest(unittest.TestCase):
     """Check Job class"""
 
     def assert_fail_msg(self, failre, job):
-        self.assert_(re.search(failre, job._metadata['failure'],
+        self.assertTrue(re.search(failre, job._metadata['failure'],
                                flags=re.DOTALL),
                      'Unexpected failure message: ' + job._metadata['failure'])
 
@@ -313,8 +313,8 @@ class JobTest(unittest.TestCase):
         # New fields should have been populated in the database
         self.assertEqual(job._metadata['testfield'], 'run')
         self.assertEqual(job._metadata['runner_id'], 'mock:MyJob ID')
-        self.assertNotEqual(job._metadata['preprocess_time'], None)
-        self.assertNotEqual(job._metadata['run_time'], None)
+        self.assertIsNotNone(job._metadata['preprocess_time'])
+        self.assertIsNotNone(job._metadata['run_time'])
         # Both preprocess and run methods in MyJob should have triggered
         os.unlink(os.path.join(runjobdir, 'preproc'))
         os.unlink(os.path.join(runjobdir, 'job-output'))
@@ -332,7 +332,7 @@ class JobTest(unittest.TestCase):
         db.conn.commit()
         web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job1')
-        self.assertEqual(job.directory, None)
+        self.assertIsNone(job.directory)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'SanityError: .*did not set the directory', job)
         cleanup_webservice(conf, tmpdir)
@@ -348,7 +348,7 @@ class JobTest(unittest.TestCase):
         db.conn.commit()
         web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job2')
-        self.assertEqual(job.directory, None)
+        self.assertIsNone(job.directory)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'SanityError: .*is not a directory', job)
         cleanup_webservice(conf, tmpdir)
@@ -405,14 +405,14 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-preprocess')
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
         self.assertEqual(job.directory, failjobdir)
-        self.assertEqual(job._metadata['runner_id'], None)
+        self.assertIsNone(job._metadata['runner_id'])
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in preprocessing', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
         # Make sure that the admin got a failed job email
         mail = conf.get_mail_output()
-        self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
+        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testadmin' \
                                + '.*Failure in preprocessing', mail,
                                flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
@@ -427,11 +427,11 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'log-preprocess')
         # Make sure that the logger file was closed
         for f in testutil.get_open_files():
-            self.assert_('framework.log' not in f,
+            self.assertTrue('framework.log' not in f,
                          "log file %s is still open" % f)
         # Check get_log_handler method
         hdlr = job.get_log_handler()
-        self.assert_(isinstance(hdlr, logging.Handler))
+        self.assertIsInstance(hdlr, logging.Handler)
         jobdir = os.path.join(conf.directories['RUNNING'], 'log-preprocess')
         self.assertEqual(job.directory, jobdir)
         # Both preprocess and run methods in MyJob should have triggered
@@ -439,7 +439,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'job-output'))
         # All logging messages above the threshold should be in framework.log
         logs = open(os.path.join(jobdir, 'framework.log')).read()
-        self.assert_(re.match(
+        self.assertTrue(re.match(
                     '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ WARNING warning message\n'
                     '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ ERROR error message\n'
                     '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ CRITICAL critical message\n',
@@ -476,9 +476,9 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(compjobdir, 'preproc'))
         os.unlink(os.path.join(compjobdir, 'complete'))
         self.assertEqual(job._metadata['testfield'], 'complete')
-        self.assertEqual(job._metadata['runner_id'], None)
-        self.assertEqual(job._metadata['run_time'], None)
-        self.assertEqual(job._metadata['postprocess_time'], None)
+        self.assertIsNone(job._metadata['runner_id'])
+        self.assertIsNone(job._metadata['run_time'])
+        self.assertIsNone(job._metadata['postprocess_time'])
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
 
@@ -493,7 +493,7 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'fail-run')
         self.assertEqual(job.directory, failjobdir)
         self.assertEqual(job._metadata['testfield'], 'preprocess')
-        self.assertEqual(job._metadata['runner_id'], None)
+        self.assertIsNone(job._metadata['runner_id'])
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in running', job)
         # Just the preprocess method in MyJob should have triggered
@@ -515,10 +515,10 @@ class JobTest(unittest.TestCase):
         self.assertEqual(id(job.config), id(conf))
         # New fields should have been populated in the database
         self.assertEqual(job._metadata['testfield'], 'complete')
-        self.assertNotEqual(job._metadata['postprocess_time'], None)
-        self.assertNotEqual(job._metadata['end_time'], None)
-        self.assertNotEqual(job._metadata['archive_time'], None)
-        self.assertNotEqual(job._metadata['expire_time'], None)
+        self.assertIsNotNone(job._metadata['postprocess_time'])
+        self.assertIsNotNone(job._metadata['end_time'])
+        self.assertIsNotNone(job._metadata['archive_time'])
+        self.assertIsNotNone(job._metadata['expire_time'])
         # postprocess, finalize, complete methods in MyJob should have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
         os.unlink(os.path.join(compjobdir, 'finalize'))
@@ -529,7 +529,7 @@ class JobTest(unittest.TestCase):
         cleanup_webservice(conf, tmpdir)
         # User should have been notified by email
         mail = conf.get_mail_output()
-        self.assert_(re.search('Subject: .*From: testadmin.*To: testuser' \
+        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testuser' \
                                + '.*Your job job1 has finished.*http://testurl',
                                mail, flags=re.DOTALL),
                      'Unexpected mail output: ' + mail)
@@ -546,8 +546,8 @@ class JobTest(unittest.TestCase):
         jobdir = os.path.join(conf.directories['COMPLETED'], 'job1')
         self.assertEqual(job.directory, jobdir)
         # archive/expire times should still be NULL
-        self.assertEqual(job._metadata['archive_time'], None)
-        self.assertEqual(job._metadata['expire_time'], None)
+        self.assertIsNone(job._metadata['archive_time'])
+        self.assertIsNone(job._metadata['expire_time'])
         os.unlink(os.path.join(jobdir, 'postproc'))
         os.unlink(os.path.join(jobdir, 'finalize'))
         os.unlink(os.path.join(jobdir, 'complete'))
@@ -720,7 +720,7 @@ class JobTest(unittest.TestCase):
 
         # Job should now have moved from ARCHIVED to EXPIRED
         job = web.get_job_by_name('EXPIRED', 'job1')
-        self.assertEqual(job.directory, None)
+        self.assertIsNone(job.directory)
         self.assertEqual(job._metadata['testfield'], 'expire')
         # expire method in MyJob should have triggered
         os.unlink('expire')
@@ -749,7 +749,7 @@ class JobTest(unittest.TestCase):
         # Job should now have moved from ARCHIVED to FAILED
         job = web.get_job_by_name('FAILED', 'fail-expire')
         # Job directory should be None since EXPIRED state was visited
-        self.assertEqual(job.directory, None)
+        self.assertIsNone(job.directory)
         self.assert_fail_msg('Python exception:.*Traceback.*' \
                              + 'ValueError: Failure in expiry', job)
         cleanup_webservice(conf, tmpdir)
@@ -783,10 +783,10 @@ class JobTest(unittest.TestCase):
         open(os.path.join(db.config.directories['PREPROCESSING'],
                           'tempfile'), 'w').write('foo')
         web._delete_all_jobs()
-        self.assertEqual(web.get_job_by_name('FAILED', 'job1'), None)
-        self.assertEqual(web.get_job_by_name('INCOMING', 'job2'), None)
-        self.assertEqual(web.get_job_by_name('EXPIRED', 'job3'), None)
-        self.assertEqual(web.get_job_by_name('RUNNING', 'job4'), None)
+        self.assertIsNone(web.get_job_by_name('FAILED', 'job1'))
+        self.assertIsNone(web.get_job_by_name('INCOMING', 'job2'))
+        self.assertIsNone(web.get_job_by_name('EXPIRED', 'job3'))
+        self.assertIsNone(web.get_job_by_name('RUNNING', 'job4'))
         for typ in ('INCOMING', 'FAILED', 'RUNNING'):
             g = glob.glob(os.path.join(db.config.directories['INCOMING'], '*'))
             self.assertEqual(g, [])
@@ -804,10 +804,10 @@ class JobTest(unittest.TestCase):
         job.delete()
         # Jobs should now be removed
         job = web.get_job_by_name('FAILED', 'job1')
-        self.assertEqual(job, None)
+        self.assertIsNone(job)
         job = web.get_job_by_name('EXPIRED', 'job2')
-        self.assertEqual(job, None)
-        self.assert_(not os.path.exists(injobdir))
+        self.assertIsNone(job)
+        self.assertFalse(os.path.exists(injobdir))
         # Make sure that the database rows really went away
         c = db.conn.cursor()
         c.execute('SELECT COUNT(*) FROM jobs')
@@ -861,13 +861,13 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'batch_complete'))
         # Rescheduled jobs should *not* set run_time but should set
         # postprocess_time
-        self.assertEqual(job._metadata['run_time'], None)
-        self.assertNotEqual(job._metadata['postprocess_time'], None)
+        self.assertIsNone(job._metadata['run_time'])
+        self.assertIsNotNone(job._metadata['postprocess_time'])
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
         # User should *not* been notified by email
         mail = conf.get_mail_output()
-        self.assertEqual(mail, None)
+        self.assertIsNone(mail)
 
     def test_reschedule_run(self):
         """Check Job.reschedule_run method"""

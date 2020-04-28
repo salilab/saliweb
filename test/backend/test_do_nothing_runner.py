@@ -24,7 +24,7 @@ class DoNothingRunnerTest(unittest.TestCase):
         self.assertEqual(DoNothingRunner._check_completed('none', ''), True)
         event = ws._event_queue.get()
         event.process()
-        self.assertEqual(ws._exception, None)
+        self.assertIsNone(ws._exception)
         os.unlink('job-state')
 
 if __name__ == '__main__':

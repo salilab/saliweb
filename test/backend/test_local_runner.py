@@ -26,7 +26,7 @@ class LocalRunnerTest(unittest.TestCase):
         ws = DummyWebService()
         r = LocalRunner(['/bin/sleep', '60'])
         pid = r._run(ws)
-        self.assert_(isinstance(pid, str))
+        self.assertIsInstance(pid, str)
         # Give the waiter thread enough time to start up
         for i in range(20):
             if pid in LocalRunner._waited_jobs:
@@ -44,7 +44,7 @@ class LocalRunnerTest(unittest.TestCase):
         # Make sure that non-zero return code causes a job failure
         event = ws._event_queue.get(timeout=0)
         event.process()
-        self.assert_(isinstance(ws._exception, OSError))
+        self.assertIsInstance(ws._exception, OSError)
         ws._exception = None
 
         # Check successful completion
@@ -62,7 +62,7 @@ class LocalRunnerTest(unittest.TestCase):
             self.assertEqual(event2.runid, pid1)
         self.assertEqual(type(event1.runner), LocalRunner)
         self.assertEqual(type(event2.runner), LocalRunner)
-        self.assertEqual(ws._exception, None)
+        self.assertIsNone(ws._exception)
 
     def test_run_directory(self):
         """Make sure that LocalRunner runs in the right directory"""

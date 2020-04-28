@@ -157,7 +157,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertRaises(DummyError, db._execute, 'execute exception')
         # Return value should be the cursor
         c = db._execute('CREATE TABLE jobs (test TEXT)')
-        self.assert_(isinstance(c, DummyCursor))
+        self.assertIsInstance(c, DummyCursor)
 
         # If a 'gone away' error is encountered and reraised, the connection
         # should have been reestablished
@@ -170,7 +170,7 @@ class DatabaseTest(unittest.TestCase):
         oldconn = db.conn
         c = db._execute('reconnect succeeds')
         self.assertNotEqual(id(db.conn), id(oldconn))
-        self.assert_(isinstance(c, DummyCursor))
+        self.assertIsInstance(c, DummyCursor)
 
     def test_drop_tables(self):
         """Check Database._drop_tables()"""
@@ -270,7 +270,7 @@ class DatabaseTest(unittest.TestCase):
         db._update_job(job._metadata, 'INCOMING')
         # Get a fresh copy of the job from the database
         newjob = list(db._get_all_jobs_in_state('INCOMING'))[0]
-        self.assert_(job is not newjob)
+        self.assertIsNot(job, newjob)
         self.assertEqual(newjob._metadata['runner_id'], 'new-SGE-ID')
 
     def test_get_job_dependencies(self):

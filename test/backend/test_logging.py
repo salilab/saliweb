@@ -12,15 +12,15 @@ class LoggingTest(unittest.TestCase):
         """Check create of _DelayFileStream objects"""
         dfs = _DelayFileStream('foo')
         self.assertEqual(dfs.filename, os.path.join(os.getcwd(), 'foo'))
-        self.assertEqual(dfs.stream, None)
-        self.assertEqual(os.path.exists('foo'), False)
+        self.assertIsNone(dfs.stream)
+        self.assertFalse(os.path.exists('foo'))
         # flush should be a no-op
         dfs.flush()
-        self.assertEqual(os.path.exists('foo'), False)
+        self.assertFalse(os.path.exists('foo'))
         # File should appear on the first write
         print("test text", file=dfs)
         dfs.flush()
-        self.assertEqual(os.path.exists('foo'), True)
+        self.assertTrue(os.path.exists('foo'))
         contents = open('foo').read()
         self.assertEqual(contents, 'test text\n')
 

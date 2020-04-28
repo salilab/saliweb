@@ -145,8 +145,8 @@ else:
         sys.modules['drmaa'] = DummyDRMAA()
         r = SGERunner('test.sh')
         d, s = r._get_drmaa()
-        self.assert_(isinstance(d, DummyDRMAA))
-        self.assert_(isinstance(s, DummyDRMAA.Session))
+        self.assertIsInstance(d, DummyDRMAA)
+        self.assertIsInstance(s, DummyDRMAA.Session)
         SGERunner._drmaa = None
         del sys.modules['drmaa']
 
@@ -181,9 +181,9 @@ else:
         e1 = ws._event_queue.get(timeout=0.)
         e2 = ws._event_queue.get(timeout=0.)
         e3 = ws._event_queue.get(timeout=0.)
-        self.assertNotEqual(e1, None)
-        self.assertNotEqual(e2, None)
-        self.assertEqual(e3, None)
+        self.assertIsNotNone(e1)
+        self.assertIsNotNone(e2)
+        self.assertIsNone(e3)
 
 if __name__ == '__main__':
     unittest.main()

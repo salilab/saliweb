@@ -88,7 +88,7 @@ class WebServiceTest(unittest.TestCase):
         db = MemoryDatabase(Job)
         conf = Config(StringIO(basic_config % {'directory': '/'}))
         ws = WebService(conf, db)
-        self.assertEqual(ws.version, None)
+        self.assertIsNone(ws.version)
         # OK to make multiple WebService instances
         ws2 = WebService(conf, db)
         # Test with hostname tracking
@@ -153,7 +153,7 @@ class WebServiceTest(unittest.TestCase):
         job = web.get_job_by_name('RUNNING', 'job3')
         self.assertEqual(job.name, 'job3')
         job = web.get_job_by_name('RUNNING', 'job9')
-        self.assertEqual(job, None)
+        self.assertIsNone(job)
 
     def test_get_job_by_runner_id(self):
         """Check WebService._get_job_by_runner_id()"""
@@ -163,9 +163,9 @@ class WebServiceTest(unittest.TestCase):
         job = web._get_job_by_runner_id(goodrunner, 'job-2')
         self.assertEqual(job.name, 'job2')
         job = web._get_job_by_runner_id(badrunner, 'job-2')
-        self.assertEqual(job, None)
+        self.assertIsNone(job)
         job = web._get_job_by_runner_id(goodrunner, 'job-3')
-        self.assertEqual(job, None)
+        self.assertIsNone(job)
 
     def test_process_incoming(self):
         """Check WebService._process_incoming_jobs()"""
@@ -249,11 +249,12 @@ class WebServiceTest(unittest.TestCase):
         with open('state_file') as fh:
             x = fh.read().rstrip('\r\n')
         os.unlink('state_file')
-        self.assert_(re.search('FAILED: Traceback.*fatal error to be handled',
-                               x, flags=re.DOTALL),
-                     'Unexpected failure message: ' + x)
+        self.assertTrue(
+                re.search('FAILED: Traceback.*fatal error to be handled',
+                          x, flags=re.DOTALL),
+                'Unexpected failure message: ' + x)
         mail = conf.get_mail_output()
-        self.assert_(re.search('Subject: .*From: testadmin.*To: testadmin' \
+        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testadmin' \
                                + '.*Traceback.*test_handle_fatal_error.*' \
                                + 'TestFatalError: fatal error to be handled',
                                mail, flags=re.DOTALL),
@@ -304,7 +305,7 @@ class WebServiceTest(unittest.TestCase):
         """Check WebService.get_running_pid()"""
         db, conf, web = self._setup_webservice('.')
         # No state file -> return None
-        self.assertEqual(web.get_running_pid(), None)
+        self.assertIsNone(web.get_running_pid())
         # FAILED state file -> raise error
         open('state_file', 'w').write('FAILED: error\n')
         self.assertRaises(StateFileError, web.get_running_pid)
@@ -315,7 +316,7 @@ class WebServiceTest(unittest.TestCase):
         # Non-running pid -> return None
         # Unlikely to have a real pid this large!
         open('state_file', 'w').write('99999999')
-        self.assertEqual(web.get_running_pid(), None)
+        self.assertIsNone(web.get_running_pid())
 
     @testutil.run_in_tempdir
     def test_filesystem_sanity_check(self):
@@ -411,7 +412,7 @@ class WebServiceTest(unittest.TestCase):
         web._cleanup_dir = _cleanup_dir
         web._cleanup_incoming_jobs()
         self.assertEqual(len(cleaned_dirs), 1)
-        self.assert_(cleaned_dirs[0][0].endswith('/incoming/badjob'))
+        self.assertTrue(cleaned_dirs[0][0].endswith('/incoming/badjob'))
         self.assertEqual(cleaned_dirs[0][1], 3600.)
         # Cleanup of zero directories should also work
         web._cleanup_incoming_jobs()
@@ -438,9 +439,9 @@ class WebServiceTest(unittest.TestCase):
         web._cleanup_dir("dir1", 0.05)
         web._cleanup_dir("dir2", 0.05)
         web._cleanup_dir("dir3", 0.05)
-        self.assert_(not os.path.exists("dir1"))
-        self.assert_(os.path.exists("dir2"))
-        self.assert_(os.path.exists("dir3"))
+        self.assertFalse(os.path.exists("dir1"))
+        self.assertTrue(os.path.exists("dir2"))
+        self.assertTrue(os.path.exists("dir3"))
 
         # Cleanup of non-existent directory should be OK
         web._cleanup_dir("baddir", 0.05)

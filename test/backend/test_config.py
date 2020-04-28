@@ -88,7 +88,7 @@ class ConfigTest(unittest.TestCase):
                 conf = get_config(config_class=config.Config)
                 conf.send_email(to, 'testsubj', body)
                 mail = conf.get_mail_output()
-                self.assert_(re.search('Subject: testsubj.*From: '
+                self.assertTrue(re.search('Subject: testsubj.*From: '
                                    'test@salilab\.org.*To: testto.*testbody',
                                    mail, flags=re.DOTALL),
                              'Unexpected mail output: ' + mail)
@@ -133,7 +133,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].days, 1000)
         # Check NEVER
         conf = get_config(expire='never')
-        self.assertEqual(conf.oldjobs['expire'], None)
+        self.assertIsNone(conf.oldjobs['expire'])
         # Other suffixes or non-floats should raise an error
         self.assertRaises(ValueError, get_config, expire='8s')
         self.assertRaises(ValueError, get_config, expire='4.garbageh')
