@@ -6,6 +6,7 @@ if sys.version_info[0] >= 3:
     from io import StringIO
 else:
     from io import BytesIO as StringIO
+import testutil
 
 
 class DummyWeb(object):

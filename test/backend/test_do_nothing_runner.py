@@ -2,6 +2,7 @@ import unittest
 import os
 from saliweb.backend import DoNothingRunner
 import saliweb.backend.events
+import testutil
 
 class DummyJob(object):
     def _try_complete(self, webservice, run_exception):

@@ -11,6 +11,7 @@ try:
 except ImportError:
     from email.MIMEText import MIMEText  # python2
 import re
+import testutil
 
 basic_config = """
 [general]

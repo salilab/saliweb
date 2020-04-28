@@ -14,6 +14,7 @@ from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
 import io
+import testutil
 
 
 class MockURL(object):

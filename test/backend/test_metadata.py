@@ -1,5 +1,6 @@
 import unittest
 from saliweb.backend import _JobMetadata
+import testutil
 
 class MetadataTest(unittest.TestCase):
     """Check JobMetadata class"""

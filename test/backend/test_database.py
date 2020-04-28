@@ -7,6 +7,7 @@ import datetime
 from saliweb.backend import Job, MySQLField
 import saliweb.backend
 from memory_database import MemoryDatabase
+import testutil
 
 def make_test_jobs(sql):
     c = sql.cursor()

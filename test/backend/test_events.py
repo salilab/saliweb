@@ -3,6 +3,7 @@ import time
 import os
 import socket
 import saliweb.backend.events
+import testutil
 
 class EventsTest(unittest.TestCase):
     """Check events"""
