@@ -3,6 +3,9 @@ import unittest, sys, os, re
 import tempfile
 import shutil
 import glob
+import warnings
+
+warnings.simplefilter("default")
 
 # Only use coverage if it's new enough and is requested
 try:

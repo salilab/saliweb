@@ -1,6 +1,9 @@
 from __future__ import print_function
 import unittest, sys, os, re
 import glob
+import warnings
+
+warnings.simplefilter("default")
 
 # Only use coverage if it's new enough and is requested
 try:
