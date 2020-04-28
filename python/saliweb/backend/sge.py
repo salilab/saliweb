@@ -41,7 +41,7 @@ class _SGETasks(object):
 
     def __init__(self, opts):
         if '-t ' in opts:
-            m = re.search('-t\s+(\d+)(?:\-(\d+)(?::(\d+))?)?', opts)
+            m = re.search(r'-t\s+(\d+)(?:\-(\d+)(?::(\d+))?)?', opts)
             if not m:
                 raise ValueError("Invalid -t SGE option: '%s'" % opts)
             self.first = int(m.group(1))

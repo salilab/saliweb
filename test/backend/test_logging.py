@@ -21,7 +21,8 @@ class LoggingTest(unittest.TestCase):
         print("test text", file=dfs)
         dfs.flush()
         self.assertTrue(os.path.exists('foo'))
-        contents = open('foo').read()
+        with open('foo') as fh:
+            contents = fh.read()
         self.assertEqual(contents, 'test text\n')
 
 if __name__ == '__main__':

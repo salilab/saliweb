@@ -37,7 +37,8 @@ class RunAllTests(unittest.TestProgram):
     def make_site_customize(self):
         """Get coverage information on Python subprocesses"""
         self.tmpdir = tempfile.mkdtemp()
-        open(os.path.join(self.tmpdir, 'sitecustomize.py'), 'w').write("""
+        with open(os.path.join(self.tmpdir, 'sitecustomize.py'), 'w') as fh:
+            fh.write("""
 import coverage
 import atexit
 _cov = coverage.coverage(branch=True, data_suffix=True, auto_data=True,

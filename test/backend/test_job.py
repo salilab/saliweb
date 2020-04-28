@@ -438,7 +438,8 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'preproc'))
         os.unlink(os.path.join(jobdir, 'job-output'))
         # All logging messages above the threshold should be in framework.log
-        logs = open(os.path.join(jobdir, 'framework.log')).read()
+        with open(os.path.join(jobdir, 'framework.log')) as fh:
+            logs = fh.read()
         self.assertTrue(re.match(
                     '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ WARNING warning message\n'
                     '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ ERROR error message\n'
@@ -780,8 +781,9 @@ class JobTest(unittest.TestCase):
         injobdir = add_incoming_job(db, 'job2')
         add_expired_job(db, 'job3')
         runjobdir = add_running_job(db, 'job4', completed=False)
-        open(os.path.join(db.config.directories['PREPROCESSING'],
-                          'tempfile'), 'w').write('foo')
+        with open(os.path.join(db.config.directories['PREPROCESSING'],
+                              'tempfile'), 'w') as fh:
+            fh.write('foo')
         web._delete_all_jobs()
         self.assertIsNone(web.get_job_by_name('FAILED', 'job1'))
         self.assertIsNone(web.get_job_by_name('INCOMING', 'job2'))

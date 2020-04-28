@@ -225,8 +225,8 @@ class Config(object):
         config = configparser.SafeConfigParser()
         if not hasattr(fh, 'read'):
             self._config_dir = os.path.dirname(os.path.abspath(fh))
-            config.readfp(open(fh), fh)
-            fh = open(fh)
+            with open(fh) as fp:
+                config.readfp(fp, fh)
         else:
             self._config_dir = None
             config.readfp(fh)
@@ -306,7 +306,8 @@ class Config(object):
     def _read_db_auth(self, end='back'):
         filename = self.database[end + 'end_config']
         config = configparser.SafeConfigParser()
-        config.readfp(open(filename), filename)
+        with open(filename) as fh:
+            config.readfp(fh, filename)
         for key in ('user', 'passwd'):
             self.database[key] = config.get(end + 'end_db', key)
 
@@ -688,7 +689,8 @@ class WebService(object):
            raise a :exc:`StateFileError`."""
         state_file = self.config.backend['state_file']
         try:
-            old_state = open(state_file).read().rstrip('\r\n')
+            with open(state_file) as fh:
+                old_state = fh.read().rstrip('\r\n')
         except IOError:
             return
         if old_state.startswith('FAILED: '):
@@ -864,6 +866,7 @@ have done this, delete the state file (%s) to reenable runs.
         except socket.error:
             # Swallow exception
             pass
+        s.close()
 
     def _sanity_check(self):
         """Do basic sanity checking of the web service"""
@@ -1201,8 +1204,8 @@ class Job(object):
         """Return True only if the job-state file indicates the job
            finished."""
         try:
-            f = open(self._get_job_state_file())
-            return f.read().rstrip('\r\n') == 'DONE'
+            with open(self._get_job_state_file()) as f:
+                return f.read().rstrip('\r\n') == 'DONE'
         except IOError:
             return False   # if the file does not exist, job is still running
 
@@ -1649,8 +1652,8 @@ class SGERunner(Runner):
            If the name is not a valid SGE name (e.g. names cannot start with
            a digit) then it is mapped to one that is.
         """
-        name = re.sub('\s*', '', name)
-        if re.match('\d', name) or name.upper() in ("NONE", "ALL", "TEMPLATE"):
+        name = re.sub(r'\s*', '', name)
+        if re.match(r'\d', name) or name.upper() in ("NONE", "ALL", "TEMPLATE"):
             name = 'J' + name
         self._name = name
 
@@ -1737,13 +1740,14 @@ class SGERunner(Runner):
         # Unfortunately DRMAA1 only allows us to query individual tasks, and
         # looping over all tasks in a large parallel job is very inefficient,
         # so use qstat instead and parse the output.
-        m = re.match('(\S+)\.(\d+)\-(\d+):(\d+)$', jobid)
+        m = re.match(r'(\S+)\.(\d+)\-(\d+):(\d+)$', jobid)
         jobid = m.group(1)
         p = subprocess.Popen([cls._qstat, '-j', jobid], stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, env=cls._env,
                              universal_newlines=True)
         out = p.stdout.readlines()
         ret = p.wait()
+        p.stdout.close()
         if ret == 0:
             return False
         elif len(out) > 0 and out[0].startswith('Following jobs do not exist'):
@@ -1887,9 +1891,13 @@ class SaliWebServiceResult(object):
            is written into the job directory with the same name."""
         fin = urllib2.urlopen(self.url)
         if fh is None:
-            fh = open(self.get_filename(), 'w')
+            outfh = open(self.get_filename(), 'w')
+        else:
+            outfh = fh
         for line in fin:
-            fh.write(line)
+            outfh.write(line)
+        if fh is None:
+            outfh.close()
 
 
 class SaliWebServiceRunner(Runner):
@@ -1917,7 +1925,8 @@ class SaliWebServiceRunner(Runner):
 
     def _run(self, webservice):
         """Run the command and return a unique job ID."""
-        open(os.path.join(self._directory, 'job-state'), 'w').write('STARTED')
+        with open(os.path.join(self._directory, 'job-state'), 'w') as fh:
+            fh.write('STARTED')
         cwd = os.getcwd()
         try:
             os.chdir(self._directory)
@@ -1931,7 +1940,8 @@ class SaliWebServiceRunner(Runner):
     def _get_results(cls, jobid, directory):
         results = saliweb.web_service.get_results(jobid)
         if results is not None:
-            open(os.path.join(directory, 'job-state'), 'w').write('DONE')
+            with open(os.path.join(directory, 'job-state'), 'w') as fh:
+                fh.write('DONE')
             return results
 
     @classmethod
@@ -1962,7 +1972,8 @@ class DoNothingRunner(Runner):
     def _run(self, webservice):
         """Run and complete immediately"""
         # Make job-state file
-        open(os.path.join(self._directory, 'job-state'), 'w').write('DONE\n')
+        with open(os.path.join(self._directory, 'job-state'), 'w') as fh:
+            fh.write('DONE\n')
         runid = 'none'
         e = saliweb.backend.events._CompletedJobEvent(webservice,
                                                       self, runid, None)

@@ -144,6 +144,7 @@ class WebServiceTest(unittest.TestCase):
         down, addr = s.accept()
         self.assertEqual(down.recv(4096), b'0/test/install/bin/service.py')
 
+        s.close()
         del s
         os.unlink('test-socket')
 
@@ -307,15 +308,18 @@ class WebServiceTest(unittest.TestCase):
         # No state file -> return None
         self.assertIsNone(web.get_running_pid())
         # FAILED state file -> raise error
-        open('state_file', 'w').write('FAILED: error\n')
+        with open('state_file', 'w') as fh:
+            fh.write('FAILED: error\n')
         self.assertRaises(StateFileError, web.get_running_pid)
         # Running pid -> return it
         ourpid = os.getpid()
-        open('state_file', 'w').write('%d' % ourpid)
+        with open('state_file', 'w') as fh:
+            fh.write('%d' % ourpid)
         self.assertEqual(web.get_running_pid(), ourpid)
         # Non-running pid -> return None
         # Unlikely to have a real pid this large!
-        open('state_file', 'w').write('99999999')
+        with open('state_file', 'w') as fh:
+            fh.write('99999999')
         self.assertIsNone(web.get_running_pid())
 
     @testutil.run_in_tempdir
@@ -328,7 +332,8 @@ class WebServiceTest(unittest.TestCase):
         os.mkdir('incoming')
         os.mkdir('preprocessing')
         # Garbage files not in job directories are fine
-        open('garbage-file', 'w').write('test')
+        with open('garbage-file', 'w') as fh:
+            fh.write('test')
         web._filesystem_sanity_check()
 
     @testutil.run_in_tempdir
@@ -339,7 +344,8 @@ class WebServiceTest(unittest.TestCase):
         db, conf, web = self._setup_webservice('.')
         web._filesystem_sanity_check()
         # Make files (not directories) in job directories
-        open('incoming/garbage-file', 'w').write('test')
+        with open('incoming/garbage-file', 'w') as fh:
+            fh.write('test')
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
     @testutil.run_in_tempdir

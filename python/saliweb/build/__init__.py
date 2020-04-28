@@ -362,7 +362,7 @@ def _check_directory_permissions(env):
 ** Please change the ownership of this directory.
 """ % (dir, backend_user), file=sys.stderr)
             env.Exit(1)
-        if not re.search('^group::.\-..*other::.\-.', out,
+        if not re.search(r'^group::.\-..*other::.\-.', out,
                          re.MULTILINE | re.DOTALL):
             print("""
 ** Install directory %s appears to be group- or world-writable!
@@ -480,7 +480,7 @@ def _check_permissions(env):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True).communicate()
-        if not re.search('^group::\-\-\-.*^other::\-\-\-', out,
+        if not re.search(r'^group::\-\-\-.*^other::\-\-\-', out,
                          re.MULTILINE | re.DOTALL):
             print("""
 ** The database configuration file %s appears to be group- or world-
@@ -615,7 +615,7 @@ def _check_sql_username_length(env, auth, typ):
 def _get_sorted_grant(grant):
     """Sort grant column rights alphabetically, so that we can match them
        reliably."""
-    m = re.match('(.*?\()(.*)(\).*)$', grant)
+    m = re.match(r'(.*?\()(.*)(\).*)$', grant)
     if m:
         fields = m.group(2).split(',')
         fields = [x.strip() for x in fields]

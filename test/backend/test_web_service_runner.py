@@ -59,7 +59,8 @@ class Test(unittest.TestCase):
                     time.sleep(0.05)
                 res = SaliWebServiceRunner._check_completed(url, d.tmpdir)
                 self.assertEqual(len(res), 2)
-                state = open(os.path.join(d.tmpdir, 'job-state')).read()
+                with open(os.path.join(d.tmpdir, 'job-state')) as fh:
+                    state = fh.read()
                 self.assertEqual(state, 'DONE')
         finally:
             saliweb.web_service = old
