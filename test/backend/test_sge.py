@@ -132,7 +132,7 @@ class SGETest(unittest.TestCase):
         os.environ['SGE_FOO'] = 'bar'
         d = _DRMAAWrapper({'SGE_BAR': 'foo'})
         self.assertEqual(os.environ['SGE_BAR'], 'foo')
-        self.assertFalse('SGE_FOO' in os.environ)
+        self.assertNotIn('SGE_FOO', os.environ)
         del sys.modules['drmaa']
 
 if __name__ == '__main__':

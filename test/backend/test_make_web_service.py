@@ -32,7 +32,7 @@ class MakeWebServiceTests(unittest.TestCase):
                              universal_newlines=True)
         out, err = p.communicate()
         self.assertNotEqual(p.wait(), 0)
-        self.assertTrue('for a new web service' in err, msg=err)
+        self.assertIn('for a new web service', err)
 
     def test_get_install_dir_fail(self):
         """Check failure of MakeWebService.get_install_dir() """

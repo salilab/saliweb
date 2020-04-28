@@ -65,7 +65,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(conf.oldjobs['expire'].days, 90)
         self.assertEqual(conf.admin_email, 'test@salilab.org')
         self.assertEqual(conf.limits['running'], 5)
-        self.assertFalse('concurrent_tasks' in conf.limits)
+        self.assertNotIn('concurrent_tasks', conf.limits)
         self.assertFalse(conf.track_hostname)
         self.assertEqual(len(conf.frontends.keys()), 2)
         self.assertEqual(conf.frontends['foo']['service_name'], 'Foo')

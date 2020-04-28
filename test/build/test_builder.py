@@ -5,6 +5,7 @@ import os
 import saliweb.build
 import tempfile
 import shutil
+import testutil
 
 class DummyEnv(object):
     def __init__(self, exit_val):
@@ -138,7 +139,7 @@ class BuilderTest(unittest.TestCase):
         e.env['config'] = DummyConfig()
         t = saliweb.build.builder_perl_tests('dummytgt',
                                              ['foo.pl', 'bar.pl'], e)
-        self.assertTrue('PERL5LIB' in e.env['ENV'])
+        self.assertIn('PERL5LIB', e.env['ENV'])
         self.assertEqual(e.exec_str, "prove foo.pl bar.pl")
         self.assertEqual(t, 1)
 
@@ -153,8 +154,8 @@ class BuilderTest(unittest.TestCase):
                                                  ['foo.pl', 'bar.pl'], e)
         finally:
             saliweb.build._fixup_perl_html_coverage = old
-        self.assertTrue('PERL5LIB' in e.env['ENV'])
-        self.assertTrue('HARNESS_PERL_SWITCHES' in e.env['ENV'])
+        self.assertIn('PERL5LIB', e.env['ENV'])
+        self.assertIn('HARNESS_PERL_SWITCHES', e.env['ENV'])
 
         os.unlink('lib/other.pm')
         os.unlink('lib/testser.pm')

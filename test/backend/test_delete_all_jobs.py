@@ -62,7 +62,7 @@ class DelJobTest(unittest.TestCase):
         web = DummyWeb(None)
         mod = DummyModule(web)
         out = run_main(mod, 'YES')
-        self.assertTrue('Are you SURE' in out)
+        self.assertIn('Are you SURE', out)
         self.assertEqual(web.delete_all_jobs_called, True)
 
         web = DummyWeb(None)

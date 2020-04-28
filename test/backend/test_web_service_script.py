@@ -206,73 +206,70 @@ else:
         """Check running web_service.py from the command line"""
         out, err, exit = self.run_web_service_subprocess([])
         self.assertEqual(exit, 0)
-        self.assertTrue("Use 'web_service.py help' for help" in out, msg=out)
+        self.assertIn("Use 'web_service.py help' for help", out)
 
     def test_help(self):
         """Check running web_service.py help"""
         for args in [['help'], ['help', 'help']]:
             out, err, exit = self.run_web_service(args)
             self.assertEqual(exit, 0)
-            self.assertTrue("for detailed help on any command" in out, msg=out)
+            self.assertIn("for detailed help on any command", out)
 
         out, err, exit = self.run_web_service(['help', 'info'])
         self.assertEqual(exit, 0)
-        self.assertTrue("Get basic information about a web service" in out,
-                        msg=out)
+        self.assertIn("Get basic information about a web service", out)
 
         out, err, exit = self.run_web_service(['help', 'badcmd'])
         self.assertEqual(exit, 1)
-        self.assertTrue("Unknown command: 'badcmd'" in out, msg=out)
+        self.assertIn("Unknown command: 'badcmd'", out)
 
     def test_unknown_command(self):
         """Check running unknown web_service.py command"""
         out, err, exit = self.run_web_service(['badcmd'])
         self.assertEqual(exit, 1)
-        self.assertTrue("Unknown command: 'badcmd'" in out, msg=out)
+        self.assertIn("Unknown command: 'badcmd'", out)
 
     def test_info_command(self):
         """Check running web_service.py info command"""
         out, err, exit = self.run_web_service(['info'])
         self.assertEqual(exit, 1)
-        self.assertTrue("sample usage for submitting jobs" in out, msg=out)
+        self.assertIn("sample usage for submitting jobs", out)
         out, err, exit = self.run_web_service(['info', 'http://noparam/'])
         self.assertEqual(exit, 0)
-        self.assertTrue("web_service.py submit http://noparam/ "
-                        "[name1=ARG] [name2=@FILENAME] ..." in out, msg=out)
+        self.assertIn("web_service.py submit http://noparam/ "
+                      "[name1=ARG] [name2=@FILENAME] ...", out)
         out, err, exit = self.run_web_service(['info', 'http://ok/'])
         self.assertEqual(exit, 0)
-        self.assertTrue("web_service.py submit http://ok/ foo=ARG" in out,
-                        msg=out)
+        self.assertIn("web_service.py submit http://ok/ foo=ARG", out)
 
     def test_submit_command(self):
         """Check running web_service.py submit command"""
         out, err, exit = self.run_web_service(['submit'])
         self.assertEqual(exit, 1)
-        self.assertTrue("This only submits the job" in out, msg=out)
+        self.assertIn("This only submits the job", out)
         out, err, exit = self.run_web_service(['submit', 'http://oksubmit/'])
         self.assertEqual(exit, 0)
-        self.assertTrue("Job submitted: results will be found at" in out,
-                        msg=out)
+        self.assertIn("Job submitted: results will be found at", out)
 
     def test_results_command(self):
         """Check running web_service.py results command"""
         out, err, exit = self.run_web_service(['results'])
         self.assertEqual(exit, 1)
-        self.assertTrue("If the job has finished," in out, msg=out)
+        self.assertIn("If the job has finished,", out)
 
         out, err, exit = self.run_web_service(['results', 'http://jobresults/'])
         self.assertEqual(exit, 0)
-        self.assertTrue("http://results1/" in out, msg=out)
+        self.assertIn("http://results1/", out)
 
     def test_run_command(self):
         """Check running web_service.py run command"""
         out, err, exit = self.run_web_service(['run'])
         self.assertEqual(exit, 1)
-        self.assertTrue("basically the equivalent" in out, msg=out)
+        self.assertIn("basically the equivalent", out)
 
         out, err, exit = self.run_web_service(['run', 'http://oksubmit/'])
         self.assertEqual(exit, 0)
-        self.assertTrue("http://results1/" in out, msg=out)
+        self.assertIn("http://results1/", out)
 
 if __name__ == '__main__':
     unittest.main()

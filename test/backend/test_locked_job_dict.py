@@ -1,5 +1,6 @@
 import unittest
 import saliweb.backend
+import testutil
 
 class LockedJobDictTest(unittest.TestCase):
     """Check the _LockedJobDict class"""
@@ -8,11 +9,11 @@ class LockedJobDictTest(unittest.TestCase):
         """Check the _LockedJobDict class"""
         d = saliweb.backend._LockedJobDict()
         self.assertRaises(KeyError, d.remove, 'bar')
-        self.assertEqual('foo' in d, False)
+        self.assertNotIn('foo', d)
         d.add('foo')
-        self.assertEqual('foo' in d, True)
+        self.assertIn('foo', d)
         d.remove('foo')
-        self.assertEqual('foo' in d, False)
+        self.assertNotIn('foo', d)
         self.assertRaises(KeyError, d.remove, 'foo')
 
 if __name__ == '__main__':
