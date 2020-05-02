@@ -94,8 +94,8 @@ if not hasattr(unittest.TestCase, 'assertIsInstance'):
 # Provide assert(Not)Regex for Python 2 users (assertRegexpMatches is
 # deprecated in Python 3)
 if not hasattr(unittest.TestCase, 'assertRegex'):
-    assertRegex = unittest.TestCase.assertRegexpMatches
-    assertNotRegex = unittest.TestCase.assertNotRegexpMatches
+    unittest.TestCase.assertRegex = unittest.TestCase.assertRegexpMatches
+    unittest.TestCase.assertNotRegex = unittest.TestCase.assertNotRegexpMatches
 
 
 def run_catch_warnings(method, *args, **keys):
