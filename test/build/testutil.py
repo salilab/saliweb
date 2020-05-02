@@ -70,6 +70,11 @@ if not hasattr(unittest.TestCase, 'assertIsInstance'):
     unittest.TestCase.assertIsNone = assertIsNone
     unittest.TestCase.assertIsNotNone = assertIsNotNone
     unittest.TestCase.assertAlmostEqual = assertAlmostEqual
+# Provide assert(Not)Regex for Python 2 users (assertRegexMatches is
+# deprecated in Python 3)
+if not hasattr(unittest.TestCase, 'assertRegex'):
+    assertRegex = unittest.TestCase.assertRegexpMatches
+    assertNotRegex = unittest.TestCase.assertNotRegexpMatches
 
 
 def run_catch_warnings(method, *args, **keys):

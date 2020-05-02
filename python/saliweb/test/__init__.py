@@ -10,7 +10,7 @@ import saliweb.backend
 
 
 def _add_unittest_methods():
-    """Add more modern unittest methods to Python 2.6"""
+    """Add more modern unittest methods to Python 2.6, 3,0, or 3.1"""
     def assertRegexpMatches(self, text, regexp, msg=None):
         if isinstance(regexp, basestring):
             regexp = re.compile(regexp)
@@ -67,10 +67,15 @@ def _add_unittest_methods():
     unittest.TestCase.assertAlmostEqual = assertAlmostEqual
 
 
-# If we're using Python 2.6, add in more modern unittest convenience
-# methods
-if not hasattr(unittest.TestCase, 'assertIn'):
+# If we're using Python 2.6, 3.0, or 3.1, add in more modern unittest
+# convenience methods
+if not hasattr(unittest.TestCase, 'assertIsInstance'):
     _add_unittest_methods()
+# Provide assert(Not)Regex for Python 2 users (assertRegexMatches is
+# deprecated in Python 3)
+if not hasattr(unittest.TestCase, 'assertRegex'):
+    assertRegex = unittest.TestCase.assertRegexpMatches
+    assertNotRegex = unittest.TestCase.assertNotRegexpMatches
 
 
 class RunInDir(object):
