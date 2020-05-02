@@ -5,6 +5,9 @@ import os
 import re
 from optparse import OptionParser
 import glob
+import warnings
+
+warnings.simplefilter("default")
 
 # Only use coverage if it's new enough
 try:
