@@ -11,12 +11,7 @@ import saliweb.backend
 
 def _add_unittest_methods():
     """Add more modern unittest methods to Python 2.6, 3,0, or 3.1"""
-    def assertRegexpMatches(self, text, regexp, msg=None):
-        if isinstance(regexp, basestring):
-            regexp = re.compile(regexp)
-        self.assertTrue(regexp.search(text),
-            "%s: %r not found in %r" % (msg or "Regexp didn't match",
-                                        regexp.pattern, text))
+    import re
     def assertIn(self, member, container, msg=None):
         return self.assertTrue(member in container,
                         msg or '%s not found in %s' % (member, container))
@@ -41,6 +36,24 @@ def _add_unittest_methods():
         return self.assertTrue(obj is None, msg or '%s is not None' % obj)
     def assertIsNotNone(self, obj, msg=None):
         return self.assertTrue(obj is not None, msg or 'unexpectedly None')
+    def assertRegex(self, text, expected_regexp, msg=None):
+        if isinstance(expected_regexp, basestring):
+            expected_regexp = re.compile(expected_regexp)
+        if not expected_regexp.search(text):
+            msg = msg or "Regexp didn't match"
+            msg = '%s: %r not found in %r' % (msg, expected_regexp.pattern, text)
+            raise self.failureException(msg)
+    def assertNotRegex(self, text, unexpected_regexp, msg=None):
+        if isinstance(expected_regexp, basestring):
+            unexpected_regexp = re.compile(unexpected_regexp)
+        match = unexpected_regexp.search(text)
+        if match:
+            msg = msg or "Regexp matched"
+            msg = '%s: %r matches %r in %r' % (msg,
+                                               text[match.start():match.end()],
+                                               unexpected_regexp.pattern,
+                                               text)
+            raise self.failureException(msg)
     def assertAlmostEqual(self, first, second, places=None, msg=None,
                           delta=None):
         if delta is not None and places is not None:
@@ -63,7 +76,8 @@ def _add_unittest_methods():
     unittest.TestCase.assertGreaterEqual = assertGreaterEqual
     unittest.TestCase.assertIsNone = assertIsNone
     unittest.TestCase.assertIsNotNone = assertIsNotNone
-    unittest.TestCase.assertRegexpMatches = assertRegexpMatches
+    unittest.TestCase.assertRegex = assertRegex
+    unittest.TestCase.assertNotRegex = assertNotRegex
     unittest.TestCase.assertAlmostEqual = assertAlmostEqual
 
 
@@ -71,7 +85,7 @@ def _add_unittest_methods():
 # convenience methods
 if not hasattr(unittest.TestCase, 'assertIsInstance'):
     _add_unittest_methods()
-# Provide assert(Not)Regex for Python 2 users (assertRegexMatches is
+# Provide assert(Not)Regex for Python 2 users (assertRegexpMatches is
 # deprecated in Python 3)
 if not hasattr(unittest.TestCase, 'assertRegex'):
     assertRegex = unittest.TestCase.assertRegexpMatches
