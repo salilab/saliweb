@@ -16,7 +16,7 @@ https://modbase.compbio.ucsf.edu/
      connect to to send emails, and the From: address for these emails.
      This is used for sending password resets, and letting the admins know
      when an internal error occurs.
-   - `MAIL_TO` a Python list of email address to send traceback information to
+   - `MAIL_TO` a Python list of email addresses to send traceback information to
      when an internal error occurs.
    - `DATABASE_USER`, `DATABASE_PASSWD`, `DATABASE_SOCKET`: parameters to
      connect to the MySQL server.
