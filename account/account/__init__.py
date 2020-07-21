@@ -98,6 +98,10 @@ def profile():
         if not all((form['first_name'], form['last_name'],
                     form['institution'], form['email'])):
             error = "Please fill out all required form fields."
+        elif any((form[x] and len(form[x]) > 40)
+                 for x in ('first_name', 'last_name', 'institution',
+                           'email', 'modeller_key')):
+            error = "Form field too long."
         else:
             dbh = saliweb.frontend.get_db()
             cur = dbh.cursor()

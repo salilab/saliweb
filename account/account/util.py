@@ -65,6 +65,11 @@ def create_account():
     if not all((f['user_name'], f['first_name'], f['last_name'],
                 f['institution'], f['email'])):
         return "Please fill out all required form fields."
+    elif (len(f['user_name']) > 25
+          or any((f[x] and len(f[x]) > 40)
+                 for x in ('first_name', 'last_name', 'institution',
+                           'email', 'modeller_key'))):
+        return "Form field too long."
     dbh = saliweb.frontend.get_db()
     cur = dbh.cursor()
     cur.execute('SELECT user_name FROM servers.users WHERE user_name=%s',
@@ -109,8 +114,8 @@ def update_login_cookie(cur, user_name, permanent):
 
 def check_password(password, passwordcheck):
     """Do basic sanity checks on a password entered in a form"""
-    if len(password) < 8:
-        return "Passwords should be at least 8 characters long."
+    if len(password) < 8 or len(password) > 25:
+        return "Passwords should be between 8 and 25 characters long."
     if password != passwordcheck:
         return "Password check failed. The two passwords are not identical."
 

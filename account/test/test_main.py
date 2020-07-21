@@ -122,7 +122,7 @@ def test_register_short_password():
     c = account.app.test_client()
     rv = c.post('/register', data={'academic': 'on', 'password': 'short',
                                    'passwordcheck': 'short'})
-    r = re.compile(b'Error:.*Passwords should be at least 8 characters long.*'
+    r = re.compile(b'Error:.*Passwords should be between 8 and 25 characters.*'
                    b'Create an Account',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
@@ -163,7 +163,7 @@ def test_register_existing_user():
     data = {'academic': 'on', 'password': '12345678',
             'passwordcheck': '12345678', 'user_name': 'authuser',
             'first_name': 'foo', 'last_name': 'foo', 'institution': 'foo',
-            'email': 'foo'}
+            'email': 'foo', 'modeller_key': ''}
     rv = c.post('/register', data=data)
     r = re.compile(b'Error:.*User name authuser already exists.*'
                    b'Create an Account',
@@ -250,6 +250,24 @@ def test_profile_missing_fields():
         assert r.search(rv.data)
 
 
+def test_profile_long_fields():
+    """Test edit-profile failure (too-long fields)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    fields = ('first_name', 'last_name',
+              'institution', 'email', 'modeller_key')
+    for field in fields:
+        data = {}
+        for f in fields:
+            data[f] = 'foo'
+        data[field] = 'x' * 80
+        rv = c.post('/profile', data=data, base_url='https://localhost')
+        r = re.compile(b'Edit Profile.*'
+                       b'Error:.*Form field too long.*',
+                       re.DOTALL | re.MULTILINE)
+        assert r.search(rv.data)
+
+
 def test_profile_ok():
     """Test successful edit-profile"""
     c = account.app.test_client()
@@ -303,7 +321,20 @@ def test_password_too_short():
             'passwordcheck': '1234'}
     rv = c.post('/password', data=data, base_url='https://localhost')
     r = re.compile(b'Change Password.*'
-                   b'Error:.*Passwords should be at least 8 characters',
+                   b'Error:.*Passwords should be between 8 and 25 characters',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+
+
+def test_password_too_long():
+    """Test change-password failure (new password too long)"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    data = {'oldpassword': 'authpw00', 'newpassword': 'x' * 30,
+            'passwordcheck': 'x' * 30}
+    rv = c.post('/password', data=data, base_url='https://localhost')
+    r = re.compile(b'Change Password.*'
+                   b'Error:.*Passwords should be between 8 and 25 characters',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
@@ -405,7 +436,7 @@ def test_reset_link_password_fail():
     rv = c.post('/reset/2/unauthkey',
                 data={'password': 'abc', 'passwordcheck': 'abc'})
     r = re.compile(b'Password Reset.*'
-                   b'Error:.*Passwords should be at least 8 characters long.*'
+                   b'Error:.*Passwords should be between 8 and 25 characters.*'
                    b'Choose Password.*'
                    b'Re-enter Password.*',
                    re.DOTALL | re.MULTILINE)
