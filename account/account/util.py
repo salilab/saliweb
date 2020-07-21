@@ -65,10 +65,10 @@ def create_account():
     if not all((f['user_name'], f['first_name'], f['last_name'],
                 f['institution'], f['email'])):
         return "Please fill out all required form fields."
-    elif (len(f['user_name']) > 25
-          or any((f[x] and len(f[x]) > 40)
-                 for x in ('first_name', 'last_name', 'institution',
-                           'email', 'modeller_key'))):
+    elif (len(f['user_name']) > 25 or
+          any((f[x] and len(f[x]) > 40)
+              for x in ('first_name', 'last_name', 'institution',
+                        'email', 'modeller_key'))):
         return "Form field too long."
     dbh = saliweb.frontend.get_db()
     cur = dbh.cursor()
