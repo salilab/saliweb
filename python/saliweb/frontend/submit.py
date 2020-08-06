@@ -6,6 +6,7 @@ import socket
 import fcntl
 import string
 import sys
+import datetime
 
 
 def _get_job_directory(job_name):
@@ -17,7 +18,7 @@ def _get_job_directory(job_name):
 def _sanitize_job_name(job_name):
     """Return a safe version of the user-provided job name"""
     # Provide default
-    job_name = job_name or "job"
+    job_name = job_name or datetime.date.today().strftime("job%Y%m%d")
     # Remove potentially dodgy characters in job_name
     job_name = re.sub('[^a-zA-Z0-9_-]', '', job_name)
     # Make sure job_name fits in the db (plus extra space for

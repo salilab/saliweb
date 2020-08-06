@@ -37,8 +37,8 @@ class Tests(unittest.TestCase):
             "012345678901234567890123456789abcdefghijlk"),
             "012345678901234567890123456789")
 
-        self.assertEqual(submit._sanitize_job_name(None), "job")
-        self.assertEqual(submit._sanitize_job_name(""), "job")
+        self.assertEqual(submit._sanitize_job_name(None)[:3], "job")
+        self.assertEqual(submit._sanitize_job_name("")[:3], "job")
 
     def test_generate_random_password(self):
         """Test _generate_random_password function"""
