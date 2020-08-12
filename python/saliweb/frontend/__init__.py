@@ -1,10 +1,7 @@
 import flask
 from flask import url_for, Markup
 import datetime
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
+import configparser
 import os
 import sys
 import re
@@ -173,10 +170,10 @@ def _read_config(app, fname):
     # Set defaults for all web services
     app.config.from_object(saliweb.frontend.config)
 
-    config = configparser.SafeConfigParser()
+    config = configparser.ConfigParser()
 
     with open(fname) as fh:
-        config.readfp(fh, fname)
+        config.read_file(fh, fname)
 
     for section in config.sections():
         prefix = '' if section == 'general' else section.upper() + '_'
@@ -187,7 +184,7 @@ def _read_config(app, fname):
     frontend_db = config.get('database', 'frontend_config')
     fname = os.path.join(config_dir, frontend_db)
     with open(fname) as fh:
-        config.readfp(fh, fname)
+        config.read_file(fh, fname)
     for name in ('user', 'passwd'):
         value = config.get('frontend_db', name)
         app.config["DATABASE_" + name.upper()] = value

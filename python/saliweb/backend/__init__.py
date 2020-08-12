@@ -1,4 +1,3 @@
-from __future__ import print_function
 import subprocess
 import re
 import fcntl
@@ -8,37 +7,25 @@ import os.path
 import datetime
 import shutil
 import time
-try:
-    import configparser
-except ImportError:  # python 2.6
-    import ConfigParser as configparser
+import configparser
 import traceback
 import select
 import signal
 import socket
 import logging
 import threading
-try:
-    import urllib.request as urllib2 # python 3
-except ImportError:
-    import urllib2  # python 2
-try:
-    import urlparse  # python 2
-except ImportError:
-    import urllib.parse as urlparse  # python 3
+import urllib.request
+import urllib.parse
 import saliweb.web_service
 import saliweb.backend.events
 import saliweb.backend.sge
 from saliweb.backend.events import _JobThread
-try:
-    from email.MIMEText import MIMEText  # python 2
-except ImportError:
-    from email.mime.text import MIMEText  # python 3
+from email.mime.text import MIMEText
 
 
-# Version check; we need 2.4 for subprocess, decorators, generator expressions
-if sys.version_info[0:2] < (2, 4):
-    raise ImportError("This module requires Python 2.4 or later")
+# Version check
+if sys.version_info[0:2] < (3, 6):
+    raise ImportError("This module requires Python 3.6 or later")
 
 
 class InvalidStateError(Exception):
@@ -222,19 +209,19 @@ class Config(object):
     _mailer = '/usr/sbin/sendmail'
 
     def __init__(self, fh):
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser()
         if not hasattr(fh, 'read'):
             self._config_dir = os.path.dirname(os.path.abspath(fh))
             with open(fh) as fp:
-                config.readfp(fp, fh)
+                config.read_file(fp, fh)
         else:
             self._config_dir = None
-            config.readfp(fh)
+            config.read_file(fh)
         self.populate(config)
 
     def populate(self, config):
         """Populate data structures using the passed `config`, which is a
-           :class:`configparser.SafeConfigParser` object.
+           :class:`configparser.ConfigParser` object.
            This can be overridden in subclasses to read additional
            service-specific information from the configuration file."""
         self._populate_database(config)
@@ -305,9 +292,9 @@ class Config(object):
 
     def _read_db_auth(self, end='back'):
         filename = self.database[end + 'end_config']
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser()
         with open(filename) as fh:
-            config.readfp(fh, filename)
+            config.read_file(fh, filename)
         for key in ('user', 'passwd'):
             self.database[key] = config.get(end + 'end_db', key)
 
@@ -1883,13 +1870,13 @@ class SaliWebServiceResult(object):
 
     def get_filename(self):
         """Return the name of the file corresponding to this result."""
-        return os.path.basename(urlparse.urlparse(self.url)[2])
+        return os.path.basename(urllib.parse.urlparse(self.url)[2])
 
     def download(self, fh=None):
         """Download the result file. If `fh` is given, it should be a Python
            file-like object, to which the file is written. Otherwise, the file
            is written into the job directory with the same name."""
-        fin = urllib2.urlopen(self.url)
+        fin = urllib.request.urlopen(self.url)
         if fh is None:
             outfh = open(self.get_filename(), 'w')
         else:

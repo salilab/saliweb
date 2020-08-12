@@ -6,7 +6,6 @@
 
 """
 
-from __future__ import print_function
 try:
     import MySQLdb
 except ImportError as detail:

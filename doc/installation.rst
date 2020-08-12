@@ -28,12 +28,11 @@ used in other environments with some modification.
 Prerequisites
 -------------
 
-* Python. The backend of the framework, which takes care of running jobs,
-  is implemented in Python. It requires Python 2.6 or later (it should
-  also work with Python 3).
+* Python 3. The backend of the framework, which takes care of running jobs,
+  is implemented in Python. (It does not work with Python 2.)
 
 * `Flask <http://flask.pocoo.org/>`_. The frontend, which handles user
-  submission of jobs and the display of results, is implemented in Python,
+  submission of jobs and the display of results, is implemented in Python 3,
   and uses the Flask microframework.
 
 * SGE. The framework expects to be run on a machine that is a submit host to a Sun GridEngine compute cluster

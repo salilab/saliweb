@@ -1,4 +1,3 @@
-from __future__ import print_function
 import saliweb.backend
 from optparse import OptionParser
 import sys
