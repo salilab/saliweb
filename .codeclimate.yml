@@ -39,3 +39,4 @@ ratings:
 exclude_paths:
 - test/
 - python_tools/reindent.py
+- web/gnuplot5/
