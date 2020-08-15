@@ -170,8 +170,9 @@ def builder_python_frontend_tests(target, source, env):
         mod += ' --html_coverage=%s' % env['html_coverage']
     if env.get('coverage', None):
         mod += ' --coverage'
+    mod += ' --frontend'
     mod += " " + env['service_module']
-    app = env['python'] + " " + mod + " --frontend " \
+    app = env['python'] + " " + mod + " " \
           + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'frontend'

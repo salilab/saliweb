@@ -73,7 +73,7 @@ class BuilderTest(unittest.TestCase):
         t = saliweb.build.builder_python_frontend_tests('dummytgt',
                                                         ['foo.py', 'bar.py'], e)
         self.assertEqual(e.env['ENV'], {'PYTHONPATH': 'frontend'})
-        regex = '.*python .*/run\-tests\.py testser --frontend foo\.py bar\.py$'
+        regex = '.*python .*/run\-tests\.py --frontend testser foo\.py bar\.py$'
         m = re.match(regex, e.exec_str)
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
@@ -83,7 +83,7 @@ class BuilderTest(unittest.TestCase):
         e.env['coverage'] = 'True'
         t = saliweb.build.builder_python_frontend_tests('dummytgt',
                                                         ['foo.py', 'bar.py'], e)
-        regex = '.*python .*/run\-tests\.py --coverage testser --frontend ' \
+        regex = '.*python .*/run\-tests\.py --coverage --frontend testser ' \
                   + 'foo\.py bar\.py$'
         m = re.match(regex, e.exec_str)
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
@@ -94,7 +94,7 @@ class BuilderTest(unittest.TestCase):
         t = saliweb.build.builder_python_frontend_tests('dummytgt',
                                                         ['foo.py', 'bar.py'], e)
         regex = '.*python .*/run\-tests\.py --html_coverage=testcov ' \
-                  + 'testser --frontend foo\.py bar\.py$'
+                  + '--frontend testser foo\.py bar\.py$'
         m = re.match(regex, e.exec_str)
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
