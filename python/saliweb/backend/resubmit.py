@@ -1,18 +1,15 @@
-from optparse import OptionParser
+from argparse import ArgumentParser
 import sys
 
 
 def get_options():
-    parser = OptionParser()
-    parser.set_usage("""
-%prog [-h] JOBNAME [...]
-
-Take the given failed job(s), JOBNAME, and put them back in the incoming queue.
-""")
-    opts, args = parser.parse_args()
-    if len(args) < 1:
-        parser.error("Need to specify a job name")
-    return args
+    parser = ArgumentParser(
+            description="Take the given failed job(s), JOBNAME, and put "
+                        "them back in the incoming queue.")
+    parser.add_argument("jobs", nargs="+", metavar="JOBNAME",
+            help="Job(s) to resubmit")
+    args = parser.parse_args()
+    return args.jobs
 
 
 def main(webservice):

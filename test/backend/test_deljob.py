@@ -46,13 +46,13 @@ class DelJobTest(unittest.TestCase):
                 sys.stderr = oldstderr
                 sys.argv = old
         self.assertRaises(SystemExit, run_get_options, [])
-        state, jobnames, opts = run_get_options(['FAILED', 'testjob1', 'job2'])
+        state, jobnames, force = run_get_options(['FAILED', 'testjob1', 'job2'])
         self.assertEqual(state, 'FAILED')
         self.assertEqual(jobnames, ['testjob1', 'job2'])
-        self.assertEqual(opts.force, False)
+        self.assertEqual(force, False)
         for arg in ['-f', '--force']:
-            state, jobnames, opts = run_get_options([arg, 'FAILED', 'testjob'])
-            self.assertEqual(opts.force, True)
+            state, jobnames, force = run_get_options([arg, 'FAILED', 'testjob'])
+            self.assertEqual(force, True)
             self.assertEqual(jobnames, ['testjob'])
 
     def test_delete_job(self):

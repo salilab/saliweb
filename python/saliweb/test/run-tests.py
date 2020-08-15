@@ -2,7 +2,7 @@ import unittest
 import sys
 import os
 import re
-from optparse import OptionParser
+from argparse import ArgumentParser
 import glob
 import warnings
 
@@ -129,23 +129,26 @@ def regressionTestFrontend():
 
 
 def parse_options():
-    parser = OptionParser()
-    parser.add_option("--html_coverage", dest="html_coverage", type="string",
-                      default=None,
-                      help="directory to write HTML coverage info into")
-    parser.add_option("--coverage", dest="coverage",
-                      default=False, action="store_true",
-                      help="preserve output coverage files")
-    parser.add_option("--frontend", dest="frontend",
-                      default=False, action="store_true",
-                      help="test frontend rather than backend")
+    parser = ArgumentParser()
+    parser.add_argument("--html_coverage", dest="html_coverage", type=str,
+                        default=None, metavar="DIR",
+                        help="directory to write HTML coverage info into")
+    parser.add_argument("--coverage", dest="coverage",
+                        default=False, action="store_true",
+                        help="preserve output coverage files")
+    parser.add_argument("--frontend", dest="frontend",
+                        default=False, action="store_true",
+                        help="test frontend rather than backend")
+    parser.add_argument("files", metavar="FILE", nargs="+",
+                        help="Python test files to run")
     return parser.parse_args()
 
 if __name__ == "__main__":
-    opts, args = parse_options()
-    sys.argv = [sys.argv[0]] + args
+    args = parse_options()
+    sys.argv = [sys.argv[0]] + args.files
     # Get directory containing test files
-    os.environ['SALIWEB_TESTDIR'] = os.path.abspath(os.path.dirname(args[-1]))
-    end = 'Frontend' if opts.frontend else 'Backend'
-    RunAllTests(opts, defaultTest="regressionTest%s" % end,
+    os.environ['SALIWEB_TESTDIR'] = os.path.abspath(
+                    os.path.dirname(args.files[-1]))
+    end = 'Frontend' if args.frontend else 'Backend'
+    RunAllTests(args, defaultTest="regressionTest%s" % end,
                 argv=[sys.argv[0], '-v'])

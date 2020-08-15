@@ -1,4 +1,4 @@
-from optparse import OptionParser
+from argparse import ArgumentParser
 import string
 import random
 import os
@@ -393,48 +393,42 @@ if __name__ == '__main__':
 
 
 def get_options():
-    parser = OptionParser()
-    parser.set_usage("""
-%prog [-h] [--git|--svn] SHORT_NAME SERVICE_NAME
+    parser = ArgumentParser(
+        description='Set up a directory structure for a new web service '
+                    'called "SERVICE_NAME".',
+        epilog="Example usage: %(prog)s --svn pepdock 'Peptide Docking'")
+    parser.add_argument("short_name", metavar="SHORT_NAME",
+        help="""Short name containing only lowercase letters and no spaces.
+        This name is used to name the directory containing the files,
+        the generated Python modules, system and MySQL users etc. An SVN
+        (--svn option) or git (--git) repository with the same name is assumed
+        to already exist, but to be empty (e.g. if SHORT_NAME is 'modfoo' the
+        repository should exist at https://svn.salilab.org/modfoo or
+        https://github.com/salilab/modfoo). A working directory with the same
+        name is set up, and the files checked in to the trunk of the SVN or git
+        repository. Users can then work on the service by checking out the SVN
+        trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo")
+        or cloning the git repository
+        (e.g. "git clone https://github.com/salilab/modfoo.git").""")
+    parser.add_argument("service_name", metavar="SERVICE_NAME",
+        help='Human-readable name of the web service, for example "ModFoo" '
+             'or "Peptide Docking". It may contain spaces and mixed case.')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--svn", action="store_true", dest="svn",
+        default=False, help="Use an SVN repository")
+    group.add_argument("--git", action="store_true", dest="git",
+        default=False, help="Use a git repository")
 
-Set up a directory structure for a new web service called "SERVICE_NAME".
-"SERVICE_NAME" should be the human-readable name of the web service, for
-example "ModFoo" or "Peptide Docking". It may contain spaces and mixed case.
-
-"SHORT_NAME" should be a short name containing only lowercase letters and
-no spaces. This name is used to name the directory containing the files,
-the generated Python and Perl modules, system and MySQL users etc.
-An SVN (--svn option) or git (--git) repository with the same name is
-assumed to already exist, but to be empty (e.g. if SHORT_NAME is 'modfoo'
-the repository should exist at https://svn.salilab.org/modfoo or
-https://github.com/salilab/modfoo). A working directory with the same name is
-set up, and the files checked in to the trunk of the SVN or git repository.
-Users can then work on the service by checking out
-the SVN trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo")
-or cloning the git repository
-(e.g. "git clone https://github.com/salilab/modfoo.git").
-
-e.g.
-%prog --svn pepdock "Peptide Docking"
-""")
-    parser.add_option("--svn", action="store_true", dest="svn",
-                      default=False, help="Use an SVN repository")
-    parser.add_option("--git", action="store_true", dest="git",
-                      default=False, help="Use a git repository")
-
-    opts, args = parser.parse_args()
-    if len(args) != 2:
-        parser.error("Wrong number of arguments given")
-    if not opts.svn ^ opts.git:
-        parser.error("Please specify one of --git or --svn")
-    if ' ' in args[0] or args[0].lower() != args[0]:
+    args = parser.parse_args()
+    if ' ' in args.short_name or args.short_name.lower() != args.short_name:
         parser.error("SHORT_NAME must be all lowercase and contain no spaces")
-    return args, opts.git
+    return args
 
 
 def main():
-    args, git = get_options()
-    m = MakeWebService(*args, git=git)
+    args = get_options()
+    m = MakeWebService(short_name=args.short_name,
+                       service_name=args.service_name, git=args.git)
     m.make()
 
 if __name__ == '__main__':

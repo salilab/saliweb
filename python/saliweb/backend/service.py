@@ -1,4 +1,4 @@
-from optparse import OptionParser
+from argparse import ArgumentParser
 import saliweb.backend
 import sys
 import signal
@@ -7,21 +7,14 @@ import os
 
 
 def get_options():
-    parser = OptionParser()
-    parser.set_usage("""
-%prog [-h] {start|stop|restart|condstart|status}
-
-Start or stop the daemon that processes incoming, completed, and old jobs.
-
-'condstart' only starts the daemon if it is currently stopped, and does nothing
-if it is already running.
-""")
-    opts, args = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Wrong number of arguments given")
-    if args[0] not in ('start', 'stop', 'restart', 'condstart', 'status'):
-        parser.error("service state not valid")
-    return args[0]
+    parser = ArgumentParser(
+        description="Start or stop the daemon that processes incoming, "
+                    "completed, and old jobs.")
+    parser.add_argument("state",
+            choices=['start', 'stop', 'restart', 'condstart', 'status'],
+            help="'condstart' only starts the daemon if it is currently "
+                 "stopped, and does nothing if it is already running")
+    return parser.parse_args().state
 
 
 def kill_pid(pid):

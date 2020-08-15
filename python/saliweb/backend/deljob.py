@@ -1,25 +1,20 @@
 import saliweb.backend
-from optparse import OptionParser
+from argparse import ArgumentParser
 import sys
 
 
 def get_options():
-    parser = OptionParser()
-    parser.set_usage("""
-%prog [-h] [-f] STATE JOBNAME [...]
+    parser = ArgumentParser(
+                description="Delete the job(s) JOBNAME in the given STATE.")
+    parser.add_argument("state", metavar="STATE", help="Job state to consider")
+    parser.add_argument("jobs", metavar="JOBNAME", nargs="+",
+                help="Jobs to delete")
+    parser.add_argument('-f', "--force", action="store_true",
+                default=False, dest="force",
+                help="Delete jobs without prompting")
 
-Delete the job(s) JOBNAME in the given STATE.
-
-STATE must be either FAILED or EXPIRED if the backend daemon is running.
-Jobs in other states can only be deleted if the backend is stopped first.
-""")
-    parser.add_option("-f", "--force", action="store_true",
-                      default=False, dest="force",
-                      help="Delete jobs without prompting")
-    opts, args = parser.parse_args()
-    if len(args) < 2:
-        parser.error("Need to specify a state and at least one job name")
-    return args[0], args[1:], opts
+    args = parser.parse_args()
+    return args.state, args.jobs, args.force
 
 
 def delete_job(job, force):
@@ -42,12 +37,12 @@ def check_valid_state(web, state):
 
 
 def main(webservice):
-    state, job_names, opts = get_options()
+    state, job_names, force = get_options()
     web = webservice.get_web_service(webservice.config)
     check_valid_state(web, state)
     for name in job_names:
         job = web.get_job_by_name(state, name)
         if job:
-            delete_job(job, opts.force)
+            delete_job(job, force)
         else:
             print("Could not find job", name, file=sys.stderr)

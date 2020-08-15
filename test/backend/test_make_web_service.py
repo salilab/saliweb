@@ -1,4 +1,5 @@
 import unittest
+import argparse
 import sys
 import os
 import tempfile
@@ -26,13 +27,13 @@ class MakeWebServiceTests(unittest.TestCase):
         mp = __import__('saliweb.make_web_service', {}, {}, ['']).__file__
         if mp.endswith('.pyc'):
             mp = mp[:-1]
-        p = subprocess.Popen([sys.executable, mp],
+        p = subprocess.Popen([sys.executable, mp, '-h'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              universal_newlines=True)
         out, err = p.communicate()
-        self.assertNotEqual(p.wait(), 0)
-        self.assertIn('for a new web service', err)
+        self.assertEqual(p.wait(), 0)
+        self.assertIn('for a new web service', out)
 
     def test_get_install_dir_fail(self):
         """Check failure of MakeWebService.get_install_dir() """
@@ -173,18 +174,23 @@ class MakeWebServiceTests(unittest.TestCase):
                     ['short', 'long'],
                     ['--svn', '--git', 'short', 'long']]:
             self.assertRaises(SystemExit, run_get_options, bad)
-        self.assertEqual(run_get_options(['--git', 'short', 'long']),
-                                         (['short', 'long'], True))
+        args = run_get_options(['--git', 'short', 'long'])
+        self.assertTrue(args.git)
+        self.assertFalse(args.svn)
+        self.assertEqual(args.short_name, 'short')
+        self.assertEqual(args.service_name, 'long')
 
     def test_main(self):
         """Test make_web_service main()"""
         events = []
         def dummy_get_options():
             events.append('get_options')
-            return (['testshort', 'testlong'], False)
+            return argparse.Namespace(short_name='testshort',
+                    service_name='testlong', git=False)
         class DummyMakeWebService(object):
-            def __init__(self, short, servicename, git):
-                events.append('MakeWebService %s %s' % (servicename, short))
+            def __init__(self, short_name, service_name, git):
+                events.append('MakeWebService %s %s'
+                              % (service_name, short_name))
             def make(self):
                 events.append('make')
 

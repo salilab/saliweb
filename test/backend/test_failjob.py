@@ -38,18 +38,18 @@ class FailJobTest(unittest.TestCase):
                 sys.stderr = oldstderr
                 sys.argv = old
         self.assertRaises(SystemExit, run_get_options, [])
-        jobnames, opts = run_get_options(['testjob1', 'job2'])
-        self.assertEqual(jobnames, ['testjob1', 'job2'])
-        self.assertEqual(opts.force, False)
-        self.assertEqual(opts.email, True)
+        args = run_get_options(['testjob1', 'job2'])
+        self.assertEqual(args.jobnames, ['testjob1', 'job2'])
+        self.assertEqual(args.force, False)
+        self.assertEqual(args.email, True)
         for arg in ['-f', '--force']:
-            jobnames, opts = run_get_options([arg, 'testjob'])
-            self.assertEqual(opts.force, True)
-            self.assertEqual(jobnames, ['testjob'])
+            args = run_get_options([arg, 'testjob'])
+            self.assertEqual(args.force, True)
+            self.assertEqual(args.jobnames, ['testjob'])
         for arg in ['-n', '--no-email']:
-            jobnames, opts = run_get_options([arg, 'testjob'])
-            self.assertEqual(opts.email, False)
-            self.assertEqual(jobnames, ['testjob'])
+            args = run_get_options([arg, 'testjob'])
+            self.assertEqual(args.email, False)
+            self.assertEqual(args.jobnames, ['testjob'])
 
     def test_fail_job(self):
         """Test failjob fail_job()"""
