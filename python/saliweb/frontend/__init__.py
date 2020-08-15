@@ -47,14 +47,6 @@ class _ResultsStillRunningError(_ResultsError):
         self.template = template
 
 
-def _timediff_in_seconds(timediff):
-    """Convert a datetime.timedelta to total number of seconds"""
-    try:
-        return int(timediff.total_seconds())
-    except AttributeError:  # python 2.6
-        return timediff.days * 24*60*60 + timediff.seconds
-
-
 def _format_timediff(timediff):
     def _format_unit(df, unit):
         return '%d %s%s' % (df, unit, '' if unit == 1 else 's')
@@ -62,7 +54,7 @@ def _format_timediff(timediff):
     if not timediff:
         return
     timediff = timediff - datetime.datetime.utcnow()
-    diff_sec = _timediff_in_seconds(timediff)
+    diff_sec = int(timediff.total_seconds())
     if diff_sec < 0:
         return
     if diff_sec < 120:
@@ -116,7 +108,7 @@ class StillRunningJob(object):
         """Get a suitable time, in seconds, to wait to refresh the
            'job is still running' page. It will be at least `minseconds`."""
         timediff = datetime.datetime.utcnow() - self.submit_time
-        return max(_timediff_in_seconds(timediff), minseconds)
+        return max(int(timediff.total_seconds()), minseconds)
 
 
 class CompletedJob(object):
