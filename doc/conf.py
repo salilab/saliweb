@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath('../python'))
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
 
 # Link to standard Python documentation
-intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -41,8 +41,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Sali lab web framework'
-copyright = u'2009-2019, Sali Lab'
+project = 'Sali lab web framework'
+copyright = '2009-2020, Sali Lab'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -168,8 +168,8 @@ htmlhelp_basename = 'saliwebdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'Saliweb.tex', ur'Web service Documentation',
-   ur'Sali Lab', 'manual'),
+  ('index', 'Saliweb.tex', 'Web service Documentation',
+   'Sali Lab', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
