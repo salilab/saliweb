@@ -139,13 +139,15 @@ def parse_options():
     parser.add_argument("--frontend", dest="frontend",
                         default=False, action="store_true",
                         help="test frontend rather than backend")
+    parser.add_argument("module_name", metavar="MODULE_NAME",
+                        help="Name of the Python service module to test")
     parser.add_argument("files", metavar="FILE", nargs="+",
                         help="Python test files to run")
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_options()
-    sys.argv = [sys.argv[0]] + args.files
+    sys.argv = [sys.argv[0], args.module_name] + args.files
     # Get directory containing test files
     os.environ['SALIWEB_TESTDIR'] = os.path.abspath(
                     os.path.dirname(args.files[-1]))
