@@ -63,8 +63,7 @@ function convert_utc_dates_to_local() {
       } else {
         var inner = e.rows[i].cells[1].innerHTML;
         d.setUTCFullYear(inner.substr(0, 4));
-        d.setUTCMonth(inner.substr(5, 2) - 1);
-        d.setUTCDate(inner.substr(8, 2));
+        d.setUTCMonth(inner.substr(5, 2) - 1, inner.substr(8, 2));
         d.setUTCHours(inner.substr(11, 2));
         d.setUTCMinutes(inner.substr(14, 2));
         d.setUTCSeconds(inner.substr(17, 2));
