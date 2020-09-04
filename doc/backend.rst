@@ -30,7 +30,7 @@ For any web service, the :class:`Job` class must first be subclassed and then
 one or more of its methods implemented to actually do the work of running jobs.
 For example, the :meth:`Job.run` method will be called by the backend when
 the job starts; it is expected to start the job running on the cluster,
-typically by using an :class:`SGERunner` object. There are similar methods
+typically by using a :class:`WyntonSGERunner` object. There are similar methods
 that can be used to do extra processing before the job starts
 (:meth:`Job.preprocess`), after it finishes running on the cluster
 (:meth:`Job.postprocess` and :meth:`Job.finalize`) or when the job is moved
@@ -53,7 +53,7 @@ job output should simply indicate what the problem is).
    in the subclass. For example, to run a new job, call
    :meth:`Job.reschedule_run`, not the :meth:`Job.run` method directly.
 
-As mentioned above, an :class:`SGERunner` class is provided that takes care of
+As mentioned above, a :class:`WyntonSGERunner` class is provided that takes care of
 the details of running a script on the cluster and checking if it has
 completed. Typically the script run here should use the local /scratch disk
 on the cluster nodes if possible - this is not implemented automatically by
@@ -176,7 +176,7 @@ The example below demonstrates a simple :class:`Job` subclass that, given a
 set of PDB files from the frontend, runs an SGE job on the cluster that
 extracts all of the HETATM records from each PDB. This is done by
 overriding the :meth:`Job.run` method to pass a set of shell script commands
-to an :class:`SGERunner` instance; this instance is then returned to the
+to an :class:`WyntonSGERunner` instance; this instance is then returned to the
 backend. The backend will then keep track of the SGE job, and notice when
 it finishes.
 

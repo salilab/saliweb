@@ -8,7 +8,7 @@ class Database(saliweb.backend.Database):
 
 
 class Job(saliweb.backend.Job):
-    runnercls = saliweb.backend.SGERunner
+    runnercls = saliweb.backend.WyntonSGERunner
 
     def preprocess(self):
         pdbs = glob.glob("*.pdb")

@@ -4,7 +4,7 @@ import gzip
 import os
 
 class Job(saliweb.backend.Job):
-    runnercls = saliweb.backend.SGERunner
+    runnercls = saliweb.backend.WyntonSGERunner
 
     def run(self):
         script = """

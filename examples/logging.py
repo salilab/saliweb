@@ -2,7 +2,7 @@ import saliweb.backend
 import logging
 
 class Job(saliweb.backend.Job):
-    runnercls = saliweb.backend.SGERunner
+    runnercls = saliweb.backend.WyntonSGERunner
 
     def run(self):
         # Uncomment to get all logging output
