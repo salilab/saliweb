@@ -1734,7 +1734,10 @@ class SGERunner(Runner):
 
 
 class WyntonSGERunner(SGERunner):
-    """Run commands on the Wynton SGE cluster"""
+    """Run commands on the Wynton SGE cluster.
+
+       See :class:`SGERunner` for more details.
+    """
     _runner_name = 'wyntonsge'
     _drmaa = None
     _env = {'SGE_CELL': 'wynton',
