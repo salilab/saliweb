@@ -1581,15 +1581,17 @@ class _LockedJobDict(object):
 
 class Runner(object):
     """Base class for runners, which handle the actual running of a job,
-       usually on an SGE cluster (see the :class:`SGERunner` and
-       :class:`SaliSGERunner` subclasses). To create a subclass, you must
-       implement both a _run method and a _check_completed class method,
-       set the _runner_name attribute to a unique name for this class,
-       and call :meth:`Job.register_runner_class` passing this class."""
+       usually on an SGE cluster (see the :class:`WyntonSGERunner` subclass).
+       To create a subclass, you must implement both a _run method and
+       a _check_completed class method, set the _runner_name attribute to a
+       unique name for this class, and call :meth:`Job.register_runner_class`
+       passing this class."""
 
 
 class SGERunner(Runner):
-    """Run a set of commands on the QB3 SGE cluster.
+    """Base class to run a set of commands on an SGE cluster.
+       Use a subclass specific to the cluster you want to use, such
+       as :class:`WyntonSGERunner`.
 
        To use, pass a string `script` containing a set of commands to run,
        and use `interpreter` to specify the shell (e.g. `/bin/sh`, `/bin/csh`)
@@ -1605,18 +1607,6 @@ class SGERunner(Runner):
        Once done, you can optionally call :meth:`set_sge_options` to set SGE
        options and/or :meth:`set_sge_name` to set the SGE job name.
     """
-
-    _runner_name = 'qb3ogs'
-    _drmaa = None
-    _env = {'SGE_CELL': 'qb3cell',
-            'SGE_ROOT': '/usr/local/sge',
-            'SGE_QMASTER_PORT': '6444',
-            'SGE_EXECD_PORT': '6445',
-            'DRMAA_LIBRARY_PATH':
-                    '/usr/local/sge/lib/linux-x64/libdrmaa.so.1.0'}
-    _qstat = '/usr/local/sge/bin/linux-x64/qstat'
-
-    _waited_jobs = _LockedJobDict()
 
     def __init__(self, script, interpreter='/bin/sh'):
         Runner.__init__(self)
@@ -1741,25 +1731,10 @@ class SGERunner(Runner):
             return True
         else:
             raise OSError("qstat returned %d (%s)" % (ret, "\n".join(out)))
-Job.register_runner_class(SGERunner)
-
-
-class SaliSGERunner(SGERunner):
-    """Run commands on the Sali SGE cluster instead of the QB3 cluster."""
-    _runner_name = 'salisge'
-    _drmaa = None
-    _env = {'SGE_CELL': 'sali',
-            'SGE_ROOT': '/home/sge61',
-            'DRMAA_LIBRARY_PATH':
-                        '/home/sge61/lib/lx24-amd64/libdrmaa.so.1.0'}
-    _qstat = '/home/sge61/bin/lx24-amd64/qstat'
-
-    _waited_jobs = _LockedJobDict()
-Job.register_runner_class(SaliSGERunner)
 
 
 class WyntonSGERunner(SGERunner):
-    """Run commands on the Wynton SGE cluster instead of the QB3 cluster."""
+    """Run commands on the Wynton SGE cluster"""
     _runner_name = 'wyntonsge'
     _drmaa = None
     _env = {'SGE_CELL': 'wynton',

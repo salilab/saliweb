@@ -159,7 +159,7 @@ class WebServiceTest(unittest.TestCase):
     def test_get_job_by_runner_id(self):
         """Check WebService._get_job_by_runner_id()"""
         db, conf, web = self._setup_webservice()
-        goodrunner = saliweb.backend.SaliSGERunner('foo')
+        goodrunner = saliweb.backend.WyntonSGERunner('foo')
         badrunner = saliweb.backend.LocalRunner('foo')
         job = web._get_job_by_runner_id(goodrunner, 'job-2')
         self.assertEqual(job.name, 'job2')

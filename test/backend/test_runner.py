@@ -6,7 +6,7 @@ if sys.version_info[0] >= 3:
 else:
     from io import BytesIO as StringIO
 import saliweb.backend.events
-from saliweb.backend import SGERunner, SaliSGERunner, WyntonSGERunner, Job
+from saliweb.backend import SGERunner, WyntonSGERunner, Job
 import testutil
 import re
 import os
@@ -16,7 +16,7 @@ import tempfile
 
 class BrokenRunner(SGERunner):
     # Duplicate runner name, so it shouldn't work
-    _runner_name = 'qb3ogs'
+    _runner_name = 'wyntonsge'
 
 
 class DummyDRMAAModule(object):
@@ -48,7 +48,7 @@ class DummyDRMAASession(object):
     def wait(self, jobids, timeout):
         return True
 
-class TestRunner(SGERunner):
+class TestRunner(WyntonSGERunner):
     @classmethod
     def _get_drmaa(cls):
         return DummyDRMAAModule(), DummyDRMAASession()
@@ -78,7 +78,7 @@ class RunnerTest(unittest.TestCase):
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
-        for runner in (SGERunner, SaliSGERunner, WyntonSGERunner):
+        for runner in (WyntonSGERunner,):
             r = runner('echo foo', interpreter='/bin/csh')
             r.set_sge_options('-l diva1=1G')
             r.set_sge_name('test\t job ')
@@ -143,7 +143,7 @@ else:
                 def initialize(self): pass
                 def exit(self): pass
         sys.modules['drmaa'] = DummyDRMAA()
-        r = SGERunner('test.sh')
+        r = WyntonSGERunner('test.sh')
         d, s = r._get_drmaa()
         self.assertIsInstance(d, DummyDRMAA)
         self.assertIsInstance(s, DummyDRMAA.Session)
