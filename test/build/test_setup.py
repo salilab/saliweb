@@ -152,7 +152,7 @@ sys.exit(1)""")
                                             env, None)
             self.assertEqual(len(warns), 1)
             self.assertTrue(
-                re.match('Could not run \S+\/errscript: returned exit '
+                re.match(r'Could not run \S+\/errscript: returned exit '
                          'code 1, stdout output text\n, '
                          'stderr error text\n$', warns[0][0].args[0]),
                 "%s does not match re" % warns[0][0].args[0])
@@ -214,10 +214,10 @@ else:
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertTrue(
-                re.search('Cannot make \.scons directory:.*'
+                re.search(r'Cannot make \.scons directory:.*'
                           'Permission denied.*Please first make it '
                           'manually, with a command like.*'
-                          'mkdir \.scons', stderr,
+                          r'mkdir \.scons', stderr,
                           re.DOTALL),
                 'regex match failed on ' + stderr)
 

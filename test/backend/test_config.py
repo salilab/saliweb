@@ -90,7 +90,7 @@ class ConfigTest(unittest.TestCase):
                 conf.send_email(to, 'testsubj', body)
                 mail = conf.get_mail_output()
                 self.assertTrue(re.search('Subject: testsubj.*From: '
-                                   'test@salilab\.org.*To: testto.*testbody',
+                                   r'test@salilab\.org.*To: testto.*testbody',
                                    mail, flags=re.DOTALL),
                              'Unexpected mail output: ' + mail)
 

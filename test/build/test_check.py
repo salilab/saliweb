@@ -147,10 +147,11 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_user, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.match('\nThe backend user.*invalid user ID \(%d\).*'
-                                 'between %d and %d' % (uid, uid+10, uid+20),
-                                 stderr, re.DOTALL),
-                                 'regex match failed on ' + stderr)
+        self.assertTrue(re.match(
+            '\nThe backend user.*invalid user ID \\(%d\\).*'
+            'between %d and %d' % (uid, uid+10, uid+20),
+            stderr, re.DOTALL),
+            'regex match failed on ' + stderr)
 
         # Not OK if current user != backend user
         env = DummyEnv('bin')  # bin user exists but hopefully is not us!
@@ -159,7 +160,7 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.match(
                               '\nscons must be run as the backend user, which '
-                              'is \'bin\'.*config file, test\.conf.*'
+                              'is \'bin\'.*config file, test\\.conf.*'
                               'Please run again.*sudo -u bin scons"\n',
                               stderr, re.DOTALL),
                               'regex match failed on ' + stderr)
@@ -171,7 +172,7 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.match(
                               '\nThe backend user is \'#baduser\' according.*'
-                              'config file, test\.conf.*user does not exist.*'
+                              'config file, test\\.conf.*user does not exist.*'
                               'Please check.*ask a\nsysadmin.*sudo\' access',
                               stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
@@ -191,7 +192,7 @@ class CheckTest(unittest.TestCase):
                                        env, auth, 'mytest')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.match('\n\*\* The database username for the '
+        self.assertTrue(re.match('\n\\*\\* The database username for the '
                                  'mytestend user is too long',
                                  stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
@@ -239,8 +240,8 @@ class CheckTest(unittest.TestCase):
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertTrue(re.search('The database configuration file '
-                                      'test\.conf.*readable or writable.*'
-                                      'To fix this.*chmod 0600 test\.conf',
+                                      'test\\.conf.*readable or writable.*'
+                                      'To fix this.*chmod 0600 test\\.conf',
                                       stderr, re.DOTALL),
                             'regex match failed on ' + stderr)
         os.chmod(conf, 0o600)
@@ -258,10 +259,10 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search('Cannot write to \.scons directory:.*'
+        self.assertTrue(re.search('Cannot write to \\.scons directory:.*'
                                   'Permission denied.*The backend user needs '
                                   'to be able to write.*To fix this problem.*'
-                                  'setfacl -m u:testuser:rwx \.scons', stderr,
+                                  'setfacl -m u:testuser:rwx \\.scons', stderr,
                                   re.DOTALL), 'regex match failed on ' + stderr)
         os.chmod('.scons', 0o755)
 
@@ -271,7 +272,7 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.match('\n\*\* Cannot read database configuration '
+        self.assertTrue(re.match('\n\\*\\* Cannot read database configuration '
                                  'file:.*Permission denied.*The backend user '
                                  'needs to be able to read.*'
                                  'To fix this problem.*'
@@ -288,10 +289,10 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search('The database configuration file test\.conf '
+        self.assertTrue(re.search('The database configuration file test\\.conf '
                                   'appears to be under SVN.*To fix this.*'
-                                  'svn rm test\.conf; svn ci test\.conf.*'
-                                  'Then recreate test\.conf using a '
+                                  'svn rm test\\.conf; svn ci test\\.conf.*'
+                                  'Then recreate test\\.conf using a '
                                   'fresh password', stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
         shutil.rmtree('.svn', ignore_errors=True)
@@ -382,7 +383,7 @@ class CheckTest(unittest.TestCase):
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertTrue(re.search('Install directory test appears to be '
-                                      'group\- or world\-writable.*fix this.*'
+                                      r'group\- or world\-writable.*fix this.*'
                                       'chmod 755 test', stderr, re.DOTALL),
                             'regex match failed on ' + stderr)
 
@@ -485,7 +486,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                             "'jobs' database table schema does not match.*"
                             'it has 0 fields, while the backend has 17 '
                             'fields.*entire table schema should look like.*'
-                            'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
+                            r'name VARCHAR\(40\) PRIMARY KEY NOT NULL '
                             "DEFAULT ''", stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
 
@@ -502,11 +503,11 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                                   'mismatch has been found in the \'child\' '
                                   'field.*'
                                   'Database schema for \'child\' field:.*'
-                                  'child VARCHAR\(30\).*'
+                                  r'child VARCHAR\(30\).*'
                                   'Should be modified.*'
-                                  'child VARCHAR\(40\).*'
+                                  r'child VARCHAR\(40\).*'
                                   'entire table schema.*'
-                                  'child VARCHAR\(40\) NOT NULL '
+                                  r'child VARCHAR\(40\) NOT NULL '
                                   'DEFAULT \'\',.*parent VARCHAR\(40\)',
                                   stderr, re.DOTALL),
                         'regex match failed on ' + stderr)

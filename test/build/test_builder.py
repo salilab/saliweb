@@ -36,7 +36,7 @@ class BuilderTest(unittest.TestCase):
         t = saliweb.build.builder_python_tests('dummytgt',
                                                ['foo.py', 'bar.py'], e)
         self.assertEqual(e.env['ENV'], {'PYTHONPATH': 'python'})
-        regex = '.*python .*/run\-tests\.py testser foo\.py bar\.py$'
+        regex = r'.*python .*/run\-tests\.py testser foo\.py bar\.py$'
         m = re.match(regex, e.exec_str)
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))
@@ -46,8 +46,8 @@ class BuilderTest(unittest.TestCase):
         e.env['coverage'] = 'True'
         t = saliweb.build.builder_python_tests('dummytgt',
                                                ['foo.py', 'bar.py'], e)
-        regex = '.*python .*/run\-tests\.py --coverage testser ' \
-                  + 'foo\.py bar\.py$'
+        regex = r'.*python .*/run\-tests\.py --coverage testser ' \
+                  + r'foo\.py bar\.py$'
         m = re.match(regex, e.exec_str)
         self.assertNotEqual(m, None, 'String %s does not match regex %s' \
                             % (e.exec_str, regex))

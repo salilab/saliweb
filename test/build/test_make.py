@@ -41,8 +41,8 @@ class MakeTest(unittest.TestCase):
             with open(t) as fh:
                 f = fh.read()
             self.assertTrue(re.match('#!/usr/bin/python.*'
-                                     'import saliweb\.backend\.mytest$.*'
-                                     'backend\.mytest\.main', f,
+                                     r'import saliweb\.backend\.mytest$.*'
+                                     r'backend\.mytest\.main', f,
                                      re.DOTALL | re.MULTILINE),
                             'regex match failed on ' + f)
             os.unlink(t)
@@ -55,8 +55,8 @@ class MakeTest(unittest.TestCase):
         class DummyEnv(object):
             def Execute(self, cmd):
                 self.cmd = cmd
-        for t, r in (('mytest.cgi', 'my \$m = new testser;'
-                                    '.*display_mytest_page\(\)'),
+        for t, r in (('mytest.cgi', r'my \$m = new testser;'
+                                    r'.*display_mytest_page\(\)'),
                      ('job', 'use saliweb::frontend::RESTService;'
                              '.*@testser::ISA = qw.*display_submit_page.*'
                              'display_results_page')):
@@ -72,7 +72,8 @@ class MakeTest(unittest.TestCase):
 
             with open(t) as fh:
                 f = fh.read()
-            self.assertTrue(re.match('#!/usr/bin/perl \-w.*' + r, f, re.DOTALL),
+            self.assertTrue(re.match(r'#!/usr/bin/perl \-w.*' + r,
+                                     f, re.DOTALL),
                             'regex match failed on ' + f)
             os.unlink(t)
 
@@ -96,9 +97,9 @@ class MakeTest(unittest.TestCase):
                 f = fh.read()
             self.assertTrue(re.match(
                 "config = 'mycfg'.*pydir = 'mypydir'.*"
-                "import mymodname\.backend as.*"
-                "import mymodname as.*ws = backend\.get_web.*"
-                "ws\.%s" % expver, f, re.DOTALL),
+                r"import mymodname\.backend as.*"
+                r"import mymodname as.*ws = backend\.get_web.*"
+                r"ws\.%s" % expver, f, re.DOTALL),
                 'regex match failed on ' + f)
             os.unlink('dummytgt')
 

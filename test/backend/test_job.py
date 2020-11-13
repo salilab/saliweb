@@ -440,10 +440,11 @@ class JobTest(unittest.TestCase):
         # All logging messages above the threshold should be in framework.log
         with open(os.path.join(jobdir, 'framework.log')) as fh:
             logs = fh.read()
+        drx = r'\d+\-\d+\-\d+ \d+:\d+:\d+,\d+'
         self.assertTrue(re.match(
-                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ WARNING warning message\n'
-                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ ERROR error message\n'
-                    '\d+\-\d+\-\d+ \d+:\d+:\d+,\d+ CRITICAL critical message\n',
+                    '%s WARNING warning message\n'
+                    '%s ERROR error message\n'
+                    '%s CRITICAL critical message\n' % (drx, drx, drx),
                     logs), 'Unexpected log output: ' + logs)
         os.unlink(os.path.join(jobdir, 'framework.log'))
         os.rmdir(jobdir)

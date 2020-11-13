@@ -36,10 +36,10 @@ class InstallTest(unittest.TestCase):
                                         env)
         self.assertEqual(len(warns), 1)
         self.assertTrue(re.search(
-            'file \/my\/test\/fedir\/testmodule\/__init__\.py does not.*'
-            'legacy Perl module, \/my\/test\/perldir\/testmodule\.pm.*'
+            r'file \/my\/test\/fedir\/testmodule\/__init__\.py does not.*'
+            r'legacy Perl module, \/my\/test\/perldir\/testmodule\.pm.*'
             'frontend will probably not work.*Python module is '
-            'named \'testmodule\'.*InstallPythonFrontend.*SConscript',
+            r'named \'testmodule\'.*InstallPythonFrontend.*SConscript',
             warns[0][0].args[0], re.DOTALL),
             'regex did not match ' + warns[0][0].args[0])
 
@@ -63,8 +63,8 @@ class InstallTest(unittest.TestCase):
                         'pythondir': '/my/test/pythondir'})
         ret, warns = run_catch_warnings(saliweb.build._check_python_import, env)
         self.assertEqual(len(warns), 1)
-        self.assertTrue(re.search('Python module.*\/my\/test\/pythondir\/'
-                               'testmodule\/__init__\.py does not.*backend '
+        self.assertTrue(re.search(r'Python module.*\/my\/test\/pythondir\/'
+                               r'testmodule\/__init__\.py does not.*backend '
                                'will probably not work.*Python package is '
                                'named \'testmodule\'.*'
                                'InstallPython.*SConscript',
