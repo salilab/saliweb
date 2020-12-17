@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get -qq update && sudo apt-get install -y libtest-exception-perl libtest-output-perl libdevel-cover-perl acl cpanminus libcgi-pm-perl perl-doc
-        pip install codecov flask pytest-cov pytest-pep8 coverage scons
+        pip install codecov flask pytest-cov pytest-flake8 coverage scons
         sudo cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov
         # Patch Devel::Cover::Report::Codecov to support GitHub Actions
         # from https://github.com/codecov/codecov-perl/pull/41
@@ -30,7 +30,7 @@ jobs:
     - name: Test
       run: |
         scons python=$(which python) test
-        py.test --cov=account/account --cov-branch --pep8 account
+        py.test --cov=account/account --cov-branch --flake8 account
     - name: Upload coverage to codecov
       run: |
         coverage combine
