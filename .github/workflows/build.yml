@@ -33,6 +33,5 @@ jobs:
         py.test --cov=account/account --cov-branch --flake8 account
     - name: Upload coverage to codecov
       run: |
-        coverage combine
-        codecov
+        bash <(curl -s https://codecov.io/bash)
         cd test/frontend && cover -report codecov
