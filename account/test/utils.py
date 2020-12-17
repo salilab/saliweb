@@ -7,6 +7,8 @@ import hashlib
 # Make reading flask config a noop
 def _mock_from_pyfile(self, fname, silent=False):
     pass
+
+
 flask.Config.from_pyfile = _mock_from_pyfile
 
 

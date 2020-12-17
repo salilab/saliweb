@@ -11,6 +11,8 @@ import sys
 # instead (UTC seconds-since-epoch) for testing
 def adapt_datetime(ts):
     return calendar.timegm(ts.timetuple())
+
+
 sqlite3.register_adapter(datetime.datetime, adapt_datetime)
 
 

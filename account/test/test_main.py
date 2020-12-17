@@ -1,6 +1,5 @@
 import utils
 import re
-import flask
 account = utils.import_mocked_account(__file__)
 
 

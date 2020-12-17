@@ -41,7 +41,7 @@ def index():
         row = cur.fetchone()
         if row:
             pwhash = row[0]
-            cookie = {'user_name': user, 'session': row[0]}
+            cookie = {'user_name': user, 'session': pwhash}
             util.set_servers_cookie_info(cookie, request.form.get('permanent'))
             g.user = saliweb.frontend._get_user_from_cookie(cookie)
             if not g.user:
@@ -166,7 +166,5 @@ def reset_link(user_id, reset_key):
                                      request.form.get('permanent'))
             flash("Password reset successfully. You are now logged in.")
             return redirect(url_for('index'))
-    else:
-        permanent = True
     return render_template('reset-link.html', error=error, user_name=user_name,
                            permanent=True)
