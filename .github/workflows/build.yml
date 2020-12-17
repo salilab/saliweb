@@ -1,0 +1,42 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        perl-version: [latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up Perl ${{ matrix.perl-version }}
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl-version }}
+    - name: Install dependencies
+      run: |
+        pip install codecov flask pytest-cov pytest-pep8 coverage scons
+        cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov Test::Exception Test::Output Devel::Cover CGI Error
+        # Patch Devel::Cover::Report::Codecov to support GitHub Actions
+        # from https://github.com/codecov/codecov-perl/pull/41
+        reportdir=$(dirname $(perldoc -l Devel::Cover::Report::Codecov) )
+        curl https://github.com/codecov/codecov-perl/commit/75ac8c01b3cccbff0acc879467b3952cd9605210.patch > gha.patch && patch -p5 < gha.patch && cp Codecov/Service/GitHub.pm $reportdir/Codecov/Service/GitHub.pm
+    - name: Test
+      run: |
+        scons python=$(which python) test
+        py.test --cov=account/account --cov-branch --pep8 account
+    - name: Upload coverage to codecov
+      run: |
+        coverage combine
+        codecov
+        cd test/frontend && cover -report codecov
