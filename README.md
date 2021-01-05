@@ -1,6 +1,6 @@
 [![docs](https://readthedocs.org/projects/saliweb/badge/)](https://salilab.org/saliweb/)
-[![Build Status](https://github.com/salilab/saliweb/workflows/build/badge.svg?branch=master)](https://github.com/salilab/saliweb/actions?query=workflow%3Abuild)
-[![codecov](https://codecov.io/gh/salilab/saliweb/branch/master/graph/badge.svg)](https://codecov.io/gh/salilab/saliweb)
+[![Build Status](https://github.com/salilab/saliweb/workflows/build/badge.svg?branch=main)](https://github.com/salilab/saliweb/actions?query=workflow%3Abuild)
+[![codecov](https://codecov.io/gh/salilab/saliweb/branch/main/graph/badge.svg)](https://codecov.io/gh/salilab/saliweb)
 [![Coverity scan](https://img.shields.io/coverity/scan/8508.svg)](https://scan.coverity.com/projects/salilab-saliweb)
 [![Code Climate](https://codeclimate.com/github/salilab/saliweb/badges/gpa.svg)](https://codeclimate.com/github/salilab/saliweb)
 

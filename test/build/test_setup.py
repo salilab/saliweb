@@ -173,7 +173,7 @@ print("1024\\n2048")""")
 from __future__ import print_function
 import sys
 if sys.argv[1:4] == ['rev-parse', '--abbrev-ref', 'HEAD']:
-    print("master\\nfoo")
+    print("main\\nfoo")
 elif sys.argv[1:4] == ['rev-parse', '--short', 'HEAD']:
     print("abc123\\nbar")
 else:
@@ -182,7 +182,7 @@ else:
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 0)
-            self.assertEqual(env, {'version': 'master.abc123'})
+            self.assertEqual(env, {'version': 'main.abc123'})
     
             shutil.rmtree(tmpdir, ignore_errors=True)
 

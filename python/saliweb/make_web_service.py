@@ -71,7 +71,7 @@ class GitSourceControl(object):
         self._run_git_command(['add'] + files, cwd=self.topdir)
         self._run_git_command(['commit', '-m', 'Initial setup'],
                               cwd=self.topdir)
-        self._run_git_command(['push', '-u', 'origin', 'master'],
+        self._run_git_command(['push', '-u', 'origin', 'main'],
                               cwd=self.topdir)
 
 

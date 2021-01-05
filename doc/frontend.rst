@@ -33,7 +33,7 @@ Web page layout
 Each web page has a similar layout (header, footer, links, and so on).
 This is provided by a system-wide `Jinja2 template <http://jinja.pocoo.org/>`_
 called ``saliweb/layout.html``, which can be seen
-`at GitHub <https://github.com/salilab/saliweb/blob/master/python/saliweb/frontend/templates/saliweb/layout.html>`_.
+`at GitHub <https://github.com/salilab/saliweb/blob/main/python/saliweb/frontend/templates/saliweb/layout.html>`_.
 This system-wide template should be overriden for each web service, by
 providing a file ``frontend/modfoo/templates/layout.html`` that 'extends'
 the template:
