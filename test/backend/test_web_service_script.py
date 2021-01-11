@@ -14,13 +14,14 @@ from xml.dom.minidom import parseString
 import xml.parsers.expat
 import subprocess
 import io
-import testutil
 
 
 class MockURL(object):
     ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
+
     def __init__(self, url):
         self.url = url
+
     def read(self):
         return """
 <saliweb %s>
@@ -29,12 +30,15 @@ class MockURL(object):
 </saliweb>
 """ % self.ns
 
+
 def mock_sleep(interval):
     pass
+
 
 class MockURLOpen(object):
     def __init__(self):
         self.numcalls = 0
+
     def __call__(self, request):
         url = request.get_full_url()
         if 'longjob' in url and self.numcalls < 100:
@@ -47,6 +51,7 @@ class MockURLOpen(object):
         else:
             return MockURL(url)
 
+
 class WebServiceTests(unittest.TestCase):
     """Test the web_service script."""
 
@@ -55,7 +60,7 @@ class WebServiceTests(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
         curl = os.path.join(self.tmpdir, 'curl')
         with open(curl, 'w') as fh:
-           fh.write("#!" + sys.executable + """
+            fh.write("#!" + sys.executable + """
 from __future__ import print_function
 import sys
 url = sys.argv[-1]
@@ -139,9 +144,9 @@ else:
 
     def test_show_info(self):
         """Test show_info()"""
-        o = web_service.show_info('http://noparam/')
-        o = web_service.show_info('http://ok/')
-        o = web_service.show_info('http://ok/', cookie='foo=bar')
+        _ = web_service.show_info('http://noparam/')
+        _ = web_service.show_info('http://ok/')
+        _ = web_service.show_info('http://ok/', cookie='foo=bar')
 
     def test_submit_job(self):
         """Test submit_job()"""
@@ -257,7 +262,8 @@ else:
         self.assertEqual(exit, 1)
         self.assertIn("If the job has finished,", out)
 
-        out, err, exit = self.run_web_service(['results', 'http://jobresults/'])
+        out, err, exit = self.run_web_service(
+            ['results', 'http://jobresults/'])
         self.assertEqual(exit, 0)
         self.assertIn("http://results1/", out)
 
@@ -270,6 +276,7 @@ else:
         out, err, exit = self.run_web_service(['run', 'http://oksubmit/'])
         self.assertEqual(exit, 0)
         self.assertIn("http://results1/", out)
+
 
 if __name__ == '__main__':
     unittest.main()

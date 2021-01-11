@@ -37,6 +37,7 @@ class Tests(unittest.TestCase):
         class DummyJob(object):
             def __init__(self, name):
                 self.name = name
+
         class DummyDatabase(object):
             def _get_all_jobs_in_state(self, state, order_by):
                 if state == 'FAILED':
@@ -47,13 +48,16 @@ class Tests(unittest.TestCase):
                     return [DummyJob('baz')]
                 else:
                     return []
+
         class DummyWebService(object):
             def __init__(self, mod):
                 self.mod = mod
                 self.db = DummyDatabase()
+
         class DummyModule(object):
             config = 'testconfig'
             job_deleted = False
+
             def get_web_service(self, config):
                 return DummyWebService(self)
 
@@ -65,20 +69,22 @@ class Tests(unittest.TestCase):
             mod = DummyModule()
             sys.argv = ['testprogram', 'FAILED', 'RUNNING']
             main(mod)
-            self.assertEqual(sio.getvalue(),
-'foo                                                          FAILED\n'
-'bar                                                          FAILED\n'
-'baz                                                          RUNNING\n')
+            self.assertEqual(
+                sio.getvalue(),
+                "%-60s FAILED\n"
+                "%-60s FAILED\n"
+                "%-60s RUNNING\n" % ('foo', 'bar', 'baz'))
             sio = StringIO()
             sys.stdout = sio
             mod = DummyModule()
             sys.argv = ['testprogram']
             main(mod)
-            self.assertEqual(sio.getvalue(),
-'foo                                                          FAILED\n'
-'bar                                                          FAILED\n'
-'testpre                                                      PREPROCESSING\n'
-'baz                                                          RUNNING\n')
+            self.assertEqual(
+                sio.getvalue(),
+                "%-60s FAILED\n"
+                "%-60s FAILED\n"
+                "%-60s PREPROCESSING\n"
+                "%-60s RUNNING\n" % ('foo', 'bar', 'testpre', 'baz'))
         finally:
             sys.argv = old
             sys.stdout = oldout

@@ -11,8 +11,10 @@ else:
 class DummyWeb(object):
     def __init__(self, pid):
         self.pid = pid
+
     def get_running_pid(self):
         return self.pid
+
 
 class FailJobTest(unittest.TestCase):
     """Check failjob script"""
@@ -56,14 +58,18 @@ class FailJobTest(unittest.TestCase):
         class DummyJob(object):
             failed = False
             name = 'testjob'
+
             def admin_fail(self, email):
                 self.failed = True
                 self.failed_email = email
+
         class DummyStdin(object):
             def __init__(self, answer):
                 self.answer = answer
+
             def readline(self):
                 return self.answer
+
         def run_fail_job(job, force, email, answer):
             oldout = sys.stdout
             oldin = sys.stdin
@@ -98,22 +104,28 @@ class FailJobTest(unittest.TestCase):
         class DummyJob(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def admin_fail(self, email):
                 self.mod.job_failed = True
                 self.mod.job_failed_email = email
+
         class DummyWebService(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def get_running_pid(self):
                 return None
+
             def get_job_by_name(self, state, name):
                 if state == 'COMPLETED' and name == 'testjob':
                     return DummyJob(self.mod)
                 else:
                     return None
+
         class DummyModule(object):
             config = 'testconfig'
             job_failed = False
+
             def get_web_service(self, config):
                 return DummyWebService(self)
 

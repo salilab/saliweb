@@ -10,10 +10,11 @@ def get_options():
     parser = ArgumentParser(
         description="Start or stop the daemon that processes incoming, "
                     "completed, and old jobs.")
-    parser.add_argument("state",
-            choices=['start', 'stop', 'restart', 'condstart', 'status'],
-            help="'condstart' only starts the daemon if it is currently "
-                 "stopped, and does nothing if it is already running")
+    parser.add_argument(
+        "state",
+        choices=['start', 'stop', 'restart', 'condstart', 'status'],
+        help="'condstart' only starts the daemon if it is currently "
+             "stopped, and does nothing if it is already running")
     return parser.parse_args().state
 
 

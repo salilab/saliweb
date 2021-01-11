@@ -6,24 +6,30 @@ import saliweb
 import saliweb.backend.events
 import testutil
 
+
 class DummyJob(object):
     def _try_complete(self, webservice, run_exception):
         if run_exception:
             webservice._exception = run_exception
 
+
 class DummyWebService(object):
     def __init__(self):
         self._event_queue = saliweb.backend.events._EventQueue()
+
     def _get_job_by_runner_id(self, runner, runid):
         return DummyJob()
+
 
 class DummyModule(object):
     def __init__(self):
         self.get_results_counter = 0
+
     def submit_job(self, url, args):
         self.url = url
         self.args = args
         return 'jobid'
+
     def get_results(self, url):
         self.get_results_counter += 1
         if self.get_results_counter > 2:
@@ -65,6 +71,7 @@ class Test(unittest.TestCase):
         finally:
             saliweb.web_service = old
             saliweb.backend._SaliWebJobWaiter._start_interval = oldin
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -20,17 +20,24 @@ else:
 
 Job._state_file_wait_time = 0.01
 
+
 class MockRunner(Runner):
     _runner_name = 'mock'
+
     def __init__(self, id):
         Runner.__init__(self)
         self.id = id
+
     def _run(self, webservice):
         return self.id
+
     @classmethod
     def _check_completed(cls, jobid, directory):
         return True
+
+
 Job.register_runner_class(MockRunner)
+
 
 basic_config = """
 [general]
@@ -59,9 +66,10 @@ archive: %s
 expire: %s
 """
 
+
 class MyJob(Job):
     def preprocess(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-preprocess':
             raise ValueError('Failure in preprocessing')
         if self.name == 'log-preprocess':
@@ -79,8 +87,10 @@ class MyJob(Job):
         f.close()
         if self.name == 'complete-preprocess':
             self.skip_run()
+        del log
+
     def postprocess(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-postprocess':
             raise ValueError('Failure in postprocessing')
         self._metadata['testfield'] = 'postprocess'
@@ -88,39 +98,50 @@ class MyJob(Job):
         f.close()
         if self.name == 'reschedule':
             self.reschedule_run('my-reschedule')
+        del log
+
     def finalize(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-finalize':
             raise ValueError('Failure in finalizing')
         self._metadata['testfield'] = 'finalize'
         f = open('finalize', 'w')
         f.close()
+        del log
+
     def complete(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-complete':
             raise ValueError('Failure in completion')
         self._metadata['testfield'] = 'complete'
         f = open('complete', 'w')
         f.close()
+        del log
+
     def run(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-run':
             raise ValueError('Failure in running')
         self._metadata['testfield'] = 'run'
         f = open('job-output', 'w')
         f.close()
+        del log
         return MockRunner('MyJob ID')
+
     def rerun(self, data):
         f = open(data, 'w')
         f.close()
         return Job.rerun(self, data)
+
     def archive(self):
-        l = self.logger # Make sure self.logger is populated
+        log = self.logger  # Make sure self.logger is populated
         if self.name == 'fail-archive':
             raise ValueError('Failure in archival')
         self._metadata['testfield'] = 'archive'
         f = open('archive', 'w')
         f.close()
+        del log
+
     def expire(self):
         if hasattr(self, 'logger'):
             raise RuntimeError("self.logger should not be set")
@@ -129,6 +150,7 @@ class MyJob(Job):
         self._metadata['testfield'] = 'expire'
         f = open('expire', 'w')
         f.close()
+
     def _get_runner_results(self):
         if self.name == 'fail-batch-exception':
             raise ValueError('Failure in batch completion')
@@ -143,26 +165,28 @@ class MyJob(Job):
         if self.name == 'fail-batch-complete':
             return True
 
+
 def add_incoming_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['INCOMING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-              + "VALUES(?,?,?,?,?)", (name, 'INCOMING', utcnow, jobdir,
-                                      'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+              "VALUES(?,?,?,?,?)", (name, 'INCOMING', utcnow, jobdir,
+                                    'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def add_running_job(db, name, completed):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['RUNNING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,runner_id,directory, " \
-              + "contact_email,url) VALUES(?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,submit_time,runner_id,directory, "
+              "contact_email,url) VALUES(?,?,?,?,?,?,?)",
               (name, 'RUNNING', utcnow, 'mock:SGE-'+name, jobdir,
-              'testuser@salilab.org', 'http://testurl'))
+               'testuser@salilab.org', 'http://testurl'))
     db.conn.commit()
     with open(os.path.join(jobdir, 'job-state'), 'w') as f:
         if completed:
@@ -170,6 +194,7 @@ def add_running_job(db, name, completed):
         else:
             print("STARTED", file=f)
     return jobdir
+
 
 def add_completed_job(db, name, archive_time):
     c = db.conn.cursor()
@@ -180,12 +205,13 @@ def add_completed_job(db, name, archive_time):
         archive = None
     else:
         archive = utcnow + archive_time
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
-              + "archive_time,url) VALUES(?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, "
+              "archive_time,url) VALUES(?,?,?,?,?,?)",
               (name, 'COMPLETED', utcnow, jobdir, archive,
                'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def add_archived_job(db, name, expire_time):
     c = db.conn.cursor()
@@ -196,64 +222,70 @@ def add_archived_job(db, name, expire_time):
         expire = None
     else:
         expire = utcnow + expire_time
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
-              + "expire_time,url) VALUES(?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, "
+              "expire_time,url) VALUES(?,?,?,?,?,?)",
               (name, 'ARCHIVED', utcnow, jobdir, expire,
                'http://testurl'))
     db.conn.commit()
     return jobdir
 
+
 def add_expired_job(db, name):
     c = db.conn.cursor()
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory, " \
-              + "url) VALUES(?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory, "
+              "url) VALUES(?,?,?,?,?)",
               (name, 'EXPIRED', utcnow, None, 'http://testurl'))
     db.conn.commit()
+
 
 def add_failed_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['FAILED'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-              + "VALUES(?,?,?,?,?)", (name, 'FAILED', utcnow, jobdir,
-                                      'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+              "VALUES(?,?,?,?,?)", (name, 'FAILED', utcnow, jobdir,
+                                    'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def add_preprocessing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['PREPROCESSING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-              + "VALUES(?,?,?,?,?)", (name, 'PREPROCESSING', utcnow, jobdir,
-                                      'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+              "VALUES(?,?,?,?,?)", (name, 'PREPROCESSING', utcnow, jobdir,
+                                    'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def add_postprocessing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['POSTPROCESSING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-              + "VALUES(?,?,?,?,?)", (name, 'POSTPROCESSING', utcnow, jobdir,
-                                      'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+              "VALUES(?,?,?,?,?)", (name, 'POSTPROCESSING', utcnow, jobdir,
+                                    'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def add_finalizing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['FINALIZING'], name)
     os.mkdir(jobdir)
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-              + "VALUES(?,?,?,?,?)", (name, 'FINALIZING', utcnow, jobdir,
-                                      'http://testurl'))
+    c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+              "VALUES(?,?,?,?,?)", (name, 'FINALIZING', utcnow, jobdir,
+                                    'http://testurl'))
     db.conn.commit()
     return jobdir
+
 
 def setup_webservice(archive='30d', expire='90d'):
     tmpdir = tempfile.mkdtemp()
@@ -265,12 +297,13 @@ def setup_webservice(archive='30d', expire='90d'):
     os.mkdir(failed)
     db = MemoryDatabase(MyJob)
     db.add_field(MySQLField('testfield', 'TEXT'))
-    conf = Config(StringIO(basic_config \
+    conf = Config(StringIO(basic_config
                            % (incoming, preprocessing, failed, archive,
                               expire)))
     web = WebService(conf, db)
     db._create_tables()
     return db, conf, web, tmpdir
+
 
 def cleanup_webservice(conf, tmpdir):
     os.rmdir(conf.directories['PREPROCESSING'])
@@ -278,13 +311,14 @@ def cleanup_webservice(conf, tmpdir):
     os.rmdir(conf.directories['FAILED'])
     os.rmdir(tmpdir)
 
+
 class JobTest(unittest.TestCase):
     """Check Job class"""
 
     def assert_fail_msg(self, failre, job):
-        self.assertTrue(re.search(failre, job._metadata['failure'],
-                               flags=re.DOTALL),
-                     'Unexpected failure message: ' + job._metadata['failure'])
+        self.assertTrue(re.search(
+            failre, job._metadata['failure'], flags=re.DOTALL),
+            'Unexpected failure message: ' + job._metadata['failure'])
 
     def test_admin_fail(self):
         """Check admin_fail method"""
@@ -299,6 +333,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_ok_startup(self):
         """Check successful startup of incoming jobs"""
@@ -320,21 +355,22 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(runjobdir, 'job-output'))
         os.rmdir(runjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_sanity_check_no_directory(self):
         """Make sure that sanity checks catch jobs without directories"""
         utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
-        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-                  + "VALUES(?,?,?,?,?)", ('job1', 'INCOMING', utcnow, None,
-                                          'http://testurl'))
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+                  "VALUES(?,?,?,?,?)", ('job1', 'INCOMING', utcnow, None,
+                                        'http://testurl'))
         db.conn.commit()
         web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job1')
         self.assertIsNone(job.directory)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'SanityError: .*did not set the directory', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*did not set the directory', job)
         cleanup_webservice(conf, tmpdir)
 
     def test_sanity_check_invalid_directory(self):
@@ -342,20 +378,19 @@ class JobTest(unittest.TestCase):
         utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
-        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) " \
-                  + "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
-                                          '/not/exist', 'http://testurl'))
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+                  "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
+                                        '/not/exist', 'http://testurl'))
         db.conn.commit()
         web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job2')
         self.assertIsNone(job.directory)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'SanityError: .*is not a directory', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*is not a directory', job)
         cleanup_webservice(conf, tmpdir)
 
     def test_sanity_check_preproc_state(self):
         """Make sure that sanity checks catch jobs in PREPROCESSING state"""
-        utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         jobdir = add_preprocessing_job(db, 'preproc')
         web._sanity_check()
@@ -363,13 +398,13 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'preproc')
         self.assertEqual(job.directory, failjobdir)
         os.rmdir(failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'SanityError: .*is in state PREPROCESSING', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*is in state PREPROCESSING', job)
         cleanup_webservice(conf, tmpdir)
+        del jobdir
 
     def test_sanity_check_postproc_state(self):
         """Make sure that sanity checks catch jobs in POSTPROCESSING state"""
-        utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         jobdir = add_postprocessing_job(db, 'postproc')
         web._sanity_check()
@@ -377,13 +412,13 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'postproc')
         self.assertEqual(job.directory, failjobdir)
         os.rmdir(failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'SanityError: .*is in state POSTPROCESSING', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*is in state POSTPROCESSING', job)
         cleanup_webservice(conf, tmpdir)
+        del jobdir
 
     def test_sanity_check_finalize_state(self):
         """Make sure that sanity checks catch jobs in FINALIZING state"""
-        utcnow = datetime.datetime.utcnow()
         db, conf, web, tmpdir = setup_webservice()
         jobdir = add_finalizing_job(db, 'fin')
         web._sanity_check()
@@ -391,9 +426,10 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'], 'fin')
         self.assertEqual(job.directory, failjobdir)
         os.rmdir(failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'SanityError: .*is in state FINALIZING', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*is in state FINALIZING', job)
         cleanup_webservice(conf, tmpdir)
+        del jobdir
 
     def test_preprocess_failure(self):
         """Make sure that preprocess failures are handled correctly"""
@@ -403,19 +439,21 @@ class JobTest(unittest.TestCase):
 
         # Job should now have moved from INCOMING to FAILED
         job = web.get_job_by_name('FAILED', 'fail-preprocess')
-        failjobdir = os.path.join(conf.directories['FAILED'], 'fail-preprocess')
+        failjobdir = os.path.join(conf.directories['FAILED'],
+                                  'fail-preprocess')
         self.assertEqual(job.directory, failjobdir)
         self.assertIsNone(job._metadata['runner_id'])
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
-                             + 'ValueError: Failure in preprocessing', job)
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'ValueError: Failure in preprocessing', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
         # Make sure that the admin got a failed job email
         mail = conf.get_mail_output()
-        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testadmin' \
-                               + '.*Failure in preprocessing', mail,
-                               flags=re.DOTALL),
-                     'Unexpected mail output: ' + mail)
+        self.assertTrue(re.search(
+            'Subject: .*From: testadmin.*To: testadmin'
+            '.*Failure in preprocessing', mail,
+            flags=re.DOTALL), 'Unexpected mail output: ' + mail)
+        del injobdir
 
     def test_preprocess_logging(self):
         """Test logging in preprocess method"""
@@ -428,7 +466,7 @@ class JobTest(unittest.TestCase):
         # Make sure that the logger file was closed
         for f in testutil.get_open_files():
             self.assertTrue('framework.log' not in f,
-                         "log file %s is still open" % f)
+                            "log file %s is still open" % f)
         # Check get_log_handler method
         hdlr = job.get_log_handler()
         self.assertIsInstance(hdlr, logging.Handler)
@@ -449,6 +487,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'framework.log'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_fatal_failure(self):
         """Make sure that job failures within _fail() are handled correctly"""
@@ -461,6 +500,7 @@ class JobTest(unittest.TestCase):
                               'fatal-fail-preprocess')
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_preprocess_complete(self):
         """Job.preprocess() should be able to skip a job run"""
@@ -483,6 +523,7 @@ class JobTest(unittest.TestCase):
         self.assertIsNone(job._metadata['postprocess_time'])
         os.rmdir(compjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_run_failure(self):
         """Make sure that run failures are handled correctly"""
@@ -496,12 +537,13 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, failjobdir)
         self.assertEqual(job._metadata['testfield'], 'preprocess')
         self.assertIsNone(job._metadata['runner_id'])
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in running', job)
         # Just the preprocess method in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'preproc'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_ok_complete(self):
         """Check normal job completion"""
@@ -521,7 +563,8 @@ class JobTest(unittest.TestCase):
         self.assertIsNotNone(job._metadata['end_time'])
         self.assertIsNotNone(job._metadata['archive_time'])
         self.assertIsNotNone(job._metadata['expire_time'])
-        # postprocess, finalize, complete methods in MyJob should have triggered
+        # postprocess, finalize, complete methods in MyJob should
+        # have triggered
         os.unlink(os.path.join(compjobdir, 'postproc'))
         os.unlink(os.path.join(compjobdir, 'finalize'))
         os.unlink(os.path.join(compjobdir, 'complete'))
@@ -531,10 +574,11 @@ class JobTest(unittest.TestCase):
         cleanup_webservice(conf, tmpdir)
         # User should have been notified by email
         mail = conf.get_mail_output()
-        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testuser' \
-                               + '.*Your job job1 has finished.*http://testurl',
-                               mail, flags=re.DOTALL),
-                     'Unexpected mail output: ' + mail)
+        self.assertTrue(re.search(
+            'Subject: .*From: testadmin.*To: testuser'
+            '.*Your job job1 has finished.*http://testurl',
+            mail, flags=re.DOTALL), 'Unexpected mail output: ' + mail)
+        del runjobdir
 
     def test_complete_no_expire(self):
         """Check completion of a job that should never expire or be archived"""
@@ -556,6 +600,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'batch_complete'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_still_running(self):
         """Check that jobs that are still running are not processed"""
@@ -584,11 +629,12 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-postprocess')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in postprocessing', job)
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_finalize_failure(self):
         """Make sure that finalize failures are handled correctly"""
@@ -601,13 +647,14 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-finalize')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in finalizing', job)
         # postprocess method in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'postproc'))
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_complete_failure(self):
         """Make sure that complete failures are handled correctly"""
@@ -620,7 +667,7 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-complete')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in completion', job)
         # postprocess, finalize methods in MyJob should have triggered
         os.unlink(os.path.join(failjobdir, 'postproc'))
@@ -629,6 +676,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_batch_failure(self):
         """Make sure that batch system failures are handled correctly"""
@@ -650,11 +698,13 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(failjobdir, 'batch_complete'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_batch_exception(self):
         """Make sure that exceptions in check_completed are handled"""
         db, conf, web, tmpdir = setup_webservice()
-        runjobdir = add_running_job(db, 'fail-batch-exception', completed=False)
+        runjobdir = add_running_job(db, 'fail-batch-exception',
+                                    completed=False)
         web._process_completed_jobs()
 
         # Job should now have moved from RUNNING to FAILED
@@ -662,11 +712,12 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-batch-exception')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in batch completion', job)
         os.unlink(os.path.join(failjobdir, 'job-state'))
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_ok_archive(self):
         """Check successful archival of completed jobs"""
@@ -683,6 +734,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(arcjobdir, 'archive'))
         os.rmdir(arcjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_archive_failure(self):
         """Make sure that archival failures are handled correctly"""
@@ -696,10 +748,11 @@ class JobTest(unittest.TestCase):
         failjobdir = os.path.join(conf.directories['FAILED'],
                                   'fail-archive')
         self.assertEqual(job.directory, failjobdir)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in archival', job)
         os.rmdir(failjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_never_archive(self):
         """Check for jobs that never archive"""
@@ -713,6 +766,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, jobdir)
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_ok_expire(self):
         """Check successful expiry of archived jobs"""
@@ -727,6 +781,7 @@ class JobTest(unittest.TestCase):
         # expire method in MyJob should have triggered
         os.unlink('expire')
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_never_expire(self):
         """Check for jobs that never expire"""
@@ -740,6 +795,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, arcjobdir)
         os.rmdir(arcjobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_expire_failure(self):
         """Make sure that expiry failures are handled correctly"""
@@ -752,9 +808,10 @@ class JobTest(unittest.TestCase):
         job = web.get_job_by_name('FAILED', 'fail-expire')
         # Job directory should be None since EXPIRED state was visited
         self.assertIsNone(job.directory)
-        self.assert_fail_msg('Python exception:.*Traceback.*' \
+        self.assert_fail_msg('Python exception:.*Traceback.*'
                              + 'ValueError: Failure in expiry', job)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_ok_resubmit(self):
         """Check successful resubmission of failed jobs"""
@@ -774,6 +831,7 @@ class JobTest(unittest.TestCase):
         self.assertEqual(job.directory, prejobdir)
         os.rmdir(prejobdir)
         cleanup_webservice(conf, tmpdir)
+        del injobdir
 
     def test_delete_all(self):
         """Check deletion of all jobs"""
@@ -783,7 +841,7 @@ class JobTest(unittest.TestCase):
         add_expired_job(db, 'job3')
         runjobdir = add_running_job(db, 'job4', completed=False)
         with open(os.path.join(db.config.directories['PREPROCESSING'],
-                              'tempfile'), 'w') as fh:
+                               'tempfile'), 'w') as fh:
             fh.write('foo')
         web._delete_all_jobs()
         self.assertIsNone(web.get_job_by_name('FAILED', 'job1'))
@@ -794,6 +852,7 @@ class JobTest(unittest.TestCase):
             g = glob.glob(os.path.join(db.config.directories['INCOMING'], '*'))
             self.assertEqual(g, [])
         cleanup_webservice(conf, tmpdir)
+        del injobdir, runjobdir, failjobdir
 
     def test_delete(self):
         """Check deletion of jobs"""
@@ -831,6 +890,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'job-state'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_skip_run(self):
         """Check Job.skip_run method"""
@@ -844,6 +904,7 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'job-state'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_reschedule(self):
         """Check rescheduling of jobs"""
@@ -871,6 +932,7 @@ class JobTest(unittest.TestCase):
         # User should *not* been notified by email
         mail = conf.get_mail_output()
         self.assertIsNone(mail)
+        del runjobdir
 
     def test_reschedule_run(self):
         """Check Job.reschedule_run method"""
@@ -884,21 +946,27 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'job-state'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
 
     def test_get_runner_results(self):
         """Check Job._get_runner_results method"""
         checked_jobs = []
+
         class DummyRunner(object):
-            def __init__(self, completed): self._completed = completed
+            def __init__(self, completed):
+                self._completed = completed
+
             def _check_completed(self, jobid, directory):
                 checked_jobs.append(jobid)
                 return self._completed
+
         class TestJob(Job):
             _runners = {'donerunner': DummyRunner(True),
-                        'runrunner': DummyRunner(False) }
+                        'runrunner': DummyRunner(False)}
             directory = ''
+
             def __init__(self, runner_id):
-                self._metadata = {'runner_id':runner_id}
+                self._metadata = {'runner_id': runner_id}
 
         j = TestJob('donerunner:job1')
         self.assertEqual(j._get_runner_results(), True)
@@ -922,6 +990,8 @@ class JobTest(unittest.TestCase):
         os.unlink(os.path.join(jobdir, 'job-state'))
         os.rmdir(jobdir)
         cleanup_webservice(conf, tmpdir)
+        del runjobdir
+
 
 if __name__ == '__main__':
     unittest.main()

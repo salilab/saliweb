@@ -3,7 +3,6 @@ import socket
 import os
 import re
 import datetime
-import tempfile
 import time
 import sys
 import contextlib
@@ -44,19 +43,32 @@ archive: 30d
 expire: 90d
 """
 
-class TestFatalError(Exception): pass
+
+class TestFatalError(Exception):
+    pass
+
 
 job_log = []
+
+
 class LoggingJob(Job):
     """Test Job subclass that logs which methods are called"""
     def _try_run(self, webservice):
         if self.name == 'fatal-error-run':
             raise TestFatalError("fatal error in run")
         job_log.append((self.name, 'run'))
-    def _try_complete(self, webservice): job_log.append((self.name, 'complete'))
-    def _try_archive(self): job_log.append((self.name, 'archive'))
-    def _try_expire(self): job_log.append((self.name, 'expire'))
-    def _sanity_check(self): job_log.append((self.name, 'sanity_check'))
+
+    def _try_complete(self, webservice):
+        job_log.append((self.name, 'complete'))
+
+    def _try_archive(self):
+        job_log.append((self.name, 'archive'))
+
+    def _try_expire(self):
+        job_log.append((self.name, 'expire'))
+
+    def _sanity_check(self):
+        job_log.append((self.name, 'sanity_check'))
 
 
 @contextlib.contextmanager
@@ -94,6 +106,7 @@ class WebServiceTest(unittest.TestCase):
         # Test with hostname tracking
         conf.track_hostname = True
         ws3 = WebService(conf, db)
+        del ws2, ws3
 
     def test_get_oldjob_interval(self):
         """Check WebService._get_oldjob_interval()"""
@@ -197,6 +210,7 @@ class WebServiceTest(unittest.TestCase):
     def test_max_running(self):
         """Make sure that limits.running is honored"""
         global job_log
+
         def setup_two_incoming(running):
             global job_log
             job_log = []
@@ -229,10 +243,10 @@ class WebServiceTest(unittest.TestCase):
         """Make sure that fatal errors are propagated"""
         db, conf, web = self._setup_webservice()
         c = db.conn.cursor()
-        c.execute("INSERT INTO jobs(name,state,submit_time, " \
-                  + "directory,url) VALUES(?,?,?,?,?)",
-                 ('fatal-error-run', 'INCOMING', datetime.datetime.utcnow(),
-                  '/', 'http://testurl'))
+        c.execute("INSERT INTO jobs(name,state,submit_time, "
+                  "directory,url) VALUES(?,?,?,?,?)",
+                  ('fatal-error-run', 'INCOMING', datetime.datetime.utcnow(),
+                   '/', 'http://testurl'))
         db.conn.commit()
         # Error is not handled by Job, so should be propagated by WebService
         self.assertRaises(TestFatalError, web._process_incoming_jobs)
@@ -255,11 +269,11 @@ class WebServiceTest(unittest.TestCase):
                           x, flags=re.DOTALL),
                 'Unexpected failure message: ' + x)
         mail = conf.get_mail_output()
-        self.assertTrue(re.search('Subject: .*From: testadmin.*To: testadmin' \
-                               + '.*Traceback.*test_handle_fatal_error.*' \
-                               + 'TestFatalError: fatal error to be handled',
-                               mail, flags=re.DOTALL),
-                     'Unexpected mail output: ' + mail)
+        self.assertTrue(re.search(
+            'Subject: .*From: testadmin.*To: testadmin'
+            '.*Traceback.*test_handle_fatal_error.*'
+            'TestFatalError: fatal error to be handled',
+            mail, flags=re.DOTALL), 'Unexpected mail output: ' + mail)
 
     def test_process_completed(self):
         """Check WebService._process_completed_jobs()"""
@@ -369,11 +383,11 @@ class WebServiceTest(unittest.TestCase):
         # Make job with non-existing directory
         c = db.conn.cursor()
         utcnow = datetime.datetime.utcnow()
-        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+                  "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
-                  utcnow + datetime.timedelta(days=1), '/not/exist',
-                  'http://testurl'))
+                   utcnow + datetime.timedelta(days=1), '/not/exist',
+                   'http://testurl'))
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
@@ -387,11 +401,11 @@ class WebServiceTest(unittest.TestCase):
         # Make job with non-existing directory
         c = db.conn.cursor()
         utcnow = datetime.datetime.utcnow()
-        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+                  "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
-                  utcnow + datetime.timedelta(days=1), None,
-                  'http://testurl'))
+                   utcnow + datetime.timedelta(days=1), None,
+                   'http://testurl'))
         db.conn.commit()
         self.assertRaises(SanityError, web._filesystem_sanity_check)
 
@@ -399,6 +413,7 @@ class WebServiceTest(unittest.TestCase):
     def test_cleanup_incoming_jobs(self):
         """Test WebSerivce._cleanup_incoming_jobs() method"""
         cleaned_dirs = []
+
         def _cleanup_dir(dir, age):
             cleaned_dirs.append((dir, age))
         os.mkdir('incoming')
@@ -409,11 +424,11 @@ class WebServiceTest(unittest.TestCase):
         # Make job with non-existing directory
         c = db.conn.cursor()
         utcnow = datetime.datetime.utcnow()
-        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-                  + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+        c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+                  "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
-                  utcnow + datetime.timedelta(days=1), '/not/exist',
-                  'http://testurl'))
+                   utcnow + datetime.timedelta(days=1), '/not/exist',
+                   'http://testurl'))
         db.conn.commit()
         web._cleanup_dir = _cleanup_dir
         web._cleanup_incoming_jobs()
@@ -456,22 +471,28 @@ class WebServiceTest(unittest.TestCase):
         """Test WebService._do_periodic_actions() method"""
         threads = []
         events = []
+
         class DummyEvent(object):
             def __init__(self, name):
                 self.name = name
+
             def process(self):
                 events.append(self.name)
         queue = [None, DummyEvent('foo'), DummyEvent('bar'), None]
+
         class DummyWebService(WebService):
             def __init__(self):
                 pass
+
         def make_thread(name):
             class DummyThread(object):
                 def __init__(self, *args):
                     pass
+
                 def start(self):
                     threads.append(name)
             return DummyThread
+
         class DummyEvents(object):
             class _EventQueue(object):
                 def get(self, timeout):

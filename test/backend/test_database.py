@@ -1,63 +1,64 @@
 import unittest
 try:
     import sqlite3
-except:
+except ImportError:
     from pysqlite2 import dbapi2 as sqlite3
 import datetime
 from saliweb.backend import Job, MySQLField
 import saliweb.backend
 from memory_database import MemoryDatabase
-import testutil
+
 
 def make_test_jobs(sql):
     c = sql.cursor()
     utcnow = datetime.datetime.utcnow()
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job1', 'INCOMING', 'SGE-job-1', utcnow,
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job2', 'RUNNING', 'wyntonsge:job-2',
                utcnow + datetime.timedelta(hours=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job3', 'RUNNING', 'SGE-job-3', utcnow,
                utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('preproc', 'PREPROCESSING', None, utcnow, utcnow, utcnow,
                '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('postproc', 'POSTPROCESSING', None, utcnow, utcnow, utcnow,
                '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('finalize', 'FINALIZING', None, utcnow, utcnow, utcnow,
                '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-archive', 'COMPLETED', None, utcnow,
                utcnow - datetime.timedelta(days=1),
                utcnow + datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('ready-for-expire', 'ARCHIVED', None, utcnow,
                utcnow + datetime.timedelta(days=1),
                utcnow - datetime.timedelta(days=1), '/', 'http://testurl'))
-    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, " \
-              + "archive_time,expire_time,directory,url) " \
-              + "VALUES(?,?,?,?,?,?,?,?)",
+    c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
+              "archive_time,expire_time,directory,url) "
+              "VALUES(?,?,?,?,?,?,?,?)",
               ('never-archive', 'COMPLETED', None, utcnow,
                None, None, '/', 'http://testurl'))
     sql.commit()
+
 
 class DatabaseTest(unittest.TestCase):
     """Check Database class"""
@@ -71,21 +72,22 @@ class DatabaseTest(unittest.TestCase):
     def test_connect(self):
         """Check the Database._config() method"""
         class DummyConfig(object):
-            database = {'user': 'testuser', 'db': 'testdb', 'passwd': 'testpwd',
-                        'socket': 'foo'}
+            database = {'user': 'testuser', 'db': 'testdb',
+                        'passwd': 'testpwd', 'socket': 'foo'}
         config = DummyConfig()
         db = saliweb.backend.Database(Job)
         db._connect(config)
         self.assertEqual(db._OperationalError, 'Dummy MySQL OperationalError')
         self.assertEqual(db._placeholder, '%s')
         self.assertEqual(db.config, config)
-        self.assertEqual(db.conn.sql,
-                    ['SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'])
+        self.assertEqual(
+            db.conn.sql,
+            ['SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'])
         self.assertEqual(db.conn.args, ())
-        self.assertEqual(db.conn.keys, {'user':'testuser',
-                                        'db':'testdb',
-                                        'unix_socket':'foo',
-                                        'passwd':'testpwd'})
+        self.assertEqual(db.conn.keys, {'user': 'testuser',
+                                        'db': 'testdb',
+                                        'unix_socket': 'foo',
+                                        'passwd': 'testpwd'})
 
     def test_add_field(self):
         """Check Database.add_field()"""
@@ -127,26 +129,30 @@ class DatabaseTest(unittest.TestCase):
         class DummyCursor(object):
             def __init__(self, conn):
                 self.conn = conn
+
             def execute(self, query, args):
                 if query == 'execute exception':
                     raise DummyError((0, 'normal error'))
                 elif query == 'reconnect fail':
                     raise DummyError(2006, 'MySQL server has gone away')
-                elif query == 'reconnect succeeds' \
-                     and not self.conn.db.in_query:
-                    self.conn.db.in_query = True # Prevent reraise
+                elif (query == 'reconnect succeeds'
+                      and not self.conn.db.in_query):
+                    self.conn.db.in_query = True  # Prevent reraise
                     raise DummyError(2006, 'MySQL server has gone away')
 
         class DummyConnection(object):
             def __init__(self, db):
                 self.db = db
+
             def cursor(self):
                 return DummyCursor(self)
 
         class DummyDatabase(saliweb.backend.Database):
             in_query = False
+
             def add_field(self, field):
                 pass
+
             def _connect(self, config):
                 self.config = config
                 self._OperationalError = DummyError
@@ -289,7 +295,8 @@ class DatabaseTest(unittest.TestCase):
         db.conn.commit()
 
         self.assertEqual(db._get_job_dependencies(),
-                         {'foo':['bar'], 'a':['one', 'two']})
+                         {'foo': ['bar'], 'a': ['one', 'two']})
+
 
 if __name__ == '__main__':
     unittest.main()

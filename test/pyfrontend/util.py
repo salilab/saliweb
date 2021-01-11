@@ -9,4 +9,3 @@ def temporary_directory():
     tmpdir = tempfile.mkdtemp()
     yield tmpdir
     shutil.rmtree(tmpdir, ignore_errors=True)
-

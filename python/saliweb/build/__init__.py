@@ -20,8 +20,6 @@ from SCons.Script import File, Mkdir, Chmod, Value, Action, Builder
 import subprocess
 import tempfile
 import re
-import shutil
-import glob
 
 frontend_user = 'apache'
 backend_group = None
@@ -52,22 +50,23 @@ def _add_build_variable(vars, configs):
         if not default:
             default = opt
         buildmap[opt] = c
-    vars.Add(SCons.Script.EnumVariable('build',
-               "Select which web service configuration to build (e.g. to "
-               "set up either a test version or the live version of the web "
-               "service)""", default=default,
-               allowed_values=list(buildmap.keys())))
+    vars.Add(SCons.Script.EnumVariable(
+        'build',
+        "Select which web service configuration to build (e.g. to "
+        "set up either a test version or the live version of the web "
+        "service)""", default=default,
+        allowed_values=list(buildmap.keys())))
     return buildmap
 
 
 def Environment(variables, configfiles, version=None, service_module=None,
                 config_class=saliweb.backend.Config):
     buildmap = _add_build_variable(variables, configfiles)
-    variables.Add(SCons.Script.PathVariable('html_coverage',
-                               'Directory to output HTML coverage reports into',
-                               None, SCons.Script.PathVariable.PathIsDirCreate))
-    variables.Add(SCons.Script.BoolVariable('coverage',
-                               'Preserve output coverage files', False))
+    variables.Add(SCons.Script.PathVariable(
+        'html_coverage', 'Directory to output HTML coverage reports into',
+        None, SCons.Script.PathVariable.PathIsDirCreate))
+    variables.Add(SCons.Script.BoolVariable(
+        'coverage', 'Preserve output coverage files', False))
     variables.Add('python', 'Python executable to use', sys.executable)
 
     env = SCons.Script.Environment(variables=variables)
@@ -99,10 +98,10 @@ def Environment(variables, configfiles, version=None, service_module=None,
     env.AddMethod(_InstallPerl, 'InstallPerl')
     env.AddMethod(_make_frontend, 'Frontend')
     env.Append(BUILDERS={'RunPerlTests': Builder(action=builder_perl_tests)})
-    env.Append(BUILDERS={'RunPythonTests': \
-                          Builder(action=builder_python_tests)})
-    env.Append(BUILDERS={'RunPythonFrontendTests': \
-                          Builder(action=builder_python_frontend_tests)})
+    env.Append(BUILDERS={'RunPythonTests':
+                         Builder(action=builder_python_tests)})
+    env.Append(BUILDERS={'RunPythonFrontendTests':
+                         Builder(action=builder_python_frontend_tests)})
     install = env.Command('install', None,
                           Action(_install_check, 'Check installation ...'))
     env.AlwaysBuild(install)
@@ -110,15 +109,18 @@ def Environment(variables, configfiles, version=None, service_module=None,
     env.Default(install)
     return env
 
+
 def _fixup_perl_html_coverage(subdir):
     os.rename(os.path.join(subdir, 'coverage.html'),
               os.path.join(subdir, 'index.html'))
+
 
 def _add_to_path(env, varname, val):
     if varname in env['ENV']:
         env['ENV'][varname] = val + ':' + env['ENV'][varname]
     else:
         env['ENV'][varname] = val
+
 
 def builder_perl_tests(target, source, env):
     """Custom builder to run Perl tests"""
@@ -140,6 +142,7 @@ def builder_perl_tests(target, source, env):
             e.Execute('cover -outputdir %s' % outdir)
             _fixup_perl_html_coverage(outdir)
             e.Execute('cover -delete')
+
 
 def builder_python_tests(target, source, env):
     """Custom builder to run Python tests"""
@@ -172,8 +175,7 @@ def builder_python_frontend_tests(target, source, env):
         mod += ' --coverage'
     mod += ' --frontend'
     mod += " " + env['service_module']
-    app = env['python'] + " " + mod + " " \
-          + " ".join(str(s) for s in source)
+    app = env['python'] + " " + mod + " " + " ".join(str(s) for s in source)
     e = env.Clone()
     e['ENV']['PYTHONPATH'] = 'frontend'
     ret = e.Execute(app)
@@ -216,7 +218,7 @@ def _check_python_import(env):
                       "up for installation. Thus, the backend will probably "
                       "not work. Make sure that the Python package is named "
                       "'%s' and there is an InstallPython call somewhere "
-                      "in the SConscripts to install it. " \
+                      "in the SConscripts to install it. "
                       % (modfile, modname))
 
 
@@ -252,11 +254,11 @@ def _run_version_binary(env, cmd, args):
             ret = p.communicate()
             if p.returncode:
                 raise OSError("returned exit code %d, stdout %s, "
-                              "stderr %s" \
+                              "stderr %s"
                               % (p.returncode, ret[0], ret[1]))
             return ret[0].split('\n')[0]
         except OSError as detail:
-            warnings.warn("Could not run %s: %s" \
+            warnings.warn("Could not run %s: %s"
                           % (fullcmd, str(detail)))
     else:
         warnings.warn("Could not find '%s' binary in path" % cmd)
@@ -268,7 +270,7 @@ def _setup_version(env, version):
             branch = _run_version_binary(env, 'git',
                                          ['rev-parse', '--abbrev-ref', 'HEAD'])
             rev = _run_version_binary(env, 'git',
-                                         ['rev-parse', '--short', 'HEAD'])
+                                      ['rev-parse', '--short', 'HEAD'])
             if branch and rev:
                 version = branch + '.' + rev
         else:
@@ -373,6 +375,7 @@ def _check_directory_permissions(env):
 """ % (dir, backend_user, backend_user, dir), file=sys.stderr)
             env.Exit(1)
 
+
 def _check_incoming_directory_permissions(env):
     """Make sure that the incoming directory, if it exists, has
        correct permissions"""
@@ -388,15 +391,15 @@ def _check_incoming_directory_permissions(env):
                                 stderr=subprocess.PIPE,
                                 universal_newlines=True).communicate()
     lines = [x for x in out.split('\n')[1:] if x != '']
-    expected_lines = [ '# owner: ' + backend_user,
-                       '# group: ' + backend_group,
-                       'user::rwx', 'user:%s:rwx' % frontend_user,
-                       'group::r-x', 'mask::rwx', 'other::r-x',
-                       'default:user::rwx',
-                       'default:user:%s:rwx' % frontend_user,
-                       'default:user:%s:rwx' % backend_user,
-                       'default:group::r-x', 'default:mask::rwx',
-                       'default:other::r-x' ]
+    expected_lines = ['# owner: ' + backend_user,
+                      '# group: ' + backend_group,
+                      'user::rwx', 'user:%s:rwx' % frontend_user,
+                      'group::r-x', 'mask::rwx', 'other::r-x',
+                      'default:user::rwx',
+                      'default:user:%s:rwx' % frontend_user,
+                      'default:user:%s:rwx' % backend_user,
+                      'default:group::r-x', 'default:mask::rwx',
+                      'default:other::r-x']
     if sorted(lines) != sorted(expected_lines):
         print("""
 ** Wrong permissions on incoming directory %s!
@@ -537,9 +540,10 @@ def _check_service(env):
             print("** Backend daemon is currently running. Run")
             print("   " + _format_shell_command(env, "%s restart" % binary))
             print("** to restart it to pick up any changes.")
-    except saliweb.backend.StateFileError as detail:
+    except saliweb.backend.StateFileError:
         print("** Backend daemon will not start due to a previous failure. ")
-        print("** You will need to fix this manually before it will run again.")
+        print("** You will need to fix this manually before "
+              "it will run again.")
         print("** Refer to %s for more information"
               % config.backend['state_file'])
 
@@ -601,8 +605,9 @@ def _check_mysql(env):
 """ % (c.database['db'], str(detail), outfile), file=sys.stderr)
         env.Exit(1)
 
+
 def _check_sql_username_length(env, auth, typ):
-    max_length = 16 # MySQL username length limit
+    max_length = 16  # MySQL username length limit
     username = auth['user']
     if len(username) > max_length:
         print("""
@@ -611,6 +616,7 @@ def _check_sql_username_length(env, auth, typ):
 ** Please shorten the username in the configuration file.
 """ % (typ, max_length), file=sys.stderr)
         env.Exit(1)
+
 
 def _get_sorted_grant(grant):
     """Sort grant column rights alphabetically, so that we can match them
@@ -647,15 +653,19 @@ def _generate_admin_mysql_script(database, backend, frontend):
     d = saliweb.backend.Database(None)
     fd, outfile = tempfile.mkstemp()
     commands = """CREATE DATABASE %(database)s;
-GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.* TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s';
+GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON %(database)s.*
+    TO '%(backend_user)s'@'localhost' IDENTIFIED BY '%(backend_passwd)s';
 CREATE TABLE %(database)s.jobs (%(schema)s);
 CREATE INDEX state_index ON %(database)s.jobs (state);
 CREATE TABLE %(database)s.dependencies (%(depschema)s);
 CREATE INDEX child_index ON %(database)s.dependencies (child);
 CREATE INDEX parent_index ON %(database)s.dependencies (parent);
-GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost' identified by '%(frontend_passwd)s';
-GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON %(database)s.jobs to '%(frontend_user)s'@'localhost';
-GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies to '%(frontend_user)s'@'localhost';
+GRANT SELECT ON %(database)s.jobs to '%(frontend_user)s'@'localhost'
+    IDENTIFIED BY '%(frontend_passwd)s';
+GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time)
+    ON %(database)s.jobs to '%(frontend_user)s'@'localhost';
+GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies
+    TO '%(frontend_user)s'@'localhost';
 """ % {'database': database, 'backend_user': backend['user'],
        'backend_passwd': backend['passwd'], 'frontend_user': frontend['user'],
        'frontend_passwd': frontend['passwd'],
@@ -681,7 +691,7 @@ def _check_mysql_schema(env, config, cursor, table):
 
     fields = {'jobs': d._fields, 'dependencies': d._dependfields}[table]
     for dbfield, backfield in zip(dbfields, fields):
-        dbfield.index = backfield.index # Ignore differences in indexes here
+        dbfield.index = backfield.index  # Ignore differences in indexes here
         if dbfield != backfield:
             print("""
 ** The '%s' database table schema does not match that expected by the backend;
@@ -695,26 +705,28 @@ def _check_mysql_schema(env, config, cursor, table):
 **
 ** For reference, the entire table schema should look like:
    %s
-""" % (table, dbfield.name, dbfield.name, dbfield.get_schema(),
-       backfield.get_schema(),
-       ',\n   '.join(x.get_schema() for x in fields)), file=sys.stderr)
+"""
+                  % (table, dbfield.name, dbfield.name, dbfield.get_schema(),
+                     backfield.get_schema(),
+                     ',\n   '.join(x.get_schema() for x in fields)),
+                  file=sys.stderr)
             env.Exit(1)
 
     if len(dbfields) != len(fields):
+        schema = ',\n   '.join(x.get_schema() for x in fields)
         print("""
 ** The '%s' database table schema does not match that expected by the backend;
 ** it has %d fields, while the backend has %d fields. Please modify the
 ** table schema accordingly. The entire table schema should look like:
    %s
-""" % (table, len(dbfields), len(fields),
-       ',\n   '.join(x.get_schema() for x in fields)), file=sys.stderr)
+""" % (table, len(dbfields), len(fields), schema), file=sys.stderr)
         env.Exit(1)
 
 
 def _install_config(env):
     config = env['config']
-    env['instconfigfile'] = os.path.join(env['confdir'],
-                                      os.path.basename(env['configfile'].path))
+    env['instconfigfile'] = os.path.join(
+        env['confdir'], os.path.basename(env['configfile'].path))
     backend = config.database['backend_config']
     frontend = config.database['frontend_config']
     env.Install(env['confdir'], env['configfile'])
@@ -759,6 +771,7 @@ def _make_readme(env, target, source):
         print("Instead, check out the source files for the %s service,"
               % service_name, file=f)
         print("and run 'scons' to install them here.", file=f)
+
 
 def _make_script(env, target, source):
     name = os.path.basename(str(target[0]))
@@ -886,7 +899,8 @@ def _subst_python_install(env, target, source):
     # Create or touch wsgi file
     with open(wsgi, 'w') as fh:
         envpre = service_module.upper()
-        fh.write("import sys, os; sys.path.insert(0, %s)\n" % repr(frontenddir))
+        fh.write("import sys, os; sys.path.insert(0, %s)\n"
+                 % repr(frontenddir))
         fh.write("os.environ['%s_CONFIG'] = %s\n" % (envpre, repr(configfile)))
         fh.write("os.environ['%s_VERSION'] = %s\n" % (envpre, repr(version)))
         fh.write("from %s import app as application\n" % service_module)
@@ -930,7 +944,7 @@ def _subst_install(env, target, source):
     else:
         frontend = "'" + frontend + "'"
     for line in fin:
-        line = line.replace('"##CONFIG##"', "'%s', %s, '%s', %s" \
+        line = line.replace('"##CONFIG##"', "'%s', %s, '%s', %s"
                             % (configfile, version, service_name, frontend))
         fout.write(line)
     fin.close()
@@ -969,10 +983,11 @@ def _InstallPerl(env, files, subdir=None):
                      env.Value(service_name), frontend],
                     _subst_install)
 
+
 class _Frontend(object):
     def __init__(self, env, name):
         if name not in env['config'].frontends:
-            raise ValueError("No frontend:%s section found in config file" \
+            raise ValueError("No frontend:%s section found in config file"
                              % name)
         self._env = e = env.Clone()
         self._name = name

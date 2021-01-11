@@ -1,5 +1,8 @@
 from __future__ import print_function
-import unittest, sys, os, re
+import unittest
+import sys
+import os
+import re
 import glob
 import warnings
 
@@ -15,14 +18,15 @@ except ImportError:
 if 'SALIWEB_COVERAGE' not in os.environ:
     coverage = None
 
+
 class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
     def __init__(self, *args, **keys):
         if coverage:
             # Start coverage testing now before we import any modules
             self.topdir = 'python'
-            self.mods = ["%s/saliweb/__init__.py" % self.topdir] \
-                        + glob.glob("%s/saliweb/build/*.py" % self.topdir)
+            self.mods = (["%s/saliweb/__init__.py" % self.topdir]
+                         + glob.glob("%s/saliweb/build/*.py" % self.topdir))
 
             self.cov = coverage.coverage(branch=True, include=self.mods,
                                          data_file='.coverage.build')
@@ -49,6 +53,7 @@ class RunAllTests(unittest.TestProgram):
 
         sys.exit(not result.wasSuccessful())
 
+
 def regressionTest():
     try:
         os.unlink('state_file')
@@ -56,13 +61,15 @@ def regressionTest():
         pass
     path = os.path.abspath(os.path.dirname(sys.argv[0]))
     files = os.listdir(path)
-    test = re.compile("^test_.*\.py$", re.IGNORECASE)
+    test = re.compile(r"^test_.*\.py$", re.IGNORECASE)
     files = filter(test.search, files)
     modnames = [os.path.splitext(f)[0] for f in files]
 
     modobjs = [__import__(m) for m in modnames]
-    tests = [unittest.defaultTestLoader.loadTestsFromModule(o) for o in modobjs]
+    tests = [unittest.defaultTestLoader.loadTestsFromModule(o)
+             for o in modobjs]
     return unittest.TestSuite(tests)
+
 
 if __name__ == "__main__":
     RunAllTests(defaultTest="regressionTest")

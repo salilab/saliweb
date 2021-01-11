@@ -6,11 +6,13 @@ import sys
 import pwd
 import subprocess
 
+
 def _run_command(prefix, cmd, cwd):
     print(prefix + " " + " ".join(cmd))
     ret = subprocess.call([prefix] + cmd, cwd=cwd)
     if ret != 0:
         raise OSError("subprocess failed with code %d" % ret)
+
 
 class SVNSourceControl(object):
     def __init__(self, short_name, topdir):
@@ -58,16 +60,17 @@ class GitSourceControl(object):
             fh.write(".scons\n*.pyc\n")
         with open(os.path.join(self.topdir, 'conf', '.gitignore'), 'w') as fh:
             fh.write("frontend.conf\nbackend.conf\n")
+
         def list_dir(subdir):
             files = os.listdir(os.path.join(self.topdir, subdir))
             return [os.path.join(subdir, f) for f in files]
-        files = list_dir('test/frontend') + list_dir('test/backend') \
-                + list_dir(os.path.join('frontend', self.short_name)) \
-                + list_dir(os.path.join('frontend', self.short_name,
-                                        'templates')) \
-                + list_dir(os.path.join('backend', self.short_name)) \
-                + ['SConstruct', 'test/SConscript', '.gitignore',
-                   'conf/.gitignore', 'conf/live.conf']
+        files = (list_dir('test/frontend') + list_dir('test/backend')
+                 + list_dir(os.path.join('frontend', self.short_name))
+                 + list_dir(os.path.join('frontend', self.short_name,
+                                         'templates'))
+                 + list_dir(os.path.join('backend', self.short_name))
+                 + ['SConstruct', 'test/SConscript', '.gitignore',
+                    'conf/.gitignore', 'conf/live.conf'])
         self._run_git_command(['add'] + files, cwd=self.topdir)
         self._run_git_command(['commit', '-m', 'Initial setup'],
                               cwd=self.topdir)
@@ -95,7 +98,7 @@ class MakeWebService(object):
         """Generate a MySQL database username"""
         suffix = "_" + typ + "end"
         prefix = self.short_name
-        max_length = 16 # MySQL max username length
+        max_length = 16  # MySQL max username length
         while True:
             name = prefix + suffix
             if len(name) <= max_length:
@@ -122,7 +125,6 @@ class MakeWebService(object):
         self._print_completion()
 
     def _print_completion(self):
-        uid = pwd.getpwnam(self.user).pw_uid
         print("Web service set up in %s directory" % self.topdir,
               file=sys.stderr)
         print("""Still need to:
@@ -137,11 +139,11 @@ to run cluster jobs, and make the the /wynton/home/sali/%(user)s directory.
 3. Change into the %(topdir)s directory and run
 /usr/bin/sudo -u %(user)s scons
 until it works.
-""" % {'user': self.user, 'topdir': self.topdir, 'uid': uid}, file=sys.stderr)
+""" % {'user': self.user, 'topdir': self.topdir}, file=sys.stderr)
 
     def _make_password(self, length):
-        return "".join(random.choice(string.ascii_letters + string.digits) \
-               for x in range(length))
+        return "".join(random.choice(string.ascii_letters + string.digits)
+                       for x in range(length))
 
     def _get_install_dir(self):
         try:
@@ -154,7 +156,8 @@ https://salilab.org/internal/wiki/SysAdmin/UID
 
 2. Set up the %(user)s user and group by running
 /usr/bin/sudo /usr/sbin/groupadd -g <UID> %(user)s
-/usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' -d %(dir)s %(user)s
+/usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' \\
+        -d %(dir)s %(user)s
 /usr/bin/sudo chmod a+rx ~%(user)s
 """ % {'user': self.user, 'dir': '/modbase5/home/%s' % self.user})
             sys.exit(1)
@@ -397,7 +400,8 @@ def get_options():
         description='Set up a directory structure for a new web service '
                     'called "SERVICE_NAME".',
         epilog="Example usage: %(prog)s --svn pepdock 'Peptide Docking'")
-    parser.add_argument("short_name", metavar="SHORT_NAME",
+    parser.add_argument(
+        "short_name", metavar="SHORT_NAME",
         help="""Short name containing only lowercase letters and no spaces.
         This name is used to name the directory containing the files,
         the generated Python modules, system and MySQL users etc. An SVN
@@ -410,13 +414,16 @@ def get_options():
         trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo")
         or cloning the git repository
         (e.g. "git clone https://github.com/salilab/modfoo.git").""")
-    parser.add_argument("service_name", metavar="SERVICE_NAME",
+    parser.add_argument(
+        "service_name", metavar="SERVICE_NAME",
         help='Human-readable name of the web service, for example "ModFoo" '
              'or "Peptide Docking". It may contain spaces and mixed case.')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--svn", action="store_true", dest="svn",
+    group.add_argument(
+        "--svn", action="store_true", dest="svn",
         default=False, help="Use an SVN repository")
-    group.add_argument("--git", action="store_true", dest="git",
+    group.add_argument(
+        "--git", action="store_true", dest="git",
         default=False, help="Use a git repository")
 
     args = parser.parse_args()
@@ -430,6 +437,7 @@ def main():
     m = MakeWebService(short_name=args.short_name,
                        service_name=args.service_name, git=args.git)
     m.make()
+
 
 if __name__ == '__main__':
     main()

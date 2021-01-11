@@ -4,7 +4,6 @@ import os
 import glob
 import shutil
 import contextlib
-import unittest
 
 
 def run_catch_warnings(method, *args, **keys):
@@ -12,7 +11,8 @@ def run_catch_warnings(method, *args, **keys):
        warnings raised."""
     warnings.simplefilter("always")
     oldwarn = warnings.showwarning
-    w  = []
+    w = []
+
     def myshowwarning(*args):
         w.append(args)
     warnings.showwarning = myshowwarning
@@ -24,9 +24,11 @@ def run_catch_warnings(method, *args, **keys):
         warnings.showwarning = oldwarn
         warnings.resetwarnings()
 
+
 class _TempDir(object):
     def __init__(self, origdir, tmpdir):
         self.origdir, self.tmpdir = origdir, tmpdir
+
 
 @contextlib.contextmanager
 def temp_working_dir():
@@ -46,12 +48,14 @@ def temp_dir():
     yield tmpdir
     shutil.rmtree(tmpdir, ignore_errors=True)
 
+
 def run_in_tempdir(func):
     """Decorate a test method to run it entirely in a temporary directory"""
     def wrapper(*args, **kwargs):
         with temp_working_dir():
             func(*args, **kwargs)
     return wrapper
+
 
 def get_open_files():
     """Get a list of all files currently opened by this process"""

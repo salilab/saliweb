@@ -6,7 +6,6 @@ if sys.version_info[0] >= 3:
     from io import StringIO
 else:
     from io import BytesIO as StringIO
-import testutil
 
 
 class DummyWeb(object):
@@ -14,12 +13,15 @@ class DummyWeb(object):
         self.pid = pid
         self.err = err
         self.delete_all_jobs_called = False
+
     def get_running_pid(self):
         if self.err:
             raise StateFileError("state file err")
         return self.pid
+
     def _delete_all_jobs(self):
         self.delete_all_jobs_called = True
+
 
 class DelJobTest(unittest.TestCase):
     """Check delete_all_jobs script"""
@@ -38,8 +40,10 @@ class DelJobTest(unittest.TestCase):
         class DummyStdin(object):
             def __init__(self, answer):
                 self.answer = answer
+
             def readline(self):
                 return self.answer
+
         def run_main(mod, answer):
             oldout = sys.stdout
             oldin = sys.stdin
@@ -52,10 +56,13 @@ class DelJobTest(unittest.TestCase):
             finally:
                 sys.stdout = oldout
                 sys.stdin = oldin
+
         class DummyModule(object):
             config = 'testconfig'
+
             def __init__(self, web):
                 self.web = web
+
             def get_web_service(self, config):
                 return self.web
 
@@ -69,6 +76,7 @@ class DelJobTest(unittest.TestCase):
         mod = DummyModule(web)
         out = run_main(mod, '')
         self.assertEqual(web.delete_all_jobs_called, False)
+
 
 if __name__ == '__main__':
     unittest.main()

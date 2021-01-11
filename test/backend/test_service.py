@@ -16,8 +16,10 @@ class DummyService(object):
             service_name = 'testservice'
         self.config = DummyConfig()
         self.pid = pid
+
     def get_running_pid(self):
         return self.pid
+
     def do_all_processing(self, daemonize=False, status_fh=None):
         if self.pid == 'bad_state':
             raise StateFileError('bad state')
@@ -48,6 +50,7 @@ class ServiceTest(unittest.TestCase):
         """Test service kill_pid()"""
         class DummyOSModule(object):
             kill_attempts = 0
+
             def kill(self, pid, sig):
                 if sig == 0:
                     if pid == 'kill_first':
@@ -139,8 +142,10 @@ class ServiceTest(unittest.TestCase):
     def test_restart(self):
         """Test service restart()"""
         events = []
+
         def dummy_stop(w):
             events.append('stop ' + w)
+
         def dummy_start(w):
             events.append('start ' + w)
         oldstart = saliweb.backend.service.start
@@ -157,14 +162,17 @@ class ServiceTest(unittest.TestCase):
     def test_main(self):
         """Test service main()"""
         events = []
+
         class DummyAction(object):
             def __init__(self, name):
                 self.name = name
+
             def __call__(self, w):
                 events.append(self.name + ' ' + w.config.service_name)
 
         class DummyModule(object):
             config = 'dummyconfig'
+
             def get_web_service(self, config):
                 return DummyService(1234)
 

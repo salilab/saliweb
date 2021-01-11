@@ -17,8 +17,10 @@ def request_mime_type(mime):
     class MockAccept(object):
         def best_match(self, types):
             return mime if mime in types else None
+
         def __getitem__(self, key):
             return 1.0 if key == mime else 0.0
+
     class MockRequest(object):
         def __init__(self):
             self.accept_mimetypes = MockAccept()
@@ -60,6 +62,7 @@ class Tests(unittest.TestCase):
     def test_format_timediff(self):
         """Check _format_timediff"""
         _format_timediff = saliweb.frontend._format_timediff
+
         def tm(**kwargs):
             # Add 0.3 seconds to account for the slightly different value of
             # utcnow between setup and when we call format_timediff
@@ -104,7 +107,7 @@ class Tests(unittest.TestCase):
             run_job = os.path.join(tmpdir, 'job2')
             os.mkdir(queue_job)
             os.mkdir(run_job)
-            with open(os.path.join(run_job, 'job-state'), 'w') as fh:
+            with open(os.path.join(run_job, 'job-state'), 'w'):
                 pass
             # Queued job, should be changed to QUEUED
             j = {'state': 'RUNNING', 'directory': queue_job}
@@ -252,6 +255,7 @@ class Tests(unittest.TestCase):
             def __init__(self, scheme):
                 self.scheme = scheme
                 self.cookies = {}
+
             def set_servers_cookie(self, d):
                 c = '&'.join('%s&%s' % x for x in d.items())
                 self.cookies['sali-servers'] = c
@@ -351,7 +355,8 @@ class Tests(unittest.TestCase):
                                            'archive_time': 'testar',
                                            'directory': 'testdir'})
         with request_mime_type('application/xml'):
-            r = saliweb.frontend.render_results_template('results.html', job=j,
+            r = saliweb.frontend.render_results_template(
+                'results.html', job=j,
                 extra_xml_outputs=['foo', 'bar'])
             self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
             self.assertEqual([r['fname'] for r in j._record_results],
@@ -371,18 +376,23 @@ db: test_db
 [directories]
 install: test_install
 """
+
         class MockConfig(object):
             def __init__(self):
                 self.d = {}
+
             def __setitem__(self, key, value):
                 self.d[key] = value
+
             def __getitem__(self, key):
                 return self.d[key]
+
             def __contains__(self, key):
                 return key in self.d
+
             def from_object(self, obj):
                 pass
-     
+
         class MockApp(object):
             def __init__(self):
                 self.config = MockConfig()
@@ -417,8 +427,10 @@ passwd: test_fe_pwd
         class MockLogger(object):
             def __init__(self):
                 self.handlers = []
+
             def addHandler(self, h):
                 self.handlers.append(h)
+
         class MockApp(object):
             def __init__(self, debug):
                 self.debug = debug
@@ -436,15 +448,16 @@ passwd: test_fe_pwd
 
     def test_make_application(self):
         """Test make_application function"""
-        import mock_application
-
         class MockAccept(object):
             def __init__(self, mime):
                 self.mime = mime
+
             def best_match(self, types):
                 return self.mime if self.mime in types else None
+
             def __getitem__(self, key):
                 return 1.0 if key == self.mime else 0.0
+
         class MockRequest(object):
             def __init__(self, scheme, mime):
                 self.scheme = scheme
@@ -490,8 +503,10 @@ passwd: test_fe_pwd
                 h('noerror')
             # Test cleanup of incoming jobs
             indir = os.path.join(tmpdir, 'incoming-dir')
+
             class MockIncomingJob(object):
                 directory = indir
+
                 def __init__(self, submitted):
                     self._submitted = submitted
             flask.g.incoming_jobs = [MockIncomingJob(True),
@@ -501,12 +516,14 @@ passwd: test_fe_pwd
             del flask.g.incoming_jobs
             # Test internal error handler
             out = f.error_handlers[500]('MockError')
-            self.assertEqual(out,
+            self.assertEqual(
+                out,
                 ('render saliweb/internal_error.html with (), {}', 500))
             # Test results error handler
             err = saliweb.frontend._ResultsGoneError("foo")
             out = f.error_handlers[saliweb.frontend._ResultsError](err)
-            self.assertEqual(out,
+            self.assertEqual(
+                out,
                 ("render saliweb/results_error.html with (), "
                  "{'message': 'foo'}", 410))
             # Test job-still-running error handler
@@ -526,9 +543,9 @@ passwd: test_fe_pwd
             # Test user error handler
             err = saliweb.frontend.InputValidationError("foo")
             out = f.error_handlers[saliweb.frontend._UserError](err)
-            self.assertEqual(out,
-                ("render saliweb/user_error.html with (), "
-                 "{'message': 'foo'}", 400))
+            self.assertEqual(
+                out, ("render saliweb/user_error.html with (), "
+                      "{'message': 'foo'}", 400))
         del flask.request
 
     def test_get_pdb_code(self):

@@ -10,9 +10,10 @@ try:
 except ImportError:
     coverage = None
 
+
 def fixup_perl_html_coverage(subdir):
     prefix = os.path.abspath('perl') + '/'
-    urlprefix=prefix.replace('/', '-')
+    urlprefix = prefix.replace('/', '-')
     os.rename(os.path.join(subdir, 'coverage.html'),
               os.path.join(subdir, 'index.html'))
     # Remove prefixes from file coverage pages
@@ -29,12 +30,13 @@ def fixup_perl_html_coverage(subdir):
         fout.close()
         os.rename(f + '.new', f)
 
+
 def action(target, source, env):
     if coverage:
         topdir = 'python'
-        mods = glob.glob("%s/saliweb/*.py" % topdir) \
-               + glob.glob("%s/saliweb/build/*.py" % topdir) \
-               + glob.glob("%s/saliweb/backend/*.py" % topdir)
+        mods = (glob.glob("%s/saliweb/*.py" % topdir)
+                + glob.glob("%s/saliweb/build/*.py" % topdir)
+                + glob.glob("%s/saliweb/backend/*.py" % topdir))
 
         cov = coverage.coverage(branch=True)
         cov.combine()

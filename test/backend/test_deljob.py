@@ -9,11 +9,14 @@ if sys.version_info[0] >= 3:
 else:
     from io import BytesIO as StringIO
 
+
 class DummyWeb(object):
     def __init__(self, pid):
         self.pid = pid
+
     def get_running_pid(self):
         return self.pid
+
 
 class DelJobTest(unittest.TestCase):
     """Check deljob script"""
@@ -46,12 +49,14 @@ class DelJobTest(unittest.TestCase):
                 sys.stderr = oldstderr
                 sys.argv = old
         self.assertRaises(SystemExit, run_get_options, [])
-        state, jobnames, force = run_get_options(['FAILED', 'testjob1', 'job2'])
+        state, jobnames, force = run_get_options(['FAILED', 'testjob1',
+                                                  'job2'])
         self.assertEqual(state, 'FAILED')
         self.assertEqual(jobnames, ['testjob1', 'job2'])
         self.assertEqual(force, False)
         for arg in ['-f', '--force']:
-            state, jobnames, force = run_get_options([arg, 'FAILED', 'testjob'])
+            state, jobnames, force = run_get_options([arg, 'FAILED',
+                                                      'testjob'])
             self.assertEqual(force, True)
             self.assertEqual(jobnames, ['testjob'])
 
@@ -60,13 +65,17 @@ class DelJobTest(unittest.TestCase):
         class DummyJob(object):
             deleted = False
             name = 'testjob'
+
             def delete(self):
                 self.deleted = True
+
         class DummyStdin(object):
             def __init__(self, answer):
                 self.answer = answer
+
             def readline(self):
                 return self.answer
+
         def run_delete_job(job, force, answer):
             oldout = sys.stdout
             oldin = sys.stdin
@@ -99,21 +108,27 @@ class DelJobTest(unittest.TestCase):
         class DummyJob(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def delete(self):
                 self.mod.job_deleted = True
+
         class DummyWebService(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def get_running_pid(self):
                 return 9999
+
             def get_job_by_name(self, state, name):
                 if state == 'FAILED' and name == 'testjob':
                     return DummyJob(self.mod)
                 else:
                     return None
+
         class DummyModule(object):
             config = 'testconfig'
             job_deleted = False
+
             def get_web_service(self, config):
                 return DummyWebService(self)
 

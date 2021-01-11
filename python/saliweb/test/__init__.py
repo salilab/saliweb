@@ -42,12 +42,13 @@ def RunInTempDir():
        current directory is reset."""
     t = TempDir()
     d = RunInDir(t.tmpdir)
-    d._tmpdir = t # Make sure that directory is deleted at the right time
+    d._tmpdir = t  # Make sure that directory is deleted at the right time
     return d
 
 
 class _DummyConfig(object):
     pass
+
 
 class _DummyDB(object):
 
@@ -110,6 +111,7 @@ def import_mocked_frontend(pkgname, test_file, topdir):
     sys.path.insert(0, os.path.dirname(__file__))
     import MySQLdb
     mock_db = MySQLdb.connect()
+
     def mock_get_db():
         return mock_db
 

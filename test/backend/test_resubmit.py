@@ -15,19 +15,24 @@ class ResubmitTest(unittest.TestCase):
         class DummyJob(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def resubmit(self):
                 self.mod.job_resub = True
+
         class DummyWebService(object):
             def __init__(self, mod):
                 self.mod = mod
+
             def get_job_by_name(self, state, name):
                 if state == 'FAILED' and name == 'testjob':
                     return DummyJob(self.mod)
                 else:
                     return None
+
         class DummyModule(object):
             config = 'testconfig'
             job_resub = False
+
             def get_web_service(self, config):
                 return DummyWebService(self)
 

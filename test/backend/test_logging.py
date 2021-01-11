@@ -4,6 +4,7 @@ import os
 from saliweb.backend import _DelayFileStream
 import testutil
 
+
 class LoggingTest(unittest.TestCase):
     """Check job logging"""
 
@@ -24,6 +25,7 @@ class LoggingTest(unittest.TestCase):
         with open('foo') as fh:
             contents = fh.read()
         self.assertEqual(contents, 'test text\n')
+
 
 if __name__ == '__main__':
     unittest.main()

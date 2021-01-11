@@ -57,9 +57,11 @@ class Tests(unittest.TestCase):
         class MockCursor(object):
             def __init__(self):
                 self.execute_calls = 0
+
             def execute(self, sql, args):
                 self.jobname = args[0]
                 self.execute_calls += 1
+
             def fetchone(self):
                 if self.jobname == 'existing-job':
                     return (1,)
@@ -67,6 +69,7 @@ class Tests(unittest.TestCase):
                     return (1,)
                 else:
                     return (0,)
+
         class MockApp(object):
             def __init__(self, tmpdir):
                 self.config = {'DIRECTORIES_INCOMING': tmpdir}

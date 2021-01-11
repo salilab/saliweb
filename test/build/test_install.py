@@ -1,9 +1,9 @@
 import unittest
 import saliweb.build
-import warnings
 import re
 import os
 from testutil import run_catch_warnings
+
 
 class DummyEnv(dict):
     def Glob(self, file, ondisk):
@@ -11,15 +11,19 @@ class DummyEnv(dict):
             return [file]
         else:
             return []
+
     def Install(self, target, files):
         self.install_target = target
         self.install_files = files
+
     def Command(self, *args):
         if not hasattr(self, 'command_target'):
             self.command_target = []
         self.command_target.append(args)
+
     def Execute(self, target):
         self.execute_target = target
+
     def Value(self, contents):
         pass
 
@@ -61,26 +65,29 @@ class InstallTest(unittest.TestCase):
         """Check to make sure check_python_import works"""
         env = DummyEnv({'service_module': 'testmodule',
                         'pythondir': '/my/test/pythondir'})
-        ret, warns = run_catch_warnings(saliweb.build._check_python_import, env)
+        ret, warns = run_catch_warnings(
+            saliweb.build._check_python_import, env)
         self.assertEqual(len(warns), 1)
-        self.assertTrue(re.search(r'Python module.*\/my\/test\/pythondir\/'
-                               r'testmodule\/__init__\.py does not.*backend '
-                               'will probably not work.*Python package is '
-                               'named \'testmodule\'.*'
-                               'InstallPython.*SConscript',
-                               warns[0][0].args[0], re.DOTALL),
-                     'regex did not match ' + warns[0][0].args[0])
+        self.assertTrue(re.search(
+            r'Python module.*\/my\/test\/pythondir\/'
+            r'testmodule\/__init__\.py does not.*backend '
+            'will probably not work.*Python package is '
+            'named \'testmodule\'.*'
+            'InstallPython.*SConscript',
+            warns[0][0].args[0], re.DOTALL),
+            'regex did not match ' + warns[0][0].args[0])
 
         env = DummyEnv({'service_module': 'testmodule',
                         'pythondir': '/my/test/okpythondir'})
-        ret, warns = run_catch_warnings(saliweb.build._check_python_import, env)
+        ret, warns = run_catch_warnings(
+            saliweb.build._check_python_import, env)
         self.assertEqual(len(warns), 0)
 
     def test_install_directories(self):
         """Check _install_directories function"""
         class DummyConfig:
-            directories = {'install':'testinst', 'INCOMING':'testinc',
-                           'test':'foo'}
+            directories = {'install': 'testinst', 'INCOMING': 'testinc',
+                           'test': 'foo'}
             backend = {'user': 'testback'}
         e = DummyEnv()
         e['config'] = DummyConfig()
@@ -95,7 +102,8 @@ class InstallTest(unittest.TestCase):
         """Check _install_config function"""
         class DummyConfig:
             database = {'backend_config': 'backend.conf',
-                        'frontend_config' : 'frontend.conf'}
+                        'frontend_config': 'frontend.conf'}
+
         class DummyNode:
             path = 'test.conf'
         e = DummyEnv()
@@ -259,7 +267,7 @@ class InstallTest(unittest.TestCase):
     def test_install_perl(self):
         """Check _InstallPerl function"""
         class DummyConfig:
-            frontends = {'foo': {'service_name': 'Foo'} }
+            frontends = {'foo': {'service_name': 'Foo'}}
 
         def make_env():
             e = DummyEnv()
@@ -287,6 +295,7 @@ class InstallTest(unittest.TestCase):
             def __init__(self, contents=None, path=None):
                 self.contents = contents
                 self.path = path
+
             def get_contents(self):
                 return self.contents
         with open('dummysrc', 'w') as fh:
@@ -316,6 +325,7 @@ class InstallTest(unittest.TestCase):
             def __init__(self, contents=None, path=None):
                 self.contents = contents
                 self.path = path
+
             def get_contents(self):
                 return self.contents
         with open('dummysrc', 'w') as fh:
@@ -333,7 +343,8 @@ class InstallTest(unittest.TestCase):
             self.assertEqual(f, 'line1\nfoo"##CONFIG##"bar\nline2\n')
             with open('dummywsgi') as fh:
                 f = fh.read()
-            self.assertEqual(f,
+            self.assertEqual(
+                f,
                 "import sys, os; sys.path.insert(0, '/frontend/dir')\n"
                 "os.environ['DUMMYMODULE_CONFIG'] = 'mycfg'\n"
                 "os.environ['DUMMYMODULE_VERSION'] = '%s'\n"

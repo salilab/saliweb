@@ -11,7 +11,6 @@ try:
 except ImportError:
     from email.MIMEText import MIMEText  # python2
 import re
-import testutil
 
 basic_config = """
 [general]
@@ -47,10 +46,12 @@ archive: %s
 expire: %s
 """
 
+
 def get_config(archive='3h', expire='90d', extra='', extradir='',
                config_class=Config, general_extra=''):
     return config_class(StringIO(basic_config % (general_extra, extradir,
                                                  archive, expire) + extra))
+
 
 class ConfigTest(unittest.TestCase):
     """Check Config class"""
@@ -89,10 +90,11 @@ class ConfigTest(unittest.TestCase):
                 conf = get_config(config_class=config.Config)
                 conf.send_email(to, 'testsubj', body)
                 mail = conf.get_mail_output()
-                self.assertTrue(re.search('Subject: testsubj.*From: '
-                                   r'test@salilab\.org.*To: testto.*testbody',
-                                   mail, flags=re.DOTALL),
-                             'Unexpected mail output: ' + mail)
+                self.assertTrue(re.search(
+                    'Subject: testsubj.*From: '
+                    r'test@salilab\.org.*To: testto.*testbody',
+                    mail, flags=re.DOTALL),
+                    'Unexpected mail output: ' + mail)
 
     def test_directory_defaults(self):
         """Check Config directory defaults"""
@@ -140,10 +142,12 @@ class ConfigTest(unittest.TestCase):
         self.assertRaises(ValueError, get_config, expire='4.garbageh')
         self.assertRaises(ValueError, get_config, expire='foo')
         # archive time cannot be greater than expire
-        self.assertRaises(ConfigError, get_config, expire='1y', archive='never')
+        self.assertRaises(ConfigError, get_config, expire='1y',
+                          archive='never')
         self.assertRaises(ConfigError, get_config, expire='1y', archive='2y')
         conf = get_config(expire='1y', archive='1y')
         conf = get_config(expire='never', archive='never')
+
 
 if __name__ == '__main__':
     unittest.main()

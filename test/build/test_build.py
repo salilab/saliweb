@@ -2,12 +2,15 @@ import unittest
 import saliweb.build
 import os
 
+
 class BuildTest(unittest.TestCase):
     """Miscellaneous checks of the saliweb.build module"""
 
     def test_format_shell_command(self):
         """Check _format_shell_command function"""
-        class DummyConfig: pass
+        class DummyConfig:
+            pass
+
         class DummyEnv(dict):
             def __init__(self, user):
                 dict.__init__(self)
@@ -29,6 +32,7 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(saliweb.build._format_shell_command(env, 'foo'),
                          '/usr/bin/sudo -u testuser foo')
         del os.environ['SUDO_USER']
+
 
 if __name__ == '__main__':
     unittest.main()

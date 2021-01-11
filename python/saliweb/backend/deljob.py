@@ -5,13 +5,14 @@ import sys
 
 def get_options():
     parser = ArgumentParser(
-                description="Delete the job(s) JOBNAME in the given STATE.")
+        description="Delete the job(s) JOBNAME in the given STATE.")
     parser.add_argument("state", metavar="STATE", help="Job state to consider")
-    parser.add_argument("jobs", metavar="JOBNAME", nargs="+",
-                help="Jobs to delete")
-    parser.add_argument('-f', "--force", action="store_true",
-                default=False, dest="force",
-                help="Delete jobs without prompting")
+    parser.add_argument(
+        "jobs", metavar="JOBNAME", nargs="+", help="Jobs to delete")
+    parser.add_argument(
+        '-f', "--force", action="store_true",
+        default=False, dest="force",
+        help="Delete jobs without prompting")
 
     args = parser.parse_args()
     return args.state, args.jobs, args.force
@@ -29,7 +30,7 @@ def delete_job(job, force):
 
 def check_valid_state(web, state):
     # Check for valid state name
-    jobstate = saliweb.backend._JobState(state)
+    _ = saliweb.backend._JobState(state)
     pid = web.get_running_pid()
     if pid is not None and state not in ("FAILED", "EXPIRED"):
         raise ValueError("Cannot delete jobs in %s state while the backend "

@@ -5,19 +5,22 @@ import sys
 
 def get_options():
     parser = ArgumentParser(
-            description="Force the job(s) JOBNAME into the FAILED state. "
-                "This can only be done if the backend daemon is stopped first. "
-                "By default, the server admin will receive an email for each "
-                "failed job, just as if it failed \"normally\". This can be "
-                "suppressed with the -n option.")
-    parser.add_argument("jobnames", nargs="+", metavar="JOBNAME",
-            help="Job(s) to fail")
+        description="Force the job(s) JOBNAME into the FAILED state. "
+                    "This can only be done if the backend daemon is stopped "
+                    "first. By default, the server admin will receive an "
+                    "email for each failed job, just as if it failed "
+                    "\"normally\". This can be suppressed with the -n option.")
+    parser.add_argument(
+        "jobnames", nargs="+", metavar="JOBNAME",
+        help="Job(s) to fail")
 
-    parser.add_argument("-n", "--no-email", action="store_false",
-            default=True, dest="email",
-            help="Don't email the admin about the failed job")
-    parser.add_argument("-f", "--force", action="store_true",
-            default=False, dest="force", help="Fail jobs without prompting")
+    parser.add_argument(
+        "-n", "--no-email", action="store_false",
+        default=True, dest="email",
+        help="Don't email the admin about the failed job")
+    parser.add_argument(
+        "-f", "--force", action="store_true",
+        default=False, dest="force", help="Fail jobs without prompting")
 
     return parser.parse_args()
 

@@ -4,10 +4,11 @@ import sys
 
 def get_options():
     parser = ArgumentParser(
-            description="Take the given failed job(s), JOBNAME, and put "
-                        "them back in the incoming queue.")
-    parser.add_argument("jobs", nargs="+", metavar="JOBNAME",
-            help="Job(s) to resubmit")
+        description="Take the given failed job(s), JOBNAME, and put "
+                    "them back in the incoming queue.")
+    parser.add_argument(
+        "jobs", nargs="+", metavar="JOBNAME",
+        help="Job(s) to resubmit")
     args = parser.parse_args()
     return args.jobs
 

@@ -9,7 +9,6 @@ import shutil
 import time
 import configparser
 import traceback
-import select
 import signal
 import socket
 import logging
@@ -119,7 +118,7 @@ class _JobState(object):
         if state in self.__valid_states:
             self.__state = state
         else:
-            raise InvalidStateError("%s is not in %s" \
+            raise InvalidStateError("%s is not in %s"
                                     % (state, str(self.__valid_states)))
 
     def __str__(self):
@@ -141,7 +140,7 @@ class _JobState(object):
         if newstate == 'FAILED' or tran in self.__valid_transitions:
             self.__state = newstate
         else:
-            raise InvalidStateError("Cannot transition from %s to %s" \
+            raise InvalidStateError("Cannot transition from %s to %s"
                                     % (self.__state, newstate))
 
 
@@ -234,7 +233,8 @@ class Config(object):
         self.admin_email = config.get('general', 'admin_email')
         self.service_name = config.get('general', 'service_name')
         if config.has_option('general', 'track_hostname'):
-            self.track_hostname = config.getboolean('general', 'track_hostname')
+            self.track_hostname = config.getboolean('general',
+                                                    'track_hostname')
         else:
             self.track_hostname = False
 
@@ -350,7 +350,7 @@ class Config(object):
         # infinity)
         if expire is not None and (archive is None or archive > expire):
             raise ConfigError("archive time (%s) cannot be greater than "
-                              "expire time (%s)" \
+                              "expire time (%s)"
                               % (config.get('oldjobs', 'archive'),
                                  config.get('oldjobs', 'expire')))
 
@@ -519,7 +519,7 @@ class Database(object):
         c.execute('CREATE TABLE %s (%s)' % (self._jobtable, schema))
         for field in self._fields:
             if field.index:
-                c.execute('CREATE INDEX %s_index ON %s (%s)' \
+                c.execute('CREATE INDEX %s_index ON %s (%s)'
                           % (field.name, self._jobtable, field.name))
 
         schema = ', '.join(x.get_schema() for x in self._dependfields)
@@ -548,7 +548,7 @@ class Database(object):
 
     def _count_all_jobs_in_state(self, state):
         """Return a count of all the jobs in the given job state."""
-        c = self._execute('SELECT COUNT(*) FROM %s WHERE state=%s' \
+        c = self._execute('SELECT COUNT(*) FROM %s WHERE state=%s'
                           % (self._jobtable, self._placeholder), (state,))
         return c.fetchone()[0]
 
@@ -621,7 +621,7 @@ class Database(object):
     def _update_job(self, metadata, state):
         """Update a job in the job state table."""
         query = 'UPDATE ' + self._jobtable + ' SET ' \
-                + ', '.join(x + '=' + self._placeholder \
+                + ', '.join(x + '=' + self._placeholder
                             for x in metadata.keys()) \
                 + ' WHERE name=' + self._placeholder
         self._execute(query, list(metadata.values()) + [metadata['name']])
@@ -640,11 +640,11 @@ class Database(object):
         """Change the job state in the database. This has the side effect of
            updating the job (as if :meth:`_update_job` were called)."""
         query = 'UPDATE ' + self._jobtable + ' SET ' \
-                + ', '.join(x + '=' + self._placeholder \
+                + ', '.join(x + '=' + self._placeholder
                             for x in list(metadata.keys()) + ['state']) \
                 + ' WHERE name=' + self._placeholder
-        c = self._execute(query,
-            list(metadata.values()) + [newstate, metadata['name']])
+        self._execute(
+            query, list(metadata.values()) + [newstate, metadata['name']])
         self.conn.commit()
         metadata.mark_synced()
 
@@ -681,12 +681,13 @@ class WebService(object):
         except IOError:
             return
         if old_state.startswith('FAILED: '):
-            raise StateFileError("A previous run failed with an "
-                    "unrecoverable error. Since this can leave the system "
-                    "in an inconsistent state, no further runs will start "
-                    "until the problem has been manually resolved. When "
-                    "you have done this, delete the state file "
-                    "(%s) to reenable runs." % state_file)
+            raise StateFileError(
+                "A previous run failed with an "
+                "unrecoverable error. Since this can leave the system "
+                "in an inconsistent state, no further runs will start "
+                "until the problem has been manually resolved. When "
+                "you have done this, delete the state file "
+                "(%s) to reenable runs." % state_file)
         old_pid = int(old_state)
         try:
             os.kill(old_pid, 0)
@@ -697,15 +698,16 @@ class WebService(object):
     def _check_state_file(self):
         """Make sure that a previous run is not still running or encountered
            an unrecoverable error."""
-        if self.__state_file_handle: # state file checked already
+        if self.__state_file_handle:  # state file checked already
             return
         state_file = self.config.backend['state_file']
         old_pid = self.get_running_pid()
         if old_pid is not None:
-            raise StateFileError("A previous run (pid %d) " % old_pid + \
-                    "still appears to be running. If this is not the "
-                    "case, please manually remove the state "
-                    "file (%s)." % state_file)
+            raise StateFileError(
+                "A previous run (pid %d) " % old_pid +
+                "still appears to be running. If this is not the "
+                "case, please manually remove the state "
+                "file (%s)." % state_file)
         self._write_state_file()
 
     def _write_state_file(self):
@@ -822,12 +824,12 @@ have done this, delete the state file (%s) to reenable runs.
                 try:
                     self._do_periodic_actions(s)
                 except _SigTermError:
-                    pass # Expected, so just swallow it
+                    pass  # Expected, so just swallow it
             finally:
                 # Don't let any further SigTerm exceptions through
                 signal.signal(signal.SIGTERM, signal.SIG_IGN)
                 if self.__state_file_handle:
-                    del self.__state_file_handle # close and unlock the file
+                    del self.__state_file_handle  # close and unlock the file
                     os.unlink(self.config.backend['state_file'])
                 self._close_socket(s)
                 self._register(up=False)
@@ -893,7 +895,7 @@ have done this, delete the state file (%s) to reenable runs.
             raise SanityError("The following files were found in job "
                               "directories. They need to be removed, since "
                               "their presence may interfere with the correct "
-                              "operation of the service: %s" \
+                              "operation of the service: %s"
                               % ", ".join(garbage))
 
         # Get all jobs from the database for each state
@@ -901,7 +903,8 @@ have done this, delete the state file (%s) to reenable runs.
             for job in self.db._get_all_jobs_in_state(state):
                 dir = job.directory
                 if dir is None:
-                    raise SanityError("Job %s (in state %s) has no directory; "                                      "please delete it" % (job.name, state))
+                    raise SanityError("Job %s (in state %s) has no directory; "
+                                      "please delete it" % (job.name, state))
                 # Check to make sure directory exists
                 if not os.path.exists(dir):
                     raise SanityError("Directory %s for job %s does not "
@@ -917,7 +920,7 @@ have done this, delete the state file (%s) to reenable runs.
                               "that don't have a matching entry in the job "
                               "database. Please remove these directories, "
                               "since their presence may interfere with the "
-                              "correct operation of the service: %s" \
+                              "correct operation of the service: %s"
                               % ", ".join(jobdirs.keys()))
 
     def _make_socket(self):
@@ -936,7 +939,7 @@ have done this, delete the state file (%s) to reenable runs.
         err = p.stderr.read()
         ret = p.wait()
         if ret != 0:
-            raise OSError("setfacl failed with code %d and stderr %s" \
+            raise OSError("setfacl failed with code %d and stderr %s"
                           % (ret, err))
         return s
 
@@ -993,7 +996,7 @@ have done this, delete the state file (%s) to reenable runs.
         """Check for any incoming jobs, and run each one."""
         numrunning = self.db._count_all_jobs_in_state('RUNNING')
         maxrunning = self.config.limits['running']
-        self._log("_process_incoming_jobs; %d jobs running out of %d" \
+        self._log("_process_incoming_jobs; %d jobs running out of %d"
                   % (numrunning, maxrunning))
         # Save doing an extra SQL SELECT if we're already at the maximum
         if numrunning >= maxrunning:
@@ -1053,7 +1056,7 @@ have done this, delete the state file (%s) to reenable runs.
     def _process_old_jobs(self):
         """Check for any old job results and archive or delete them."""
         for job in self.db._get_all_jobs_in_state('COMPLETED',
-                                                 after_time='archive_time'):
+                                                  after_time='archive_time'):
             job._try_archive()
         for job in self.db._get_all_jobs_in_state('ARCHIVED',
                                                   after_time='expire_time'):
@@ -1141,7 +1144,7 @@ class Job(object):
             dir = self.directory
             self._metadata['directory'] = None
             self._sync_metadata()
-            raise SanityError("Job %s: directory %s is not a directory" \
+            raise SanityError("Job %s: directory %s is not a directory"
                               % (self.name, dir))
 
     def _start_runner(self, runner, webservice):
@@ -1230,7 +1233,7 @@ class Job(object):
                  "job-state file in job directory (%s) claims it "
                  "is not. This usually means the underlying batch system "
                  "(e.g. SGE) job failed - e.g. a node went down, or the job "
-                 "was killed because it ran out of time or memory." \
+                 "was killed because it ran out of time or memory."
                  % (self._metadata['runner_id'], self._metadata['directory']))
         return False
 
@@ -1317,9 +1320,9 @@ class Job(object):
                 # The only way to go into INCOMING state is from the FAILED
                 # state (via resubmit). Since it's going to go from there back
                 # to running, and the failed/running directories are often
-                # on cluster storage (while incoming has to be on modbase) avoid
-                # a potentially expensive copy from network to modbase and
-                # then back to network by cheating and putting the job in
+                # on cluster storage (while incoming has to be on modbase)
+                # avoid a potentially expensive copy from network to modbase
+                # and then back to network by cheating and putting the job in
                 # the PREPROCESSING directory already.
                 directory = os.path.join(
                                  self._db.config.directories['PREPROCESSING'],
@@ -1386,8 +1389,8 @@ class Job(object):
            `state`. If not, an :exc:`InvalidStateError` is raised."""
         current_state = self.__state.get()
         if state != current_state:
-            raise InvalidStateError(("Expected job to be in %s state, " + \
-                                     "but it is actually in %s state") \
+            raise InvalidStateError(("Expected job to be in %s state, " +
+                                     "but it is actually in %s state")
                                     % (state, current_state))
 
     def resubmit(self):
@@ -1560,17 +1563,20 @@ class _LockedJobDict(object):
     def __init__(self):
         self._lock = threading.Lock()
         self._dict = {}
+
     def __contains__(self, key):
         self._lock.acquire()
         ret = key in self._dict
         self._lock.release()
         return ret
+
     def add(self, key):
         self._lock.acquire()
         try:
             self._dict[key] = None
         finally:
             self._lock.release()
+
     def remove(self, key):
         self._lock.acquire()
         try:
@@ -1630,7 +1636,8 @@ class SGERunner(Runner):
            a digit) then it is mapped to one that is.
         """
         name = re.sub(r'\s*', '', name)
-        if re.match(r'\d', name) or name.upper() in ("NONE", "ALL", "TEMPLATE"):
+        if re.match(r'\d', name) or name.upper() in ("NONE", "ALL",
+                                                     "TEMPLATE"):
             name = 'J' + name
         self._name = name
 
@@ -1703,7 +1710,7 @@ class SGERunner(Runner):
         else:
             drmaa, s = cls._get_drmaa()
             try:
-                x = s.jobStatus(jobid)
+                _ = s.jobStatus(jobid)
                 return False
             except drmaa.InvalidJobException:
                 return True
@@ -1747,6 +1754,8 @@ class WyntonSGERunner(SGERunner):
     _qstat = '/opt/sge/bin/lx-amd64/qstat'
 
     _waited_jobs = _LockedJobDict()
+
+
 Job.register_runner_class(WyntonSGERunner)
 
 
@@ -1808,6 +1817,8 @@ class LocalRunner(Runner):
             return False
         else:
             return not os.path.exists("/proc/%s" % jobid)
+
+
 Job.register_runner_class(LocalRunner)
 
 
@@ -1922,6 +1933,8 @@ class SaliWebServiceRunner(Runner):
                 return False
             else:
                 return [SaliWebServiceResult(url) for url in res]
+
+
 Job.register_runner_class(SaliWebServiceRunner)
 
 
@@ -1951,4 +1964,6 @@ class DoNothingRunner(Runner):
            running."""
         # Jobs complete immediately
         return True
+
+
 Job.register_runner_class(DoNothingRunner)

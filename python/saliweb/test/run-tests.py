@@ -1,7 +1,6 @@
 import unittest
 import sys
 import os
-import re
 from argparse import ArgumentParser
 import glob
 import warnings
@@ -15,6 +14,7 @@ try:
         coverage = None
 except ImportError:
     coverage = None
+
 
 class RunAllTests(unittest.TestProgram):
     """Custom main program that also displays a final coverage report"""
@@ -59,12 +59,13 @@ class RunAllTests(unittest.TestProgram):
             self.cov.report(self.mods, file=sys.stderr)
             html = self.opts.html_coverage
             if html:
-                self.cov.html_report(self.mods,
-                    directory=os.path.join(html, self.subdir))
+                self.cov.html_report(
+                    self.mods, directory=os.path.join(html, self.subdir))
             if not self.opts.coverage:
                 for cov in glob.glob('.coverage*'):
                     os.unlink(cov)
         sys.exit(not result.wasSuccessful())
+
 
 def get_boilerplate_test_case(module_name):
     service = __import__(module_name)
@@ -77,10 +78,13 @@ def get_boilerplate_test_case(module_name):
         def test_get_web_service(self):
             """Check get_web_service function"""
             import saliweb.backend
+
             def db_init(self, jobobj):
                 self.jobobj = jobobj
+
             def config_init(self, configfile):
                 self.configfile = configfile
+
             def ws_init(self, config, db):
                 self.config = config
                 self.db = db
@@ -112,7 +116,7 @@ def get_all_tests():
         sys.path.insert(0, dir)
         modobjs.append(__import__(mod))
         sys.path.pop(0)
-    tests = [unittest.defaultTestLoader.loadTestsFromModule(o) \
+    tests = [unittest.defaultTestLoader.loadTestsFromModule(o)
              for o in modobjs]
     return tests, module_name
 
@@ -144,6 +148,7 @@ def parse_options():
     parser.add_argument("files", metavar="FILE", nargs="+",
                         help="Python test files to run")
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_options()

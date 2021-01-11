@@ -2,6 +2,7 @@ from __future__ import print_function
 import saliweb.backend
 import unittest
 
+
 class Tets(unittest.TestCase):
     def test_sigterm_handler(self):
         """Test sigterm_handler"""

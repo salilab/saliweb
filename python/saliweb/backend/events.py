@@ -3,6 +3,7 @@ import select
 import time
 import collections
 
+
 class _EventQueue(object):
     """A thread-safe FIFO queue"""
     def __init__(self):

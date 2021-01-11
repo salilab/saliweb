@@ -2,17 +2,20 @@ import unittest
 import os
 from saliweb.backend import DoNothingRunner
 import saliweb.backend.events
-import testutil
+
 
 class DummyJob(object):
     def _try_complete(self, webservice, run_exception):
         webservice._exception = run_exception
 
+
 class DummyWebService(object):
     def __init__(self):
         self._event_queue = saliweb.backend.events._EventQueue()
+
     def _get_job_by_runner_id(self, runner, runid):
         return DummyJob()
+
 
 class DoNothingRunnerTest(unittest.TestCase):
     """Check DoNothingRunner class"""
@@ -27,6 +30,7 @@ class DoNothingRunnerTest(unittest.TestCase):
         event.process()
         self.assertIsNone(ws._exception)
         os.unlink('job-state')
+
 
 if __name__ == '__main__':
     unittest.main()

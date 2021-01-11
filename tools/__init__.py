@@ -2,11 +2,11 @@
 
 from __future__ import print_function
 import os.path
-import re
 import sys
-from SCons.Script import *
+from SCons.Script import BoolVariable, PathVariable, Environment, Exit
 
 __all__ = ["add_common_variables", "MyEnvironment"]
+
 
 class WineEnvironment(Environment):
     """Environment to build Windows binaries under Linux, by running the
@@ -33,6 +33,7 @@ class WineEnvironment(Environment):
         self.Append(CFLAGS="/MD")
         self.Append(CXXFLAGS="/MD /GR /GX")
 
+
 def MyEnvironment(variables=None, *args, **kw):
     """Create an environment suitable for building"""
     # First make a dummy environment in order to evaluate all variables, since
@@ -45,6 +46,7 @@ def MyEnvironment(variables=None, *args, **kw):
         env['PATHSEP'] = os.path.pathsep
     return env
 
+
 def add_common_variables(vars, package):
     """Add common variables to an SCons Variables object."""
     vars.Add(PathVariable('prefix', 'Top-level installation directory', '/usr',
@@ -55,7 +57,7 @@ def add_common_variables(vars, package):
                           'System admin binary installation directory',
                           '${prefix}/sbin', PathVariable.PathAccept))
     vars.Add(PathVariable('pythondir', 'Python module installation directory',
-                          '${prefix}/lib/python%d.%d/site-packages' \
+                          '${prefix}/lib/python%d.%d/site-packages'
                           % sys.version_info[0:2], PathVariable.PathAccept))
     vars.Add(PathVariable('perldir', 'Perl module installation directory',
                           '${prefix}/lib64/perl5/vendor_perl',

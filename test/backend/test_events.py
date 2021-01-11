@@ -3,7 +3,7 @@ import time
 import os
 import socket
 import saliweb.backend.events
-import testutil
+
 
 class EventsTest(unittest.TestCase):
     """Check events"""
@@ -50,6 +50,7 @@ class EventsTest(unittest.TestCase):
         class DummyJob(object):
             def _try_complete(self, webservice, run_exception):
                 webservice.run_exception = run_exception
+
         class DummyWebService(object):
             def _get_job_by_runner_id(self, runner, runid):
                 if runid == 'bad':
@@ -91,10 +92,12 @@ class EventsTest(unittest.TestCase):
 
     def test_periodic_check(self):
         """Check the _PeriodicCheck class"""
-        class dummy: pass
+        class dummy:
+            pass
+
         ws = dummy()
         ws.config = dummy()
-        ws.config.backend = {'check_minutes':0.02/60.}
+        ws.config.backend = {'check_minutes': 0.02/60.}
 
         q = saliweb.backend.events._EventQueue()
         ws._event_queue = q
@@ -104,8 +107,8 @@ class EventsTest(unittest.TestCase):
         # Should have added 2 events
         for i in range(2):
             x = q.get(timeout=0.)
-            self.assertIsInstance(x,
-                                 saliweb.backend.events._PeriodicCheckEvent)
+            self.assertIsInstance(
+                x, saliweb.backend.events._PeriodicCheckEvent)
         self.assertIsNone(q.get(timeout=0.))
 
     def test_periodic_check_event(self):
@@ -132,16 +135,18 @@ class EventsTest(unittest.TestCase):
         # Should have added 2 events
         for i in range(2):
             x = q.get(timeout=0.)
-            self.assertIsInstance(x,
-                         saliweb.backend.events._CleanupIncomingJobsEvent)
+            self.assertIsInstance(
+                x, saliweb.backend.events._CleanupIncomingJobsEvent)
         self.assertIsNone(q.get(timeout=0.))
 
     def test_incoming_jobs(self):
         """Check the _IncomingJobs class"""
-        class dummy: pass
+        class dummy:
+            pass
+
         ws = dummy()
         ws.config = dummy()
-        ws.config.backend = {'check_minutes':1}
+        ws.config.backend = {'check_minutes': 1}
 
         if os.path.exists('test.sock'):
             os.unlink('test.sock')
@@ -162,6 +167,7 @@ class EventsTest(unittest.TestCase):
         self.assertIsInstance(x, saliweb.backend.events._IncomingJobsEvent)
         self.assertIsNone(q.get(timeout=0.))
         os.unlink('test.sock')
+
 
 if __name__ == '__main__':
     unittest.main()

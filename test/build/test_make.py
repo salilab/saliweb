@@ -2,7 +2,7 @@ import unittest
 import re
 import os
 import saliweb.build
-from io import StringIO
+
 
 class MakeTest(unittest.TestCase):
     """Check make* functions"""
@@ -12,6 +12,7 @@ class MakeTest(unittest.TestCase):
         class DummySource(object):
             def get_contents(self):
                 return 'testser'
+
         class DummyTarget(object):
             path = 'dummytgt'
 
@@ -31,6 +32,7 @@ class MakeTest(unittest.TestCase):
         for t in ('mytest.py', 'mytest'):
             class DummyTarget(object):
                 path = t
+
                 def __str__(self):
                     return self.path
             e = DummyEnv()
@@ -52,6 +54,7 @@ class MakeTest(unittest.TestCase):
         class DummySource(object):
             def get_contents(self):
                 return 'testser'
+
         class DummyEnv(object):
             def Execute(self, cmd):
                 self.cmd = cmd
@@ -62,6 +65,7 @@ class MakeTest(unittest.TestCase):
                              'display_results_page')):
             class DummyTarget(object):
                 path = t
+
                 def __str__(self):
                     return self.path
             e = DummyEnv()
@@ -82,8 +86,10 @@ class MakeTest(unittest.TestCase):
         class DummySource(object):
             def __init__(self, contents):
                 self.contents = contents
+
             def get_contents(self):
                 return self.contents
+
         class DummyTarget(object):
             path = 'dummytgt'
         for ver, expver in (('None', 'version = None'),

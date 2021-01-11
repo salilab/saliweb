@@ -1,6 +1,7 @@
 # Mock of MySQLdb
 
-from . import cursors
+from . import cursors  # noqa: F401
+
 
 class _MockCursor(object):
     def __init__(self, conn):

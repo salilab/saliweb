@@ -2,7 +2,6 @@ from __future__ import print_function
 import unittest
 import sys
 import saliweb.build
-import warnings
 import tempfile
 import shutil
 import os
@@ -10,6 +9,7 @@ import re
 import io
 import testutil
 from testutil import run_catch_warnings
+
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
@@ -22,7 +22,10 @@ def run_catch_stderr(method, *args, **keys):
     finally:
         sys.stderr = oldstderr
 
-class DummyConfig: pass
+
+class DummyConfig:
+    pass
+
 
 class SetupTest(unittest.TestCase):
     """Check setup functions"""
@@ -32,6 +35,7 @@ class SetupTest(unittest.TestCase):
         class Vars(object):
             def __init__(self):
                 self.vars = []
+
             def Add(self, var):
                 self.vars.append(var)
 
@@ -96,8 +100,11 @@ class SetupTest(unittest.TestCase):
             def __init__(self, bin):
                 dict.__init__(self)
                 self.bin = bin
-            def WhereIs(self, bin): return self.bin
+
+            def WhereIs(self, bin):
+                return self.bin
         tmpdir = tempfile.mkdtemp()
+
         def get_broken_env_pyscript(name, script):
             tmpfile = os.path.join(tmpdir, name)
             with open(tmpfile, 'w') as fh:
@@ -110,15 +117,16 @@ class SetupTest(unittest.TestCase):
             env = {}
             saliweb.build._setup_version(env, '1.0')
             self.assertEqual(env, {'version': '1.0'})
-    
+
             # No number provided; no svnversion binary in path
             env = BrokenEnv(None)
-            ret, warns = run_catch_warnings(saliweb.build._setup_version, env, None)
+            ret, warns = run_catch_warnings(
+                saliweb.build._setup_version, env, None)
             self.assertEqual(len(warns), 1)
             self.assertEqual(warns[0][0].args,
                              ("Could not find 'svnversion' binary in path",))
             self.assertEqual(env, {'version': None})
-    
+
             # No number provided; cannot find svnversion binary
             env = BrokenEnv('/not/exist/svnversion')
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
@@ -129,9 +137,9 @@ class SetupTest(unittest.TestCase):
             # end of the message; python2 does not)
             self.assertEqual(warns[0][0].args[0][:72],
                              "Could not run /not/exist/svnversion: [Errno 2] "
-                              "No such file or directory")
+                             "No such file or directory")
             self.assertEqual(env, {'version': None})
-    
+
             # No number provided; svnversion binary reports 'exported'
             env = get_broken_env_pyscript('expscript', """
 from __future__ import print_function
@@ -140,7 +148,7 @@ print("exported")""")
                                             env, None)
             self.assertEqual(len(warns), 0)
             self.assertEqual(env, {'version': None})
-    
+
             # No number provided; svnversion binary returns error
             env = get_broken_env_pyscript('errscript', """
 from __future__ import print_function
@@ -157,7 +165,7 @@ sys.exit(1)""")
                          'stderr error text\n$', warns[0][0].args[0]),
                 "%s does not match re" % warns[0][0].args[0])
             self.assertEqual(env, {'version': None})
-    
+
             # No number provided; svnversion binary works
             env = get_broken_env_pyscript('workscript', """
 from __future__ import print_function
@@ -165,8 +173,8 @@ print("1024\\n2048")""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
             self.assertEqual(len(warns), 0)
-            self.assertEqual(env, {'version': 'r1024'}) # Only first line used
-    
+            self.assertEqual(env, {'version': 'r1024'})  # Only first line used
+
             # git repository
             os.mkdir('.git')
             env = get_broken_env_pyscript('gitscript', """
@@ -183,14 +191,18 @@ else:
                                             env, None)
             self.assertEqual(len(warns), 0)
             self.assertEqual(env, {'version': 'main.abc123'})
-    
+
             shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_setup_sconsign(self):
         """Test _setup_sconsign function"""
         class DummyEnv(dict):
-            def Exit(self, val): self.exitval = val
-            def SConsignFile(self, file): self.file = file
+            def Exit(self, val):
+                self.exitval = val
+
+            def SConsignFile(self, file):
+                self.file = file
+
         class DummyConfig:
             backend = {'user': 'testuser'}
         # Try with existing .scons directory

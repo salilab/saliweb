@@ -2,8 +2,6 @@ import unittest
 import argparse
 import sys
 import os
-import tempfile
-import shutil
 import subprocess
 import saliweb.make_web_service
 import testutil
@@ -61,7 +59,7 @@ class MakeWebServiceTests(unittest.TestCase):
                 return "dummy"
         for (short_name, typ, expected) in (
               ["short", "veryverylongtype", "short_veryverylo"],
-              ["veryverylongname", "back", "veryverylongna_b"] ):
+              ["veryverylongname", "back", "veryverylongna_b"]):
             m = Dummy(short_name, "service name", git=False)
             name = m._make_database_name(typ)
             self.assertEqual(name, expected)
@@ -84,13 +82,14 @@ class MakeWebServiceTests(unittest.TestCase):
         class DummySourceControl(SVNSourceControl):
             def _run_svn_command(self, cmd, cwd=None):
                 self.cmds.append(cmd)
+
         class Dummy(MakeWebService):
             def _get_install_dir(self):
                 return "dummy"
         m = Dummy('modfoo', 'ModFoo', git=False)
         msc = DummySourceControl('modfoo', 'modfoo')
         m.source_control = msc
-        m.user = 'root' # so that getpwnam works
+        m.user = 'root'  # so that getpwnam works
         os.mkdir(m.topdir)
         msc.cmds = []
         oldstderr = sys.stderr
@@ -120,13 +119,14 @@ class MakeWebServiceTests(unittest.TestCase):
         class DummySourceControl(GitSourceControl):
             def _run_git_command(self, cmd, cwd=None):
                 self.cmds.append(cmd)
+
         class Dummy(MakeWebService):
             def _get_install_dir(self):
                 return "dummy"
         m = Dummy('modfoo', 'ModFoo', git=True)
         msc = DummySourceControl('modfoo', 'modfoo')
         m.source_control = msc
-        m.user = 'root' # so that getpwnam works
+        m.user = 'root'  # so that getpwnam works
         os.mkdir(m.topdir)
         msc.cmds = []
         oldstderr = sys.stderr
@@ -183,14 +183,18 @@ class MakeWebServiceTests(unittest.TestCase):
     def test_main(self):
         """Test make_web_service main()"""
         events = []
+
         def dummy_get_options():
             events.append('get_options')
-            return argparse.Namespace(short_name='testshort',
-                    service_name='testlong', git=False)
+            return argparse.Namespace(
+                short_name='testshort',
+                service_name='testlong', git=False)
+
         class DummyMakeWebService(object):
             def __init__(self, short_name, service_name, git):
                 events.append('MakeWebService %s %s'
                               % (service_name, short_name))
+
             def make(self):
                 events.append('make')
 

@@ -1,5 +1,6 @@
 import datetime
 
+
 class DictCursor(object):
     def __init__(self, conn):
         self.conn = conn

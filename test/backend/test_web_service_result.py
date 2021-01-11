@@ -3,13 +3,14 @@ import os
 import io
 import sys
 try:
-    import urllib.request as urllib2 # python 3
+    import urllib.request as urllib2  # python 3
 except ImportError:
     import urllib2  # python 2
 from saliweb.backend import SaliWebServiceResult
 
 testurl = 'http://modbase.compbio.ucsf.edu/modloop/job/job_279120/' + \
           'output.pdb?passwd=oGHxb7R3xy'
+
 
 def dummy_urlopen(url):
     cls = io.StringIO if sys.version_info[0] >= 3 else io.BytesIO
@@ -26,7 +27,7 @@ class Test(unittest.TestCase):
 
     def test_download(self):
         """Test download() method"""
-        r = SaliWebServiceResult('http://modbase.compbio.ucsf.edu/modloop/' \
+        r = SaliWebServiceResult('http://modbase.compbio.ucsf.edu/modloop/'
                                  'job/job_279120/output.pdb?passwd=oGHxb7R3xy')
         old = urllib2.urlopen
         try:
@@ -41,6 +42,7 @@ class Test(unittest.TestCase):
             os.unlink('output.pdb')
         finally:
             urllib2.urlopen = old
+
 
 if __name__ == '__main__':
     unittest.main()

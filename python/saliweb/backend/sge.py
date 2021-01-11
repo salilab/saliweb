@@ -3,6 +3,7 @@ import os
 import saliweb.backend.events
 from saliweb.backend.events import _JobThread
 
+
 class _DRMAAJobWaiter(_JobThread):
     """Wait for a job started by a DRMAA Runner to finish"""
     def __init__(self, webservice, jobids, runner, runid):
@@ -24,7 +25,7 @@ class _DRMAAJobWaiter(_JobThread):
                     failed_jobids.append(j)
             if len(failed_jobids) > 0:
                 failure = RunnerError("SGE jobs failed: %s. Please contact "
-                                      "the cluster sysadmin." \
+                                      "the cluster sysadmin."
                                       % ', '.join(failed_jobids))
             else:
                 failure = None

@@ -8,11 +8,9 @@ else:
 import saliweb.backend.events
 from saliweb.backend import SGERunner, WyntonSGERunner, Job
 import testutil
-import re
 import os
 import time
-import shutil
-import tempfile
+
 
 class BrokenRunner(SGERunner):
     # Duplicate runner name, so it shouldn't work
@@ -20,9 +18,12 @@ class BrokenRunner(SGERunner):
 
 
 class DummyDRMAAModule(object):
-    class InvalidJobException(Exception): pass
+    class InvalidJobException(Exception):
+        pass
+
     class Session(object):
         TIMEOUT_WAIT_FOREVER = 'forever'
+
 
 class DummyDRMAASession(object):
     def jobStatus(self, jobid):
@@ -34,24 +35,33 @@ class DummyDRMAASession(object):
             return 'queued'
         else:
             raise RuntimeError("Bad jobid: " + jobid)
+
     def createJobTemplate(self):
-        class Dummy(object): pass
+        class Dummy(object):
+            pass
         return Dummy()
+
     def deleteJobTemplate(self, jt):
         DummyDRMAASession.deleted_template = jt
+
     def runBulkJobs(self, jt, first, last, step):
         return ['dummyJob.%d' % x for x in range(first, last+step, step)]
+
     def runJob(self, jt):
         return 'dummyJob'
+
     def synchronize(self, jobids, timeout, cleanup):
         pass
+
     def wait(self, jobids, timeout):
         return True
+
 
 class TestRunner(WyntonSGERunner):
     @classmethod
     def _get_drmaa(cls):
         return DummyDRMAAModule(), DummyDRMAASession()
+
 
 class RunnerTest(unittest.TestCase):
     """Check Runner classes"""
@@ -184,6 +194,7 @@ else:
         self.assertIsNotNone(e1)
         self.assertIsNotNone(e2)
         self.assertIsNone(e3)
+
 
 if __name__ == '__main__':
     unittest.main()

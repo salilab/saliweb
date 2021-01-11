@@ -1,6 +1,7 @@
 import saliweb.backend
 import sys
 
+
 def check_not_running(web):
     try:
         pid = web.get_running_pid()
@@ -9,6 +10,7 @@ def check_not_running(web):
                              "Please stop it first." % pid)
     except saliweb.backend.StateFileError:
         return
+
 
 def main(webservice):
     web = webservice.get_web_service(webservice.config)

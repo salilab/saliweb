@@ -7,16 +7,20 @@ from saliweb.backend import LocalRunner
 import testutil
 import saliweb.backend.events
 
+
 class DummyJob(object):
     def _try_complete(self, webservice, run_exception):
         if run_exception:
             webservice._exception = run_exception
 
+
 class DummyWebService(object):
     def __init__(self):
         self._event_queue = saliweb.backend.events._EventQueue()
+
     def _get_job_by_runner_id(self, runner, runid):
         return DummyJob()
+
 
 class LocalRunnerTest(unittest.TestCase):
     """Check LocalRunner class"""
@@ -75,6 +79,7 @@ class LocalRunnerTest(unittest.TestCase):
             # wait for completion
             event = ws._event_queue.get()
             os.unlink(os.path.join(d.tmpdir, 'bar'))
+            del pid, event
 
     def test_run_proc(self):
         """Check that LocalRunner jobs from other processes are checked"""
@@ -84,6 +89,7 @@ class LocalRunnerTest(unittest.TestCase):
         os.kill(int(pid), signal.SIGTERM)
         p.wait()
         self.assertEqual(LocalRunner._check_completed(pid, ''), True)
+
 
 if __name__ == '__main__':
     unittest.main()

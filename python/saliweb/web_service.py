@@ -37,6 +37,7 @@ except ImportError:
     import urllib2  # python 2
 import time
 
+
 def _get_cookie_arg(args):
     opts, args = getopt.getopt(args, "c:", ["cookie="])
     cookie = None
@@ -44,6 +45,7 @@ def _get_cookie_arg(args):
         if o in ("-c", "--cookie"):
             cookie = a
     return cookie, args
+
 
 def _curl_rest_page(url, curl_args):
     # Sadly Python currently has no method to POST multipart forms, so we
@@ -67,28 +69,34 @@ def _curl_rest_page(url, curl_args):
                          "XML containing a 'saliweb' tag")
     return top[0], out
 
+
 class _Parameter(object):
     def __init__(self, name, help, optional):
         self.name = name
         self.help = help
         self.optional = optional == '1'
+
     def get_full_arg(self):
         a = self._get_arg()
         if self.optional:
             return '[' + a + ']'
         else:
             return a
+
     def _get_arg(self):
         return '%s=ARG' % self.name
+
     def get_help(self):
         h = "%-20s" % self.name + self.help
         if self.optional:
             h += ' [optional]'
         return h
 
+
 class _FileParameter(_Parameter):
     def _get_arg(self):
         return '%s=@FILENAME' % self.name
+
 
 def _get_parameters_from_xml(xml):
     ps = []
@@ -103,6 +111,7 @@ def _get_parameters_from_xml(xml):
                                          c.childNodes[0].wholeText,
                                          c.getAttribute('optional')))
     return ps
+
 
 def show_info(url, cookie=None):
     """Given the URL of a Sali lab web service, print information about it."""
@@ -143,6 +152,7 @@ service page and look at the names of the HTML form elements. Alternatively,
 ask the developer of the web service to implement the
 get_submit_parameter_help() method!""")
 
+
 def submit_job(url, args, cookie=None):
     """Submit a job to a Sali Lab web service (but don't wait for it to end).
        'args' is a service-dependent list of arguments; each should be suitable
@@ -176,6 +186,7 @@ def submit_job(url, args, cookie=None):
         return url
     raise IOError("Could not submit job: " + out)
 
+
 def get_results(url):
     """Check for results from a web service.
        Given a URL previously returned by submit_job(), this returns a list
@@ -204,6 +215,7 @@ def get_results(url):
     dom.unlink()
     return urls
 
+
 def run_job(url, args, cookie=None):
     """Run a job, wait for it to finish, and return its results.
        This is essentially the same as running submit_job(), then
@@ -219,13 +231,16 @@ def run_job(url, args, cookie=None):
         if results is not None:
             return results
 
+
 class _Command(object):
     def __init__(self, progname, usage_prefix):
         self.progname = progname
         self.usage_prefix = usage_prefix
+
     def usage(self):
         print("\nUsage: %s " % self.usage_prefix + self.usage_args
               + '\n\n' + self.long_help.replace('%prog', self.progname))
+
 
 class _InfoCommand(_Command):
     short_help = "Get basic information about a web service."
@@ -243,6 +258,7 @@ service. Just as for curl, it can either be a filename or key=value.
 If the URL is valid and the web service is working properly, this will show
 a sample usage for submitting jobs to the service.
 """
+
     def main(self, args):
         try:
             cookie, args = _get_cookie_arg(args)
@@ -255,6 +271,7 @@ a sample usage for submitting jobs to the service.
         else:
             self.usage()
             sys.exit(1)
+
 
 class _SubmitCommand(_Command):
     short_help = "Submit a job to a web service (don't wait for it to finish)."
@@ -272,6 +289,7 @@ This only submits the job; on successful completion, a new URL is returned,
 at which the results will become available when the job completes. Use
 '%prog results' to check for these results.
 """
+
     def main(self, args):
         try:
             cookie, args = _get_cookie_arg(args)
@@ -285,6 +303,7 @@ at which the results will become available when the job completes. Use
             self.usage()
             sys.exit(1)
 
+
 class _ResultsCommand(_Command):
     short_help = "Check for web service results."
     usage_args = '<url>'
@@ -292,12 +311,14 @@ class _ResultsCommand(_Command):
 <url> should be the URL returned by a previous call to '%prog submit'.
 If the job has finished, a list of URLs of job outputs will be returned.
 """
+
     def main(self, args):
         if len(args) == 1:
             get_results(args[0])
         else:
             self.usage()
             sys.exit(1)
+
 
 class _RunCommand(_Command):
     short_help = "Run a web service job to completion."
@@ -309,6 +330,7 @@ followed by calling '%prog results' periodically until the
 job finishes. See '%prog submit' for more information on
 the parameters.
 """
+
     def main(self, args):
         if len(args) >= 1:
             run_job(args[0], args[1:])
@@ -321,14 +343,15 @@ class _WebService(object):
     def __init__(self):
         self.short_help = "Run jobs using Sali lab REST web services."
         self._progname = os.path.basename(sys.argv[0])
-        self._all_commands = {'info':_InfoCommand,
-                              'submit':_SubmitCommand,
-                              'results':_ResultsCommand,
-                              'run':_RunCommand}
+        self._all_commands = {'info': _InfoCommand,
+                              'submit': _SubmitCommand,
+                              'results': _ResultsCommand,
+                              'run': _RunCommand}
 
     def main(self):
         if len(sys.argv) <= 1:
-            print(self.short_help + " Use '%s help' for help." % self._progname)
+            print(self.short_help +
+                  " Use '%s help' for help." % self._progname)
         else:
             command = sys.argv[1]
             if command == 'help':
@@ -373,9 +396,11 @@ Use "%s help <command>" for detailed help on any command.""" % self._progname)
         print("Use '%s help' for help." % self._progname)
         sys.exit(1)
 
+
 def main():
     ws = _WebService()
     ws.main()
+
 
 if __name__ == '__main__':
     main()

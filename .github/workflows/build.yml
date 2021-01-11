@@ -30,6 +30,7 @@ jobs:
     - name: Test
       run: |
         scons python=$(which python) test
+        flake8 --exclude doc/conf.py,tools/reindent.py,examples .
         py.test --cov=account/account --cov-branch --flake8 account
     - name: Upload coverage to codecov
       run: |

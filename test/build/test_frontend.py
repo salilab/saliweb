@@ -1,16 +1,20 @@
 import unittest
 import saliweb.build
 
+
 class DummyEnv(dict):
     def Install(self, target, files):
         self.install_target = target
         self.install_files = files
+
     def Command(self, *args):
         if not hasattr(self, 'command_target'):
             self.command_target = []
         self.command_target.append(args)
+
     def Value(self, contents):
         pass
+
     def Clone(self):
         return DummyEnv(self)
 
@@ -20,7 +24,7 @@ class FrontendTest(unittest.TestCase):
 
     def make_frontend(self, name):
         class DummyConfig:
-            frontends = {'foo': {'service_name': 'Foo'} }
+            frontends = {'foo': {'service_name': 'Foo'}}
 
         env = DummyEnv()
         env['instdir'] = '/inst/'
@@ -74,6 +78,7 @@ class FrontendTest(unittest.TestCase):
         f.InstallTXT(['mytxt'])
         self.assertEqual(f._env.install_target, '/inst/foo/txt')
         self.assertEqual(f._env.install_files, ['mytxt'])
+
 
 if __name__ == '__main__':
     unittest.main()

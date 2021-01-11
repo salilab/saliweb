@@ -9,10 +9,12 @@ import re
 import shutil
 import testutil
 
+
 class MockEnvFunctions(object):
     class DummyFunc(object):
         def __init__(self, name):
             self.name = name
+
         def __call__(self, env):
             env.append(self.name)
 
@@ -41,15 +43,22 @@ def run_catch_stderr(method, *args, **keys):
     finally:
         sys.stderr = oldstderr
 
-class DummyConfig: pass
+
+class DummyConfig:
+    pass
+
+
 class DummyEnv(dict):
     exitval = None
+
     def __init__(self, user):
         dict.__init__(self)
         self['configfile'] = 'test.conf'
         self['config'] = c = DummyConfig()
         c.backend = {'user': user}
-    def Exit(self, val): self.exitval = val
+
+    def Exit(self, val):
+        self.exitval = val
 
 
 class CheckTest(unittest.TestCase):
@@ -59,11 +68,18 @@ class CheckTest(unittest.TestCase):
         """Check _check_filesystem_sanity function"""
         class DummyBackend:
             class Database:
-                def __init__(self, jobcls): pass
+                def __init__(self, jobcls):
+                    pass
+
             class WebService:
-                def __init__(self, config, db): pass
-                def _filesystem_sanity_check(self): pass
-            class Job: pass
+                def __init__(self, config, db):
+                    pass
+
+                def _filesystem_sanity_check(self):
+                    pass
+
+            class Job:
+                pass
         e = {'config': None}
         oldbackend = saliweb.build.saliweb.backend
         try:
@@ -81,6 +97,7 @@ class CheckTest(unittest.TestCase):
         saliweb.build._install_check(None, None, e)
         self.assertEqual(e, ['_check_frontend_import', '_check_python_import',
                              '_check_filesystem_sanity'])
+        del m
 
     def test_check_directories(self):
         """Check _check_directories function"""
@@ -93,6 +110,7 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(e, ['_check_directory_locations',
                              '_check_directory_permissions',
                              '_check_incoming_directory_permissions'])
+        del m
 
     def test_check(self):
         """Check _check function"""
@@ -119,7 +137,7 @@ class CheckTest(unittest.TestCase):
         self.assertRaises(SystemExit, saliweb.build._check, e)
         self.assertEqual(e.exitval, 1)
         self.assertEqual(e, ['_check_user', '_check_ownership',
-                              '_check_permissions', '_check_directories'])
+                             '_check_permissions', '_check_directories'])
 
         # Normal operation
         saliweb.build.MySQLdb = None
@@ -127,8 +145,9 @@ class CheckTest(unittest.TestCase):
         e = []
         saliweb.build._check(e)
         self.assertEqual(e, ['_check_user', '_check_ownership',
-                              '_check_permissions', '_check_directories',
-                              '_check_mysql', '_check_service'])
+                             '_check_permissions', '_check_directories',
+                             '_check_mysql', '_check_service'])
+        del m
 
     def test_check_user(self):
         """Check _check_user function"""
@@ -159,11 +178,11 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.match(
-                              '\nscons must be run as the backend user, which '
-                              'is \'bin\'.*config file, test\\.conf.*'
-                              'Please run again.*sudo -u bin scons"\n',
-                              stderr, re.DOTALL),
-                              'regex match failed on ' + stderr)
+            '\nscons must be run as the backend user, which '
+            'is \'bin\'.*config file, test\\.conf.*'
+            'Please run again.*sudo -u bin scons"\n',
+            stderr, re.DOTALL),
+            'regex match failed on ' + stderr)
 
         # Not OK if backend user does not exist
         env = DummyEnv('#baduser')
@@ -181,15 +200,15 @@ class CheckTest(unittest.TestCase):
         """Check _check_sql_username_length function"""
         # Names up to 16 characters are OK"
         for name in ('short', 'ok', "1234567890123456"):
-            auth = {'user':name}
+            auth = {'user': name}
             env = DummyEnv('foo')
             saliweb.build._check_sql_username_length(env, auth, "back")
             self.assertEqual(env.exitval, None)
         # Longer names are not
-        auth = {'user':'12345678901234567'}
+        auth = {'user': '12345678901234567'}
         env = DummyEnv('foo')
-        ret, stderr = run_catch_stderr(saliweb.build._check_sql_username_length,
-                                       env, auth, 'mytest')
+        ret, stderr = run_catch_stderr(
+            saliweb.build._check_sql_username_length, env, auth, 'mytest')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.match('\n\\*\\* The database username for the '
@@ -225,6 +244,7 @@ class CheckTest(unittest.TestCase):
             fh.write('test')
         os.chmod(conf, 0o600)
         os.mkdir('.scons')
+
         def make_env():
             env = DummyEnv('testuser')
             env['config'].database = {'frontend_config': conf,
@@ -259,11 +279,12 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search('Cannot write to \\.scons directory:.*'
-                                  'Permission denied.*The backend user needs '
-                                  'to be able to write.*To fix this problem.*'
-                                  'setfacl -m u:testuser:rwx \\.scons', stderr,
-                                  re.DOTALL), 'regex match failed on ' + stderr)
+        self.assertTrue(re.search(
+            'Cannot write to \\.scons directory:.*'
+            'Permission denied.*The backend user needs '
+            'to be able to write.*To fix this problem.*'
+            'setfacl -m u:testuser:rwx \\.scons', stderr,
+            re.DOTALL), 'regex match failed on ' + stderr)
         os.chmod('.scons', 0o755)
 
         # If config files are not readable, warnings should be printed
@@ -289,12 +310,13 @@ class CheckTest(unittest.TestCase):
         ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search('The database configuration file test\\.conf '
-                                  'appears to be under SVN.*To fix this.*'
-                                  'svn rm test\\.conf; svn ci test\\.conf.*'
-                                  'Then recreate test\\.conf using a '
-                                  'fresh password', stderr, re.DOTALL),
-                        'regex match failed on ' + stderr)
+        self.assertTrue(re.search(
+            'The database configuration file test\\.conf '
+            'appears to be under SVN.*To fix this.*'
+            'svn rm test\\.conf; svn ci test\\.conf.*'
+            'Then recreate test\\.conf using a '
+            'fresh password', stderr, re.DOTALL),
+            'regex match failed on ' + stderr)
         shutil.rmtree('.svn', ignore_errors=True)
 
     def test_check_directory_locations(self):
@@ -326,8 +348,8 @@ class CheckTest(unittest.TestCase):
                                saliweb.build._check_directory_locations, env)
                 self.assertEqual(ret, None)
                 self.assertEqual(env.exitval, 1)
-                self.assertEqual(stderr, '\n** The ' + name + \
-                                 ' directory is set to ' + disk + \
+                self.assertEqual(stderr, '\n** The ' + name +
+                                 ' directory is set to ' + disk +
                                  '.\n** It must be on a local disk '
                                  '(e.g. /modbase1).\n\n')
 
@@ -340,8 +362,8 @@ class CheckTest(unittest.TestCase):
                                saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
-            self.assertEqual(stderr, '\n** The RUNNING directory is set to ' \
-                             + disk + \
+            self.assertEqual(stderr, '\n** The RUNNING directory is set to '
+                             + disk +
                              '.\n** It must be on a cluster-accessible disk '
                              '(i.e. /wynton).\n\n')
 
@@ -425,13 +447,13 @@ class CheckTest(unittest.TestCase):
         try:
             saliweb.build.frontend_user = 'nobody'
             os.system('setfacl -d -m u:nobody:rwx test')
-            os.system('setfacl -d -m u:%s:rwx test' \
+            os.system('setfacl -d -m u:%s:rwx test'
                       % pwd.getpwuid(os.getuid()).pw_name)
             os.system('setfacl -m u:nobody:rwx test')
             saliweb.build.backend_group = \
-                  grp.getgrgid(pwd.getpwuid(os.getuid()).pw_gid).gr_name
+                grp.getgrgid(pwd.getpwuid(os.getuid()).pw_gid).gr_name
             ret, stderr = run_catch_stderr(
-                      saliweb.build._check_incoming_directory_permissions, env)
+                saliweb.build._check_incoming_directory_permissions, env)
             self.assertEqual(stderr, '')
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, None)
@@ -447,18 +469,33 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(os.stat(o).st_mode, 0o100600)
         with open(o) as fh:
             contents = fh.read()
-        self.assertEqual(contents, \
-"""CREATE DATABASE testdb;
-GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.* TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';
-CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email VARCHAR(100), directory TEXT, url TEXT NOT NULL, state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING','COMPLETED','FAILED','EXPIRED','ARCHIVED','FINALIZING') NOT NULL DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, preprocess_time DATETIME, run_time DATETIME, postprocess_time DATETIME, finalize_time DATETIME, end_time DATETIME, archive_time DATETIME, expire_time DATETIME, runner_id VARCHAR(200), failure TEXT);
-CREATE INDEX state_index ON testdb.jobs (state);
-CREATE TABLE testdb.dependencies (child VARCHAR(40) NOT NULL DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');
-CREATE INDEX child_index ON testdb.dependencies (child);
-CREATE INDEX parent_index ON testdb.dependencies (parent);
-GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost' identified by 'frontpwd';
-GRANT INSERT (name,user,passwd,directory,contact_email,url,submit_time) ON testdb.jobs to 'frontuser'@'localhost';
-GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localhost';
-""")
+        self.assertEqual(
+            contents,
+            "CREATE DATABASE testdb;\n"
+            "GRANT DELETE,CREATE,DROP,INDEX,INSERT,SELECT,UPDATE ON testdb.*\n"
+            "    TO 'backuser'@'localhost' IDENTIFIED BY 'backpwd';\n"
+            "CREATE TABLE testdb.jobs (name VARCHAR(40) PRIMARY KEY NOT NULL "
+            "DEFAULT '', user VARCHAR(40), passwd CHAR(10), contact_email "
+            "VARCHAR(100), directory TEXT, url TEXT NOT NULL, "
+            "state ENUM('INCOMING','PREPROCESSING','RUNNING','POSTPROCESSING',"
+            "'COMPLETED','FAILED','EXPIRED','ARCHIVED','FINALIZING') NOT NULL "
+            "DEFAULT 'INCOMING', submit_time DATETIME NOT NULL, "
+            "preprocess_time DATETIME, run_time DATETIME, postprocess_time "
+            "DATETIME, finalize_time DATETIME, end_time DATETIME, "
+            "archive_time DATETIME, expire_time DATETIME, "
+            "runner_id VARCHAR(200), failure TEXT);\n"
+            "CREATE INDEX state_index ON testdb.jobs (state);\n"
+            "CREATE TABLE testdb.dependencies (child VARCHAR(40) NOT NULL "
+            "DEFAULT '', parent VARCHAR(40) NOT NULL DEFAULT '');\n"
+            "CREATE INDEX child_index ON testdb.dependencies (child);\n"
+            "CREATE INDEX parent_index ON testdb.dependencies (parent);\n"
+            "GRANT SELECT ON testdb.jobs to 'frontuser'@'localhost'\n"
+            "    IDENTIFIED BY 'frontpwd';\n"
+            "GRANT INSERT (name,user,passwd,directory,contact_email,url,"
+            "submit_time)\n"
+            "    ON testdb.jobs to 'frontuser'@'localhost';\n"
+            "GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies\n"
+            "    TO 'frontuser'@'localhost';\n")
         os.unlink(o)
 
     def test_check_mysql_schema(self):
@@ -471,15 +508,13 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         conf = DummyConf()
         conf.track_hostname = True
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields,
-                         'jobs')
+            saliweb.build._check_mysql_schema, env, conf, dbfields, 'jobs')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
 
         conf.track_hostname = False
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields,
-                         'jobs')
+            saliweb.build._check_mysql_schema, env, conf, dbfields, 'jobs')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.search(
@@ -494,8 +529,8 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         env = DummyEnv('testuser')
         dbfields = [('child', 'varchar(30)', 'NO', 'PRI', '', '')]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields,
-                         'dependencies')
+            saliweb.build._check_mysql_schema, env, conf, dbfields,
+            'dependencies')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, 1)
         self.assertTrue(re.search("'dependencies' database table schema does "
@@ -508,7 +543,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                                   r'child VARCHAR\(40\).*'
                                   'entire table schema.*'
                                   r'child VARCHAR\(40\) NOT NULL '
-                                  'DEFAULT \'\',.*parent VARCHAR\(40\)',
+                                  r'DEFAULT \'\',.*parent VARCHAR\(40\)',
                                   stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
 
@@ -533,11 +568,9 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                     ('archive_time', 'datetime', 'YES', '', None, ''),
                     ('expire_time', 'datetime', 'YES', '', None, ''),
                     ('runner_id', 'varchar(200)', 'YES', '', None, ''),
-                    ('failure', 'text', 'YES', '', None, ''),
-                   ]
+                    ('failure', 'text', 'YES', '', None, ''), ]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_schema, env, conf, dbfields,
-                         'jobs')
+            saliweb.build._check_mysql_schema, env, conf, dbfields, 'jobs')
         self.assertEqual(stderr, '')
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
@@ -546,9 +579,9 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         """Test _get_sorted_grant function"""
         self.assertEqual(saliweb.build._get_sorted_grant('test grant'),
                          'test grant')
-        self.assertEqual(saliweb.build._get_sorted_grant(
-                          'INSERT (foo,bar,baz)'),
-                          'INSERT (bar, baz, foo)')
+        self.assertEqual(
+            saliweb.build._get_sorted_grant('INSERT (foo,bar,baz)'),
+            'INSERT (bar, baz, foo)')
 
     def test_check_mysql_grants(self):
         """Test _check_mysql_grants function"""
@@ -566,15 +599,16 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
         grants = [("GRANT INSERT(foo,bar) ON `testdb`.* "
                    "TO 'testuser'@'localhost'",)]
         ret, stderr = run_catch_stderr(
-                         saliweb.build._check_mysql_grants, env, grants,
-                            'testdb', 'testuser', "INSERT(bar,foo)")
+            saliweb.build._check_mysql_grants, env, grants,
+            'testdb', 'testuser', "INSERT(bar,foo)")
         self.assertEqual(ret, None)
         self.assertEqual(env.exitval, None)
         self.assertEqual(stderr, '')
 
         # Grant is present on a single table
         env = DummyEnv('testuser')
-        grants = [("GRANT INSERT ON `testdb`.`job` TO 'testuser'@'localhost'",)]
+        grants = [("GRANT INSERT ON `testdb`.`job` "
+                   "TO 'testuser'@'localhost'",)]
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_grants, env, grants,
                          'testdb', 'testuser', 'INSERT', table='job')
@@ -595,6 +629,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON testdb.dependencies to 'frontuser'@'localho
                                   'GRANT DROP ON `testdb`.* TO '
                                   "'testuser'@'localhost'", stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

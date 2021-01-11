@@ -5,7 +5,7 @@ import sys
 import saliweb.backend
 import saliweb.backend.events
 from saliweb.backend.sge import _DRMAAJobWaiter, _SGETasks, _DRMAAWrapper
-import testutil
+
 
 class SGETest(unittest.TestCase):
     """Check SGE utility classes"""
@@ -45,29 +45,38 @@ class SGETest(unittest.TestCase):
     def test_drmaa_waiter(self):
         """Check the _DRMAAJobWaiter class"""
         events = []
+
         class DummyWebService(object):
             def __init__(self):
                 self._event_queue = saliweb.backend.events._EventQueue()
+
         class DummyJobList(object):
             def add(self, key):
                 events.append('add job dict ' + key)
+
             def remove(self, key):
                 events.append('remove job dict ' + key)
+
         class DummyDRMAAModule(object):
             def __init__(self):
-                class Dummy(object): pass
+                class Dummy(object):
+                    pass
                 self.Session = Dummy()
                 self.Session.TIMEOUT_WAIT_FOREVER = 'forever'
+
         class DummyDRMAASession(object):
             def synchronize(self, jobids, timeout, cleanup):
-                events.append('sync %s timeout %s cleanup %s' \
+                events.append('sync %s timeout %s cleanup %s'
                               % (str(jobids), timeout, str(cleanup)))
+
             def wait(self, jobid, timeout):
-                events.append('wait %s timeout %s' \
+                events.append('wait %s timeout %s'
                               % (str(jobid), timeout))
                 return jobid != 'jobN.fail'
+
         class DummyRunner(object):
             _waited_jobs = DummyJobList()
+
             @classmethod
             def _get_drmaa(cls):
                 events.append('get drmaa')
@@ -82,12 +91,13 @@ class SGETest(unittest.TestCase):
         e = ws._event_queue.get(timeout=0.)
         self.assertEqual(e.runid, 'jobN.1-2:1')
         self.assertIsNone(e.run_exception)
-        self.assertEqual(events,
-                ['add job dict jobN.1-2:1', 'get drmaa',
-                 "sync ['jobN.1', 'jobN.2'] timeout forever cleanup False",
-                 "wait jobN.1 timeout forever",
-                 "wait jobN.2 timeout forever",
-                 'remove job dict jobN.1-2:1'])
+        self.assertEqual(
+            events,
+            ['add job dict jobN.1-2:1', 'get drmaa',
+             "sync ['jobN.1', 'jobN.2'] timeout forever cleanup False",
+             "wait jobN.1 timeout forever",
+             "wait jobN.2 timeout forever",
+             'remove job dict jobN.1-2:1'])
         events[:] = []
 
         w = _DRMAAJobWaiter(ws, ['jobN.1', 'jobN.fail'], runner, 'jobN.1-2:1')
@@ -97,20 +107,23 @@ class SGETest(unittest.TestCase):
         e = ws._event_queue.get(timeout=0.)
         self.assertEqual(e.runid, 'jobN.1-2:1')
         self.assertIsInstance(e.run_exception, saliweb.backend.RunnerError)
-        self.assertEqual(events,
-                ['add job dict jobN.1-2:1', 'get drmaa',
-                 "sync ['jobN.1', 'jobN.fail'] timeout forever cleanup False",
-                 "wait jobN.1 timeout forever",
-                 "wait jobN.fail timeout forever",
-                 'remove job dict jobN.1-2:1'])
+        self.assertEqual(
+            events,
+            ['add job dict jobN.1-2:1', 'get drmaa',
+             "sync ['jobN.1', 'jobN.fail'] timeout forever cleanup False",
+             "wait jobN.1 timeout forever",
+             "wait jobN.fail timeout forever",
+             'remove job dict jobN.1-2:1'])
 
     def test_drmaa_wrapper(self):
         """Check the _DRMAAWrapper class"""
         events = []
+
         class DummyDRMAA(object):
             class Session(object):
                 def initialize(self):
                     events.append('drmaa session init')
+
                 def exit(self):
                     events.append('drmaa session exit')
         sys.modules['drmaa'] = DummyDRMAA()
@@ -134,6 +147,8 @@ class SGETest(unittest.TestCase):
         self.assertEqual(os.environ['SGE_BAR'], 'foo')
         self.assertNotIn('SGE_FOO', os.environ)
         del sys.modules['drmaa']
+        del d
+
 
 if __name__ == '__main__':
     unittest.main()

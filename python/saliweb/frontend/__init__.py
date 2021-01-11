@@ -10,7 +10,6 @@ import shutil
 import gzip
 import MySQLdb
 import MySQLdb.cursors
-from .submit import IncomingJob
 import saliweb.frontend.config
 
 
@@ -137,8 +136,8 @@ class CompletedJob(object):
            automatically decompressed when the user downloads it; otherwise
            the original .gz file is downloaded.)"""
         url = url_for('results_file', name=self.name, fp=fname,
-                       passwd=self.passwd,
-                       _external=self._record_results is not None)
+                      passwd=self.passwd,
+                      _external=self._record_results is not None)
         if self._record_results is not None:
             self._record_results.append({'url': url, 'fname': fname})
         return url
@@ -243,13 +242,14 @@ class LoggedInUser(object):
 
 
 def _get_logged_in_user():
-    """Return a LoggedInUser object for the currently logged-in user, or None"""
+    """Return a LoggedInUser object for the currently logged-in user,
+       or None"""
     # Make sure logins are SSL-secured
     if flask.request.scheme != 'https':
         return
     c = _get_servers_cookie_info()
     if (c and 'user_name' in c and 'session' in c
-        and c['user_name'] != 'Anonymous'):
+            and c['user_name'] != 'Anonymous'):
         return _get_user_from_cookie(c)
 
 
@@ -301,7 +301,7 @@ def make_application(name, parameters=[], static_folder='html',
        .. note:: Any additional arguments are passed to the Flask constructor.
     """
     # Get environment variable prefix from package name
-    env_name = pkg = sys.modules[name].__package__.split('.')[0].upper()
+    env_name = sys.modules[name].__package__.split('.')[0].upper()
 
     app = flask.Flask(name, *args, static_folder=static_folder, **kwargs)
     _read_config(app, os.environ[env_name + "_CONFIG"])
@@ -359,7 +359,8 @@ def get_db():
     """Get the MySQL database connection"""
     if not hasattr(flask.g, 'db_conn'):
         app = flask.current_app
-        flask.g.db_conn = MySQLdb.connect(user=app.config['DATABASE_USER'],
+        flask.g.db_conn = MySQLdb.connect(
+            user=app.config['DATABASE_USER'],
             db=app.config['DATABASE_DB'],
             unix_socket=app.config['DATABASE_SOCKET'],
             passwd=app.config['DATABASE_PASSWD'],
@@ -416,6 +417,7 @@ def _check_cluster_running(j):
             j['state'] = 'QUEUED'
     return j
 
+
 def render_queue_page():
     """Return an HTML list of all jobs. Typically used in the `/job` route for
        a GET request."""
@@ -428,10 +430,10 @@ def render_queue_page():
     c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "
               "AND state != 'EXPIRED' AND state != 'COMPLETED' "
               "ORDER BY submit_time DESC")
-    running_jobs = [ _QueuedJob(_check_cluster_running(x)) for x in c ]
+    running_jobs = [_QueuedJob(_check_cluster_running(x)) for x in c]
     c.execute("SELECT * FROM jobs WHERE state='COMPLETED' "
               "ORDER BY submit_time DESC")
-    completed_jobs = [ _QueuedJob(x) for x in c ]
+    completed_jobs = [_QueuedJob(x) for x in c]
     return flask.render_template('saliweb/queue.html',
                                  running_jobs=running_jobs,
                                  completed_jobs=completed_jobs)
@@ -527,7 +529,7 @@ def _filter_pdb_chains(in_pdb, out_pdb, chain_ids):
         with open(out_pdb, 'w') as fh_out:
             for line in fh_in:
                 if ((line.startswith('ATOM') or line.startswith('HETATM'))
-                    and line[21] in chain_ids):
+                        and line[21] in chain_ids):
                     fh_out.write(line)
 
 
