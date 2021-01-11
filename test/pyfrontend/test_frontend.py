@@ -448,6 +448,8 @@ passwd: test_fe_pwd
 
     def test_make_application(self):
         """Test make_application function"""
+        import mock_application  # noqa: F401
+
         class MockAccept(object):
             def __init__(self, mime):
                 self.mime = mime
