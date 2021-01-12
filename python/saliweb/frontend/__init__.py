@@ -10,6 +10,7 @@ import shutil
 import gzip
 import MySQLdb
 import MySQLdb.cursors
+from .submit import IncomingJob  # noqa: F401
 import saliweb.frontend.config
 
 
