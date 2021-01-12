@@ -587,7 +587,7 @@ class CheckTest(unittest.TestCase):
         """Test _check_mysql_grants function"""
         # Grant is present on all tables
         env = DummyEnv('testuser')
-        grants = [("GRANT INSERT ON `testdb`.* TO 'testuser'@'localhost'",)]
+        grants = [("GRANT INSERT ON `testdb`.* TO `testuser`@`localhost`",)]
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_grants, env, grants,
                          'testdb', 'testuser', 'INSERT')
@@ -597,7 +597,7 @@ class CheckTest(unittest.TestCase):
 
         # Grant column rights should match regardless of their ordering
         grants = [("GRANT INSERT(foo,bar) ON `testdb`.* "
-                   "TO 'testuser'@'localhost'",)]
+                   "TO `testuser`@`localhost`",)]
         ret, stderr = run_catch_stderr(
             saliweb.build._check_mysql_grants, env, grants,
             'testdb', 'testuser', "INSERT(bar,foo)")
@@ -608,7 +608,7 @@ class CheckTest(unittest.TestCase):
         # Grant is present on a single table
         env = DummyEnv('testuser')
         grants = [("GRANT INSERT ON `testdb`.`job` "
-                   "TO 'testuser'@'localhost'",)]
+                   "TO `testuser`@`localhost`",)]
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_grants, env, grants,
                          'testdb', 'testuser', 'INSERT', table='job')
@@ -618,7 +618,7 @@ class CheckTest(unittest.TestCase):
 
         # Grant is not present
         env = DummyEnv('testuser')
-        grants = [("GRANT INSERT ON `testdb`.* TO 'testuser'@'localhost'",)]
+        grants = [("GRANT INSERT ON `testdb`.* TO `testuser`@`localhost`",)]
         ret, stderr = run_catch_stderr(
                          saliweb.build._check_mysql_grants, env, grants,
                          'testdb', 'testuser', 'DROP')
@@ -627,7 +627,7 @@ class CheckTest(unittest.TestCase):
         self.assertTrue(re.search('The testuser user does not appear to have.*'
                                   'admin run the following.*'
                                   'GRANT DROP ON `testdb`.* TO '
-                                  "'testuser'@'localhost'", stderr, re.DOTALL),
+                                  "`testuser`@`localhost`", stderr, re.DOTALL),
                         'regex match failed on ' + stderr)
 
 

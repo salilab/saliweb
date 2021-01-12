@@ -635,7 +635,7 @@ def _check_mysql_grants(env, cursor, database, user, grant, table=None):
         table = '*'
     else:
         table = '`%s`' % table
-    grant = "GRANT %s ON `%s`.%s TO '%s'@'localhost'" \
+    grant = "GRANT %s ON `%s`.%s TO `%s`@`localhost`" \
             % (_get_sorted_grant(grant), database, table, user)
     for row in cursor:
         if _get_sorted_grant(row[0]) == grant:
