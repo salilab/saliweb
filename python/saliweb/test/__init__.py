@@ -52,24 +52,7 @@ def temporary_directory(dir=None):
     shutil.rmtree(tmpdir, ignore_errors=True)
 
 
-class RunInDir(object):
-    """Change to the given directory, and change back when this object
-       goes out of scope."""
-
-    def __init__(self, dir):
-        try:
-            self.origdir = os.getcwd()
-        # Current directory might not be defined
-        except OSError:
-            pass
-        os.chdir(dir)
-
-    def __del__(self):
-        if hasattr(self, 'origdir'):
-            os.chdir(self.origdir)
-
-
-class TempDir(object):
+class _TempDir(object):
     """Make a temporary directory that is deleted when this object is."""
 
     def __init__(self):
@@ -77,16 +60,6 @@ class TempDir(object):
 
     def __del__(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-
-def RunInTempDir():
-    """Run in an automatically-created temporary directory. When the
-       returned object goes out of scope, the directory is deleted and the
-       current directory is reset."""
-    t = TempDir()
-    d = RunInDir(t.tmpdir)
-    d._tmpdir = t  # Make sure that directory is deleted at the right time
-    return d
 
 
 class _DummyConfig(object):
@@ -108,7 +81,7 @@ class TestCase(unittest.TestCase):
            A temporary directory is created for the job to use
            (as Job.directory) and will be deleted automatically once
            the object is destroyed."""
-        t = TempDir()
+        t = _TempDir()
         s = saliweb.backend._JobState(state)
         db = _DummyDB()
         db.config = _DummyConfig()
@@ -165,7 +138,7 @@ def import_mocked_frontend(pkgname, test_file, topdir):
     saliweb.frontend.config.DEBUG = True
     saliweb.frontend.config.TESTING = True
     saliweb.frontend.config.MODELLER_LICENSE_KEY = get_modeller_key()
-    t = TempDir()
+    t = _TempDir()
     config = os.path.join(t.tmpdir, 'test.conf')
     with open(config, 'w') as fh:
         fh.write("""
