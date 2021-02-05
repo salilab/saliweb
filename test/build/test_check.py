@@ -6,6 +6,7 @@ import pwd
 import grp
 import io
 import re
+import subprocess
 import shutil
 import testutil
 
@@ -218,7 +219,10 @@ class CheckTest(unittest.TestCase):
 
     def test_check_ownership(self):
         """Check _check_ownership function"""
-        dir_owner = pwd.getpwuid(os.stat('.').st_uid).pw_name
+        try:
+            dir_owner = pwd.getpwuid(os.stat('.').st_uid).pw_name
+        except KeyError:
+            self.skipTest("can't check ownership in podman containers")
         # Not OK if directory owner == backend
         env = DummyEnv(dir_owner)
         ret, stderr = run_catch_stderr(saliweb.build._check_ownership, env)
@@ -276,29 +280,35 @@ class CheckTest(unittest.TestCase):
         # If .scons is not writable, a warning should be printed
         env = make_env()
         os.chmod('.scons', 0o555)
-        ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
-        self.assertEqual(ret, None)
-        self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search(
-            'Cannot write to \\.scons directory:.*'
-            'Permission denied.*The backend user needs '
-            'to be able to write.*To fix this problem.*'
-            'setfacl -m u:testuser:rwx \\.scons', stderr,
-            re.DOTALL), 'regex match failed on ' + stderr)
+        # Skip this if we're root, since root ignores permissions
+        if os.getuid() != 0:
+            ret, stderr = run_catch_stderr(saliweb.build._check_permissions,
+                                           env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assertTrue(re.search(
+                'Cannot write to \\.scons directory:.*'
+                'Permission denied.*The backend user needs '
+                'to be able to write.*To fix this problem.*'
+                'setfacl -m u:testuser:rwx \\.scons', stderr,
+                re.DOTALL), 'regex match failed on ' + stderr)
         os.chmod('.scons', 0o755)
 
         # If config files are not readable, warnings should be printed
         env = make_env()
         os.chmod(conf, 0o200)
-        ret, stderr = run_catch_stderr(saliweb.build._check_permissions, env)
-        self.assertEqual(ret, None)
-        self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.match('\n\\*\\* Cannot read database configuration '
-                                 'file:.*Permission denied.*The backend user '
-                                 'needs to be able to read.*'
-                                 'To fix this problem.*'
-                                 'setfacl -m u:testuser:r test.conf', stderr,
-                                 re.DOTALL), 'regex match failed on ' + stderr)
+        if os.getuid() != 0:
+            ret, stderr = run_catch_stderr(saliweb.build._check_permissions,
+                                           env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assertTrue(re.match(
+                '\n\\*\\* Cannot read database configuration '
+                'file:.*Permission denied.*The backend user '
+                'needs to be able to read.*'
+                'To fix this problem.*'
+                'setfacl -m u:testuser:r test.conf', stderr,
+                re.DOTALL), 'regex match failed on ' + stderr)
         os.chmod(conf, 0o600)
 
         # If config files are under SVN control, warnings should be printed
@@ -375,15 +385,17 @@ class CheckTest(unittest.TestCase):
             env['config'].directories = {'testdir': dir}
             return env
 
-        # Backend does not own this directory
+        # Backend does not own this directory (unless we're root)
         env = make_env('/')
-        ret, stderr = run_catch_stderr(
-                           saliweb.build._check_directory_permissions, env)
-        self.assertEqual(ret, None)
-        self.assertEqual(env.exitval, 1)
-        self.assertTrue(re.search('Install directory / is not owned by the '
-                                  'backend user', stderr, re.DOTALL),
-                        'regex match failed on ' + stderr)
+        if os.getuid() != 0:
+            ret, stderr = run_catch_stderr(
+                               saliweb.build._check_directory_permissions, env)
+            self.assertEqual(ret, None)
+            self.assertEqual(env.exitval, 1)
+            self.assertTrue(re.search(
+                'Install directory / is not owned by the '
+                'backend user', stderr, re.DOTALL),
+                'regex match failed on ' + stderr)
 
         # Backend *does* own this directory
         os.mkdir('test')
@@ -443,13 +455,19 @@ class CheckTest(unittest.TestCase):
         # Test should pass if the ACLs are correct
         env = make_env('test')
         old_frontend_user = saliweb.build.frontend_user
+        # If we're running tests on a system that doesn't support ACLs,
+        # skip this part
+        try:
+            subprocess.check_call(['setfacl', '-d', '-m',
+                                   'u:nobody:rwx', 'test'])
+        except subprocess.CalledProcessError:
+            return
+        os.system('setfacl -d -m u:%s:rwx test'
+                  % pwd.getpwuid(os.getuid()).pw_name)
+        os.system('setfacl -m u:nobody:rwx test')
         # 'apache' user not present on all systems; use 'nobody' instead
         try:
             saliweb.build.frontend_user = 'nobody'
-            os.system('setfacl -d -m u:nobody:rwx test')
-            os.system('setfacl -d -m u:%s:rwx test'
-                      % pwd.getpwuid(os.getuid()).pw_name)
-            os.system('setfacl -m u:nobody:rwx test')
             saliweb.build.backend_group = \
                 grp.getgrgid(pwd.getpwuid(os.getuid()).pw_gid).gr_name
             ret, stderr = run_catch_stderr(
