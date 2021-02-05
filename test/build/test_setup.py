@@ -7,8 +7,18 @@ import shutil
 import os
 import re
 import io
+import contextlib
 import testutil
 from testutil import run_catch_warnings
+
+
+@contextlib.contextmanager
+def unwritable_working_dir():
+    """Simple context manager to run in an unwritable working directory"""
+    origdir = os.getcwd()
+    os.chdir('/sys')    # Not even root can write to /sys
+    yield
+    os.chdir(origdir)
 
 
 def run_catch_stderr(method, *args, **keys):
@@ -220,14 +230,13 @@ else:
         # Try with unwritable top-level directory
         env = DummyEnv()
         env['config'] = DummyConfig()
-        with testutil.temp_working_dir():
-            os.chmod('.', 0o555)
+        with unwritable_working_dir():
             ret, stderr = run_catch_stderr(saliweb.build._setup_sconsign, env)
             self.assertEqual(ret, None)
             self.assertEqual(env.exitval, 1)
             self.assertTrue(
                 re.search(r'Cannot make \.scons directory:.*'
-                          'Permission denied.*Please first make it '
+                          'Please first make it '
                           'manually, with a command like.*'
                           r'mkdir \.scons', stderr,
                           re.DOTALL),
