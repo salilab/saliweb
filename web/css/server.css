@@ -206,6 +206,9 @@ h5 {
         background-color: inherit;
         font-weight: bold;
 }
+#navigation_lab .fa {
+	text-decoration: none;
+}
 #bodypart {
         width: 965px;
         height: auto;
