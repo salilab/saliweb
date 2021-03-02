@@ -751,7 +751,7 @@ sub get_start_html_parameters {
     ga('send', 'pageview'); ";
  
     my %param = (-title => $self->{page_title},
-                 -style => {-src=>[$style, "https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"]},
+                 -style => {-src=>[$style, "https://use.fontawesome.com/releases/v5.6.3/css/all.css"]},
                  -script=>[{-language => 'JavaScript',
                             -src      => "/saliweb/js/salilab.js"},
                            {-language => 'JavaScript',
@@ -853,7 +853,7 @@ sub get_header {
                          "&bull;&nbsp;" .
                          join("&nbsp;&bull;&nbsp;\n", @$lab_navigation_links) .
                          "&nbsp;&bull;&nbsp;&nbsp;" .
-			 "&nbsp;&nbsp;<a href=\"https://twitter.com/salilab_ucsf\" class=\"fa fa-twitter\" title=\"Follow us on Twitter\"></a>" .
+			 "&nbsp;&nbsp;<a href=\"https://twitter.com/salilab_ucsf\" class=\"fab fa-twitter\" title=\"Follow us on Twitter\"></a>" .
                          "</div>";
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
