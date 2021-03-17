@@ -17,7 +17,7 @@ import urllib.request
 import urllib.parse
 import saliweb.web_service
 import saliweb.backend.events
-import saliweb.backend.sge
+import saliweb.backend.cluster
 from saliweb.backend.events import _JobThread
 from email.mime.text import MIMEText
 
@@ -1644,7 +1644,7 @@ class SGERunner(Runner):
     @classmethod
     def _get_drmaa(cls):
         if cls._drmaa is None:
-            cls._drmaa = saliweb.backend.sge._DRMAAWrapper(cls._env)
+            cls._drmaa = saliweb.backend.cluster._DRMAAWrapper(cls._env)
         return cls._drmaa.module, cls._drmaa.session
 
     def _run(self, webservice):
@@ -1686,7 +1686,7 @@ class SGERunner(Runner):
         jt.nativeSpecification = self._opts + ' -w n -b no'
         jt.remoteCommand = script
         jt.workingDirectory = self._directory
-        tasks = saliweb.backend.sge._SGETasks(self._opts)
+        tasks = saliweb.backend.cluster._SGETasks(self._opts)
         if tasks:
             jobids = s.runBulkJobs(jt, tasks.first, tasks.last, tasks.step)
             runid = tasks.get_run_id(jobids)
@@ -1694,8 +1694,8 @@ class SGERunner(Runner):
             runid = s.runJob(jt)
             jobids = [runid]
         s.deleteJobTemplate(jt)
-        saliweb.backend.sge._DRMAAJobWaiter(webservice, jobids,
-                                            self, runid).start()
+        saliweb.backend.cluster._DRMAAJobWaiter(webservice, jobids,
+                                                self, runid).start()
         return runid
 
     @classmethod

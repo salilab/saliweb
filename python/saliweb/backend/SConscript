@@ -3,7 +3,7 @@ import os
 Import('env')
 
 python_files = [ '__init__.py', 'service.py', 'resubmit.py', 'deljob.py',
-                 'events.py', 'sge.py', 'failjob.py', 'delete_all_jobs.py',
+                 'events.py', 'cluster.py', 'failjob.py', 'delete_all_jobs.py',
                  'list_jobs.py' ]
 
 # Install .py files:

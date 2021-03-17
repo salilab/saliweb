@@ -4,7 +4,7 @@ import os
 import sys
 import saliweb.backend
 import saliweb.backend.events
-from saliweb.backend.sge import _DRMAAJobWaiter, _SGETasks, _DRMAAWrapper
+from saliweb.backend.cluster import _DRMAAJobWaiter, _SGETasks, _DRMAAWrapper
 
 
 class SGETest(unittest.TestCase):
