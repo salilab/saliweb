@@ -1,9 +1,4 @@
 import unittest
-import time
-import os
-import sys
-import saliweb.backend
-import saliweb.backend.events
 from saliweb.backend.cluster import _SLURMTasks
 
 
