@@ -1686,6 +1686,8 @@ class SGERunner(Runner):
         jt.nativeSpecification = self._opts + ' -w n -b no'
         jt.remoteCommand = script
         jt.workingDirectory = self._directory
+        if self._name:
+            jt.jobName = self._name
         tasks = saliweb.backend.cluster._SGETasks(self._opts)
         if tasks:
             jobids = s.runBulkJobs(jt, tasks.first, tasks.last, tasks.step)
