@@ -29,10 +29,10 @@ class SLURMTest(unittest.TestCase):
         """Check the _SLURMTasks.get_run_id() method"""
         t = _SLURMTasks('-a 4-10:2')
         self.assertEqual(t.get_run_id(['foo_4', 'foo_6', 'foo_8', 'foo_10']),
-                         'foo')
+                         'foo_4-10:2')
         t = _SLURMTasks('-a 1-3')
         self.assertEqual(t.get_run_id(['foo_1', 'foo_2', 'foo_3']),
-                         'foo')
+                         'foo_1-3:1')
         t = _SLURMTasks('-a 4-10:2')
         self.assertRaises(ValueError, t.get_run_id,
                           ['foo_1', 'foo_2', 'foo_3'])

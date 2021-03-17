@@ -90,8 +90,7 @@ class _SLURMTasks(_Tasks):
         """Get a run ID that represents all of the tasks in this job"""
         self._check_jobids(jobids)
         job, task = jobids[0].split('_')
-        # todo: check whether SLURM-DRMAA needs taskids, as SGE does
-        return job
+        return job + '_%d-%d:%d' % (self.first, self.last, self.step)
 
 
 class _DRMAAWrapper(object):

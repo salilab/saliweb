@@ -7,6 +7,7 @@ else:
     from io import BytesIO as StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, WyntonSGERunner, Job
+from saliweb.backend import SLURMRunner, _LockedJobDict
 import testutil
 import os
 import time
@@ -63,6 +64,15 @@ class TestRunner(WyntonSGERunner):
         return DummyDRMAAModule(), DummyDRMAASession()
 
 
+class TestSLURMRunner(SLURMRunner):
+    _waited_jobs = _LockedJobDict()
+    _env = {}
+
+    @classmethod
+    def _get_drmaa(cls):
+        return DummyDRMAAModule(), DummyDRMAASession()
+
+
 class RunnerTest(unittest.TestCase):
     """Check Runner classes"""
 
@@ -86,7 +96,23 @@ class RunnerTest(unittest.TestCase):
         r.set_name('template')
         self.assertEqual(r._name, 'Jtemplate')
 
-    def test_generate_script(self):
+    def test_slurm_name(self):
+        """Check SLURMRunner.set_name()"""
+        r = SLURMRunner('echo foo', interpreter='/bin/csh')
+        r.set_name('test\t job ')
+        self.assertEqual(r._name, 'testjob')
+        r.set_name('TestJob')
+        self.assertEqual(r._name, 'TestJob')
+        r.set_name('1234')
+        self.assertEqual(r._name, '1234')
+        r.set_name('None')
+        self.assertEqual(r._name, 'None')
+        r.set_name('ALL')
+        self.assertEqual(r._name, 'ALL')
+        r.set_name('template')
+        self.assertEqual(r._name, 'template')
+
+    def test_sge_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
         for runner in (WyntonSGERunner,):
             r = runner('echo foo', interpreter='/bin/csh')
@@ -111,6 +137,31 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
             expected = """#!/bin/oddshell
 #$ -S /bin/oddshell
 #$ -cwd
+echo foo
+"""
+            self.assertEqual(sio.getvalue(), expected)
+
+    def test_slurm_generate_script(self):
+        """Check that SLURMRunner generates reasonable scripts"""
+        for runner in (SLURMRunner,):
+            r = runner('echo foo', interpreter='/bin/csh')
+            r.set_options('-l diva1=1G')
+            r.set_name('test\t job ')
+            sio = StringIO()
+            r._write_script(sio)
+            expected = """#!/bin/csh
+#SBATCH -l diva1=1G
+#SBATCH -J testjob
+setenv _SALI_JOB_DIR `pwd`
+echo "STARTED" > ${_SALI_JOB_DIR}/job-state
+echo foo
+echo "DONE" > ${_SALI_JOB_DIR}/job-state
+"""
+            self.assertEqual(sio.getvalue(), expected)
+            r = runner('echo foo', interpreter='/bin/oddshell')
+            sio = StringIO()
+            r._write_script(sio)
+            expected = """#!/bin/oddshell
 echo foo
 """
             self.assertEqual(sio.getvalue(), expected)
@@ -145,6 +196,38 @@ else:
                          False)
         self.assertEqual(TestRunner._check_completed('queuedjob', ''), False)
         self.assertEqual(TestRunner._check_completed('waitedjob', ''), False)
+
+    @testutil.run_in_tempdir
+    def test_slurm_check_completed(self):
+        """Check SLURMRunner._check_completed()"""
+        TestSLURMRunner._waited_jobs.add('waitedjob')
+        with open('squeue', 'w') as squeue:
+            squeue.write("""#!%s
+from __future__ import print_function
+import sys
+if sys.argv[2].startswith('badbulk'):
+    sys.exit(1)
+elif sys.argv[2].startswith('donebulk'):
+    print("slurm_load_jobs error: Invalid job id specified")
+    sys.exit(1)
+else:
+    print("job info")
+""" % sys.executable)
+        os.chmod('squeue', 0o755)
+        TestSLURMRunner._squeue = os.path.join(os.getcwd(), 'squeue')
+        self.assertEqual(TestSLURMRunner._check_completed('donejob', ''), True)
+        self.assertEqual(TestSLURMRunner._check_completed('runningjob', ''),
+                         False)
+        self.assertEqual(
+            TestSLURMRunner._check_completed('donebulk_1-10:1', ''), True)
+        self.assertRaises(OSError, TestSLURMRunner._check_completed,
+                          'badbulk_1-10:1', '')
+        self.assertEqual(
+            TestSLURMRunner._check_completed('runningbulk_1-10:1', ''), False)
+        self.assertEqual(TestSLURMRunner._check_completed('queuedjob', ''),
+                         False)
+        self.assertEqual(TestSLURMRunner._check_completed('waitedjob', ''),
+                         False)
 
     def test_get_drmaa(self):
         """Check SGERunner._get_drmaa()"""

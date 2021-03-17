@@ -1707,7 +1707,7 @@ class ClusterRunner(Runner):
         """
         if jobid in cls._waited_jobs:
             return False
-        elif '.' in jobid:
+        elif cls._task_separator in jobid:
             return cls._check_bulk_completed(jobid)
         else:
             drmaa, s = cls._get_drmaa()
@@ -1726,6 +1726,7 @@ class SGERunner(ClusterRunner):
        See :class:`ClusterRunner` for more information.
     """
     _script_name = 'sge-script.sh'
+    _task_separator = '.'
 
     # Backwards compatibility
     set_sge_name = ClusterRunner.set_name
@@ -1782,6 +1783,53 @@ class SGERunner(ClusterRunner):
             return True
         else:
             raise OSError("qstat returned %d (%s)" % (ret, "\n".join(out)))
+
+
+class SLURMRunner(ClusterRunner):
+    """Base class to run a set of commands on a SLURM cluster (experimental).
+
+       See :class:`ClusterRunner` for more information.
+    """
+    _script_name = 'slurm-script.sh'
+    _task_separator = '_'
+
+    def set_name(self, name):
+        self._name = re.sub(r'\s*', '', name)
+
+    def _write_script(self, fh):
+        self._write_script_header(fh)
+        # Add SLURM directives so that we can rerun the script from the
+        # command line with 'sbatch' if needed
+        if self._opts:
+            print('#SBATCH ' + self._opts, file=fh)
+        if self._name:
+            print('#SBATCH -J ' + self._name, file=fh)
+        self._write_script_body(fh)
+
+    @classmethod
+    def _check_bulk_completed(cls, jobid):
+        """Return True if SLURM reports that the given bulk job has finished,
+           False if it is still running, or None if the status cannot be
+           determined.
+        """
+        # Unfortunately DRMAA1 only allows us to query individual tasks, and
+        # looping over all tasks in a large parallel job is very inefficient,
+        # so use squeue instead and parse the output.
+        m = re.match(r'(\S+)_(\d+)\-(\d+):(\d+)$', jobid)
+        jobid = m.group(1)
+        p = subprocess.Popen([cls._squeue, '-j', jobid],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, env=cls._env,
+                             universal_newlines=True)
+        out = p.stdout.readlines()
+        ret = p.wait()
+        p.stdout.close()
+        if ret == 0:
+            return False
+        elif len(out) > 0 and 'error: Invalid job id specified' in out[0]:
+            return True
+        else:
+            raise OSError("squeue returned %d (%s)" % (ret, "\n".join(out)))
 
 
 class WyntonSGERunner(SGERunner):
