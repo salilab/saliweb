@@ -37,14 +37,14 @@ class _DRMAAJobWaiter(_JobThread):
             self._runner._waited_jobs.remove(self._runid)
 
 
-class _SGETasks(object):
-    """Parse SGE-style '-t' option into number of job subtasks"""
+class _Tasks(object):
+    """Parse command line option into number of job subtasks"""
 
-    def __init__(self, opts):
-        if '-t ' in opts:
-            m = re.search(r'-t\s+(\d+)(?:\-(\d+)(?::(\d+))?)?', opts)
+    def _parse_option(self, flag, optre, opts):
+        if flag in opts:
+            m = re.search(optre, opts)
             if not m:
-                raise ValueError("Invalid -t SGE option: '%s'" % opts)
+                raise ValueError("Invalid %soption: '%s'" % (flag, opts))
             self.first = int(m.group(1))
             if m.group(2):
                 self.last = int(m.group(2))
@@ -60,14 +60,38 @@ class _SGETasks(object):
     def __bool__(self):
         return self.first != 0
 
-    def get_run_id(self, jobids):
-        """Get a run ID that represents all of the tasks in this job"""
+    def _check_jobids(self, jobids):
         numjobs = (self.last - self.first + self.step) / self.step
         if len(jobids) != numjobs:
             raise ValueError("Unexpected bulk jobs return: %s; "
                              "was expecting %d jobs" % (str(jobids), numjobs))
+
+
+class _SGETasks(_Tasks):
+    """Parse SGE-style '-t' option into number of job subtasks"""
+
+    def __init__(self, opts):
+        self._parse_option('-t ', r'-t\s+(\d+)(?:\-(\d+)(?::(\d+))?)?', opts)
+
+    def get_run_id(self, jobids):
+        """Get a run ID that represents all of the tasks in this job"""
+        self._check_jobids(jobids)
         job, task = jobids[0].split('.')
         return job + '.%d-%d:%d' % (self.first, self.last, self.step)
+
+
+class _SLURMTasks(_Tasks):
+    """Parse SLURM-style '-a' option into number of job subtasks"""
+
+    def __init__(self, opts):
+        self._parse_option('-a ', r'-a\s+(\d+)(?:\-(\d+)(?::(\d+))?)?', opts)
+
+    def get_run_id(self, jobids):
+        """Get a run ID that represents all of the tasks in this job"""
+        self._check_jobids(jobids)
+        job, task = jobids[0].split('_')
+        # todo: check whether SLURM-DRMAA needs taskids, as SGE does
+        return job
 
 
 class _DRMAAWrapper(object):
