@@ -24,7 +24,7 @@ class _DRMAAJobWaiter(_JobThread):
                 if not s.wait(j, drmaa.Session.TIMEOUT_WAIT_FOREVER):
                     failed_jobids.append(j)
             if len(failed_jobids) > 0:
-                failure = RunnerError("SGE jobs failed: %s. Please contact "
+                failure = RunnerError("Cluster jobs failed: %s. Please contact "
                                       "the cluster sysadmin."
                                       % ', '.join(failed_jobids))
             else:
