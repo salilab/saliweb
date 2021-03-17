@@ -13,7 +13,7 @@ for f in *.pdb; do
 done
 """
         r = self.runnercls(script)
-        r.set_sge_options('-l diva1=1G')
+        r.set_options('-l diva1=1G')
         return r
 
     def archive(self):

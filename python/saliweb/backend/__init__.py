@@ -1594,8 +1594,8 @@ class Runner(object):
        passing this class."""
 
 
-class SGERunner(Runner):
-    """Base class to run a set of commands on an SGE cluster.
+class ClusterRunner(Runner):
+    """Base class to run a set of commands on a compute cluster.
        Use a subclass specific to the cluster you want to use, such
        as :class:`WyntonSGERunner`.
 
@@ -1610,8 +1610,9 @@ class SGERunner(Runner):
        text "STARTED" (without the quotes) when the job starts and just
        "DONE" when it completes.
 
-       Once done, you can optionally call :meth:`set_sge_options` to set SGE
-       options and/or :meth:`set_sge_name` to set the SGE job name.
+       Once done, you can optionally call :meth:`set_options` to set command
+       line options (e.g. time limits, requested resources)
+       and/or :meth:`set_name` to set the job name.
     """
 
     def __init__(self, script, interpreter='/bin/sh'):
@@ -1622,23 +1623,21 @@ class SGERunner(Runner):
         self._interpreter = interpreter
         self._directory = os.getcwd()
 
-    def set_sge_options(self, opts):
-        """Set the SGE options to use, as a string,
-           for example '-l mydisk=1G -p 0'.
-           Note that if you want to set the job name (-N option) it is better
-           to use :meth:`set_sge_name`.
+    def set_options(self, opts):
+        """Set the options to use, as a string, for example '-l mydisk=1G -p 0'.
+           These will be specific to the queuing system (e.g. SGE, SLURM)
+           you are using.
+           Note that if you want to set the job name
+           (SGE's -N, SLURM's -J option) it is better to use :meth:`set_name`.
         """
         self._opts = opts
 
-    def set_sge_name(self, name):
-        """Set the SGE job name (equivalent to qsub's -N option).
-           If the name is not a valid SGE name (e.g. names cannot start with
-           a digit) then it is mapped to one that is.
+    def set_name(self, name):
+        """Set the job name (equivalent to SGE's qsub -N option, or SLURM's
+           sbatch -J option).
+           If the name is not a valid name (e.g. SGE job names cannot start
+           with a digit) then it is mapped to one that is.
         """
-        name = re.sub(r'\s*', '', name)
-        if re.match(r'\d', name) or name.upper() in ("NONE", "ALL",
-                                                     "TEMPLATE"):
-            name = 'J' + name
         self._name = name
 
     @classmethod
@@ -1648,21 +1647,21 @@ class SGERunner(Runner):
         return cls._drmaa.module, cls._drmaa.session
 
     def _run(self, webservice):
-        """Generate an SGE script in the job directory and run it.
-           Return the SGE job ID."""
-        script = os.path.join(self._directory, 'sge-script.sh')
+        """Generate a job script in the job directory and run it.
+           Return the job ID."""
+        script = os.path.join(self._directory, self._script_name)
         with open(script, 'w') as fh:
-            self._write_sge_script(fh)
+            self._write_script(fh)
         return self._qsub(script, webservice)
 
-    def _write_sge_script(self, fh):
+    def _write_script(self, fh):
+        self._write_script_header(fh)
+        self._write_script_body(fh)
+
+    def _write_script_header(self, fh):
         print("#!" + self._interpreter, file=fh)
-        print("#$ -S " + self._interpreter, file=fh)
-        print("#$ -cwd", file=fh)
-        if self._opts:
-            print('#$ ' + self._opts, file=fh)
-        if self._name:
-            print('#$ -N ' + self._name, file=fh)
+
+    def _write_script_body(self, fh):
         # Update job state file at job start and end
         if self._interpreter in ('/bin/sh', '/bin/bash'):
             print("_SALI_JOB_DIR=`pwd`", file=fh)
@@ -1676,19 +1675,19 @@ class SGERunner(Runner):
                                  '/bin/tcsh'):
             print('echo "DONE" > ${_SALI_JOB_DIR}/job-state', file=fh)
 
+    def _get_native_spec(self):
+        return self._opts
+
     def _qsub(self, script, webservice):
         """Submit a job script to the cluster using DRMAA."""
         drmaa, s = self._get_drmaa()
         jt = s.createJobTemplate()
-        # Note that "-w n" turns off verification of -l options, since SGE 6.1
-        # always fails at this step (a bug); "-b no" parses the script for
-        # additional SGE options
-        jt.nativeSpecification = self._opts + ' -w n -b no'
+        jt.nativeSpecification = self._get_native_spec()
         jt.remoteCommand = script
         jt.workingDirectory = self._directory
         if self._name:
             jt.jobName = self._name
-        tasks = saliweb.backend.cluster._SGETasks(self._opts)
+        tasks = self._parse_task_opts(self._opts)
         if tasks:
             jobids = s.runBulkJobs(jt, tasks.first, tasks.last, tasks.step)
             runid = tasks.get_run_id(jobids)
@@ -1702,8 +1701,9 @@ class SGERunner(Runner):
 
     @classmethod
     def _check_completed(cls, jobid, directory):
-        """Return True if SGE reports that the given job has finished, False
-           if it is still running, or None if the status cannot be determined.
+        """Return True if the cluster reports that the given job has finished,
+           False if it is still running, or None if the status cannot
+           be determined.
         """
         if jobid in cls._waited_jobs:
             return False
@@ -1716,6 +1716,48 @@ class SGERunner(Runner):
                 return False
             except drmaa.InvalidJobException:
                 return True
+
+
+class SGERunner(ClusterRunner):
+    """Base class to run a set of commands on an SGE cluster.
+       Use a subclass specific to the cluster you want to use, such
+       as :class:`WyntonSGERunner`.
+
+       See :class:`ClusterRunner` for more information.
+    """
+    _script_name = 'sge-script.sh'
+
+    # Backwards compatibility
+    set_sge_name = ClusterRunner.set_name
+    set_sge_options = ClusterRunner.set_options
+
+    def set_name(self, name):
+        name = re.sub(r'\s*', '', name)
+        if re.match(r'\d', name) or name.upper() in ("NONE", "ALL",
+                                                     "TEMPLATE"):
+            name = 'J' + name
+        self._name = name
+
+    def _parse_task_opts(self, opts):
+        return saliweb.backend.cluster._SGETasks(opts)
+
+    def _write_script(self, fh):
+        self._write_script_header(fh)
+        # Add SGE directives so that we can rerun the script from the
+        # command line with 'qsub' if needed
+        print("#$ -S " + self._interpreter, file=fh)
+        print("#$ -cwd", file=fh)
+        if self._opts:
+            print('#$ ' + self._opts, file=fh)
+        if self._name:
+            print('#$ -N ' + self._name, file=fh)
+        self._write_script_body(fh)
+
+    def _get_native_spec(self):
+        # Note that "-w n" turns off verification of -l options, since SGE 6.1
+        # always fails at this step (a bug); "-b no" parses the script for
+        # additional SGE options
+        return self._opts + ' -w n -b no'
 
     @classmethod
     def _check_bulk_completed(cls, jobid):

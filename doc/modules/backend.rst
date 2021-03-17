@@ -23,6 +23,9 @@ The :mod:`saliweb.backend` Python module
 .. autoclass:: Runner
    :members:
 
+.. autoclass:: ClusterRunner
+   :members:
+
 .. autoclass:: SGERunner
    :members:
 

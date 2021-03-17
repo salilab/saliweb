@@ -71,29 +71,29 @@ class RunnerTest(unittest.TestCase):
         self.assertRaises(TypeError, Job.register_runner_class, BrokenRunner)
 
     def test_sge_name(self):
-        """Check SGERunner.set_sge_name()"""
+        """Check SGERunner.set_name()"""
         r = SGERunner('echo foo', interpreter='/bin/csh')
-        r.set_sge_name('test\t job ')
+        r.set_name('test\t job ')
         self.assertEqual(r._name, 'testjob')
-        r.set_sge_name('TestJob')
+        r.set_name('TestJob')
         self.assertEqual(r._name, 'TestJob')
-        r.set_sge_name('1234')
+        r.set_name('1234')
         self.assertEqual(r._name, 'J1234')
-        r.set_sge_name('None')
+        r.set_name('None')
         self.assertEqual(r._name, 'JNone')
-        r.set_sge_name('ALL')
+        r.set_name('ALL')
         self.assertEqual(r._name, 'JALL')
-        r.set_sge_name('template')
+        r.set_name('template')
         self.assertEqual(r._name, 'Jtemplate')
 
     def test_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
         for runner in (WyntonSGERunner,):
             r = runner('echo foo', interpreter='/bin/csh')
-            r.set_sge_options('-l diva1=1G')
-            r.set_sge_name('test\t job ')
+            r.set_options('-l diva1=1G')
+            r.set_name('test\t job ')
             sio = StringIO()
-            r._write_sge_script(sio)
+            r._write_script(sio)
             expected = """#!/bin/csh
 #$ -S /bin/csh
 #$ -cwd
@@ -107,7 +107,7 @@ echo "DONE" > ${_SALI_JOB_DIR}/job-state
             self.assertEqual(sio.getvalue(), expected)
             r = runner('echo foo', interpreter='/bin/oddshell')
             sio = StringIO()
-            r._write_sge_script(sio)
+            r._write_script(sio)
             expected = """#!/bin/oddshell
 #$ -S /bin/oddshell
 #$ -cwd
@@ -177,7 +177,7 @@ else:
         with testutil.temp_dir() as tmpdir:
             r = TestRunner('echo foo')
             r._directory = tmpdir
-            r.set_sge_options('-t 2-10:2')
+            r.set_options('-t 2-10:2')
             jobid2 = r._run(ws)
             self.assertEqual(jobid2, 'dummyJob.2-10:2')
             jt = DummyDRMAASession.deleted_template
