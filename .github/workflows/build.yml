@@ -32,7 +32,8 @@ jobs:
         scons python=$(which python) test
         flake8 --exclude doc/conf.py,tools/reindent.py,examples .
         py.test --cov=account/account --cov-branch --flake8 account
-    - name: Upload coverage to codecov
+    - name: Upload Python coverage to codecov
+      uses: codecov/codecov-action@v1
+    - name: Upload Perl coverage to codecov
       run: |
-        bash <(curl -s https://codecov.io/bash)
         cd test/frontend && cover -report codecov
