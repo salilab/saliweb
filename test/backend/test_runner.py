@@ -89,6 +89,8 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(r._name, 'TestJob')
         r.set_name('1234')
         self.assertEqual(r._name, 'J1234')
+        r.set_sge_name('1234')
+        self.assertEqual(r._name, 'J1234')
         r.set_name('None')
         self.assertEqual(r._name, 'JNone')
         r.set_name('ALL')

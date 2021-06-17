@@ -1728,16 +1728,16 @@ class SGERunner(ClusterRunner):
     _script_name = 'sge-script.sh'
     _task_separator = '.'
 
-    # Backwards compatibility
-    set_sge_name = ClusterRunner.set_name
-    set_sge_options = ClusterRunner.set_options
-
     def set_name(self, name):
         name = re.sub(r'\s*', '', name)
         if re.match(r'\d', name) or name.upper() in ("NONE", "ALL",
                                                      "TEMPLATE"):
             name = 'J' + name
         self._name = name
+
+    # Backwards compatibility
+    set_sge_name = set_name
+    set_sge_options = ClusterRunner.set_options
 
     def _parse_task_opts(self, opts):
         return saliweb.backend.cluster._SGETasks(opts)
