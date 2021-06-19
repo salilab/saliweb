@@ -339,7 +339,8 @@ def make_application(name, parameters=[], static_folder='html',
 
     @app.before_request
     def check_login():
-        flask.g.user = _get_logged_in_user()
+        if not hasattr(flask.g, 'user'):
+            flask.g.user = _get_logged_in_user()
 
     @app.teardown_appcontext
     def close_db(error):
