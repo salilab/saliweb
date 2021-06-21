@@ -578,6 +578,7 @@ def get_pdb_chains(pdb_chain, outdir):
 
 
 def render_results_template(template_name, job, extra_xml_outputs=[],
+                            extra_xml_metadata={}, extra_xml_links={},
                             **context):
     """Render a template for the job results page.
        This normally functions like `flask.render_template` but will instead
@@ -585,6 +586,10 @@ def render_results_template(template_name, job, extra_xml_outputs=[],
        will include download links to any file mentioned in the template
        with :meth:`CompletedJob.get_results_file_url`. Extra downloadable files
        can be added to the XML output by listing them in `extra_xml_outputs`.
+       Custom tags can also be added to the XML output by listing them in
+       `extra_xml_metadata`, which is a dict (keys are XML tag names, values
+       are the XML values). `extra_xml_links` is similar except that the values
+       are hyperlinks (xlink:href targets).
     """
     if _request_wants_xml():
         job._record_results = []
@@ -593,7 +598,9 @@ def render_results_template(template_name, job, extra_xml_outputs=[],
         for o in extra_xml_outputs:
             job.get_results_file_url(o)
         return flask.render_template('saliweb/results.xml',
-                                     results=job._record_results)
+                                     results=job._record_results,
+                                     extra_xml_metadata=extra_xml_metadata,
+                                     extra_xml_links=extra_xml_links)
     else:
         return r
 

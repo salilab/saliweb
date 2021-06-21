@@ -357,7 +357,9 @@ class Tests(unittest.TestCase):
         with request_mime_type('application/xml'):
             r = saliweb.frontend.render_results_template(
                 'results.html', job=j,
-                extra_xml_outputs=['foo', 'bar'])
+                extra_xml_outputs=['foo', 'bar'],
+                extra_xml_metadata={'baz': 'bazval'},
+                extra_xml_links={'link': 'lnkval'})
             self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
             self.assertEqual([r['fname'] for r in j._record_results],
                              ['foo', 'bar'])

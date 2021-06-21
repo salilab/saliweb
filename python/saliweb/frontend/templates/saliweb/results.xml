@@ -3,4 +3,10 @@
    {%- for result in results %}
    <results_file xlink:href="{{ result.url }}">{{ result.fname }}</results_file>
    {%- endfor %}
+   {%- for key, val in extra_xml_metadata.items() %}
+   <{{ key }}>{{ val }}</{{ key }}>
+   {%- endfor %}
+   {%- for key, val in extra_xml_links.items() %}
+   <{{ key }} xlink:href="{{ val }}" />
+   {%- endfor %}
 </saliweb>
