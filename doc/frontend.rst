@@ -313,7 +313,7 @@ checking the value of ``flask.g.user`` in any function, which
 is either a :class:`LoggedInUser` object or ``None``.
 
 If access should be denied, either raise an :exc:`AccessDeniedError` exception
-(with will return an error page to the user with a message)
+(which will return an error page to the user with a message)
 or call `flask.abort <http://flask.pocoo.org/docs/1.0/api/#flask.abort>`_
 with a suitable HTTP error code, e.g. 401, "unauthorized"
 (which will return a generic error page without a message).
