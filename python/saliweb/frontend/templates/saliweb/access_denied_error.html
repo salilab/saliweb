@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ config.SERVICE_NAME }} Error{% endblock %}
+
+{% block body %}
+<h2>401 Unauthorized</h2>
+
+<p>&nbsp;</p>
+
+<div class="standout">
+<p>{{ message }}</p>
+</div>
+
+{% endblock %}

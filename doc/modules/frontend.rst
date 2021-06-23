@@ -50,3 +50,5 @@ The :mod:`saliweb.frontend` Python module
 .. autofunction:: redirect_to_results_page
 
 .. autoexception:: InputValidationError
+
+.. autoexception:: AccessDeniedError

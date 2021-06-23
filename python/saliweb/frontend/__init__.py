@@ -26,6 +26,13 @@ class InputValidationError(_UserError):
     http_status = 400  # bad request
 
 
+class AccessDeniedError(Exception):
+    """Attempt by the user to access a protected page. These errors
+       can be raised by any page and are generally handled by displaying
+       an HTML/XML error page."""
+    http_status = 401  # unauthorized
+
+
 class _ResultsError(Exception):
     pass
 
@@ -335,6 +342,12 @@ def make_application(name, parameters=[], static_folder='html',
     def handle_user_error(error):
         ext = 'xml' if _request_wants_xml() else 'html'
         return (flask.render_template('saliweb/user_error.%s' % ext,
+                                      message=str(error)), error.http_status)
+
+    @app.errorhandler(AccessDeniedError)
+    def handle_access_error(error):
+        ext = 'xml' if _request_wants_xml() else 'html'
+        return (flask.render_template('saliweb/access_denied_error.%s' % ext,
                                       message=str(error)), error.http_status)
 
     @app.before_request

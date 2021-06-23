@@ -550,6 +550,12 @@ passwd: test_fe_pwd
             self.assertEqual(
                 out, ("render saliweb/user_error.html with (), "
                       "{'message': 'foo'}", 400))
+            # Test access-denied error handler
+            err = saliweb.frontend.AccessDeniedError("foo")
+            out = f.error_handlers[saliweb.frontend.AccessDeniedError](err)
+            self.assertEqual(
+                out, ("render saliweb/access_denied_error.html with (), "
+                      "{'message': 'foo'}", 401))
         del flask.request
 
     def test_get_pdb_code(self):
