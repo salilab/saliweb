@@ -145,6 +145,7 @@ def import_mocked_frontend(pkgname, test_file, topdir):
 [general]
 service_name: TestService
 socket: /not/exist
+urltop: http://localhost
 
 [database]
 frontend_config: frontend.conf
