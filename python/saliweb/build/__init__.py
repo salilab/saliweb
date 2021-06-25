@@ -342,10 +342,10 @@ def _check_directory_locations(env):
     running = env['config'].directories['RUNNING']
     if not running.startswith('/wynton'):
         print("""
-** The RUNNING directory is set to %s.
-** It must be on a cluster-accessible disk (i.e. /wynton).
+** WARNING: The RUNNING directory is set to %s.
+** It must be on a cluster-accessible disk (i.e. /wynton)
+** unless you are using LocalRunner to run jobs.
 """ % running, file=sys.stderr)
-        env.Exit(1)
 
 
 def _check_directory_permissions(env):

@@ -363,7 +363,7 @@ class CheckTest(unittest.TestCase):
                                  '.\n** It must be on a local disk '
                                  '(e.g. /modbase1).\n\n')
 
-        # Running on a non-Wynton disk is NOT OK
+        # Running on a non-Wynton disk will trigger a warning
         for disk in ('/var', '/usr', '/home', '/modbase1', '/modbase2',
                      '/modbase3', '/modbase4', '/modbase5', '/guitar1',
                      '/salilab'):
@@ -371,11 +371,12 @@ class CheckTest(unittest.TestCase):
             ret, stderr = run_catch_stderr(
                                saliweb.build._check_directory_locations, env)
             self.assertEqual(ret, None)
-            self.assertEqual(env.exitval, 1)
-            self.assertEqual(stderr, '\n** The RUNNING directory is set to '
-                             + disk +
-                             '.\n** It must be on a cluster-accessible disk '
-                             '(i.e. /wynton).\n\n')
+            self.assertIsNone(env.exitval)
+            self.assertEqual(
+                stderr,
+                '\n** WARNING: The RUNNING directory is set to ' + disk + '.\n'
+                '** It must be on a cluster-accessible disk (i.e. /wynton)\n'
+                '** unless you are using LocalRunner to run jobs.\n\n')
 
     @testutil.run_in_tempdir
     def test_check_directory_permissions(self):
