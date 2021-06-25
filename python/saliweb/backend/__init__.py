@@ -1241,12 +1241,12 @@ class Job(object):
         """Take a running job, see if it completed, and if so, process it."""
         try:
             self._assert_state('RUNNING')
-            results = self._get_job_results()
-            if not results:
-                return
             # If the Runner caught an exception, raise it here
             if run_exception is not None:
                 raise run_exception
+            results = self._get_job_results()
+            if not results:
+                return
             # Delete job-state file; no longer needed
             os.unlink(self._get_job_state_file())
             self._metadata['postprocess_time'] = datetime.datetime.utcnow()
