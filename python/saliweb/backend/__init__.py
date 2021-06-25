@@ -1864,7 +1864,8 @@ class _LocalJobWaiter(_JobThread):
         try:
             ret = self._subproc.wait()
             if ret != 0:
-                result = OSError("Process failed with return code %d" % ret)
+                result = OSError("Process '%s' failed with return code %d"
+                                 % (self._runner._cmd, ret))
             else:
                 result = None
             e = saliweb.backend.events._CompletedJobEvent(self._webservice,
