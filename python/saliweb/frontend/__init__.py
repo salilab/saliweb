@@ -472,6 +472,28 @@ def check_email(email, required=False):
             "Please provide a valid return email address")
 
 
+def check_pdb(filename, show_filename=None):
+    """Check that a PDB file really looks like a PDB file.
+       If it does not, raise an :exc:`InputValidationError` exception.
+
+       :param str filename: The PDB file to check.
+       :param str show_filename: If provided, include this filename in any
+              error message to identify the PDB file (useful for services
+              that allow upload of multiple PDB files).
+    """
+    if show_filename:
+        pdb_file = "PDB file %s" % show_filename
+    else:
+        pdb_file = "PDB file"
+    # Use latin1 to avoid decode errors with 8-bit characters
+    with open(filename, encoding='latin1') as fh:
+        for line in fh:
+            if line.startswith('ATOM  ') or line.startswith('HETATM'):
+                return
+    raise InputValidationError("%s contains no ATOM or HETATM records!"
+                               % pdb_file)
+
+
 def check_modeller_key(modkey):
     """Check a provided MODELLER key.
        If the key is empty or invalid, raise an

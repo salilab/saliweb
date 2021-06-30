@@ -174,6 +174,27 @@ class Tests(unittest.TestCase):
                           tf, 'garbage')
         tf("test@test.com")
 
+    def test_check_pdb(self):
+        """Test check_pdb"""
+        with util.temporary_directory() as tmpdir:
+            good_pdb = os.path.join(tmpdir, 'good.pdb')
+            with open(good_pdb, 'w') as fh:
+                fh.write("REMARK  6  TEST REMARK\n")
+                fh.write(
+                    "ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
+                    "1.00 23.91           N\n")
+            bad_pdb = os.path.join(tmpdir, 'bad.pdb')
+            with open(bad_pdb, 'w') as fh:
+                fh.write("not a pdb\n")
+
+            saliweb.frontend.check_pdb(good_pdb)
+            saliweb.frontend.check_pdb(good_pdb, show_filename='good.pdb')
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb, bad_pdb)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb, bad_pdb,
+                              show_filename='bad.pdb')
+
     def test_check_modeller_key(self):
         """Test check_modeller_key function"""
         class MockApp(object):
