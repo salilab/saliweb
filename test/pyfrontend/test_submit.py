@@ -7,7 +7,7 @@ import re
 from saliweb.frontend import submit
 import saliweb.frontend
 import contextlib
-import util
+import tempfile
 from test_frontend import request_mime_type
 
 
@@ -19,7 +19,7 @@ def mock_app(track=False, socket='/not/exist'):
                            'DATABASE_PASSWD': 'x', 'DATABASE_SOCKET': 'x',
                            'DIRECTORIES_INCOMING': tmpdir,
                            'TRACK_HOSTNAME': track, 'SOCKET': socket}
-    with util.temporary_directory() as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir:
         flask.current_app = MockApp(tmpdir, track=track, socket=socket)
         yield flask.current_app, tmpdir
         flask.current_app = None
@@ -73,7 +73,7 @@ class Tests(unittest.TestCase):
         class MockApp(object):
             def __init__(self, tmpdir):
                 self.config = {'DIRECTORIES_INCOMING': tmpdir}
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             flask.current_app = MockApp(tmpdir)
             os.mkdir(os.path.join(tmpdir, 'existing-dir'))
             # Cannot create a job if the directory already exists
@@ -137,7 +137,7 @@ class Tests(unittest.TestCase):
             j.submit()
 
         # Test with active backend socket
-        with util.temporary_directory() as sockdir:
+        with tempfile.TemporaryDirectory() as sockdir:
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sockpth = os.path.join(sockdir, 'test.socket')
             s.bind(sockpth)

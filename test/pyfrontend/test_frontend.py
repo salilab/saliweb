@@ -7,7 +7,7 @@ import contextlib
 import os
 import sys
 import gzip
-import util
+import tempfile
 import flask
 
 
@@ -102,7 +102,7 @@ class Tests(unittest.TestCase):
 
     def test_check_cluster_running(self):
         """Test _check_cluster_running function"""
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             queue_job = os.path.join(tmpdir, 'job1')
             run_job = os.path.join(tmpdir, 'job2')
             os.mkdir(queue_job)
@@ -176,7 +176,7 @@ class Tests(unittest.TestCase):
 
     def test_check_pdb(self):
         """Test check_pdb"""
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             good_pdb = os.path.join(tmpdir, 'good.pdb')
             with open(good_pdb, 'w') as fh:
                 fh.write("REMARK  6  TEST REMARK\n")
@@ -420,7 +420,7 @@ install: test_install
             def __init__(self):
                 self.config = MockConfig()
         app = MockApp()
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             fname = os.path.join(tmpdir, 'live.conf')
             with open(fname, 'w') as fh:
                 fh.write(config_template % "")
@@ -491,7 +491,7 @@ passwd: test_fe_pwd
         # Logins have to be SSL-secured
         flask.request = MockRequest(scheme='https', mime='text/html')
 
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             fname = os.path.join(tmpdir, 'live.conf')
             os.environ['MOCK_APPLICATION_CONFIG'] = fname
             with open(fname, 'w') as fh:
@@ -584,7 +584,7 @@ passwd: test_fe_pwd
         class MockApp(object):
             def __init__(self, tmpdir):
                 self.config = {'PDB_ROOT': tmpdir}
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             make_test_pdb(tmpdir)
             flask.current_app = MockApp(tmpdir)
             self.assertRaises(saliweb.frontend.InputValidationError,
@@ -603,7 +603,7 @@ passwd: test_fe_pwd
         class MockApp(object):
             def __init__(self, tmpdir):
                 self.config = {'PDB_ROOT': tmpdir}
-        with util.temporary_directory() as tmpdir:
+        with tempfile.TemporaryDirectory() as tmpdir:
             make_test_pdb(tmpdir)
             flask.current_app = MockApp(tmpdir)
             # No chains specified
