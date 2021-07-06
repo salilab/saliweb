@@ -36,22 +36,6 @@ def working_directory(workdir):
     os.chdir(origdir)
 
 
-@contextlib.contextmanager
-def temporary_directory(dir=None):
-    """Simple context manager to make a temporary directory.
-       The temporary directory has the same lifetime as the context manager
-       (i.e. it is created at the start of the 'with' block, and deleted
-       at the end of the block).
-       @param dir If given, the temporary directory is made as a subdirectory
-                  of that directory, rather than in the default temporary
-                  directory location (e.g. /tmp)
-       @return the full path to the temporary directory.
-    """
-    tmpdir = tempfile.mkdtemp(dir=dir)
-    yield tmpdir
-    shutil.rmtree(tmpdir, ignore_errors=True)
-
-
 class _TempDir(object):
     """Make a temporary directory that is deleted when this object is."""
 
