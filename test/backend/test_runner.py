@@ -182,6 +182,11 @@ elif sys.argv[2].startswith('donebulk'):
     print("Following jobs do not exist:")
     print(sys.argv[2])
     sys.exit(1)
+elif sys.argv[2].startswith('doneschedbulk'):
+    print("Can not get job info messages, scheduler is not available")
+    print("Following jobs do not exist:")
+    print(sys.argv[2])
+    sys.exit(1)
 else:
     print("job info")
 """ % sys.executable)
@@ -192,6 +197,8 @@ else:
         self.assertEqual(TestRunner._check_completed('runningjob', ''), False)
         self.assertEqual(TestRunner._check_completed('donebulk.1-10:1', ''),
                          True)
+        self.assertEqual(
+            TestRunner._check_completed('doneschedbulk.1-10:1', ''), True)
         self.assertRaises(OSError, TestRunner._check_completed,
                           'badbulk.1-10:1', '')
         self.assertEqual(TestRunner._check_completed('runningbulk.1-10:1', ''),

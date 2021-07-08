@@ -1779,7 +1779,8 @@ class SGERunner(ClusterRunner):
         p.stdout.close()
         if ret == 0:
             return False
-        elif len(out) > 0 and out[0].startswith('Following jobs do not exist'):
+        elif any(line.startswith('Following jobs do not exist')
+                 for line in out):
             return True
         else:
             raise OSError("qstat returned %d (%s)" % (ret, "\n".join(out)))
