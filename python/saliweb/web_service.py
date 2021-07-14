@@ -248,8 +248,8 @@ class _InfoCommand(_Command):
     long_help = short_help + """
 <url> should be the REST URL for a Sali Lab web service. This is generally
 the same as the main web page, with /job appended. For example, to access the
-ModLoop server, use http://salilab.org/modloop/job (the main web page is
-at http://salilab.org/modloop/).
+ModLoop server, use https://salilab.org/modloop/job (the main web page is
+at https://salilab.org/modloop/).
 
 If '--cookie' is given, it is passed as the --cookie argument to curl.
 This is typically used to pass a username and password to the web
