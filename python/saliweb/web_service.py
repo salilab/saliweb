@@ -149,8 +149,8 @@ def show_info(url, cookie=None):
         print("""
 To determine name1, name2 etc., view the HTML source of the regular web
 service page and look at the names of the HTML form elements. Alternatively,
-ask the developer of the web service to implement the
-get_submit_parameter_help() method!""")
+ask the developer of the web service to document parameters as the second
+argument to saliweb.frontend.make_application().""")
 
 
 def submit_job(url, args, cookie=None):
