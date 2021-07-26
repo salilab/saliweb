@@ -397,9 +397,15 @@ def get_completed_job(name, passwd, still_running_template=None):
        :return: A new CompletedJob.
        :rtype: :class:`CompletedJob`
     """
+    def make_ascii(s):
+        # name/passwd columns in our DB are latin1, so we will get an
+        # "Illegal mix of collations" error if the user passes in random
+        # Unicode. Coerce to ASCII to be safe.
+        return bytes(s, encoding='ascii', errors='replace').decode('ascii')
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
-    c.execute('SELECT * FROM jobs WHERE name=%s AND passwd=%s', (name, passwd))
+    c.execute('SELECT * FROM jobs WHERE name=%s AND passwd=%s',
+              (make_ascii(name), make_ascii(passwd)))
     job_row = c.fetchone()
     if not job_row:
         raise _ResultsBadJobError('Job does not exist, or wrong password')
