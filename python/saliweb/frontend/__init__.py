@@ -401,6 +401,8 @@ def get_completed_job(name, passwd, still_running_template=None):
         # name/passwd columns in our DB are latin1, so we will get an
         # "Illegal mix of collations" error if the user passes in random
         # Unicode. Coerce to ASCII to be safe.
+        if s is None:
+            return s
         return bytes(s, encoding='ascii', errors='replace').decode('ascii')
     conn = get_db()
     c = MySQLdb.cursors.DictCursor(conn)
