@@ -548,8 +548,8 @@ def get_pdb_code(code, outdir):
     in_pdb, out_pdb = _get_pdb_paths(code)
     if not os.path.exists(in_pdb):
         raise InputValidationError(
-            "PDB code '%s' does not exist in our copy of the PDB database.",
-            code)
+            "PDB code '%s' does not exist in our copy of the PDB database."
+            % code)
     out_pdb = os.path.join(outdir, out_pdb)
     fh_in = gzip.open(in_pdb, 'rb')
     with open(out_pdb, 'wb') as fh_out:

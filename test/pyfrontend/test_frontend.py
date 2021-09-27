@@ -589,8 +589,11 @@ passwd: test_fe_pwd
             flask.current_app = MockApp(tmpdir)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_code, "1@bc", tmpdir)
-            self.assertRaises(saliweb.frontend.InputValidationError,
-                              saliweb.frontend.get_pdb_code, "1aaaaaa", tmpdir)
+            with self.assertRaises(saliweb.frontend.InputValidationError) as cm:
+                saliweb.frontend.get_pdb_code("1aaaaaa", tmpdir)
+            self.assertEqual(str(cm.exception),
+                             "PDB code '1aaaaaa' does not exist in our copy "
+                             "of the PDB database.")
             self.assertFalse(saliweb.frontend.pdb_code_exists('1aaaaaa'))
             self.assertTrue(saliweb.frontend.pdb_code_exists('1xyz'))
             p = saliweb.frontend.get_pdb_code('1xyz', tmpdir)
