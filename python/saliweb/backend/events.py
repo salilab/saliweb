@@ -63,8 +63,8 @@ class _CleanupIncomingJobsEvent(object):
 class _JobThread(threading.Thread):
     """Base for threads that wait for jobs"""
     def __init__(self, webservice):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
+        super().__init__()
+        self.daemon = True
         self._webservice = webservice
 
 
