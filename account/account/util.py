@@ -47,7 +47,8 @@ def set_servers_cookie_info(cookie, permanent):
     def add_cookie(response):
         response.set_cookie(key='sali-servers',
                             value='user_name&%s&session&%s' % (user, pwhash),
-                            secure=True, max_age=age, expires=expires)
+                            secure=True, httponly=True, max_age=age,
+                            expires=expires)
         return response
 
 
