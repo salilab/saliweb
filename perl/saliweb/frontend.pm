@@ -747,7 +747,7 @@ sub get_start_html_parameters {
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
  
-    ga('create', '$google_ua', 'ucsf.edu');
+    ga('create', '$google_ua', 'ucsf.edu', {'cookieFlags': 'SameSite=None; Secure'});
     ga('send', 'pageview'); ";
  
     my %param = (-title => $self->{page_title},
