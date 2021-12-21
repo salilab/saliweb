@@ -47,7 +47,8 @@ def test_good_log_in_temporary():
     assert r.search(rv.data)
     assert (rv.headers['Set-Cookie'] ==
             'sali-servers=user_name&authuser&session&'
-            'bce42b481e4c5f9012ad7da17c7c141b; Secure; HttpOnly; Path=/')
+            'bce42b481e4c5f9012ad7da17c7c141b; Secure; HttpOnly; Path=/; '
+            'SameSite=Lax')
 
 
 def test_good_log_in_permanent():
@@ -181,7 +182,8 @@ def test_register_ok():
     assert rv.status_code == 302  # redirect to index page
     assert (rv.headers['Set-Cookie'] ==
             'sali-servers=user_name&newuser&session&'
-            '25d55ad283aa400af464c76d713c07ad; Secure; HttpOnly; Path=/')
+            '25d55ad283aa400af464c76d713c07ad; Secure; HttpOnly; Path=/; '
+            'SameSite=Lax')
 
 
 def test_logout():
