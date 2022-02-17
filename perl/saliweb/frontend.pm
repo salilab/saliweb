@@ -751,7 +751,9 @@ sub get_start_html_parameters {
     ga('send', 'pageview'); ";
  
     my %param = (-title => $self->{page_title},
-                 -style => {-src=>[$style, "https://use.fontawesome.com/releases/v5.6.3/css/all.css"]},
+                 -style => {-src=>[$style,
+				   "/fontawesome6/css/fontawesome.min.css",
+				   "/fontawesome6/css/brands.min.css"]},
                  -script=>[{-language => 'JavaScript',
                             -src      => "/saliweb/js/salilab.js"},
                            {-language => 'JavaScript',
