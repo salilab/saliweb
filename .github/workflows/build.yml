@@ -22,11 +22,6 @@ jobs:
       run: |
         sudo apt-get -qq update && sudo apt-get install -y libtest-exception-perl libtest-output-perl libdevel-cover-perl acl cpanminus libcgi-pm-perl perl-doc
         pip install codecov flask pytest-cov pytest-flake8 coverage scons
-        sudo cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov
-        # Patch Devel::Cover::Report::Codecov to support GitHub Actions
-        # from https://github.com/codecov/codecov-perl/pull/41
-        reportdir=$(dirname $(perldoc -l Devel::Cover::Report::Codecov) )
-        curl https://github.com/codecov/codecov-perl/commit/75ac8c01b3cccbff0acc879467b3952cd9605210.patch > gha.patch && patch -p5 < gha.patch && sudo cp Codecov/Service/GitHub.pm $reportdir/Codecov/Service/GitHub.pm
     - name: Test
       run: |
         scons python=$(which python) test
@@ -34,6 +29,3 @@ jobs:
         py.test --cov=account/account --cov-branch --flake8 account
     - name: Upload Python coverage to codecov
       uses: codecov/codecov-action@v1
-    - name: Upload Perl coverage to codecov
-      run: |
-        cd test/frontend && cover -report codecov
