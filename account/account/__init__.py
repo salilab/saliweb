@@ -7,6 +7,7 @@ from . import util
 
 app = Flask(__name__, instance_relative_config=True)
 app.config['DATABASE_DB'] = 'servers'
+app.config.update(SESSION_COOKIE_SECURE=True)
 app.config.from_pyfile('account.cfg')
 util.setup_logging(app)
 app.register_blueprint(saliweb.frontend._blueprint)
