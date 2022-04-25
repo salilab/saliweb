@@ -197,7 +197,7 @@ def _setup_email_logging(app):
     if not app.debug:
         mail_handler = logging.handlers.SMTPHandler(
             mailhost=('localhost', 25),
-            fromaddr='no-reply@modbase.compbio.ucsf.edu',
+            fromaddr='no-reply@salilab.org',
             toaddrs=[app.config['ADMIN_EMAIL']],
             subject='%s web service error' % app.config['SERVICE_NAME'])
         mail_handler.setLevel(logging.ERROR)
