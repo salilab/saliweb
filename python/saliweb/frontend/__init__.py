@@ -125,6 +125,7 @@ class CompletedJob(object):
     def __init__(self, sql_dict):
         for k in ('name', 'passwd', 'archive_time', 'directory'):
             setattr(self, k, sql_dict[k])
+        self.email = sql_dict['contact_email']
         self._record_results = None
 
     def get_path(self, fname):

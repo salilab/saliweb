@@ -129,11 +129,13 @@ class Tests(unittest.TestCase):
         j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
                                            'passwd': 'testpw',
                                            'archive_time': 'testar',
-                                           'directory': 'testdir'})
+                                           'directory': 'testdir',
+                                           'contact_email': 'test@test.com'})
         self.assertEqual(j.name, 'testname')
         self.assertEqual(j.passwd, 'testpw')
         self.assertEqual(j.archive_time, 'testar')
         self.assertEqual(j.directory, 'testdir')
+        self.assertEqual(j.email, 'test@test.com')
         self.assertFalse(hasattr(j, 'foo'))
         self.assertTrue(j.get_results_file_url('foo')
                         .startswith('results_file;()'))
@@ -238,6 +240,7 @@ class Tests(unittest.TestCase):
                           saliweb.frontend.get_completed_job,
                           'bad-job', 'passwd')
         j = saliweb.frontend.get_completed_job('completed-job', 'passwd')
+        self.assertEqual(j.email, 'test@test.com')
 
         flask.current_app = None
 
@@ -354,7 +357,8 @@ class Tests(unittest.TestCase):
         j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
                                            'passwd': 'testpw',
                                            'archive_time': 'testar',
-                                           'directory': 'testdir'})
+                                           'directory': 'testdir',
+                                           'contact_email': None})
         with request_mime_type('text/html'):
             r = saliweb.frontend.render_results_template('results.html', job=j)
             self.assertTrue(r.startswith('render results.html with ()'))
@@ -364,7 +368,8 @@ class Tests(unittest.TestCase):
         j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
                                            'passwd': 'testpw',
                                            'archive_time': 'testar',
-                                           'directory': 'testdir'})
+                                           'directory': 'testdir',
+                                           'contact_email': None})
         with request_mime_type('application/xml'):
             r = saliweb.frontend.render_results_template('results.html', job=j)
             self.assertTrue(r.startswith('render saliweb/results.xml with ()'))
@@ -374,7 +379,8 @@ class Tests(unittest.TestCase):
         j = saliweb.frontend.CompletedJob({'foo': 'bar', 'name': 'testname',
                                            'passwd': 'testpw',
                                            'archive_time': 'testar',
-                                           'directory': 'testdir'})
+                                           'directory': 'testdir',
+                                           'contact_email': None})
         with request_mime_type('application/xml'):
             r = saliweb.frontend.render_results_template(
                 'results.html', job=j,

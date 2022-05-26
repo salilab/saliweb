@@ -19,7 +19,8 @@ class DictCursor(object):
             elif self.args[0] == 'completed-job':
                 return {'state': 'COMPLETED', 'name': self.args[0],
                         'passwd': self.args[1], 'archive_time': None,
-                        'directory': '/test/job'}
+                        'directory': '/test/job',
+                        'contact_email': 'test@test.com'}
         elif (self.sql == 'SELECT first_name,last_name,email,institution,'
                           'modeller_key FROM servers.users WHERE user_name=%s '
                           'AND password=%s'):
