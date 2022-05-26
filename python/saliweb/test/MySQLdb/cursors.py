@@ -17,7 +17,8 @@ class DictCursor(object):
                             'passwd': j.passwd,
                             'archive_time': datetime.datetime(year=2099,
                                                               month=1, day=1),
-                            'directory': j.directory}
+                            'directory': j.directory,
+                            'contact_email': 'test@test.com'}
             # Check incoming jobs
             for j in self.conn._incoming_jobs:
                 if self.args == (j['name'], j['passwd']):
