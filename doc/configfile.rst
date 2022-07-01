@@ -39,10 +39,6 @@ urltop
     The URL under which the service's web pages live. This is used to construct
     URLs containing job results, for example.
 
-google_ua
-    The Google Analytics UA for tracking traffic. Please ask a sysadmin to 
-    register the service. As default, the ModBase UA is used. 
-
 track_hostname
     If set to "True" then the hostname or IP address of each web service
     user is stored in the database.

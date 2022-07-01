@@ -50,20 +50,6 @@ $ENV{REQUEST_URI} = "dummy request URI";
          "check help_link href");
 }
 
-# Test _google_ua method
-{
-    my $default = 'UA-44577804-1';
-    my $self = {};
-    bless($self, 'saliweb::frontend');
-    is($self->_google_ua, $default, 'google_ua (default 1)');
-    $self->{config} = {};
-    is($self->_google_ua, $default, '          (default 2)');
-    $self->{config}->{general} = {};
-    is($self->_google_ua, $default, '          (default 3)');
-    $self->{config}->{general}->{google_ua} = "test_ua";
-    is($self->_google_ua, "test_ua", '          (config)');
-}
-
 # Test _admin_email method
 {
     my $default = 'system@salilab.org';
