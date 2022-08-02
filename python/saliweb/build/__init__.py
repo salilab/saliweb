@@ -568,7 +568,8 @@ def _check_mysql(env):
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
         _check_mysql_grants(env, cur, c.database['db'], backend['user'],
                             'SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, '
-                            'INDEX')
+                            'REFERENCES, INDEX, ALTER, EXECUTE, '
+                            'CREATE ROUTINE, ALTER ROUTINE')
 
         db = MySQLdb.connect(db=c.database['db'], user=frontend['user'],
                              unix_socket=c.database['socket'],
