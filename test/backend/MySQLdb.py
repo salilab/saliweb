@@ -20,6 +20,9 @@ class DummyConnection(object):
     def cursor(self):
         return DummyCursor(self.sql)
 
+    def set_character_set(self, charset):
+        pass
+
 
 def connect(*args, **keys):
     return DummyConnection(*args, **keys)

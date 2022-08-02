@@ -494,6 +494,7 @@ class Database(object):
                                     db=config.database['db'],
                                     unix_socket=config.database['socket'],
                                     passwd=config.database['passwd'])
+        self.conn.set_character_set('utf8')
         c = self.conn.cursor()
         # Make sure that our SELECTs see jobs added by the frontend
         c.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
