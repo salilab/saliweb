@@ -310,7 +310,7 @@ class Config(object):
             others.remove(key)
             self.directories[key] = config.get('directories', key)
         # We should have defaults for each other directory except FAILED
-        assert(len(sorted_others) == len(others))
+        assert len(sorted_others) == len(others)
         # Other directories (except EXPIRED) are optional:
         # default to the directory for the previous state
         for n in range(1, len(sorted_others)):
@@ -1624,7 +1624,7 @@ class ClusterRunner(Runner):
         self._directory = os.getcwd()
 
     def set_options(self, opts):
-        """Set the options to use, as a string, for example '-l mydisk=1G -p 0'.
+        """Set the options to use as a string, for example '-l mydisk=1G -p 0'.
            These will be specific to the queuing system (e.g. SGE, SLURM)
            you are using.
            Note that if you want to set the job name
