@@ -19,6 +19,9 @@ class _MockConnection(object):
     def cursor(self):
         return _MockCursor()
 
+    def set_character_set(self, cs):
+        pass
+
     def commit(self):
         pass
 

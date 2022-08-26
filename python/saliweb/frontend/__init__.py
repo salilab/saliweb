@@ -264,6 +264,7 @@ def _get_logged_in_user():
 
 def _get_user_from_cookie(c):
     dbh = get_db()
+    dbh.set_character_set('utf8')
     cur = MySQLdb.cursors.DictCursor(dbh)
     cur.execute('SELECT first_name,last_name,email,institution,modeller_key '
                 'FROM servers.users WHERE user_name=%s '
