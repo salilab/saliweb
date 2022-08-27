@@ -83,6 +83,9 @@ class MockConnection(object):
         self.sql = []
         self._populate_mock_db()
 
+    def set_character_set(self, cs):
+        pass
+
     def _populate_mock_db(self):
         c = self.db.cursor()
         for sql in MOCK_DB_SETUP:
