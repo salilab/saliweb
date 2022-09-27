@@ -451,6 +451,7 @@ def render_queue_page():
     if _request_wants_xml():
         return flask.render_template('saliweb/help.xml')
     conn = get_db()
+    conn.set_character_set('utf8')
     c = MySQLdb.cursors.DictCursor(conn)
     c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "
               "AND state != 'EXPIRED' AND state != 'COMPLETED' "
