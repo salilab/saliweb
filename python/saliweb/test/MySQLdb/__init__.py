@@ -30,6 +30,9 @@ class _MockConnection(object):
         self._jobs = []
         self._incoming_jobs = []
 
+    def set_character_set(self, charset):
+        pass
+
     def cursor(self):
         return _MockCursor(self)
 
