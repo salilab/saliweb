@@ -833,7 +833,8 @@ sub get_header {
                          join("&nbsp;&bull;&nbsp;\n", @$lab_navigation_links) .
                          "&nbsp;&bull;&nbsp;&nbsp;" .
 			 "&nbsp;&nbsp;<a href=\"https://twitter.com/salilab_ucsf\" class=\"fab fa-twitter\" title=\"Follow us on Twitter\"></a>" .
-                         "</div>";
+                         "</div>" .
+                        "<p class=\"standout\">The compute cluster will be down for maintenance from Sep 27th until Sep 29th. Most jobs will be queued until the cluster is back up.</p>";
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
                      "</div>";
