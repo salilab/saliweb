@@ -264,7 +264,6 @@ def _get_logged_in_user():
 
 def _get_user_from_cookie(c):
     dbh = get_db()
-    dbh.set_character_set('utf8')
     cur = MySQLdb.cursors.DictCursor(dbh)
     cur.execute('SELECT first_name,last_name,email,institution,modeller_key '
                 'FROM servers.users WHERE user_name=%s '
@@ -381,7 +380,7 @@ def get_db():
             db=app.config['DATABASE_DB'],
             unix_socket=app.config['DATABASE_SOCKET'],
             passwd=app.config['DATABASE_PASSWD'],
-            charset='utf8mb4', use_unicode=True)
+            charset='utf8', use_unicode=True)
     return flask.g.db_conn
 
 
@@ -451,7 +450,6 @@ def render_queue_page():
     if _request_wants_xml():
         return flask.render_template('saliweb/help.xml')
     conn = get_db()
-    conn.set_character_set('utf8')
     c = MySQLdb.cursors.DictCursor(conn)
     c.execute("SELECT * FROM jobs WHERE state != 'ARCHIVED' "
               "AND state != 'EXPIRED' AND state != 'COMPLETED' "
