@@ -1,5 +1,6 @@
 import flask
-from flask import url_for, Markup
+from flask import url_for
+from markupsafe import Markup
 import datetime
 import configparser
 import os
