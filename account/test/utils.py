@@ -52,5 +52,10 @@ def set_servers_cookie(client, user, passwd):
     if sys.version_info[0] >= 3:
         passwd = passwd.encode('utf-8')
     hashpw = hashlib.md5(passwd).hexdigest()
-    client.set_cookie('localhost', 'sali-servers',
-                      'user_name&%s&session&%s' % (user, hashpw))
+    try:
+        client.set_cookie(key='sali-servers',
+                          value='user_name&%s&session&%s' % (user, hashpw))
+    except TypeError:  # werkzeug 2
+        client.set_cookie(key='sali-servers',
+                          value='user_name&%s&session&%s' % (user, hashpw),
+                          server_name='localhost')
