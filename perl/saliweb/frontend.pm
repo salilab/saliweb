@@ -832,7 +832,7 @@ sub get_header {
                          "&bull;&nbsp;" .
                          join("&nbsp;&bull;&nbsp;\n", @$lab_navigation_links) .
                          "&nbsp;&bull;&nbsp;&nbsp;" .
-			 "&nbsp;&nbsp;<a href=\"https://twitter.com/salilab_ucsf\" class=\"fab fa-twitter\" title=\"Follow us on Twitter\"></a>" .
+			 "&nbsp;&nbsp;<a href=\"https://twitter.com/salilab_ucsf\" class=\"fab fa-x-twitter\" title=\"Follow us on X/Twitter\"></a>" .
                          "</div>";
     my $navigation = "<div id=\"navigation_second\">" .
                      join("&nbsp;&bull;&nbsp;\n", @$navigation_links) .
