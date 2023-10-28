@@ -577,13 +577,13 @@ def _check_mysql(env):
         cur = db.cursor()
         cur.execute('SHOW GRANTS FOR CURRENT_USER')
         if c.track_hostname:
-            hostname = 'hostname, '
+            hostname = 'hostname`, `'
         else:
             hostname = ''
         _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
-                            'SELECT, INSERT (submit_time, contact_email, url, '
-                            'passwd, user, directory, %sname)' % hostname,
-                            table='jobs')
+                            'SELECT, INSERT (`submit_time`, `contact_email`, '
+                            '`url`, `passwd`, `user`, `directory`, `%sname`)'
+                            % hostname, table='jobs')
         _check_mysql_grants(env, cur, c.database['db'], frontend['user'],
                             'SELECT, INSERT, UPDATE, DELETE',
                             table='dependencies')
