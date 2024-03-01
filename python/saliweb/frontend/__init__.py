@@ -553,10 +553,8 @@ def get_pdb_code(code, outdir):
             "PDB code '%s' does not exist in our copy of the PDB database."
             % code)
     out_pdb = os.path.join(outdir, out_pdb)
-    fh_in = gzip.open(in_pdb, 'rb')
-    with open(out_pdb, 'wb') as fh_out:
+    with gzip.open(in_pdb, 'rb') as fh_in, open(out_pdb, 'wb') as fh_out:
         shutil.copyfileobj(fh_in, fh_out)
-    fh_in.close()
     return out_pdb
 
 

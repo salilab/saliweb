@@ -18,9 +18,6 @@ done
 
     def archive(self):
         for f in glob.glob('*.pdb'):
-            fin = open(f, 'rb')
-            fout = gzip.open(f + '.gz', 'wb')
-            fout.writelines(fin)
-            fin.close()
-            fout.close()
+            with open(f, 'rb') as fin, gzip.open(f + '.gz', 'wb') as fout:
+                fout.writelines(fin)
             os.unlink(f)
