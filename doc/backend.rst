@@ -160,8 +160,9 @@ in the service's configuration file. Job data are automatically moved between
 directories when the state changes. For example, the **INCOMING** directory
 generally needs to reside on a local disk, and have special permissions so that
 the frontend can create files within it. The **RUNNING** directory usually
-needs to be accessible by the cluster, so it needs to be on the NetApp disk.
-The **ARCHIVED** directory may live on long-term storage, such as a park disk.
+needs to be accessible by the cluster, so it needs to be on the :file:`/wynton`
+disk.  The **ARCHIVED** directory may live on long-term storage, such
+as a park disk.
 
 
 Examples

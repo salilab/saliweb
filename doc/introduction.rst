@@ -58,8 +58,8 @@ The framework aims to be:
   frontend can be used to break into the cluster.
 
 * *Efficient*: it is straightforward to configure the system so that
-  long-term data from jobs are not left on expensive disks such as NetApp,
-  but are instead moved to park disks or deleted.
+  long-term data from jobs are not left on expensive disks such as
+  :file:`/wynton`, but are instead moved to park disks or deleted.
 
 * *Easy to use*: given a simple workflow, it should be easy to deploy a
   simple web server that implements it.

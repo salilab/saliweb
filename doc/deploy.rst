@@ -29,9 +29,9 @@ Every service needs some basic setup:
   in the service could lead to deletion of that user's files or their exposure
   to outside attack.) A sysadmin can also set up this user account.
 
-* The web service user needs a directory on the NetApp disk in order to store
-  running jobs, and at least one directory on a local `modbase` disk so the
-  frontend can create incoming jobs.
+* The web service user needs a directory on the :file:`/wynton` disk in order
+  to store running jobs, and at least one directory on a local `modbase` disk
+  so the frontend can create incoming jobs.
 
 * A sysadmin needs to configure the web server on `modbase` so that the
   web service files are visible to the outside world. They can also password
@@ -52,11 +52,11 @@ files used for a basic web service. Run ``make_web_service`` with no
 arguments for further help.
 
 .. note::
-   ``make_web_service`` should be run on a local disk (**not** /wynton). Most
-   users on `modbase` have their home directories on a local disk, so this is
-   generally OK by default. Note that the home directory should be accessible
-   by the backend user in order for the build system to work; running
-   ``chmod a+rx ~`` should usually be sufficient.
+   ``make_web_service`` should be run on a local disk (**not** file:`/wynton`).
+   Most users on `modbase` have their home directories on a local disk, so
+   this is generally OK by default. Note that the home directory should be
+   accessible by the backend user in order for the build system to work;
+   running ``chmod a+rx ~`` should usually be sufficient.
 
 Example usage
 -------------
