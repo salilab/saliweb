@@ -5,7 +5,6 @@ import random
 import socket
 import fcntl
 import string
-import sys
 import datetime
 
 
@@ -174,8 +173,7 @@ class IncomingJob(object):
         fcntl.flock(s, fcntl.LOCK_EX)
         try:
             ss = "INCOMING %s\n" % self.name
-            if sys.version_info[0] >= 3:
-                ss = ss.encode('utf-8')
+            ss = ss.encode('utf-8')
             s.sendall(ss)
         except socket.error:
             pass  # ignore broken pipe errors

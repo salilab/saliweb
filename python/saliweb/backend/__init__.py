@@ -850,8 +850,7 @@ have done this, delete the state file (%s) to reenable runs.
             msg = '0' + script_name
         try:
             s.connect(self._system_socket_file)
-            if sys.version_info[0] >= 3:
-                msg = msg.encode('utf-8')
+            msg = msg.encode('utf-8')
             s.send(msg)
         except socket.error:
             # Swallow exception
@@ -1405,8 +1404,7 @@ class Job(object):
                 s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 s.connect(self._db.config.socket)
                 msg = "INCOMING %s" % self.name
-                if sys.version_info[0] >= 3:
-                    msg = msg.encode('utf-8')
+                msg = msg.encode('utf-8')
                 s.send(msg)
                 s.close()
             except socket.error:

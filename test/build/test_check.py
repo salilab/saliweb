@@ -35,7 +35,7 @@ class MockEnvFunctions(object):
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
-    sio = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
+    sio = io.StringIO()
     oldstderr = sys.stderr
     try:
         sys.stderr = sio

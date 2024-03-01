@@ -2,10 +2,7 @@ import unittest
 import sys
 from saliweb.backend import StateFileError
 from saliweb.backend.delete_all_jobs import main, check_not_running
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class DummyWeb(object):

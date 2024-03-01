@@ -3,11 +3,7 @@ import sys
 from saliweb.backend import InvalidStateError
 from saliweb.backend.deljob import check_valid_state, get_options, delete_job
 from saliweb.backend.deljob import main
-
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class DummyWeb(object):

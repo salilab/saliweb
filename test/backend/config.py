@@ -1,4 +1,3 @@
-from __future__ import print_function
 import saliweb.backend
 import tempfile
 import os

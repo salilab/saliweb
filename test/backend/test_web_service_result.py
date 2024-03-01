@@ -1,11 +1,7 @@
 import unittest
 import os
 import io
-import sys
-try:
-    import urllib.request as urllib2  # python 3
-except ImportError:
-    import urllib2  # python 2
+import urllib.request
 from saliweb.backend import SaliWebServiceResult
 
 testurl = 'http://modbase.compbio.ucsf.edu/modloop/job/job_279120/' + \
@@ -13,8 +9,7 @@ testurl = 'http://modbase.compbio.ucsf.edu/modloop/job/job_279120/' + \
 
 
 def dummy_urlopen(url):
-    cls = io.StringIO if sys.version_info[0] >= 3 else io.BytesIO
-    return cls('dummy')
+    return io.StringIO('dummy')
 
 
 class Test(unittest.TestCase):
@@ -29,10 +24,10 @@ class Test(unittest.TestCase):
         """Test download() method"""
         r = SaliWebServiceResult('http://modbase.compbio.ucsf.edu/modloop/'
                                  'job/job_279120/output.pdb?passwd=oGHxb7R3xy')
-        old = urllib2.urlopen
+        old = urllib.request.urlopen
         try:
-            urllib2.urlopen = dummy_urlopen
-            sio = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
+            urllib.request.urlopen = dummy_urlopen
+            sio = io.StringIO()
             r.download(fh=sio)
             self.assertEqual(sio.getvalue(), 'dummy')
             r.download()
@@ -41,7 +36,7 @@ class Test(unittest.TestCase):
             self.assertEqual(r, 'dummy')
             os.unlink('output.pdb')
         finally:
-            urllib2.urlopen = old
+            urllib.request.urlopen = old
 
 
 if __name__ == '__main__':

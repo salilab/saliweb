@@ -11,10 +11,7 @@ from memory_database import MemoryDatabase
 from config import Config
 from saliweb.backend import WebService, Job, StateFileError, SanityError
 import saliweb.backend
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 import testutil
 
 basic_config = """

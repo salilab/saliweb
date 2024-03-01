@@ -9,10 +9,7 @@ from saliweb.make_web_service import MakeWebService, get_options
 from saliweb.make_web_service import SVNSourceControl, _run_command
 from saliweb.make_web_service import GitSourceControl
 import saliweb.backend
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class MakeWebServiceTests(unittest.TestCase):

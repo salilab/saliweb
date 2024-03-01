@@ -2,10 +2,7 @@ import unittest
 import sys
 from saliweb.backend import InvalidStateError
 from saliweb.backend.list_jobs import check_valid_state, get_options, main
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class Tests(unittest.TestCase):

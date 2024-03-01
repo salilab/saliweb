@@ -1,6 +1,5 @@
 """Utility functions used by all IMP modules"""
 
-from __future__ import print_function
 import os.path
 import sys
 from SCons.Script import BoolVariable, PathVariable, Environment, Exit

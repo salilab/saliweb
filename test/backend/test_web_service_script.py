@@ -1,11 +1,7 @@
-from __future__ import print_function
 import unittest
 import tempfile
 import shutil
-try:
-    import urllib.request as urllib2  # python3
-except ImportError:
-    import urllib2  # python2
+import urllib.request
 import os
 import sys
 import time
@@ -43,11 +39,11 @@ class MockURLOpen(object):
         url = request.get_full_url()
         if 'longjob' in url and self.numcalls < 100:
             self.numcalls += 1
-            raise urllib2.HTTPError('url', 503, 'msg', [], None)
+            raise urllib.request.HTTPError('url', 503, 'msg', [], None)
         elif 'notdone' in url:
-            raise urllib2.HTTPError('url', 503, 'msg', [], None)
+            raise urllib.request.HTTPError('url', 503, 'msg', [], None)
         elif 'badurl' in url:
-            raise urllib2.HTTPError('url', 404, 'msg', [], None)
+            raise urllib.request.HTTPError('url', 404, 'msg', [], None)
         else:
             return MockURL(url)
 
@@ -61,7 +57,6 @@ class WebServiceTests(unittest.TestCase):
         curl = os.path.join(self.tmpdir, 'curl')
         with open(curl, 'w') as fh:
             fh.write("#!" + sys.executable + """
-from __future__ import print_function
 import sys
 url = sys.argv[-1]
 ns = 'xmlns:xlink="http://www.w3.org/1999/xlink"'
@@ -87,15 +82,15 @@ else:
 """)
         os.chmod(curl, 0o700)
         os.environ['PATH'] = self.tmpdir + ':' + os.environ['PATH']
-        self.orig_urlopen = urllib2.urlopen
-        urllib2.urlopen = MockURLOpen()
+        self.orig_urlopen = urllib.request.urlopen
+        urllib.request.urlopen = MockURLOpen()
         self.orig_sleep = time.sleep
         time.sleep = mock_sleep
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
         shutil.rmtree(self.tmpdir)
-        urllib2.urlopen = self.orig_urlopen
+        urllib.request.urlopen = self.orig_urlopen
         time.sleep = self.orig_sleep
 
     def test_curl_rest_page(self):
@@ -161,7 +156,7 @@ else:
     def test_get_results(self):
         """Test get_results()"""
         self.assertIsNone(web_service.get_results('http://notdone/'))
-        self.assertRaises(urllib2.HTTPError, web_service.get_results,
+        self.assertRaises(urllib.request.HTTPError, web_service.get_results,
                           'http://badurl/')
         urls = web_service.get_results('http://jobresults/')
         self.assertEqual(urls, [u'http://results1/', u'http://results2/'])
@@ -190,8 +185,8 @@ else:
         orig_stdout = sys.stdout
         orig_stderr = sys.stderr
         orig_argv = sys.argv
-        out = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
-        err = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
+        out = io.StringIO()
+        err = io.StringIO()
         exitval = 0
         try:
             sys.stdout = out

@@ -4,10 +4,7 @@ from saliweb.backend.service import get_options, kill_pid, status, stop
 from saliweb.backend.service import start, condstart, restart, main
 from saliweb.backend import StateFileError
 import saliweb.backend.service
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class DummyService(object):

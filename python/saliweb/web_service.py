@@ -130,9 +130,6 @@ def show_info(url, cookie=None):
         pstr = " ".join(x.get_full_arg() for x in parameters)
     else:
         pstr = "[name1=ARG] [name2=@FILENAME] ..."
-    if sys.version_info[0] == 2:
-        service = service.encode('utf-8')
-        pstr = pstr.encode('utf-8')
     print("\nSali Lab %s web service." % service)
     print("\nTo submit a job to this web service, run:\n")
     print("%s submit %s " % (progname, url) + pstr)
@@ -142,8 +139,6 @@ def show_info(url, cookie=None):
     if parameters:
         for x in parameters:
             h = x.get_help()
-            if sys.version_info[0] == 2:
-                h = h.encode('utf-8')
             print("   " + h)
     else:
         print("""
@@ -180,8 +175,6 @@ def submit_job(url, args, cookie=None):
     p, out = _curl_rest_page(url, curl_args)
     for results in p.getElementsByTagName('job'):
         url = results.getAttribute('xlink:href')
-        if sys.version_info[0] == 2:
-            url = url.encode('utf-8')
         print("Job submitted: results will be found at " + url)
         return url
     raise IOError("Could not submit job: " + out)
@@ -208,8 +201,6 @@ def get_results(url):
     top = dom.getElementsByTagName('saliweb')[0]
     for results in top.getElementsByTagName('results_file'):
         url = results.getAttribute('xlink:href')
-        if sys.version_info[0] == 2:
-            url = url.encode('utf-8')
         urls.append(url)
         print("   " + url)
     dom.unlink()

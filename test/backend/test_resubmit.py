@@ -1,10 +1,7 @@
 import unittest
 import sys
 from saliweb.backend.resubmit import main
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 
 
 class ResubmitTest(unittest.TestCase):

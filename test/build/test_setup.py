@@ -1,4 +1,3 @@
-from __future__ import print_function
 import unittest
 import sys
 import saliweb.build
@@ -23,7 +22,7 @@ def unwritable_working_dir():
 
 def run_catch_stderr(method, *args, **keys):
     """Run a method and return both its own return value and stderr."""
-    sio = io.StringIO() if sys.version_info[0] >= 3 else io.BytesIO()
+    sio = io.StringIO()
     oldstderr = sys.stderr
     try:
         sys.stderr = sio
@@ -152,7 +151,6 @@ class SetupTest(unittest.TestCase):
 
             # No number provided; svnversion binary reports 'exported'
             env = get_broken_env_pyscript('expscript', """
-from __future__ import print_function
 print("exported")""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
@@ -161,7 +159,6 @@ print("exported")""")
 
             # No number provided; svnversion binary returns error
             env = get_broken_env_pyscript('errscript', """
-from __future__ import print_function
 import sys
 print("error text", file=sys.stderr)
 print("output text")
@@ -178,7 +175,6 @@ sys.exit(1)""")
 
             # No number provided; svnversion binary works
             env = get_broken_env_pyscript('workscript', """
-from __future__ import print_function
 print("1024\\n2048")""")
             ret, warns = run_catch_warnings(saliweb.build._setup_version,
                                             env, None)
@@ -188,7 +184,6 @@ print("1024\\n2048")""")
             # git repository
             os.mkdir('.git')
             env = get_broken_env_pyscript('gitscript', """
-from __future__ import print_function
 import sys
 if sys.argv[1:4] == ['rev-parse', '--abbrev-ref', 'HEAD']:
     print("main\\nfoo")

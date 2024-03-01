@@ -1,11 +1,9 @@
-from __future__ import print_function
 import unittest
 import saliweb.frontend
 import datetime
 import functools
 import contextlib
 import os
-import sys
 import gzip
 import tempfile
 import flask
@@ -31,8 +29,7 @@ def request_mime_type(mime):
 
 def make_test_pdb(tmpdir):
     os.mkdir(os.path.join(tmpdir, 'xy'))
-    fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'),
-                   'wt' if sys.version_info[0] >= 3 else 'wb')
+    fh = gzip.open(os.path.join(tmpdir, 'xy', 'pdb1xyz.ent.gz'), 'wt')
     fh.write("REMARK  6  TEST REMARK\n")
     fh.write("ATOM      1  N   ALA C   1      27.932  14.488   4.257  "
              "1.00 23.91           N\n")

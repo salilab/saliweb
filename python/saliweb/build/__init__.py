@@ -26,16 +26,12 @@ backend_group = None
 backend_uid_range = [11800, 11900]
 
 
-if sys.version_info[0] >= 3:
-    def _get_value_contents(value_node):
-        contents = value_node.get_contents()
-        if isinstance(contents, bytes):
-            return contents.decode('utf-8')
-        else:
-            return contents
-else:
-    def _get_value_contents(value_node):
-        return value_node.get_contents()
+def _get_value_contents(value_node):
+    contents = value_node.get_contents()
+    if isinstance(contents, bytes):
+        return contents.decode('utf-8')
+    else:
+        return contents
 
 
 def _add_build_variable(vars, configs):
@@ -672,8 +668,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON %(database)s.dependencies
        'frontend_passwd': frontend['passwd'],
        'schema': ', '.join(x.get_schema() for x in d._fields),
        'depschema': ', '.join(x.get_schema() for x in d._dependfields)}
-    if sys.version_info[0] >= 3:
-        commands = commands.encode('ascii')
+    commands = commands.encode('ascii')
     os.write(fd, commands)
     os.close(fd)
     os.chmod(outfile, 0o600)

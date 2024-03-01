@@ -1,6 +1,5 @@
 # Simple Sphinx tool and builder.
 
-from __future__ import print_function
 import os
 
 

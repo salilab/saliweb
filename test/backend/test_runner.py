@@ -1,10 +1,6 @@
-from __future__ import print_function
 import unittest
 import sys
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
+from io import StringIO
 import saliweb.backend.events
 from saliweb.backend import SGERunner, WyntonSGERunner, Job
 from saliweb.backend import SLURMRunner, _LockedJobDict
@@ -174,7 +170,6 @@ echo foo
         TestRunner._waited_jobs.add('waitedjob')
         qstat = open('qstat', 'w')
         qstat.write("""#!%s
-from __future__ import print_function
 import sys
 if sys.argv[2].startswith('badbulk'):
     sys.exit(1)
@@ -212,7 +207,6 @@ else:
         TestSLURMRunner._waited_jobs.add('waitedjob')
         with open('squeue', 'w') as squeue:
             squeue.write("""#!%s
-from __future__ import print_function
 import sys
 if sys.argv[2].startswith('badbulk'):
     sys.exit(1)
