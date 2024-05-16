@@ -1851,6 +1851,26 @@ class WyntonSGERunner(SGERunner):
 Job.register_runner_class(WyntonSGERunner)
 
 
+class WyntonAGERunner(SGERunner):
+    """Run commands on the Wynton AGE cluster.
+
+       See :class:`SGERunner` for more details.
+    """
+    _runner_name = 'wyntonage'
+    _drmaa = None
+    _env = {'SGE_CELL': 'wynton',
+            'SGE_ROOT': '/opt/age',
+            'SGE_QMASTER_PORT': '26444',
+            'DRMAA_LIBRARY_PATH':
+                        '/opt/age/drmaa/lib/lx-amd64/libdrmaa.so.1.0'}
+    _qstat = '/opt/age/bin/lx-amd64/qstat'
+
+    _waited_jobs = _LockedJobDict()
+
+
+Job.register_runner_class(WyntonAGERunner)
+
+
 class _LocalJobWaiter(_JobThread):
     """Wait for a job started by LocalRunner to finish"""
     def __init__(self, webservice, subproc, runner, runid):

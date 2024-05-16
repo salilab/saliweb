@@ -32,6 +32,9 @@ The :mod:`saliweb.backend` Python module
 .. autoclass:: WyntonSGERunner
    :members:
 
+.. autoclass:: WyntonAGERunner
+   :members:
+
 .. autoclass:: SLURMRunner
    :members:
 

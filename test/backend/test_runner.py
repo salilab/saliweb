@@ -2,7 +2,7 @@ import unittest
 import sys
 from io import StringIO
 import saliweb.backend.events
-from saliweb.backend import SGERunner, WyntonSGERunner, Job
+from saliweb.backend import SGERunner, WyntonSGERunner, WyntonAGERunner, Job
 from saliweb.backend import SLURMRunner, _LockedJobDict
 import testutil
 import os
@@ -60,6 +60,12 @@ class TestRunner(WyntonSGERunner):
         return DummyDRMAAModule(), DummyDRMAASession()
 
 
+class AGETestRunner(WyntonAGERunner):
+    @classmethod
+    def _get_drmaa(cls):
+        return DummyDRMAAModule(), DummyDRMAASession()
+
+
 class TestSLURMRunner(SLURMRunner):
     _waited_jobs = _LockedJobDict()
     _env = {}
@@ -112,7 +118,7 @@ class RunnerTest(unittest.TestCase):
 
     def test_sge_generate_script(self):
         """Check that SGERunner generates reasonable scripts"""
-        for runner in (WyntonSGERunner,):
+        for runner in (WyntonSGERunner, WyntonAGERunner):
             r = runner('echo foo', interpreter='/bin/csh')
             r.set_options('-l diva1=1G')
             r.set_name('test\t job ')
@@ -262,6 +268,55 @@ else:
 
         with testutil.temp_dir() as tmpdir:
             r = TestRunner('echo foo')
+            r._directory = tmpdir
+            r.set_options('-t 2-10:2')
+            jobid2 = r._run(ws)
+            self.assertEqual(jobid2, 'dummyJob.2-10:2')
+            jt = DummyDRMAASession.deleted_template
+            self.assertEqual(jt.nativeSpecification, '-t 2-10:2 -w n -b no')
+            self.assertEqual(jt.remoteCommand,
+                             os.path.join(tmpdir, 'sge-script.sh'))
+            self.assertEqual(jt.workingDirectory, r._directory)
+
+        # Make sure the waiter threads get time to finish
+        time.sleep(0.1)
+        e1 = ws._event_queue.get(timeout=0.)
+        e2 = ws._event_queue.get(timeout=0.)
+        e3 = ws._event_queue.get(timeout=0.)
+        self.assertIsNotNone(e1)
+        self.assertIsNotNone(e2)
+        self.assertIsNone(e3)
+
+    def test_age_get_drmaa(self):
+        """Check AGERunner._get_drmaa()"""
+        class DummyDRMAA(object):
+            class Session(object):
+                def initialize(self): pass
+                def exit(self): pass
+        sys.modules['drmaa'] = DummyDRMAA()
+        r = WyntonAGERunner('test.sh')
+        d, s = r._get_drmaa()
+        self.assertIsInstance(d, DummyDRMAA)
+        self.assertIsInstance(s, DummyDRMAA.Session)
+        SGERunner._drmaa = None
+        del sys.modules['drmaa']
+
+    def test_age_check_run(self):
+        """Check AGERunner._qsub() and _run()"""
+        class DummyWebService(object):
+            def __init__(self):
+                self._event_queue = saliweb.backend.events._EventQueue()
+        ws = DummyWebService()
+        r = AGETestRunner('echo foo')
+        jobid1 = r._qsub('test.sh', ws)
+        self.assertEqual(jobid1, 'dummyJob')
+        jt = DummyDRMAASession.deleted_template
+        self.assertEqual(jt.nativeSpecification, ' -w n -b no')
+        self.assertEqual(jt.remoteCommand, 'test.sh')
+        self.assertEqual(jt.workingDirectory, r._directory)
+
+        with testutil.temp_dir() as tmpdir:
+            r = AGETestRunner('echo foo')
             r._directory = tmpdir
             r.set_options('-t 2-10:2')
             jobid2 = r._run(ws)
