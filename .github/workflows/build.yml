@@ -27,10 +27,24 @@ jobs:
         pip install codecov flask pytest-cov pytest-flake8 coverage scons
     - name: Test
       run: |
-        scons python=$(which python) test
+        scons coverage=true python=$(which python) test
+        coverage combine
+        coverage xml --omit='*/mailer,*/curl,*/sitecustomize.py'
         flake8 --exclude doc/conf.py,tools/reindent.py,examples .
-        py.test --cov=account/account --cov-branch account
     - name: Upload Python coverage to codecov
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload Perl coverage to codecov
+      run: |
+        cover -report codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    - name: Test account
+      run: |
+        rm -f coverage.xml
+        py.test --cov=account/account --cov-branch account
+    - name: Upload account Python coverage to codecov
       uses: codecov/codecov-action@v4
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
