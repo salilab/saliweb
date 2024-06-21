@@ -31,4 +31,6 @@ jobs:
         flake8 --exclude doc/conf.py,tools/reindent.py,examples .
         py.test --cov=account/account --cov-branch account
     - name: Upload Python coverage to codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
