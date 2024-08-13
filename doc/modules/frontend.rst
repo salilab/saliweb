@@ -37,6 +37,8 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: check_modeller_key
 
+.. autofunction:: check_mmcif
+
 .. autofunction:: check_pdb
 
 .. autofunction:: pdb_code_exists
