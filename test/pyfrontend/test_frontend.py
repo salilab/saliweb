@@ -193,6 +193,24 @@ class Tests(unittest.TestCase):
                               saliweb.frontend.check_pdb, bad_pdb,
                               show_filename='bad.pdb')
 
+    def test_check_mmcif(self):
+        """Test check_mmcif"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            good_cif = os.path.join(tmpdir, 'good.cif')
+            with open(good_cif, 'w') as fh:
+                fh.write("loop_\n_atom_site.group_PDB\nATOM\nATOM\n")
+            bad_cif = os.path.join(tmpdir, 'bad.cif')
+            with open(bad_cif, 'w') as fh:
+                fh.write("not an mmCIF\n")
+
+            saliweb.frontend.check_mmcif(good_cif)
+            saliweb.frontend.check_mmcif(good_cif, show_filename='good.cif')
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_mmcif, bad_cif)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_mmcif, bad_cif,
+                              show_filename='bad.cif')
+
     def test_check_modeller_key(self):
         """Test check_modeller_key function"""
         class MockApp(object):

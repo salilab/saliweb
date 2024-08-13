@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get -qq update && sudo apt-get install -y libtest-exception-perl libtest-output-perl libdevel-cover-perl acl cpanminus libcgi-pm-perl perl-doc
-        pip install codecov flask pytest-cov pytest-flake8 coverage scons
+        pip install codecov flask pytest-cov pytest-flake8 coverage scons ihm
     - name: Test
       run: |
         scons coverage=true python=$(which python) test

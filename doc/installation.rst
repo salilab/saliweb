@@ -35,6 +35,9 @@ Prerequisites
   submission of jobs and the display of results, is implemented in Python 3,
   and uses the Flask microframework.
 
+* `python-ihm <https://github.com/ihmwg/python-ihm>`_. The frontend uses
+  the python-ihm library to handle mmCIF files.
+
 * SGE. The framework expects to be run on a machine that is a submit host to a Sun GridEngine compute cluster
   (or a compatible product, such as `OGE <http://www.oracle.com/us/products/tools/oracle-grid-engine-075549.html>`_
   or `OGS <http://gridscheduler.sourceforge.net/>`_). The framework talks to SGE via DRMAA, so you will also need

@@ -6,6 +6,7 @@ import configparser
 import os
 import sys
 import re
+import ihm.format
 import logging.handlers
 import shutil
 import gzip
@@ -502,6 +503,43 @@ def check_pdb(filename, show_filename=None):
                 return
     raise InputValidationError("%s contains no ATOM or HETATM records!"
                                % pdb_file)
+
+
+class _AtomSiteHandler:
+    not_in_file = omitted = unknown = None
+
+    def __init__(self):
+        self.num_rows = 0
+
+    def __call__(self):
+        self.num_rows += 1
+
+
+def check_mmcif(filename, show_filename=None):
+    """Check that an mmCIF file really looks like an (atomic) mmCIF file.
+       If it does not, raise an :exc:`InputValidationError` exception.
+
+       :param str filename: The mmCIF file to check.
+       :param str show_filename: If provided, include this filename in any
+              error message to identify the mmCIF file (useful for services
+              that allow upload of multiple mmCIF files).
+    """
+    if show_filename:
+        cif_file = "mmCIF file %s" % show_filename
+    else:
+        cif_file = "mmCIF file"
+    ash = _AtomSiteHandler()
+    # Use latin1 to avoid decode errors with 8-bit characters
+    with open(filename, encoding='latin1') as fh:
+        c = ihm.format.CifReader(fh, category_handler={'_atom_site': ash})
+        try:
+            c.read_file()  # read first block
+        except ihm.format.CifParserError as err:
+            raise InputValidationError(
+                "Invalid %s uploaded: %s" % (cif_file, str(err)))
+    if ash.num_rows == 0:
+        raise InputValidationError(
+            "%s contains no _atom_site entries!" % cif_file)
 
 
 def check_modeller_key(modkey):
