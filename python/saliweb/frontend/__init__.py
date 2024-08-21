@@ -578,44 +578,67 @@ def check_modeller_key(modkey):
             "You have entered an invalid MODELLER key: " + str(modkey))
 
 
-def _get_pdb_paths(code):
-    root = flask.current_app.config['PDB_ROOT']
+def _get_pdb_paths(code, fmt='PDB'):
     code = code.lower()  # PDB codes are case insensitive
-    return (os.path.join(root, code[1:3], 'pdb%s.ent.gz' % code),
-            'pdb%s.ent' % code)
+
+    if fmt == 'PDB':
+        root = flask.current_app.config['PDB_ROOT']
+        return (os.path.join(root, code[1:3], 'pdb%s.ent.gz' % code),
+                'pdb%s.ent' % code)
+    elif fmt == 'MMCIF':
+        root = flask.current_app.config['MMCIF_ROOT']
+        return (os.path.join(root, code[1:3], '%s.cif.gz' % code),
+                '%s.cif' % code)
+    else:
+        raise ValueError("Invalid format %s; should be PDB or MMCIF" % fmt)
 
 
-def pdb_code_exists(code):
+def pdb_code_exists(code, formats=["PDB"]):
     """Return true iff the PDB code (e.g. 1abc) exists in our local
-       copy of the PDB."""
-    inpdb, outpdb = _get_pdb_paths(code)
-    return os.path.exists(inpdb)
+       copy of the PDB.
+
+       :param str code: The PDB code to access (e.g. 1abc)
+       :param list formats: File formats to look for, in order. Valid formats
+              are ``PDB`` and ``MMCIF``.
+    """
+    for fmt in formats:
+        inpdb, outpdb = _get_pdb_paths(code, fmt)
+        if os.path.exists(inpdb):
+            return True
+    return False
 
 
-def get_pdb_code(code, outdir):
+def get_pdb_code(code, outdir, formats=["PDB"]):
     """Look up the PDB code (e.g. 1abc) in our local copy of the PDB, and
        copy it into the given directory (usually an incoming job directory).
-       The file will be named in standard PDB fashion, e.g. ``pdb1abc.ent``.
-       The full path to the file is returned. If the code is invalid or
-       does not exist, raise an :exc:`InputValidationError` exception.
+       The file will be named in standard PDB fashion, e.g. ``pdb1abc.ent``
+       (legacy PDB format) or ``1abc.cif`` (mmCIF format). The full path to
+       the file is returned. If the code is invalid or does not exist, raise
+       an :exc:`InputValidationError` exception.
 
        :param str code: The PDB code to access (e.g. 1abc)
        :param str outdir: The directory to copy the PDB file into
+       :param list formats: File formats to look for, in order. Valid formats
+              are ``PDB`` and ``MMCIF``. For example, ``['PDB', 'MMCIF']``
+              would return a PDB file if possible, or an mmCIF file if
+              the code is not available in PDB format (e.g. newer larger
+              structures such as ``1vvj``).
        :return: The full path to the new file in ``outdir``
     """
     if not re.match('([A-Za-z0-9]+)$', code):
         raise InputValidationError(
             "You have entered an invalid PDB code; valid codes "
             "contain only letters and numbers, e.g. 1abc")
-    in_pdb, out_pdb = _get_pdb_paths(code)
-    if not os.path.exists(in_pdb):
-        raise InputValidationError(
-            "PDB code '%s' does not exist in our copy of the PDB database."
-            % code)
-    out_pdb = os.path.join(outdir, out_pdb)
-    with gzip.open(in_pdb, 'rb') as fh_in, open(out_pdb, 'wb') as fh_out:
-        shutil.copyfileobj(fh_in, fh_out)
-    return out_pdb
+    for fmt in formats:
+        in_pdb, out_pdb = _get_pdb_paths(code, fmt)
+        if os.path.exists(in_pdb):
+            out_pdb = os.path.join(outdir, out_pdb)
+            with (gzip.open(in_pdb, 'rb') as fh_in,
+                  open(out_pdb, 'wb') as fh_out):
+                shutil.copyfileobj(fh_in, fh_out)
+            return out_pdb
+    raise InputValidationError(
+        "PDB code '%s' does not exist in our copy of the PDB database." % code)
 
 
 def _get_chains_in_pdb(pdb_file):
@@ -649,6 +672,8 @@ def get_pdb_chains(pdb_chain, outdir):
        is returned. If the code is invalid or does not exist, or at least
        one chain is specified that is not in the PDB file, raise
        an :exc:`InputValidationError` exception.
+
+       This function currently works only with legacy PDB format, not mmCIF.
 
        :param str pdb_chain: PDB code and chain IDs, separated by a colon
        :param str outdir: Directory to write the PDB file into

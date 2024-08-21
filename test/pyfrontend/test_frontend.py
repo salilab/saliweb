@@ -37,6 +37,34 @@ def make_test_pdb(tmpdir):
                  "1.00 23.91           N\n")
 
 
+def make_test_mmcif(tmpdir):
+    os.mkdir(os.path.join(tmpdir, 'xy'))
+    with gzip.open(os.path.join(tmpdir, 'xy', '1xyz.cif.gz'), 'wt') as fh:
+        fh.write("""
+loop_
+_atom_site.group_PDB
+_atom_site.type_symbol
+_atom_site.label_atom_id
+_atom_site.label_alt_id
+_atom_site.label_comp_id
+_atom_site.label_asym_id
+_atom_site.auth_asym_id
+_atom_site.label_seq_id
+_atom_site.auth_seq_id
+_atom_site.pdbx_PDB_ins_code
+_atom_site.Cartn_x
+_atom_site.Cartn_y
+_atom_site.Cartn_z
+_atom_site.occupancy
+_atom_site.B_iso_or_equiv
+_atom_site.label_entity_id
+_atom_site.id
+_atom_site.pdbx_PDB_model_num
+ATOM N N . ALA A C 1 1 ? 27.932 14.488 4.257 1.000 23.91 1 1 1
+ATOM N N . ALA B D 1 1 ? 27.932 14.488 4.257 1.000 23.91 1 2 1
+""")
+
+
 class Tests(unittest.TestCase):
     """Check frontend"""
 
@@ -621,9 +649,15 @@ passwd: test_fe_pwd
         """Test get_pdb_code function"""
         class MockApp(object):
             def __init__(self, tmpdir):
-                self.config = {'PDB_ROOT': tmpdir}
+                self.config = {'PDB_ROOT': os.path.join(tmpdir, 'pdb'),
+                               'MMCIF_ROOT': os.path.join(tmpdir, 'mmCIF')}
         with tempfile.TemporaryDirectory() as tmpdir:
-            make_test_pdb(tmpdir)
+            pdb_dir = os.path.join(tmpdir, 'pdb')
+            mmcif_dir = os.path.join(tmpdir, 'mmCIF')
+            os.mkdir(pdb_dir)
+            os.mkdir(mmcif_dir)
+            make_test_pdb(pdb_dir)
+            make_test_mmcif(mmcif_dir)
             flask.current_app = MockApp(tmpdir)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_code, "1@bc", tmpdir)
@@ -634,10 +668,23 @@ passwd: test_fe_pwd
                              "PDB code '1aaaaaa' does not exist in our copy "
                              "of the PDB database.")
             self.assertFalse(saliweb.frontend.pdb_code_exists('1aaaaaa'))
-            self.assertTrue(saliweb.frontend.pdb_code_exists('1xyz'))
+            self.assertRaises(ValueError,
+                saliweb.frontend.pdb_code_exists, '1xyz', formats=['not-pdb'])
+            self.assertTrue(saliweb.frontend.pdb_code_exists(
+                '1xyz', formats=['PDB']))
+            self.assertTrue(saliweb.frontend.pdb_code_exists(
+                '1xyz', formats=['MMCIF']))
             p = saliweb.frontend.get_pdb_code('1xyz', tmpdir)
             self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
+            p = saliweb.frontend.get_pdb_code(
+                '1xyz', tmpdir, formats=['PDB', 'MMCIF'])
+            self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
             os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
+
+            p = saliweb.frontend.get_pdb_code(
+                '1xyz', tmpdir, formats=['MMCIF', 'PDB'])
+            self.assertEqual(p, os.path.join(tmpdir, '1xyz.cif'))
+            os.unlink(os.path.join(tmpdir, '1xyz.cif'))
             flask.current_app = None
 
     def test_get_pdb_chains(self):
