@@ -184,6 +184,10 @@ class Tests(unittest.TestCase):
             bad_pdb = os.path.join(tmpdir, 'bad.pdb')
             with open(bad_pdb, 'w') as fh:
                 fh.write("not a pdb\n")
+            # Use .pdb file extension but actually contain mmCIF data
+            good_cif = os.path.join(tmpdir, 'goodcif.pdb')
+            with open(good_cif, 'w') as fh:
+                fh.write("loop_\n_atom_site.group_PDB\nATOM\nATOM\n")
 
             saliweb.frontend.check_pdb(good_pdb)
             saliweb.frontend.check_pdb(good_pdb, show_filename='good.pdb')
@@ -195,6 +199,14 @@ class Tests(unittest.TestCase):
                               show_filename='bad.pdb')
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_pdb_or_mmcif, bad_pdb)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb, good_cif)
+            # check_pdb_or_mmcif should fail on a good cif too since it
+            # should treat it as a PDB file based on the .pdb file extension
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb_or_mmcif, good_cif)
+            # Should pass though if forced to treat it as mmCIF
+            saliweb.frontend.check_mmcif(good_cif)
 
     def test_check_mmcif(self):
         """Test check_mmcif"""

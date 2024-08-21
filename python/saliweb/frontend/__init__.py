@@ -499,6 +499,10 @@ def check_pdb(filename, show_filename=None):
     # Use latin1 to avoid decode errors with 8-bit characters
     with open(filename, encoding='latin1') as fh:
         for line in fh:
+            if line.startswith('data_') or line.startswith('loop_'):
+                raise InputValidationError(
+                    "%s looks like an mmCIF file, not a legacy PDB file"
+                    % pdb_file)
             if line.startswith('ATOM  ') or line.startswith('HETATM'):
                 return
     raise InputValidationError("%s contains no ATOM or HETATM records!"
