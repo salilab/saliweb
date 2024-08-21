@@ -187,11 +187,14 @@ class Tests(unittest.TestCase):
 
             saliweb.frontend.check_pdb(good_pdb)
             saliweb.frontend.check_pdb(good_pdb, show_filename='good.pdb')
+            saliweb.frontend.check_pdb_or_mmcif(good_pdb)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_pdb, bad_pdb)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_pdb, bad_pdb,
                               show_filename='bad.pdb')
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb_or_mmcif, bad_pdb)
 
     def test_check_mmcif(self):
         """Test check_mmcif"""
@@ -205,11 +208,14 @@ class Tests(unittest.TestCase):
 
             saliweb.frontend.check_mmcif(good_cif)
             saliweb.frontend.check_mmcif(good_cif, show_filename='good.cif')
+            saliweb.frontend.check_pdb_or_mmcif(good_cif)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_mmcif, bad_cif)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_mmcif, bad_cif,
                               show_filename='bad.cif')
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_pdb_or_mmcif, bad_cif)
 
     def test_check_modeller_key(self):
         """Test check_modeller_key function"""

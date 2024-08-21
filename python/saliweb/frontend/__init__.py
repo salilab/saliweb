@@ -542,6 +542,24 @@ def check_mmcif(filename, show_filename=None):
             "%s contains no _atom_site entries!" % cif_file)
 
 
+def check_pdb_or_mmcif(filename, show_filename=None):
+    """Check that a PDB or mmCIF file really looks like an (atomic) PDB
+       or mmCIF file.
+       If it does not, raise an :exc:`InputValidationError` exception.
+       This simply calls :func:`check_mmcif` if the file has a ``.cif``
+       extension, or :func:`check_pdb` otherwise.
+
+       :param str filename: The file to check.
+       :param str show_filename: If provided, include this filename in any
+              error message to identify the file (useful for services
+              that allow upload of multiple files).
+    """
+    if filename.endswith('.cif'):
+        return check_mmcif(filename, show_filename=show_filename)
+    else:
+        return check_pdb(filename, show_filename=show_filename)
+
+
 def check_modeller_key(modkey):
     """Check a provided MODELLER key.
        If the key is empty or invalid, raise an
