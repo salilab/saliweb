@@ -668,8 +668,9 @@ passwd: test_fe_pwd
                              "PDB code '1aaaaaa' does not exist in our copy "
                              "of the PDB database.")
             self.assertFalse(saliweb.frontend.pdb_code_exists('1aaaaaa'))
-            self.assertRaises(ValueError,
-                saliweb.frontend.pdb_code_exists, '1xyz', formats=['not-pdb'])
+            self.assertRaises(
+                ValueError, saliweb.frontend.pdb_code_exists, '1xyz',
+                formats=['not-pdb'])
             self.assertTrue(saliweb.frontend.pdb_code_exists(
                 '1xyz', formats=['PDB']))
             self.assertTrue(saliweb.frontend.pdb_code_exists(
