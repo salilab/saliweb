@@ -692,51 +692,122 @@ passwd: test_fe_pwd
         """Test get_pdb_chains function"""
         class MockApp(object):
             def __init__(self, tmpdir):
-                self.config = {'PDB_ROOT': tmpdir}
+                self.config = {'PDB_ROOT': os.path.join(tmpdir, 'pdb'),
+                               'MMCIF_ROOT': os.path.join(tmpdir, 'mmCIF')}
         with tempfile.TemporaryDirectory() as tmpdir:
-            make_test_pdb(tmpdir)
+            pdb_dir = os.path.join(tmpdir, 'pdb')
+            mmcif_dir = os.path.join(tmpdir, 'mmCIF')
+            os.mkdir(pdb_dir)
+            os.mkdir(mmcif_dir)
+            make_test_pdb(pdb_dir)
+            make_test_mmcif(mmcif_dir)
             flask.current_app = MockApp(tmpdir)
-            # No chains specified
+            # No chains specified, PDB
             p = saliweb.frontend.get_pdb_chains('1xyz', tmpdir)
             self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
             os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
 
-            # "-" chain requested
-            p = saliweb.frontend.get_pdb_chains('1xyz:-', tmpdir)
+            # No chains specified, mmCIF
+            p = saliweb.frontend.get_pdb_chains('1xyz', tmpdir,
+                                                formats=['MMCIF'])
+            self.assertEqual(p, os.path.join(tmpdir, '1xyz.cif'))
+            os.unlink(os.path.join(tmpdir, '1xyz.cif'))
+
+            # "-" chain requested, PDB
+            p = saliweb.frontend.get_pdb_chains('1xyz:-', tmpdir,
+                                                formats=['PDB'])
             self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
             os.unlink(os.path.join(tmpdir, 'pdb1xyz.ent'))
+
+            # "-" chain requested, mmCIF
+            p = saliweb.frontend.get_pdb_chains('1xyz:-', tmpdir,
+                                                formats=['MMCIF'])
+            self.assertEqual(p, os.path.join(tmpdir, '1xyz.cif'))
+            os.unlink(os.path.join(tmpdir, '1xyz.cif'))
 
             # Invalid chain requested
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:\t",
                               tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:\t",
+                              tmpdir, formats=['MMCIF'])
 
             # One chain (E) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:C,D,E",
                               tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:C,D,E",
+                              tmpdir, formats=['MMCIF'])
 
             # Multiple chains (E,F) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:C,D,E,F",
                               tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:C,D,E,F",
+                              tmpdir, formats=['MMCIF'])
 
             # Two-character chain not present in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:CD",
                               tmpdir)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:CD",
+                              tmpdir, formats=['MMCIF'])
 
-            # One OK chain requested
+            # One OK chain requested, PDB
             p = saliweb.frontend.get_pdb_chains('1xyz:C', tmpdir)
-            self.assertEqual(p, os.path.join(tmpdir, '1xyzC.pdb'))
-            os.unlink(os.path.join(tmpdir, '1xyzC.pdb'))
+            outf = os.path.join(tmpdir, '1xyzC.pdb')
+            self.assertEqual(p, outf)
+            self._check_pdb_chains(outf, ['C'])
+            os.unlink(outf)
 
-            # Two OK chains requested
+            # One OK chain requested, mmCIF
+            p = saliweb.frontend.get_pdb_chains('1xyz:C', tmpdir,
+                                                formats=['MMCIF'])
+            outf = os.path.join(tmpdir, '1xyzC.cif')
+            self.assertEqual(p, outf)
+            self._check_mmcif_chains(outf, ['C'])
+            os.unlink(outf)
+
+            # Two OK chains requested, PDB
             p = saliweb.frontend.get_pdb_chains('1xyz:C,D', tmpdir)
-            self.assertEqual(p, os.path.join(tmpdir, '1xyzCD.pdb'))
-            os.unlink(os.path.join(tmpdir, '1xyzCD.pdb'))
+            outf = os.path.join(tmpdir, '1xyzCD.pdb')
+            self.assertEqual(p, outf)
+            self._check_pdb_chains(outf, ['C', 'D'])
+            os.unlink(outf)
+
+            # Two OK chains requested, mmCIF
+            p = saliweb.frontend.get_pdb_chains('1xyz:C,D', tmpdir,
+                                                formats=['MMCIF'])
+            outf = os.path.join(tmpdir, '1xyzCD.cif')
+            self.assertEqual(p, outf)
+            self._check_mmcif_chains(outf, ['C', 'D'])
+            os.unlink(outf)
 
             flask.current_app = None
+
+    def _check_pdb_chains(self, fname, exp_chains):
+        """Assert that the PDB file contains exactly the given chains"""
+        def yield_chains(fh):
+            for line in fh:
+                if line.startswith('HETATM') or line.startswith('ATOM'):
+                    yield line[21]
+        with open(fname) as fh:
+            chains = frozenset(yield_chains(fh))
+        self.assertEqual(chains, frozenset(exp_chains))
+
+    def _check_mmcif_chains(self, fname, exp_chains):
+        """Assert that the mmCIF file contains exactly the given chains"""
+        def yield_chains(fh):
+            for line in fh:
+                if line.startswith('HETATM') or line.startswith('ATOM'):
+                    yield line.split()[14]
+        with open(fname) as fh:
+            chains = frozenset(yield_chains(fh))
+        self.assertEqual(chains, frozenset(exp_chains))
 
 
 if __name__ == '__main__':

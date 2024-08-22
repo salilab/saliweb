@@ -7,6 +7,7 @@ import os
 import sys
 import re
 import ihm.format
+import contextlib
 import logging.handlers
 import shutil
 import gzip
@@ -661,52 +662,120 @@ def _filter_pdb_chains(in_pdb, out_pdb, chain_ids):
                     fh_out.write(line)
 
 
-def get_pdb_chains(pdb_chain, outdir):
-    """Similar to :func:`get_pdb_code`, find a PDB in our database, and make a
-       new PDB containing just the requested comma-separated chains (if any)
-       in the given directory. The PDB code and the chains are separated
-       by a colon. (If there is no colon, no chains, or the chains are
-       just '-', this does the same thing as :func:`get_pdb_code`.)
-       For example, '1xyz:A,C' would make a new PDB file containing just
-       the A and C chains from the 1xyz PDB, while '1xyz:AC' would select
+def get_pdb_chains(pdb_chain, outdir, formats=["PDB"]):
+    """Similar to :func:`get_pdb_code`, find a PDB or mmCIF file in our
+       database, and make a new structure file containing just the requested
+       comma-separated chains (if any) in the given directory. The PDB code
+       and the chains are separated by a colon. (If there is no colon, no
+       chains, or the chains are just '-', this does the same thing as
+       :func:`get_pdb_code`.)
+       For example, '1xyz:A,C' would make a new PDB/mmCIF file containing just
+       the A and C chains from the 1xyz PDB/mmCIF, while '1xyz:AC' would select
        a single chain called 'AC' (if any). The full path to the file
        is returned. If the code is invalid or does not exist, or at least
-       one chain is specified that is not in the PDB file, raise
+       one chain is specified that is not in the PDB/mmCIF file, raise
        an :exc:`InputValidationError` exception.
-
-       This function currently works only with legacy PDB format, not mmCIF.
 
        :param str pdb_chain: PDB code and comma-separated chain IDs,
               separated by a colon
        :param str outdir: Directory to write the PDB file into
-       :return: Full path to the new PDB file
+       :param list formats: File formats to look for, in order. Valid formats
+              are ``PDB`` and ``MMCIF``.
+       :return: Full path to the new PDB/mmCIF file
     """
 
     pdb_split = pdb_chain.split(':')
 
-    pdb_file = get_pdb_code(pdb_split[0], outdir)
+    pdb_file = get_pdb_code(pdb_split[0], outdir, formats=formats)
     if len(pdb_split) == 1 or pdb_split[1] == '-':  # no chains given
         return pdb_file
 
     if not re.match(r'[\w,]*$', pdb_split[1]):
         raise InputValidationError("Invalid chain IDs %s" % pdb_split[1])
 
+    pdb_code = pdb_split[0]
     chain_ids = pdb_split[1].split(',')
 
+    if pdb_file.endswith('.cif'):
+        return _get_mmcif_chains(outdir, pdb_file, pdb_code, chain_ids)
+    else:
+        return _get_pdb_chains_internal(outdir, pdb_file, pdb_code, chain_ids)
+
+
+def _get_mmcif_chains(outdir, pdb_file, pdb_code, chain_ids):
+    out_file = os.path.join(
+        outdir, "%s%s.cif" % (pdb_code, "".join(chain_ids)))
+    with open(pdb_file, encoding='latin1') as in_fh:
+        with open(out_file, 'w', encoding='latin1') as out_fh:
+            with contextlib.ExitStack() as stack:
+                writer = ihm.format.CifWriter(out_fh)
+                ash = _AtomSiteChainFilter(writer, stack, chain_ids)
+                c = ihm.format.CifReader(in_fh,
+                                         category_handler={'_atom_site': ash})
+                c.read_file()  # read first block
+    missing = [c for c in chain_ids if c not in ash.seen_chains]
+    if missing:
+        os.unlink(out_file)
+        _report_missing_chains(missing, 'mmCIF')
+    return out_file
+
+
+def _get_pdb_chains_internal(outdir, pdb_file, pdb_code, chain_ids):
     # Check user-specified chains exist in PDB
     pdb_chains = _get_chains_in_pdb(pdb_file)
     missing = [c for c in chain_ids if c not in pdb_chains]
     if missing:
-        missing_txt = " %s does" if len(missing) == 1 else "s %s do"
-        raise InputValidationError(
-            "The given chain%s not exist in the PDB file" %
-            (missing_txt % ",".join(missing)))
-
+        _report_missing_chains(missing, 'PDB')
     out_pdb_file = os.path.join(
-        outdir, "%s%s.pdb" % (pdb_split[0], "".join(chain_ids)))
+        outdir, "%s%s.pdb" % (pdb_code, "".join(chain_ids)))
     _filter_pdb_chains(pdb_file, out_pdb_file, frozenset(chain_ids))
     os.unlink(pdb_file)
     return out_pdb_file
+
+
+class _AtomSiteChainFilter:
+    """Read the _atom_site table from an mmCIF file, and output a new mmCIF
+       file containing only the selected chains"""
+
+    not_in_file = omitted = None
+    unknown = ihm.unknown
+
+    def __init__(self, writer, stack, chain_ids):
+        self.seen_chains = set()
+        self._chain_ids = frozenset(chain_ids)
+        self._lw = stack.enter_context(
+            writer.loop("_atom_site",
+                        ["group_PDB", "id", "type_symbol", "label_atom_id",
+                         "label_alt_id", "label_comp_id", "label_seq_id",
+                         "auth_seq_id", "pdbx_PDB_ins_code",
+                         "label_asym_id", "Cartn_x", "Cartn_y", "Cartn_z",
+                         "occupancy", "auth_asym_id",
+                         "B_iso_or_equiv", "pdbx_PDB_model_num"]))
+
+    # We read and write only the data items that IMP's mmCIF reader uses
+    def __call__(self, label_atom_id, label_comp_id, label_asym_id,
+                 auth_asym_id, type_symbol, label_seq_id, group_pdb, id,
+                 occupancy, b_iso_or_equiv, pdbx_pdb_ins_code, cartn_x,
+                 cartn_y, cartn_z, pdbx_pdb_model_num, auth_seq_id,
+                 label_alt_id):
+        self.seen_chains.add(auth_asym_id)
+        if auth_asym_id in self._chain_ids:
+            self._lw.write(
+                group_PDB=group_pdb, id=id, type_symbol=type_symbol,
+                label_atom_id=label_atom_id, label_alt_id=label_alt_id,
+                label_comp_id=label_comp_id, label_seq_id=label_seq_id,
+                auth_seq_id=auth_seq_id, pdbx_PDB_ins_code=pdbx_pdb_ins_code,
+                label_asym_id=label_asym_id, Cartn_x=cartn_x, Cartn_y=cartn_y,
+                Cartn_z=cartn_z, occupancy=occupancy,
+                auth_asym_id=auth_asym_id, B_iso_or_equiv=b_iso_or_equiv,
+                pdbx_PDB_model_num=pdbx_pdb_model_num)
+
+
+def _report_missing_chains(missing, fmt):
+    missing_txt = " %s does" if len(missing) == 1 else "s %s do"
+    raise InputValidationError(
+        "The given chain%s not exist in the %s file"
+        % (missing_txt % ",".join(missing), fmt))
 
 
 def render_results_template(template_name, job, extra_xml_outputs=[],
