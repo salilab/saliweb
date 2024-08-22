@@ -713,12 +713,17 @@ passwd: test_fe_pwd
 
             # One chain (E) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
-                              saliweb.frontend.get_pdb_chains, "1xyz:CDE",
+                              saliweb.frontend.get_pdb_chains, "1xyz:C,D,E",
                               tmpdir)
 
             # Multiple chains (E,F) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
-                              saliweb.frontend.get_pdb_chains, "1xyz:CDEF",
+                              saliweb.frontend.get_pdb_chains, "1xyz:C,D,E,F",
+                              tmpdir)
+
+            # Two-character chain not present in PDB
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.get_pdb_chains, "1xyz:CD",
                               tmpdir)
 
             # One OK chain requested
@@ -727,7 +732,7 @@ passwd: test_fe_pwd
             os.unlink(os.path.join(tmpdir, '1xyzC.pdb'))
 
             # Two OK chains requested
-            p = saliweb.frontend.get_pdb_chains('1xyz:Cd', tmpdir)
+            p = saliweb.frontend.get_pdb_chains('1xyz:C,D', tmpdir)
             self.assertEqual(p, os.path.join(tmpdir, '1xyzCD.pdb'))
             os.unlink(os.path.join(tmpdir, '1xyzCD.pdb'))
 

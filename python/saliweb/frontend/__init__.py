@@ -663,19 +663,21 @@ def _filter_pdb_chains(in_pdb, out_pdb, chain_ids):
 
 def get_pdb_chains(pdb_chain, outdir):
     """Similar to :func:`get_pdb_code`, find a PDB in our database, and make a
-       new PDB containing just the requested one-letter chains (if any)
+       new PDB containing just the requested comma-separated chains (if any)
        in the given directory. The PDB code and the chains are separated
        by a colon. (If there is no colon, no chains, or the chains are
        just '-', this does the same thing as :func:`get_pdb_code`.)
-       For example, '1xyz:AC' would make a new PDB file containing just
-       the A and C chains from the 1xyz PDB. The full path to the file
+       For example, '1xyz:A,C' would make a new PDB file containing just
+       the A and C chains from the 1xyz PDB, while '1xyz:AC' would select
+       a single chain called 'AC' (if any). The full path to the file
        is returned. If the code is invalid or does not exist, or at least
        one chain is specified that is not in the PDB file, raise
        an :exc:`InputValidationError` exception.
 
        This function currently works only with legacy PDB format, not mmCIF.
 
-       :param str pdb_chain: PDB code and chain IDs, separated by a colon
+       :param str pdb_chain: PDB code and comma-separated chain IDs,
+              separated by a colon
        :param str outdir: Directory to write the PDB file into
        :return: Full path to the new PDB file
     """
@@ -686,9 +688,10 @@ def get_pdb_chains(pdb_chain, outdir):
     if len(pdb_split) == 1 or pdb_split[1] == '-':  # no chains given
         return pdb_file
 
-    chain_ids = pdb_split[1].upper()
-    if not re.match(r'\w*$', chain_ids):
-        raise InputValidationError("Invalid chain IDs %s", chain_ids)
+    if not re.match(r'[\w,]*$', pdb_split[1]):
+        raise InputValidationError("Invalid chain IDs %s" % pdb_split[1])
+
+    chain_ids = pdb_split[1].split(',')
 
     # Check user-specified chains exist in PDB
     pdb_chains = _get_chains_in_pdb(pdb_file)
@@ -699,7 +702,8 @@ def get_pdb_chains(pdb_chain, outdir):
             "The given chain%s not exist in the PDB file" %
             (missing_txt % chain_ids))
 
-    out_pdb_file = os.path.join(outdir, "%s%s.pdb" % (pdb_split[0], chain_ids))
+    out_pdb_file = os.path.join(
+        outdir, "%s%s.pdb" % (pdb_split[0], "".join(chain_ids)))
     _filter_pdb_chains(pdb_file, out_pdb_file, frozenset(chain_ids))
     os.unlink(pdb_file)
     return out_pdb_file
