@@ -691,6 +691,7 @@ def get_pdb_chains(pdb_chain, outdir, formats=["PDB"]):
         return pdb_file
 
     if not re.match(r'[\w,]*$', pdb_split[1]):
+        os.unlink(pdb_file)
         raise InputValidationError("Invalid chain IDs %s" % pdb_split[1])
 
     pdb_code = pdb_split[0]
@@ -713,6 +714,7 @@ def _get_mmcif_chains(outdir, pdb_file, pdb_code, chain_ids):
                 c = ihm.format.CifReader(in_fh,
                                          category_handler={'_atom_site': ash})
                 c.read_file()  # read first block
+    os.unlink(pdb_file)
     missing = [c for c in chain_ids if c not in ash.seen_chains]
     if missing:
         os.unlink(out_file)
@@ -725,6 +727,7 @@ def _get_pdb_chains_internal(outdir, pdb_file, pdb_code, chain_ids):
     pdb_chains = _get_chains_in_pdb(pdb_file)
     missing = [c for c in chain_ids if c not in pdb_chains]
     if missing:
+        os.unlink(pdb_file)
         _report_missing_chains(missing, 'PDB')
     out_pdb_file = os.path.join(
         outdir, "%s%s.pdb" % (pdb_code, "".join(chain_ids)))

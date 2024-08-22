@@ -729,17 +729,29 @@ passwd: test_fe_pwd
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:\t",
                               tmpdir)
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, 'pdb1xyz.ent')))
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:\t",
                               tmpdir, formats=['MMCIF'])
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, '1xyz.cif')))
 
             # One chain (E) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:C,D,E",
                               tmpdir)
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, 'pdb1xyz.ent')))
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, 'pdb1xyzCDE.ent')))
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_chains, "1xyz:C,D,E",
                               tmpdir, formats=['MMCIF'])
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, '1xyz.cif')))
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, '1xyzCDE.cif')))
 
             # Multiple chains (E,F) not in PDB
             self.assertRaises(saliweb.frontend.InputValidationError,
@@ -759,6 +771,8 @@ passwd: test_fe_pwd
 
             # One OK chain requested, PDB
             p = saliweb.frontend.get_pdb_chains('1xyz:C', tmpdir)
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, 'pdb1xyz.ent')))
             outf = os.path.join(tmpdir, '1xyzC.pdb')
             self.assertEqual(p, outf)
             self._check_pdb_chains(outf, ['C'])
@@ -767,6 +781,8 @@ passwd: test_fe_pwd
             # One OK chain requested, mmCIF
             p = saliweb.frontend.get_pdb_chains('1xyz:C', tmpdir,
                                                 formats=['MMCIF'])
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, '1xyz.cif')))
             outf = os.path.join(tmpdir, '1xyzC.cif')
             self.assertEqual(p, outf)
             self._check_mmcif_chains(outf, ['C'])
@@ -774,6 +790,8 @@ passwd: test_fe_pwd
 
             # Two OK chains requested, PDB
             p = saliweb.frontend.get_pdb_chains('1xyz:C,D', tmpdir)
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, 'pdb1xyz.ent')))
             outf = os.path.join(tmpdir, '1xyzCD.pdb')
             self.assertEqual(p, outf)
             self._check_pdb_chains(outf, ['C', 'D'])
@@ -782,6 +800,8 @@ passwd: test_fe_pwd
             # Two OK chains requested, mmCIF
             p = saliweb.frontend.get_pdb_chains('1xyz:C,D', tmpdir,
                                                 formats=['MMCIF'])
+            self.assertFalse(
+                os.path.exists(os.path.join(tmpdir, '1xyz.cif')))
             outf = os.path.join(tmpdir, '1xyzCD.cif')
             self.assertEqual(p, outf)
             self._check_mmcif_chains(outf, ['C', 'D'])
