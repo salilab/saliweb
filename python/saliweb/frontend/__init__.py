@@ -590,8 +590,13 @@ def _get_pdb_paths(code, fmt='PDB'):
         root = flask.current_app.config['MMCIF_ROOT']
         return (os.path.join(root, code[1:3], '%s.cif.gz' % code),
                 '%s.cif' % code)
+    elif fmt == 'IHM':
+        root = flask.current_app.config['IHM_ROOT']
+        return (os.path.join(root, code[1:3], code, 'structures',
+                             '%s.cif.gz' % code), '%s.cif' % code)
     else:
-        raise ValueError("Invalid format %s; should be PDB or MMCIF" % fmt)
+        raise ValueError(
+            "Invalid format %s; should be PDB, MMCIF or IHM" % fmt)
 
 
 def pdb_code_exists(code, formats=["PDB"]):
@@ -600,7 +605,7 @@ def pdb_code_exists(code, formats=["PDB"]):
 
        :param str code: The PDB code to access (e.g. 1abc)
        :param list formats: File formats to look for, in order. Valid formats
-              are ``PDB`` and ``MMCIF``.
+              are ``PDB``, ``MMCIF`` and ``IHM``.
     """
     for fmt in formats:
         inpdb, outpdb = _get_pdb_paths(code, fmt)
@@ -620,7 +625,8 @@ def get_pdb_code(code, outdir, formats=["PDB"]):
        :param str code: The PDB code to access (e.g. 1abc)
        :param str outdir: The directory to copy the PDB file into
        :param list formats: File formats to look for, in order. Valid formats
-              are ``PDB`` and ``MMCIF``. For example, ``['PDB', 'MMCIF']``
+              are ``PDB``, ``MMCIF`` and ``IHM`` (integrative models in mmCIF
+              format). For example, ``['PDB', 'MMCIF']``
               would return a PDB file if possible, or an mmCIF file if
               the code is not available in PDB format (e.g. newer larger
               structures such as ``1vvj``).
@@ -680,7 +686,7 @@ def get_pdb_chains(pdb_chain, outdir, formats=["PDB"]):
               separated by a colon
        :param str outdir: Directory to write the PDB file into
        :param list formats: File formats to look for, in order. Valid formats
-              are ``PDB`` and ``MMCIF``.
+              are ``PDB``, ``MMCIF`` and ``IHM``.
        :return: Full path to the new PDB/mmCIF file
     """
 

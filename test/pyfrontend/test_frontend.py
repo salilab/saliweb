@@ -37,9 +37,17 @@ def make_test_pdb(tmpdir):
                  "1.00 23.91           N\n")
 
 
-def make_test_mmcif(tmpdir):
-    os.mkdir(os.path.join(tmpdir, 'xy'))
-    with gzip.open(os.path.join(tmpdir, 'xy', '1xyz.cif.gz'), 'wt') as fh:
+def make_test_mmcif(tmpdir, ihm=False):
+    if ihm:
+        os.mkdir(os.path.join(tmpdir, 'zz'))
+        os.mkdir(os.path.join(tmpdir, 'zz', '1zza'))
+        os.mkdir(os.path.join(tmpdir, 'zz', '1zza', 'structures'))
+        fname = os.path.join(tmpdir, 'zz', '1zza', 'structures', '1zza.cif.gz')
+    else:
+        os.mkdir(os.path.join(tmpdir, 'xy'))
+        fname = os.path.join(tmpdir, 'xy', '1xyz.cif.gz')
+
+    with gzip.open(fname, 'wt') as fh:
         fh.write("""
 loop_
 _atom_site.group_PDB
@@ -650,14 +658,18 @@ passwd: test_fe_pwd
         class MockApp(object):
             def __init__(self, tmpdir):
                 self.config = {'PDB_ROOT': os.path.join(tmpdir, 'pdb'),
-                               'MMCIF_ROOT': os.path.join(tmpdir, 'mmCIF')}
+                               'MMCIF_ROOT': os.path.join(tmpdir, 'mmCIF'),
+                               'IHM_ROOT': os.path.join(tmpdir, 'ihm')}
         with tempfile.TemporaryDirectory() as tmpdir:
             pdb_dir = os.path.join(tmpdir, 'pdb')
             mmcif_dir = os.path.join(tmpdir, 'mmCIF')
+            ihm_dir = os.path.join(tmpdir, 'ihm')
             os.mkdir(pdb_dir)
             os.mkdir(mmcif_dir)
+            os.mkdir(ihm_dir)
             make_test_pdb(pdb_dir)
             make_test_mmcif(mmcif_dir)
+            make_test_mmcif(ihm_dir, ihm=True)
             flask.current_app = MockApp(tmpdir)
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.get_pdb_code, "1@bc", tmpdir)
@@ -675,6 +687,9 @@ passwd: test_fe_pwd
                 '1xyz', formats=['PDB']))
             self.assertTrue(saliweb.frontend.pdb_code_exists(
                 '1xyz', formats=['MMCIF']))
+            # Check in IHM directory structure
+            self.assertTrue(saliweb.frontend.pdb_code_exists(
+                '1zza', formats=['IHM']))
             p = saliweb.frontend.get_pdb_code('1xyz', tmpdir)
             self.assertEqual(p, os.path.join(tmpdir, 'pdb1xyz.ent'))
             p = saliweb.frontend.get_pdb_code(
