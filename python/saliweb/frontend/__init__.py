@@ -700,7 +700,7 @@ def get_pdb_chains(pdb_chain, outdir):
         missing_txt = " %s does" if len(missing) == 1 else "s %s do"
         raise InputValidationError(
             "The given chain%s not exist in the PDB file" %
-            (missing_txt % chain_ids))
+            (missing_txt % ",".join(chain_ids)))
 
     out_pdb_file = os.path.join(
         outdir, "%s%s.pdb" % (pdb_split[0], "".join(chain_ids)))
