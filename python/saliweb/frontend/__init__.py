@@ -695,12 +695,12 @@ def get_pdb_chains(pdb_chain, outdir):
 
     # Check user-specified chains exist in PDB
     pdb_chains = _get_chains_in_pdb(pdb_file)
-    missing = ", ".join(c for c in chain_ids if c not in pdb_chains)
+    missing = [c for c in chain_ids if c not in pdb_chains]
     if missing:
         missing_txt = " %s does" if len(missing) == 1 else "s %s do"
         raise InputValidationError(
             "The given chain%s not exist in the PDB file" %
-            (missing_txt % ",".join(chain_ids)))
+            (missing_txt % ",".join(missing)))
 
     out_pdb_file = os.path.join(
         outdir, "%s%s.pdb" % (pdb_split[0], "".join(chain_ids)))
