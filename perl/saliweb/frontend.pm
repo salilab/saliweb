@@ -889,17 +889,17 @@ sub check_modeller_key {
 }
 
 sub _get_pdb_paths {
-    my ($code, $fmt) = @_;
+    my ($code, $outdir, $fmt) = @_;
     $code = lc $code; # PDB codes are case insensitive
     if ($fmt eq "PDB") {
         return $pdb_root . substr($code, 1, 2) . "/pdb${code}.ent.gz",
-               "./pdb${code}.ent";
+               "${outdir}/pdb${code}.ent";
     } elsif ($fmt eq "MMCIF") {
         return $mmcif_root . substr($code, 1, 2) . "/${code}.cif.gz",
-               "./${code}.cif";
+               "${outdir}/${code}.cif";
     } elsif ($fmt eq "IHM") {
         return $ihm_root . substr($code, 1, 2)
-               . "/${code}/structures/${code}.cif.gz", "./${code}.cif";
+               . "/${code}/structures/${code}.cif.gz", "${outdir}/${code}.cif";
     } else {
         throw saliweb::frontend::InternalError(
             "Invalid format $fmt; should be PDB, MMCIF, or IHM");
@@ -912,7 +912,7 @@ sub pdb_code_exists {
       push @formats, "PDB";
     }
     for my $fmt (@formats) {
-        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, $fmt);
+        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, ".", $fmt);
         if (-e $in_pdb) {
             return 1;
         }
@@ -933,7 +933,7 @@ sub get_pdb_code {
     }
 
     for my $fmt (@formats) {
-        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, $fmt);
+        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, $outdir, $fmt);
         if (-e $in_pdb) {
             system("gunzip -c $in_pdb > $out_pdb") == 0 or
                     throw saliweb::frontend::InternalError(
