@@ -369,8 +369,10 @@ require Exporter;
              get_pdb_code get_pdb_chains pdb_code_exists get_modeller_key
              sanitize_filename);
 
-# Location of our PDB mirror.
+# Locations of our PDB mirror.
 our $pdb_root = "/wynton/home/database/pdb/remediated/pdb/";
+our $mmcif_root = "/wynton/home/database/pdb/remediated/mmCIF/";
+our $ihm_root = "/wynton/home/database/pdb/remediated/ihm/";
 
 use File::Spec;
 use DBI;
@@ -886,37 +888,62 @@ sub check_modeller_key {
     }
 }
 
-sub pdb_code_exists {
-    my ($code) = @_;
+sub _get_pdb_paths {
+    my ($code, $fmt) = @_;
     $code = lc $code; # PDB codes are case insensitive
-    my $in_pdb = $pdb_root . substr($code, 1, 2) . "/pdb" . $code . ".ent.gz";
-    return -e $in_pdb;
+    if ($fmt eq "PDB") {
+        return $pdb_root . substr($code, 1, 2) . "/pdb${code}.ent.gz",
+               "./pdb${code}.ent";
+    } elsif ($fmt eq "MMCIF") {
+        return $mmcif_root . substr($code, 1, 2) . "/${code}.cif.gz",
+               "./${code}.cif";
+    } elsif ($fmt eq "IHM") {
+        return $ihm_root . substr($code, 1, 2)
+               . "/${code}/structures/${code}.cif.gz", "./${code}.cif";
+    } else {
+        throw saliweb::frontend::InternalError(
+            "Invalid format $fmt; should be PDB, MMCIF, or IHM");
+    }
+}
+
+sub pdb_code_exists {
+    my ($code, @formats) = @_;
+    if ($#formats < 0) {
+      push @formats, "PDB";
+    }
+    for my $fmt (@formats) {
+        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, $fmt);
+        if (-e $in_pdb) {
+            return 1;
+        }
+    }
+    return undef;
 }
 
 sub get_pdb_code {
-    my ($code, $outdir) = @_;
+    my ($code, $outdir, @formats) = @_;
+    if ($#formats < 0) {
+      push @formats, "PDB";
+    }
 
-    if ($code =~ m/^([A-Za-z0-9]+)$/) {
-      $code = lc $1; # PDB codes are case insensitive
-    } else {
+    if ($code !~ m/^([A-Za-z0-9]+)$/) {
         throw saliweb::frontend::InputValidationError(
                  "You have entered an invalid PDB code; valid codes " .
                  "contain only letters and numbers, e.g. 1abc");
     }
 
-    my $in_pdb = $pdb_root . substr($code, 1, 2) . "/pdb" . $code . ".ent.gz";
-    my $out_pdb = "$outdir/pdb${code}.ent";
-
-    if (! -e $in_pdb) {
-        throw saliweb::frontend::InputValidationError(
-                 "PDB code '$code' does not exist in our copy of the " .
-                 "PDB database.");
-    } else {
-        system("gunzip -c $in_pdb > $out_pdb") == 0 or
-                throw saliweb::frontend::InternalError(
-                                 "gunzip of $in_pdb to $out_pdb failed: $?");
-        return $out_pdb;
+    for my $fmt (@formats) {
+        my ($in_pdb, $out_pdb) = _get_pdb_paths($code, $fmt);
+        if (-e $in_pdb) {
+            system("gunzip -c $in_pdb > $out_pdb") == 0 or
+                    throw saliweb::frontend::InternalError(
+                                   "gunzip of $in_pdb to $out_pdb failed: $?");
+            return $out_pdb;
+        }
     }
+    throw saliweb::frontend::InputValidationError(
+             "PDB code '$code' does not exist in our copy of the " .
+             "PDB database.");
 }
 
 # Get chains in PDB file

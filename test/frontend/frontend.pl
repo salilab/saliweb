@@ -646,12 +646,65 @@ sub make_test_pdb {
     ok(system("gzip $testpdb") == 0, "compress test pdb");
 }
 
+sub make_test_mmcif {
+    my $tmpdir = shift;
+    my $ihm = shift;
+    my $testcif;
+    if ($ihm) {
+        mkdir("$tmpdir/zz");
+        mkdir("$tmpdir/zz/1zza");
+        mkdir("$tmpdir/zz/1zza/structures");
+        $testcif = "$tmpdir/zz/1zza/structures/1zza.cif";
+    } else {
+        mkdir("$tmpdir/xy");
+        $testcif = "$tmpdir/xy/1xyz.cif";
+    }
+    ok(open(FH, "> $testcif"), "open test mmcif");
+    print FH <<END;
+loop_
+_atom_site.group_PDB
+_atom_site.type_symbol
+_atom_site.label_atom_id
+_atom_site.label_alt_id
+_atom_site.label_comp_id
+_atom_site.label_asym_id
+_atom_site.auth_asym_id
+_atom_site.label_seq_id
+_atom_site.auth_seq_id
+_atom_site.pdbx_PDB_ins_code
+_atom_site.Cartn_x
+_atom_site.Cartn_y
+_atom_site.Cartn_z
+_atom_site.occupancy
+_atom_site.B_iso_or_equiv
+_atom_site.label_entity_id
+_atom_site.id
+_atom_site.pdbx_PDB_model_num
+ATOM N N . ALA A C 1 1 ? 27.932 14.488 4.257 1.000 23.91 1 1 1
+ATOM N N . ALA B D 1 1 ? 27.932 14.488 4.257 1.000 23.91 1 2 1
+END
+    ok(close(FH), "close test mmcif");
+    ok(system("gzip $testcif") == 0, "compress test mmcif");
+}
+
 # Test get_pdb_code function
 {
     my $tmpdir = tempdir( CLEANUP => 1 );
-    my $oldroot = $saliweb::frontend::pdb_root;
-    $saliweb::frontend::pdb_root = $tmpdir . "/";
-    make_test_pdb($tmpdir);
+    my $pdbroot = "$tmpdir/pdb/";
+    my $cifroot = "$tmpdir/cif/";
+    my $ihmroot = "$tmpdir/ihm/";
+    mkdir($pdbroot);
+    mkdir($cifroot);
+    mkdir($ihmroot);
+    my $oldpdbroot = $saliweb::frontend::pdb_root;
+    my $oldcifroot = $saliweb::frontend::mmcif_root;
+    my $oldihmroot = $saliweb::frontend::ihm_root;
+    $saliweb::frontend::pdb_root = $pdbroot;
+    $saliweb::frontend::mmcif_root = $cifroot;
+    $saliweb::frontend::ihm_root = $ihmroot;
+    make_test_pdb($pdbroot);
+    make_test_mmcif($cifroot, 0);
+    make_test_mmcif($ihmroot, 1);
 
     throws_ok { get_pdb_code("1\@bc", ".") }
               'saliweb::frontend::InputValidationError',
@@ -662,13 +715,25 @@ sub make_test_pdb {
               "get_pdb_code (non-existing code)";
 
     is(pdb_code_exists("1aaaaaa"), undef, "pdb_code_exists (false)");
+    throws_ok { pdb_code_exists("1xyz", "not-pdb") }
+               'saliweb::frontend::InternalError',
+               "pdb_code_exists (invalid format)";
+
     ok(pdb_code_exists("1xyz"), "pdb_code_exists (true)");
+    ok(pdb_code_exists("1xyz", "MMCIF"), "pdb_code_exists (mmCIF, true)");
+    ok(pdb_code_exists("1zza", "IHM"), "pdb_code_exists (IHM, true)");
 
     my $code = get_pdb_code("1xyz", ".");
     is($code, "./pdb1xyz.ent", "get_pdb_code (valid code)");
     ok(unlink('pdb1xyz.ent'),  "                          (unlink)");
 
-    $saliweb::frontend::pdb_root = $oldroot;
+    $code = get_pdb_code("1xyz", ".", "MMCIF", "PDB");
+    is($code, "./1xyz.cif", "get_pdb_code (valid code, mmCIF format)");
+    ok(unlink('1xyz.cif'),  "                          (unlink)");
+
+    $saliweb::frontend::pdb_root = $oldpdbroot;
+    $saliweb::frontend::mmcif_root = $oldcifroot;
+    $saliweb::frontend::ihm_root = $oldihmroot;
 }
 
 # Test get_pdb_chains function
