@@ -41,6 +41,8 @@ The :mod:`saliweb.frontend` Python module
 
 .. autofunction:: check_mmcif
 
+.. autofunction:: check_bcif
+
 .. autofunction:: check_pdb
 
 .. autofunction:: pdb_code_exists

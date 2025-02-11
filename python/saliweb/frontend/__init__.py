@@ -516,7 +516,7 @@ class _AtomSiteHandler:
     def __init__(self):
         self.num_rows = 0
 
-    def __call__(self):
+    def __call__(self, cartn_x, cartn_y, cartn_z):
         self.num_rows += 1
 
 
@@ -545,6 +545,33 @@ def check_mmcif(filename, show_filename=None):
     if ash.num_rows == 0:
         raise InputValidationError(
             "%s contains no _atom_site entries!" % cif_file)
+
+
+def check_bcif(filename, show_filename=None):
+    """Check that a BinaryCIF file really looks like an (atomic) BinaryCIF
+       file. If it does not, raise an :exc:`InputValidationError` exception.
+
+       :param str filename: The BinaryCIF file to check.
+       :param str show_filename: If provided, include this filename in any
+              error message to identify the BinaryCIF file (useful for services
+              that allow upload of multiple BinaryCIF files).
+    """
+    if show_filename:
+        bcif_file = "BinaryCIF file %s" % show_filename
+    else:
+        bcif_file = "BinaryCIF file"
+    ash = _AtomSiteHandler()
+    with open(filename, 'rb') as fh:
+        c = ihm.format_bcif.BinaryCifReader(
+            fh, category_handler={'_atom_site': ash})
+        try:
+            c.read_file()  # read first block
+        except Exception as err:
+            raise InputValidationError(
+                "Invalid %s uploaded: %s" % (bcif_file, str(err)))
+    if ash.num_rows == 0:
+        raise InputValidationError(
+            "%s contains no _atom_site entries!" % bcif_file)
 
 
 def check_pdb_or_mmcif(filename, show_filename=None):

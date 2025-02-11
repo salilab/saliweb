@@ -6,6 +6,8 @@ import contextlib
 import os
 import gzip
 import tempfile
+import struct
+import ihm.format_bcif
 import flask
 
 
@@ -25,6 +27,32 @@ def request_mime_type(mime):
     flask.request = MockRequest()
     yield
     del flask.request
+
+
+def _add_msgpack(d, fh):
+    """Add `d` to filelike object `fh` in msgpack format"""
+    if isinstance(d, dict):
+        fh.write(struct.pack('>Bi', 0xdf, len(d)))
+        for key, val in d.items():
+            _add_msgpack(key, fh)
+            _add_msgpack(val, fh)
+    elif isinstance(d, list):
+        fh.write(struct.pack('>Bi', 0xdd, len(d)))
+        for val in d:
+            _add_msgpack(val, fh)
+    elif isinstance(d, str):
+        b = d.encode('utf8')
+        fh.write(struct.pack('>Bi', 0xdb, len(b)))
+        fh.write(b)
+    elif isinstance(d, bytes):
+        fh.write(struct.pack('>Bi', 0xc6, len(d)))
+        fh.write(d)
+    elif isinstance(d, int):
+        fh.write(struct.pack('>Bi', 0xce, d))
+    elif d is None:
+        fh.write(b'\xc0')
+    else:
+        raise TypeError("Cannot handle %s" % type(d))
 
 
 def make_test_pdb(tmpdir):
@@ -264,6 +292,32 @@ class Tests(unittest.TestCase):
                               show_filename='bad.cif')
             self.assertRaises(saliweb.frontend.InputValidationError,
                               saliweb.frontend.check_pdb_or_mmcif, bad_cif)
+
+    def test_check_bcif(self):
+        """Test check_bcif"""
+        c = {'name': 'Cartn_x',
+             'mask': None,
+             'data': {'data': struct.pack('<2d', 1.0, 2.0),
+                      'encoding':
+                      [{'kind': 'ByteArray',
+                        'type': ihm.format_bcif._Float64}]}}
+        d = {'dataBlocks': [{'categories': [{'name': '_atom_site',
+                                             'columns': [c]}]}]}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            good_bcif = os.path.join(tmpdir, 'good.bcif')
+            with open(good_bcif, 'wb') as fh:
+                _add_msgpack(d, fh)
+            bad_bcif = os.path.join(tmpdir, 'bad.bcif')
+            with open(bad_bcif, 'w') as fh:
+                fh.write('garbage')
+            saliweb.frontend.check_bcif(good_bcif)
+            saliweb.frontend.check_bcif(good_bcif, show_filename='good.bcif')
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_bcif, bad_bcif)
+            self.assertRaises(saliweb.frontend.InputValidationError,
+                              saliweb.frontend.check_bcif, bad_bcif,
+                              show_filename='bad.bcif')
 
     def test_check_modeller_key(self):
         """Test check_modeller_key function"""
