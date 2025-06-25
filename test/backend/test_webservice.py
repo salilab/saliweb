@@ -206,7 +206,6 @@ class WebServiceTest(unittest.TestCase):
 
     def test_max_running(self):
         """Make sure that limits.running is honored"""
-        global job_log
 
         def setup_two_incoming(running):
             global job_log
