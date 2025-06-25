@@ -165,7 +165,7 @@ def add_incoming_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['INCOMING'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
               "VALUES(?,?,?,?,?)", (name, 'INCOMING', utcnow, jobdir,
                                     'http://testurl'))
@@ -177,7 +177,7 @@ def add_running_job(db, name, completed):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['RUNNING'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,runner_id,directory, "
               "contact_email,url) VALUES(?,?,?,?,?,?,?)",
               (name, 'RUNNING', utcnow, 'mock:SGE-'+name, jobdir,
@@ -195,7 +195,7 @@ def add_completed_job(db, name, archive_time):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['COMPLETED'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     if archive_time is None:
         archive = None
     else:
@@ -212,7 +212,7 @@ def add_archived_job(db, name, expire_time):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['ARCHIVED'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     if expire_time is None:
         expire = None
     else:
@@ -227,7 +227,7 @@ def add_archived_job(db, name, expire_time):
 
 def add_expired_job(db, name):
     c = db.conn.cursor()
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory, "
               "url) VALUES(?,?,?,?,?)",
               (name, 'EXPIRED', utcnow, None, 'http://testurl'))
@@ -238,7 +238,7 @@ def add_failed_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['FAILED'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
               "VALUES(?,?,?,?,?)", (name, 'FAILED', utcnow, jobdir,
                                     'http://testurl'))
@@ -250,7 +250,7 @@ def add_preprocessing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['PREPROCESSING'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
               "VALUES(?,?,?,?,?)", (name, 'PREPROCESSING', utcnow, jobdir,
                                     'http://testurl'))
@@ -262,7 +262,7 @@ def add_postprocessing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['POSTPROCESSING'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
               "VALUES(?,?,?,?,?)", (name, 'POSTPROCESSING', utcnow, jobdir,
                                     'http://testurl'))
@@ -274,7 +274,7 @@ def add_finalizing_job(db, name):
     c = db.conn.cursor()
     jobdir = os.path.join(db.config.directories['FINALIZING'], name)
     os.mkdir(jobdir)
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
               "VALUES(?,?,?,?,?)", (name, 'FINALIZING', utcnow, jobdir,
                                     'http://testurl'))
@@ -354,7 +354,7 @@ class JobTest(unittest.TestCase):
 
     def test_sanity_check_no_directory(self):
         """Make sure that sanity checks catch jobs without directories"""
-        utcnow = datetime.datetime.utcnow()
+        utcnow = testutil._utcnow()
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
@@ -370,7 +370,7 @@ class JobTest(unittest.TestCase):
 
     def test_sanity_check_invalid_directory(self):
         """Make sure that sanity checks catch invalid job directories"""
-        utcnow = datetime.datetime.utcnow()
+        utcnow = testutil._utcnow()
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "

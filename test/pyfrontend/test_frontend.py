@@ -11,6 +11,14 @@ import ihm.format_bcif
 import flask
 
 
+def _utcnow():
+    """Get the current UTC time and date"""
+    # MySQLdb uses naive datetime objects. We store all dates in the DB
+    # in UTC. This function replaces datetime.datetime.utcnow() as that has
+    # been deprecated in modern Python.
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
+
 @contextlib.contextmanager
 def request_mime_type(mime):
     """Temporarily set the HTTP Accept header"""
@@ -126,8 +134,7 @@ class Tests(unittest.TestCase):
         def tm(**kwargs):
             # Add 0.3 seconds to account for the slightly different value of
             # utcnow between setup and when we call format_timediff
-            return (datetime.datetime.utcnow()
-                    + datetime.timedelta(microseconds=300, **kwargs))
+            return (_utcnow() + datetime.timedelta(microseconds=300, **kwargs))
 
         # Empty time
         self.assertEqual(_format_timediff(None), None)
@@ -209,8 +216,7 @@ class Tests(unittest.TestCase):
                         .startswith('https://results_file;()'))
         j.archive_time = None
         self.assertEqual(j.get_results_available_time(), None)
-        j.archive_time = (datetime.datetime.utcnow()
-                          + datetime.timedelta(days=5, hours=1))
+        j.archive_time = (_utcnow() + datetime.timedelta(days=5, hours=1))
         self.assertEqual(str(j.get_results_available_time()),
                          '<p>Job results will be available at this URL '
                          'for 5 days.</p>')

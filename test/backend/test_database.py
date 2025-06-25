@@ -7,11 +7,12 @@ import datetime
 from saliweb.backend import Job, MySQLField
 import saliweb.backend
 from memory_database import MemoryDatabase
+import testutil
 
 
 def make_test_jobs(sql):
     c = sql.cursor()
-    utcnow = datetime.datetime.utcnow()
+    utcnow = testutil._utcnow()
     c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
               "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
               ('job1', 'INCOMING', 'SGE-job-1', utcnow,

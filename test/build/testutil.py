@@ -4,6 +4,7 @@ import os
 import glob
 import shutil
 import contextlib
+import datetime
 
 
 def run_catch_warnings(method, *args, **keys):
@@ -68,3 +69,11 @@ def get_open_files():
             yield os.readlink(f)
         except OSError:
             pass
+
+
+def _utcnow():
+    """Get the current UTC time and date"""
+    # MySQLdb uses naive datetime objects. We store all dates in the DB
+    # in UTC. This function replaces datetime.datetime.utcnow() as that has
+    # been deprecated in modern Python.
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)

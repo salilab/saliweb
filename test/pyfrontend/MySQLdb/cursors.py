@@ -1,6 +1,14 @@
 import datetime
 
 
+def _utcnow():
+    """Get the current UTC time and date"""
+    # MySQLdb uses naive datetime objects. We store all dates in the DB
+    # in UTC. This function replaces datetime.datetime.utcnow() as that has
+    # been deprecated in modern Python.
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
+
 class DictCursor(object):
     def __init__(self, conn):
         pass
@@ -14,7 +22,7 @@ class DictCursor(object):
                 return {'state': 'EXPIRED'}
             elif self.args[0] == 'running-job':
                 return {'state': 'RUNNING', 'contact_email': 'test@test.com',
-                        'submit_time': datetime.datetime.utcnow()
+                        'submit_time': _utcnow()
                         - datetime.timedelta(seconds=10)}
             elif self.args[0] == 'completed-job':
                 return {'state': 'COMPLETED', 'name': self.args[0],

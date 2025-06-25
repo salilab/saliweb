@@ -216,7 +216,7 @@ class WebServiceTest(unittest.TestCase):
             c = db.conn.cursor()
             c.execute("INSERT INTO jobs(name,state,submit_time, "
                       "directory,url) VALUES(?,?,?,?,?)",
-                      ('injob2', 'INCOMING', datetime.datetime.utcnow(),
+                      ('injob2', 'INCOMING', testutil._utcnow(),
                        '/', 'http://testurl'))
             db.conn.commit()
             return db, conf, web
@@ -242,7 +242,7 @@ class WebServiceTest(unittest.TestCase):
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time, "
                   "directory,url) VALUES(?,?,?,?,?)",
-                  ('fatal-error-run', 'INCOMING', datetime.datetime.utcnow(),
+                  ('fatal-error-run', 'INCOMING', testutil._utcnow(),
                    '/', 'http://testurl'))
         db.conn.commit()
         # Error is not handled by Job, so should be propagated by WebService
@@ -379,7 +379,7 @@ class WebServiceTest(unittest.TestCase):
         web._filesystem_sanity_check()
         # Make job with non-existing directory
         c = db.conn.cursor()
-        utcnow = datetime.datetime.utcnow()
+        utcnow = testutil._utcnow()
         c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
                   "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
@@ -397,7 +397,7 @@ class WebServiceTest(unittest.TestCase):
         web._filesystem_sanity_check()
         # Make job with non-existing directory
         c = db.conn.cursor()
-        utcnow = datetime.datetime.utcnow()
+        utcnow = testutil._utcnow()
         c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
                   "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,
@@ -420,7 +420,7 @@ class WebServiceTest(unittest.TestCase):
         os.mkdir('incoming/badjob')
         # Make job with non-existing directory
         c = db.conn.cursor()
-        utcnow = datetime.datetime.utcnow()
+        utcnow = testutil._utcnow()
         c.execute("INSERT INTO jobs(name,state,runner_id,submit_time, "
                   "expire_time,directory,url) VALUES(?,?,?,?,?,?,?)",
                   ('badjobdir', 'INCOMING', 'SGE-job-1', utcnow,

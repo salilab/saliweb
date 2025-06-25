@@ -5,6 +5,7 @@ except ImportError:
 import datetime
 import calendar
 import saliweb.backend
+import testutil
 
 
 # sqlite doesn't have a datetime type, so we use float
@@ -17,7 +18,7 @@ sqlite3.register_adapter(datetime.datetime, adapt_datetime)
 
 
 def utc_timestamp():
-    return adapt_datetime(datetime.datetime.utcnow())
+    return adapt_datetime(testutil._utcnow())
 
 
 class MemoryDatabase(saliweb.backend.Database):

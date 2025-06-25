@@ -57,13 +57,21 @@ class _ResultsStillRunningError(_ResultsError):
         self.template = template
 
 
+def _utcnow():
+    """Get the current UTC time and date"""
+    # MySQLdb uses naive datetime objects. We store all dates in the DB
+    # in UTC. This function replaces datetime.datetime.utcnow() as that has
+    # been deprecated in modern Python.
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
+
 def _format_timediff(timediff):
     def _format_unit(df, unit):
         return '%d %s%s' % (df, unit, '' if unit == 1 else 's')
 
     if not timediff:
         return
-    timediff = timediff - datetime.datetime.utcnow()
+    timediff = timediff - _utcnow()
     diff_sec = int(timediff.total_seconds())
     if diff_sec < 0:
         return
@@ -117,7 +125,7 @@ class StillRunningJob(object):
     def get_refresh_time(self, minseconds):
         """Get a suitable time, in seconds, to wait to refresh the
            'job is still running' page. It will be at least `minseconds`."""
-        timediff = datetime.datetime.utcnow() - self.submit_time
+        timediff = _utcnow() - self.submit_time
         return max(int(timediff.total_seconds()), minseconds)
 
 

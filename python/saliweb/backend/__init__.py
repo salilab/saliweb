@@ -69,6 +69,14 @@ def _sigterm_handler(signum, frame):
     raise _SigTermError()
 
 
+def _utcnow():
+    """Get the current UTC time and date"""
+    # MySQLdb uses naive datetime objects. We store all dates in the DB
+    # in UTC. This function replaces datetime.datetime.utcnow() as that has
+    # been deprecated in modern Python.
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
+
 def _make_daemon():
     """Make the current process into a daemon, by forking twice and detaching
        from the controlling terminal. On the parent, this function does not
@@ -1157,7 +1165,7 @@ class Job(object):
         """Take an incoming job and try to start running it."""
         try:
             self._frontend_sanity_check()
-            self._metadata['preprocess_time'] = datetime.datetime.utcnow()
+            self._metadata['preprocess_time'] = _utcnow()
             self.__set_state('PREPROCESSING')
             # Delete job-state file, if present from a previous run
             try:
@@ -1170,7 +1178,7 @@ class Job(object):
                 self._sync_metadata()
                 self._mark_job_completed()
             else:
-                self._metadata['run_time'] = datetime.datetime.utcnow()
+                self._metadata['run_time'] = _utcnow()
                 self.__set_state('RUNNING')
                 runner = self._run_in_job_directory(self.run)
                 self._start_runner(runner, webservice)
@@ -1249,7 +1257,7 @@ class Job(object):
                 return
             # Delete job-state file; no longer needed
             os.unlink(self._get_job_state_file())
-            self._metadata['postprocess_time'] = datetime.datetime.utcnow()
+            self._metadata['postprocess_time'] = _utcnow()
             self.__set_state('POSTPROCESSING')
             self.__reschedule_run = False
             if results is True:
@@ -1262,7 +1270,7 @@ class Job(object):
                                                     self.__reschedule_data)
                 self._start_runner(runner, webservice)
             else:
-                self._metadata['finalize_time'] = datetime.datetime.utcnow()
+                self._metadata['finalize_time'] = _utcnow()
                 self.__set_state('FINALIZING')
                 self._run_in_job_directory(self.finalize)
                 self._mark_job_completed()
@@ -1270,7 +1278,7 @@ class Job(object):
             self._fail(detail)
 
     def _mark_job_completed(self):
-        endtime = datetime.datetime.utcnow()
+        endtime = _utcnow()
         self._metadata['end_time'] = endtime
         archive_time = self._db.config.oldjobs['archive']
         if archive_time is not None:
