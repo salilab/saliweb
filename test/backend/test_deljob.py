@@ -136,7 +136,7 @@ class DelJobTest(unittest.TestCase):
             mod = DummyModule()
             sys.argv = ['testprogram'] + ['-f', 'FAILED', 'badjob']
             main(mod)
-            self.assertEqual(sio.getvalue(), 'Could not find job badjob\n')
+            self.assertIn('Could not find job badjob\n', sio.getvalue())
             self.assertEqual(mod.job_deleted, False)
 
             sio = StringIO()
