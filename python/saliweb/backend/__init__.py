@@ -23,8 +23,8 @@ from email.mime.text import MIMEText
 
 
 # Version check
-if sys.version_info[0:2] < (3, 7):
-    raise ImportError("This module requires Python 3.7 or later")
+if sys.version_info[0:2] < (3, 6):
+    raise ImportError("This module requires Python 3.6 or later")
 
 
 class InvalidStateError(Exception):
