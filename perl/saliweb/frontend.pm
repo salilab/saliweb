@@ -777,7 +777,7 @@ title, but can be overridden if desired.
 sub get_header_page_title {
     my $self = shift;
     return '<h3><img src="//salilab.org/img/logo_small.gif" height="40" ' .
-           'alt="" />' . $self->{page_title} . '</h3>';
+           'alt="Sali Lab logo" />' . $self->{page_title} . '</h3>';
 }
 
 =item get_lab_navigation_links
