@@ -52,7 +52,7 @@ $ENV{REQUEST_URI} = "dummy request URI";
 
 # Test _admin_email method
 {
-    my $default = 'system@salilab.org';
+    my $default = 'salilab-system@ucsf.edu';
     my $self = {};
     bless($self, 'saliweb::frontend');
     is($self->_admin_email, $default, 'admin_email (default 1)');
@@ -841,8 +841,10 @@ END
     $self->_email_admin_fatal_error($exc);
     my $email = $MIME::Lite::last_email;
     $MIME::Lite::last_email = undef;
-    is($email->{From}, 'system@salilab.org', 'email_admin_fatal_error (from)');
-    is($email->{To}, 'system@salilab.org', '                        (to)');
+    is($email->{From}, 'salilab-system@ucsf.edu',
+       'email_admin_fatal_error (from)');
+    is($email->{To}, 'salilab-system@ucsf.edu',
+       '                        (to)');
     is($email->{Subject}, 'Fatal error in unittest-server web service frontend',
        '                        (subject)');
     like($email->{Data},

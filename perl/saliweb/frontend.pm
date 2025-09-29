@@ -427,7 +427,7 @@ sub _admin_email {
     } else {
         # If an error occurred before we managed to read the configuration file,
         # fall back to bothering the sysadmins
-        return "system\@salilab.org";
+        return "salilab-system\@ucsf.edu";
     }
 }
 
