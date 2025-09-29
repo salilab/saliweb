@@ -151,6 +151,7 @@ until it works.
         try:
             dir = pwd.getpwnam(self.user).pw_dir
         except KeyError:
+            d = os.path.join(config.home_top, self.user)
             print("""The %(user)s user doesn't exist. Please create it first:
 
 1. Determine the UID for the new user and add it to the wiki page:
@@ -161,8 +162,7 @@ until it works.
 /usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' \\
         -d %(dir)s %(user)s
 /usr/bin/sudo chmod a+rx ~%(user)s
-""" % {'user': self.user, 'dir': os.path.join(config.home_top, self.user),
-       'wiki': config.wiki_uid_page})
+""" % {'user': self.user, 'dir': d, 'wiki': config.wiki_uid_page})
             sys.exit(1)
         return os.path.join(dir, 'service')
 
