@@ -5,6 +5,7 @@ import os
 import sys
 import pwd
 import subprocess
+from saliweb import config
 
 
 def _run_command(prefix, cmd, cwd):
@@ -18,7 +19,7 @@ class SVNSourceControl(object):
     def __init__(self, short_name, topdir):
         self.short_name = short_name
         self.topdir = topdir
-        self.svn_url = 'https://svn.salilab.org/' + short_name
+        self.svn_url = os.path.join(config.svn_url_top, short_name)
         self.svn_trunk_url = self.svn_url + '/trunk'
 
     def _run_svn_command(self, cmd, cwd=None):
@@ -46,7 +47,7 @@ class GitSourceControl(object):
     def __init__(self, short_name, topdir):
         self.short_name = short_name
         self.topdir = topdir
-        self.url = 'git@github.com:salilab/%s.git' % short_name
+        self.url = 'git@github.com:%s/%s.git' % (config.github_org, short_name)
 
     def _run_git_command(self, cmd, cwd=None):
         _run_command('git', cmd, cwd)
@@ -85,6 +86,7 @@ class MakeWebService(object):
         self.topdir = self.short_name
         self.user = self.short_name
         self.db = self.short_name
+        self.email_domain = config.email_domain
         if git:
             self.source_control = GitSourceControl(short_name, self.topdir)
         else:
@@ -152,14 +154,15 @@ until it works.
             print("""The %(user)s user doesn't exist. Please create it first:
 
 1. Determine the UID for the new user and add it to the wiki page:
-https://salilab.org/internal/wiki/SysAdmin/UID
+%(wiki)s
 
 2. Set up the %(user)s user and group by running
 /usr/bin/sudo /usr/sbin/groupadd -g <UID> %(user)s
 /usr/bin/sudo /usr/sbin/useradd -u <UID> -g <UID> -c '%(user)s service' \\
         -d %(dir)s %(user)s
 /usr/bin/sudo chmod a+rx ~%(user)s
-""" % {'user': self.user, 'dir': '/modbase5/home/%s' % self.user})
+""" % {'user': self.user, 'dir': os.path.join(config.home_top, self.user),
+       'wiki': config.wiki_uid_page})
             sys.exit(1)
         return os.path.join(dir, 'service')
 
@@ -231,7 +234,7 @@ SConscript('frontend/SConscript')""", file=f)
     def _make_config(self):
         with open(os.path.join(self.topdir, 'conf', 'live.conf'), 'w') as f:
             print("""[general]
-admin_email: %(user)s@salilab.org
+admin_email: %(user)s@%(email_domain)s
 socket: %(install)s/%(short_name)s.socket
 service_name: %(service_name)s
 urltop: https://modbase.compbio.ucsf.edu/%(short_name)s
@@ -380,9 +383,9 @@ if __name__ == '__main__':
 
 {%% block body %%}
 <p>Please address inquiries to:<br />
-<script type="text/javascript">escramble('%s','salilab.org')</script></p>
+<script type="text/javascript">escramble('%s','%s')</script></p>
 {%% endblock %%}
-""" % (self.service_name, self.user), file=f)
+""" % (self.service_name, self.user, config.email_domain), file=f)
 
         with open(os.path.join(template_dir, 'help.html'), 'w') as f:
             print("""{%% extends "layout.html" %%}
@@ -407,13 +410,15 @@ def get_options():
         the generated Python modules, system and MySQL users etc. An SVN
         (--svn option) or git (--git) repository with the same name is assumed
         to already exist, but to be empty (e.g. if SHORT_NAME is 'modfoo' the
-        repository should exist at https://svn.salilab.org/modfoo or
-        https://github.com/salilab/modfoo). A working directory with the same
-        name is set up, and the files checked in to the trunk of the SVN or git
-        repository. Users can then work on the service by checking out the SVN
-        trunk (e.g. "svn co https://svn.salilab.org/modfoo/trunk modfoo")
+        repository should exist at %(svn_url_top)s/modfoo or
+        https://github.com/%(github_org)s/modfoo). A working directory with
+        the same name is set up, and the files checked in to the trunk of the
+        SVN or git repository. Users can then work on the service by checking
+        out the SVN trunk
+        (e.g. "svn co %(svn_url_top)s/modfoo/trunk modfoo")
         or cloning the git repository
-        (e.g. "git clone https://github.com/salilab/modfoo.git").""")
+        (e.g. "git clone https://github.com/%(github_org)s/modfoo.git")."""
+        % {'svn_url_top': config.svn_url_top, 'github_org': config.github_org})
     parser.add_argument(
         "service_name", metavar="SERVICE_NAME",
         help='Human-readable name of the web service, for example "ModFoo" '

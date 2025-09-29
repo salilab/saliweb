@@ -3,6 +3,8 @@ import os
 Import('env')
 
 ws_script = 'web_service.py'
+# Note that we do not install config.py, so as not to overwrite any
+# site-specific config
 python_files = [ '__init__.py', 'make_web_service.py', ws_script ]
 
 # Install .py files:

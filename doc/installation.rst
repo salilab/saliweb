@@ -80,3 +80,7 @@ Prerequisites
   where the files for jobs that run on the cluster are placed (the 'running' directory). (If space is limited on the network
   storage, web services can also be configured to move the files back to the cheaper local filesystem - the 'completed'
   directory - when the job is done.)
+
+After installation, manually install `python/saliweb/config.py` and add
+site-specific configuration, such as the location of your SVN and git
+repositories and your email domain.
