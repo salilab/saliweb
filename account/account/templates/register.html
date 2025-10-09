@@ -11,14 +11,14 @@
   <table>
     <tr><td colspan="5"><hr /></td></tr>
     <tr><th colspan="2">Create an Account {{ help_link("account") }}</th></tr>
-    <tr><td>Choose Username (max 25 characters):</td> <td><input type="text" name="user_name" value="{{ form.user_name }}" size="10" maxlength="25" /></td></tr>
-    <tr><td>Choose Password (min 8, max 25 characters):</td> <td><input type="password" name="password"  size="10" maxlength="25" /></td></tr>
-    <tr><td>Re-enter Password:</td> <td><input type="password" name="passwordcheck"  size="10" maxlength="25" /></td></tr>
-    <tr><td>First Name <input type="hidden" name="create" value="y"  /></td> <td><input type="text" name="first_name" value="{{ form.first_name }}" size="20" maxlength="40" /></td></tr>
-    <tr><td>Last Name</td> <td><input type="text" name="last_name" value="{{ form.last_name }}" size="20" maxlength="40" /></td></tr>
-    <tr><td>Institution</td> <td><input type="text" name="institution" value="{{ form.institution }}" size="20" maxlength="40" /></td></tr>
-    <tr><td><span class="tooltip" title="This will be used to notify you of completed jobs, and to reset your password if you forget it. It will not be used for any other purpose.">Email Address</span></td> <td><input type="text" name="email" value="{{ form.email }}" size="20" maxlength="40" /></td></tr>
-    <tr><td><a href="https://salilab.org/modeller/" title="If you have a MODELLER license key, you can save it here; it will be provided automatically to any web service that needs it.">MODELLER license key</a> (optional)</td> <td><input type="text" name="modeller_key" value="{{ form.modeller_key }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><label for="user_name">Choose Username (max 25 characters):</label></td> <td><input id="user_name" type="text" name="user_name" value="{{ form.user_name }}" size="10" maxlength="25" /></td></tr>
+    <tr><td><label for="password">Choose Password (min 8, max 25 characters):</label></td> <td><input id="password" type="password" name="password"  size="10" maxlength="25" /></td></tr>
+    <tr><td><label for="passwordcheck">Re-enter Password:</label></td> <td><input id="passwordcheck" type="password" name="passwordcheck"  size="10" maxlength="25" /></td></tr>
+    <tr><td><label for="first_name">First Name</label> <input type="hidden" name="create" value="y"  /></td> <td><input id="first_name" type="text" name="first_name" value="{{ form.first_name }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><label for="last_name">Last Name</label></td> <td><input id="last_name" type="text" name="last_name" value="{{ form.last_name }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><label for="institution">Institution</label></td> <td><input id="institution" type="text" name="institution" value="{{ form.institution }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><span class="tooltip" title="This will be used to notify you of completed jobs, and to reset your password if you forget it. It will not be used for any other purpose."><label for="email">Email Address</label></span></td> <td><input id="email" type="text" name="email" value="{{ form.email }}" size="20" maxlength="40" /></td></tr>
+    <tr><td><a href="https://salilab.org/modeller/" title="If you have a MODELLER license key, you can save it here; it will be provided automatically to any web service that needs it."><label for="modeller_key">MODELLER license key</label></a> (optional)</td> <td><input id="modeller_key" type="text" name="modeller_key" value="{{ form.modeller_key }}" size="20" maxlength="40" /></td></tr>
     <tr><td align="center" colspan="2"><div class=standout> <label><input type="checkbox" name="academic" value="on" {{ 'checked="checked"' if form.academic }} />I am a <span class="tooltip" title="Sali Lab web server accounts are currently only available for non-profit or academic users.">non-profit/academic user</span>
 	                and this server will be used solely for educational 
 	                purposes or for basic research intended to advance 
