@@ -202,7 +202,7 @@ h5 {
 }
 #navigation_lab ul{list-style-type:none}
 #navigation_lab a {
-        color: #EEEEEE;
+        color: #F1F1F1;
         background-color: inherit;
         font-weight: bold;
 }
@@ -329,11 +329,11 @@ h5 {
 }
 #navigation_saliresources a {
         font-weight: bold;
-        color: #EEEEEE;
+        color: #F1F1F1;
 }
 #navigation_saliresources p {
         font-weight: bold;
-        color: #EEEEEE;
+        color: #F1F1F1;
 }
 
 #navigation_saliresources h3 {
