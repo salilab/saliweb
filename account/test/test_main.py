@@ -93,7 +93,7 @@ def test_contact():
     """Test contact page"""
     c = account.app.test_client()
     rv = c.get('/contact')
-    r = re.compile(b'Contact.*modbase.*salilab\\.org',
+    r = re.compile(b'Contact.*modbase.*ucsf\\.edu',
                    re.DOTALL | re.MULTILINE)
     assert r.search(rv.data)
 
