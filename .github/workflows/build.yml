@@ -16,9 +16,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -32,7 +32,7 @@ jobs:
         coverage xml --omit='*/mailer,*/curl,*/sitecustomize.py'
         flake8 --exclude doc/conf.py,tools/reindent.py,examples .
     - name: Upload Python coverage to codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - name: Test account
@@ -40,6 +40,6 @@ jobs:
         rm -f coverage.xml
         py.test --cov=account/account --cov-branch account
     - name: Upload account Python coverage to codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
