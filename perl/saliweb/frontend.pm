@@ -162,9 +162,25 @@ sub _generate_results_url {
 
 sub generate_random_passwd {
   # Generate a random alphanumeric password of the given length
+  # using the OS cryptographic RNG (Perl's rand() is predictable)
   my ($len) = @_;
   my @validchars = ('a'..'z', 'A'..'Z', 0..9);
-  my $randstr = join '', map $validchars[rand @validchars], 1..$len;
+  my $nvalid = scalar(@validchars);
+  # Reject bytes at or above this to avoid modulo bias
+  my $limit = 256 - (256 % $nvalid);
+  open(my $fh, '<:raw', '/dev/urandom')
+      or die "Cannot open /dev/urandom: $!";
+  my $randstr = '';
+  while (length($randstr) < $len) {
+    read($fh, my $buf, $len) == $len
+        or die "Cannot read from /dev/urandom: $!";
+    for my $byte (unpack('C*', $buf)) {
+      if ($byte < $limit && length($randstr) < $len) {
+        $randstr .= $validchars[$byte % $nvalid];
+      }
+    }
+  }
+  close($fh);
   return $randstr;
 }
 

@@ -2,6 +2,7 @@ import re
 import os
 import flask
 import random
+import secrets
 import socket
 import fcntl
 import string
@@ -68,7 +69,7 @@ def _get_job_name_directory(user_job_name):
 def _generate_random_password(length):
     """Generate a random alphanumeric password of the given length"""
     valid = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    return ''.join(random.choice(valid) for _ in range(length))
+    return ''.join(secrets.choice(valid) for _ in range(length))
 
 
 def _generate_results_url(job_name, force_xml=False):

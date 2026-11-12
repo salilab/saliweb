@@ -4,7 +4,7 @@ import saliweb.frontend
 import MySQLdb.cursors
 import datetime
 import string
-import random
+import secrets
 import smtplib
 import email.mime.text
 
@@ -165,4 +165,4 @@ If you did not request this password reset, feel free to ignore this email.
 def _generate_random_password(length):
     """Generate a random alphanumeric password of the given length"""
     valid = string.ascii_lowercase + string.ascii_uppercase + string.digits
-    return ''.join(random.choice(valid) for _ in range(length))
+    return ''.join(secrets.choice(valid) for _ in range(length))

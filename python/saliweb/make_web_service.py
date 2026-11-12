@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 import string
-import random
+import secrets
 import os
 import sys
 import pwd
@@ -144,7 +144,7 @@ until it works.
 """ % {'user': self.user, 'topdir': self.topdir}, file=sys.stderr)
 
     def _make_password(self, length):
-        return "".join(random.choice(string.ascii_letters + string.digits)
+        return "".join(secrets.choice(string.ascii_letters + string.digits)
                        for x in range(length))
 
     def _get_install_dir(self):
