@@ -1154,6 +1154,16 @@ class Job(object):
             self._sync_metadata()
             raise SanityError("Job %s: directory %s is not a directory"
                               % (self.name, dir))
+        # The frontend should never create symlinks; they could be used to
+        # trick the backend into reading or writing files outside of the
+        # job directory
+        for root, dirs, files in os.walk(self.directory):
+            for f in dirs + files:
+                path = os.path.join(root, f)
+                if os.path.islink(path):
+                    raise SanityError("Job %s: directory %s contains a "
+                                      "symbolic link, %s"
+                                      % (self.name, self.directory, path))
 
     def _check_incoming_job_location(self):
         """Make sure that the job name and directory set by the frontend

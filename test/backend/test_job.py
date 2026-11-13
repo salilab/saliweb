@@ -448,6 +448,24 @@ class JobTest(unittest.TestCase):
         os.rmdir(target)
         cleanup_webservice(conf, tmpdir)
 
+    def test_sanity_check_symlink(self):
+        """Job directories containing symlinks should fail the job"""
+        db, conf, web, tmpdir = setup_webservice()
+        injobdir = add_incoming_job(db, 'job1')
+        subdir = os.path.join(injobdir, 'subdir')
+        os.mkdir(subdir)
+        os.symlink('/etc/passwd', os.path.join(subdir, 'framework.log'))
+        web._process_incoming_jobs()
+        job = web.get_job_by_name('FAILED', 'job1')
+        self.assert_fail_msg('Python exception:.*Traceback.*'
+                             'SanityError: .*contains a symbolic link, '
+                             '.*subdir/framework.log', job)
+        # Job should not have been run
+        self.assertFalse(os.path.exists(
+            os.path.join(job.directory, 'job-output')))
+        shutil.rmtree(job.directory)
+        cleanup_webservice(conf, tmpdir)
+
     def test_check_location_resubmitted(self):
         """Resubmitted jobs in the PREPROCESSING directory should run"""
         db, conf, web, tmpdir = setup_webservice()

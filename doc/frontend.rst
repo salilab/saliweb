@@ -181,6 +181,12 @@ necessary input files in that directory, for example using
    `secure_filename <https://werkzeug.palletsprojects.com/en/0.15.x/utils/#werkzeug.utils.secure_filename>`_
    function to get a safe version of the filename.
 
+.. note::
+
+   The frontend must not create symbolic links in the job directory (or
+   any subdirectory of it). The backend checks for these before running
+   the job, and if it finds any, it fails the job.
+
 Finally, the submission page should inform the user of the results URL
 (:attr:`IncomingJob.results_url`), so that they can obtain the results
 when the job finishes. This uses the function
