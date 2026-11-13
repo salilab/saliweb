@@ -231,6 +231,8 @@ class Tests(unittest.TestCase):
                           tf, '')
         self.assertRaises(saliweb.frontend.InputValidationError,
                           tf, 'garbage')
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, 'test@test.com\n')
         tf("test@test.com")
 
     def test_check_email_optional(self):
@@ -240,6 +242,8 @@ class Tests(unittest.TestCase):
         tf('')
         self.assertRaises(saliweb.frontend.InputValidationError,
                           tf, 'garbage')
+        self.assertRaises(saliweb.frontend.InputValidationError,
+                          tf, 'test@test.com\n')
         tf("test@test.com")
 
     def test_check_pdb(self):

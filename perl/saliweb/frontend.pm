@@ -872,7 +872,7 @@ sub check_optional_email {
 sub check_required_email {
     my ($email) = @_;
     if (!defined($email)
-        || $email !~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$/ ) {
+        || $email !~ m/^[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?\z/ ) {
         throw saliweb::frontend::InputValidationError(
                  "Please provide a valid return email address");
     }

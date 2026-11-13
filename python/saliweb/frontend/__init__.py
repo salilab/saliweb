@@ -487,7 +487,8 @@ def check_email(email, required=False):
     if not email and not required:
         return
     elif (not email
-          or not re.match(r'[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?$', email)):
+          or not re.fullmatch(r'[\w\.-]+@[\w-]+\.[\w-]+((\.[\w-]+)*)?',
+                              email)):
         raise InputValidationError(
             "Please provide a valid return email address")
 

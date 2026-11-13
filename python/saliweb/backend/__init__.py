@@ -268,8 +268,9 @@ class Config(object):
         msg['From'] = self.admin_email
         msg['To'] = ", ".join(to)
 
-        # Send email via sendmail binary
-        p = subprocess.Popen([self._mailer, '-oi'] + to,
+        # Send email via sendmail binary. Use '--' so that addresses
+        # starting with '-' are not treated as sendmail options
+        p = subprocess.Popen([self._mailer, '-oi', '--'] + to,
                              stdin=subprocess.PIPE, universal_newlines=True)
         p.stdin.write(msg.as_string())
         p.stdin.close()

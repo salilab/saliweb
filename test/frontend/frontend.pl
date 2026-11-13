@@ -611,6 +611,10 @@ sub test_display_page {
     like($@, qr/Please provide a valid return email/,
               "                     (exception message)");
 
+    throws_ok { check_required_email("test\@test.com\n") }
+              'saliweb::frontend::InputValidationError',
+              "                     (trailing newline)";
+
     lives_ok { check_required_email("test\@test.com") }
               "                     (good address)";
 }
@@ -628,6 +632,10 @@ sub test_display_page {
               "                     (invalid address)";
     like($@, qr/Please provide a valid return email/,
               "                     (exception message)");
+
+    throws_ok { check_optional_email("test\@test.com\n") }
+              'saliweb::frontend::InputValidationError',
+              "                     (trailing newline)";
 
     lives_ok { check_optional_email("test\@test.com") }
               "                     (good address)";

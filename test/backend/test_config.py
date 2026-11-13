@@ -89,6 +89,13 @@ class ConfigTest(unittest.TestCase):
                     mail, flags=re.DOTALL),
                     'Unexpected mail output: ' + mail)
 
+    def test_send_email_option_address(self):
+        """Check that addresses are never treated as sendmail options"""
+        conf = get_config(config_class=config.Config)
+        conf.send_email(['-Xlog@b.com', 'test@b.com'], 'testsubj', 'body')
+        self.assertEqual(conf.get_mail_args(),
+                         ['-oi', '--', '-Xlog@b.com', 'test@b.com'])
+
     def test_directory_defaults(self):
         """Check Config directory defaults"""
         # FAILED and ARCHIVED default to COMPLETED
