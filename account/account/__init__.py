@@ -84,8 +84,14 @@ def register():
     return render_template('register.html', error=error, form=request.form)
 
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
+    # Only log out on POST, so that other sites can't log users out simply
+    # by linking to this page. Existing links (GET) get a confirmation page.
+    if request.method == 'GET':
+        if not g.user:
+            return redirect(url_for("index"))
+        return render_template('logout.html')
     flash("You have been logged out.")
     util.set_servers_cookie_info({'user_name': 'Anonymous', 'session': ''},
                                  False)

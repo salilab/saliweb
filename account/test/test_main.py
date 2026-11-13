@@ -186,11 +186,37 @@ def test_register_ok():
             'SameSite=Lax')
 
 
-def test_logout():
-    """Test logout page"""
+def test_logout_get_logged_out():
+    """Test logout page (GET) when not logged in"""
     c = account.app.test_client()
     rv = c.get('/logout')
     assert rv.status_code == 302  # redirect to index page
+    assert 'Set-Cookie' not in rv.headers
+
+
+def test_logout_get():
+    """Test logout page (GET) asks for confirmation, but doesn't log out"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    rv = c.get('/logout', base_url='https://localhost')
+    assert rv.status_code == 200
+    r = re.compile(b'Log out of Sali Lab web services as user authuser.*'
+                   b'<form method="post">.*Log out',
+                   re.DOTALL | re.MULTILINE)
+    assert r.search(rv.data)
+    # Only the Flask session (holding the CSRF token) should be set,
+    # not the login cookie
+    assert 'sali-servers' not in rv.headers.get('Set-Cookie', '')
+
+
+def test_logout_post():
+    """Test logout page (POST) logs the user out"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    rv = c.post('/logout', base_url='https://localhost')
+    assert rv.status_code == 302  # redirect to index page
+    assert rv.headers['Set-Cookie'].startswith(
+        'sali-servers=user_name&Anonymous&session&;')
 
 
 def test_setup_logging():
@@ -486,7 +512,7 @@ def test_csrf_token_in_forms():
         rv = c.get(url, base_url='https://localhost')
         assert b'name="csrf_token"' in rv.data, url
     utils.set_servers_cookie(c, 'authuser', 'authpw00')
-    for url in ('/profile', '/password'):
+    for url in ('/profile', '/password', '/logout'):
         rv = c.get(url, base_url='https://localhost')
         assert b'name="csrf_token"' in rv.data, url
 
@@ -545,3 +571,20 @@ def test_csrf_foreign_referer():
                     headers={'Referer': 'https://evil.example/'})
     assert rv.status_code == 400
     assert b'Form Expired' in rv.data
+
+
+def test_csrf_logout():
+    """Test that logout requires a CSRF token"""
+    c = account.app.test_client()
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    with utils.csrf_enabled(account.app):
+        rv = c.post('/logout', base_url='https://localhost')
+        assert rv.status_code == 400
+        assert 'sali-servers' not in rv.headers.get('Set-Cookie', '')
+        token = utils.get_csrf_token(c, '/logout')
+        rv = c.post('/logout', data={'csrf_token': token},
+                    base_url='https://localhost',
+                    headers={'Referer': 'https://localhost/logout'})
+    assert rv.status_code == 302
+    assert rv.headers['Set-Cookie'].startswith(
+        'sali-servers=user_name&Anonymous&session&;')
