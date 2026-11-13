@@ -1,5 +1,6 @@
 from flask import (Flask, g, render_template, request, redirect, url_for,
                    flash, abort)
+from flask_wtf.csrf import CSRFProtect, CSRFError
 import saliweb.frontend
 import datetime
 from . import util
@@ -11,11 +12,18 @@ app.config.update(SESSION_COOKIE_SECURE=True)
 app.config.from_pyfile('account.cfg')
 util.setup_logging(app)
 app.register_blueprint(saliweb.frontend._blueprint)
+# Require a CSRF token for all POST requests
+csrf = CSRFProtect(app)
 
 
 @app.errorhandler(500)
 def handle_internal_error(error):
     return render_template('saliweb/internal_error.html'), 500
+
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(error):
+    return render_template('csrf-error.html'), 400
 
 
 @app.before_request

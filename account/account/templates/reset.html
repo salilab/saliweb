@@ -12,6 +12,7 @@ email address associated with that account, below. A temporary link
 to reset your password will be emailed to that address.</p>
 
 <form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <table>
     <tr>
       <td><label for="reset-email">Email:</label></td>

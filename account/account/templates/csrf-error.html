@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<h4>Form Expired</h4>
+
+<p class=error><strong>Error:</strong> This form has expired or was not
+submitted from this site. Please go back, reload the page, and try again.</p>
+
+<p>If you continue to have issues with your account,
+please <a href="{{ url_for("contact") }}">contact us</a>.</p>
+
+{% endblock %}

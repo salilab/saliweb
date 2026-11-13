@@ -477,3 +477,71 @@ def test_internal_error_handler():
     finally:
         account.render_template = old_rt
         account.app.testing = True
+
+
+def test_csrf_token_in_forms():
+    """Test that every form page includes a CSRF token"""
+    c = account.app.test_client()
+    for url in ('/', '/register', '/reset'):
+        rv = c.get(url, base_url='https://localhost')
+        assert b'name="csrf_token"' in rv.data, url
+    utils.set_servers_cookie(c, 'authuser', 'authpw00')
+    for url in ('/profile', '/password'):
+        rv = c.get(url, base_url='https://localhost')
+        assert b'name="csrf_token"' in rv.data, url
+
+
+def test_csrf_missing_token():
+    """Test that a POST without a CSRF token is rejected"""
+    c = account.app.test_client()
+    with utils.csrf_enabled(account.app):
+        rv = c.post('/', data={'user_name': 'authuser',
+                               'password': 'authpw00'},
+                    base_url='https://localhost')
+    assert rv.status_code == 400
+    assert b'Form Expired' in rv.data
+    assert 'Set-Cookie' not in rv.headers or \
+        'sali-servers' not in rv.headers['Set-Cookie']
+
+
+def test_csrf_wrong_token():
+    """Test that a POST with an invalid CSRF token is rejected"""
+    c = account.app.test_client()
+    with utils.csrf_enabled(account.app):
+        utils.get_csrf_token(c, '/')
+        rv = c.post('/', data={'user_name': 'authuser',
+                               'password': 'authpw00',
+                               'csrf_token': 'not-a-real-token'},
+                    base_url='https://localhost')
+    assert rv.status_code == 400
+    assert b'Form Expired' in rv.data
+
+
+def test_csrf_valid_token():
+    """Test that a POST with a valid CSRF token is accepted"""
+    c = account.app.test_client()
+    with utils.csrf_enabled(account.app):
+        token = utils.get_csrf_token(c, '/')
+        # Flask-WTF also requires a same-site Referer for HTTPS requests,
+        # which browsers send by default
+        rv = c.post('/', data={'user_name': 'authuser',
+                               'password': 'authpw00',
+                               'csrf_token': token},
+                    base_url='https://localhost',
+                    headers={'Referer': 'https://localhost/'})
+    assert rv.status_code == 200
+    assert b'Server availability for user authuser' in rv.data
+
+
+def test_csrf_foreign_referer():
+    """Test that a POST with a valid token but from another site is rejected"""
+    c = account.app.test_client()
+    with utils.csrf_enabled(account.app):
+        token = utils.get_csrf_token(c, '/')
+        rv = c.post('/', data={'user_name': 'authuser',
+                               'password': 'authpw00',
+                               'csrf_token': token},
+                    base_url='https://localhost',
+                    headers={'Referer': 'https://evil.example/'})
+    assert rv.status_code == 400
+    assert b'Form Expired' in rv.data

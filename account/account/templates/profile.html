@@ -8,6 +8,7 @@
 {%- endif %}
 
 <form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <table>
     <tr><td>First Name</td> <td><input type="text" name="first_name" value="{{ form.first_name }}" size="20" maxlength="40" /></td></tr>
     <tr><td>Last Name</td> <td><input type="text" name="last_name" value="{{ form.last_name }}" size="20" maxlength="40" /></td></tr>

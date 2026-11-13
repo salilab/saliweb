@@ -2,6 +2,8 @@ import flask
 import sys
 import os
 import hashlib
+import contextlib
+import re
 
 
 # Make reading flask config a noop
@@ -32,6 +34,8 @@ def import_mocked_account(fname):
     account.app.config['DATABASE_SOCKET'] = '/not/exist'
     account.app.config['DATABASE_PASSWD'] = 'testpwd'
     account.app.config['SECRET_KEY'] = 'test-secret-key'
+    # Most tests don't need CSRF tokens; see csrf_enabled() for those that do
+    account.app.config['WTF_CSRF_ENABLED'] = False
     account.app.config['MAIL_SERVER'] = 'localhost'
     account.app.config['MAIL_PORT'] = 25
     account.app.config['MAIL_FROM'] = 'noreply@localhost'
@@ -58,3 +62,20 @@ def set_servers_cookie(client, user, passwd):
         client.set_cookie(key='sali-servers',
                           value='user_name&%s&session&%s' % (user, hashpw),
                           server_name='localhost')
+
+
+@contextlib.contextmanager
+def csrf_enabled(app):
+    """Turn on CSRF protection for the duration of the context"""
+    app.config['WTF_CSRF_ENABLED'] = True
+    try:
+        yield
+    finally:
+        app.config['WTF_CSRF_ENABLED'] = False
+
+
+def get_csrf_token(client, url):
+    """Get the CSRF token from the form on the given page"""
+    rv = client.get(url, base_url='https://localhost')
+    m = re.search(rb'name="csrf_token" value="([^"]+)"', rv.data)
+    return m.group(1).decode('ascii')

@@ -8,6 +8,7 @@
 {%- endif %}
 
 <form method="post" enctype="multipart/form-data" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <table>
     <tr><td colspan="5"><hr /></td></tr>
     <tr><th colspan="2">Choose new password for user {{ user_name }}</th></tr>

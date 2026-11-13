@@ -2,6 +2,9 @@ This is a simple [Flask](https://palletsprojects.com/p/flask/) application
 to manage user accounts for web services hosted at
 https://modbase.compbio.ucsf.edu/
 
+It requires [Flask-WTF](https://flask-wtf.readthedocs.io/) (for CSRF
+protection of forms) in addition to Flask itself.
+
 ## Configuration
 
 1. Create a file `Makefile.include` in the same directory as `Makefile` that
@@ -10,8 +13,8 @@ https://modbase.compbio.ucsf.edu/
 2. Create a configuration file `<WEBTOP>/instance/account.cfg`. This should
    be readable only by Apache (since it contains passwords) and contain
    a number of key=value pairs:
-   - `SECRET_KEY`: a long random password, used by Flask to encrypt
-     session cookies.
+   - `SECRET_KEY`: a long random password, used by Flask to sign
+     session cookies and CSRF tokens.
    - `MAIL_SERVER`, `MAIL_PORT`, `MAIL_FROM`: host and port to
      connect to to send emails, and the From: address for these emails.
      This is used for sending password resets, and letting the admins know
