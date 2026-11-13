@@ -4,10 +4,12 @@ import logging
 import datetime
 import os
 import re
+import shutil
 import tempfile
 import testutil
 from memory_database import MemoryDatabase
 from saliweb.backend import WebService, Job, InvalidStateError, Runner
+from saliweb.backend import SanityError
 from saliweb.backend import MySQLField
 from config import Config
 from io import StringIO
@@ -374,14 +376,88 @@ class JobTest(unittest.TestCase):
         db, conf, web, tmpdir = setup_webservice()
         c = db.conn.cursor()
         c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
-                  "VALUES(?,?,?,?,?)", ('job2', 'INCOMING', utcnow,
-                                        '/not/exist', 'http://testurl'))
+                  "VALUES(?,?,?,?,?)",
+                  ('job2', 'INCOMING', utcnow,
+                   os.path.join(conf.directories['INCOMING'], 'job2'),
+                   'http://testurl'))
         db.conn.commit()
         web._process_incoming_jobs()
         job = web.get_job_by_name('FAILED', 'job2')
         self.assertIsNone(job.directory)
         self.assert_fail_msg('Python exception:.*Traceback.*'
                              'SanityError: .*is not a directory', job)
+        cleanup_webservice(conf, tmpdir)
+
+    def _add_raw_incoming_job(self, db, name, jobdir):
+        c = db.conn.cursor()
+        c.execute("INSERT INTO jobs(name,state,submit_time,directory,url) "
+                  "VALUES(?,?,?,?,?)", (name, 'INCOMING',
+                                        testutil._utcnow(), jobdir,
+                                        'http://testurl'))
+        db.conn.commit()
+
+    def test_check_location_bad_name(self):
+        """Job names with invalid characters should be a fatal error"""
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = os.path.join(conf.directories['INCOMING'], 'bad.name')
+        os.mkdir(jobdir)
+        self._add_raw_incoming_job(db, 'bad.name', jobdir)
+        self.assertRaisesRegex(SanityError, 'contains invalid characters',
+                               web._process_incoming_jobs)
+        # Job should be left untouched
+        job = web.get_job_by_name('INCOMING', 'bad.name')
+        self.assertEqual(job.directory, jobdir)
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_check_location_outside_incoming(self):
+        """Job directories outside of INCOMING should be a fatal error"""
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = os.path.join(tmpdir, 'job1')
+        os.mkdir(jobdir)
+        self._add_raw_incoming_job(db, 'job1', jobdir)
+        self.assertRaisesRegex(SanityError, 'directory .* is not',
+                               web._process_incoming_jobs)
+        self.assertTrue(os.path.isdir(jobdir))
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_check_location_wrong_name(self):
+        """Job directories not matching the job name should be fatal"""
+        db, conf, web, tmpdir = setup_webservice()
+        jobdir = os.path.join(conf.directories['INCOMING'], 'job2')
+        os.mkdir(jobdir)
+        self._add_raw_incoming_job(db, 'job1', jobdir)
+        self.assertRaisesRegex(SanityError, 'directory .* is not',
+                               web._process_incoming_jobs)
+        os.rmdir(jobdir)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_check_location_symlink_directory(self):
+        """A job directory that is a symlink should be a fatal error"""
+        db, conf, web, tmpdir = setup_webservice()
+        target = os.path.join(tmpdir, 'target')
+        os.mkdir(target)
+        jobdir = os.path.join(conf.directories['INCOMING'], 'job1')
+        os.symlink(target, jobdir)
+        self._add_raw_incoming_job(db, 'job1', jobdir)
+        self.assertRaisesRegex(SanityError, 'directory .* is not',
+                               web._process_incoming_jobs)
+        self.assertTrue(os.path.isdir(target))
+        os.unlink(jobdir)
+        os.rmdir(target)
+        cleanup_webservice(conf, tmpdir)
+
+    def test_check_location_resubmitted(self):
+        """Resubmitted jobs in the PREPROCESSING directory should run"""
+        db, conf, web, tmpdir = setup_webservice()
+        add_failed_job(db, 'job1')
+        web.get_job_by_name('FAILED', 'job1').resubmit()
+        web._process_incoming_jobs()
+        job = web.get_job_by_name('RUNNING', 'job1')
+        runjobdir = os.path.join(conf.directories['RUNNING'], 'job1')
+        self.assertEqual(job.directory, runjobdir)
+        shutil.rmtree(runjobdir)
         cleanup_webservice(conf, tmpdir)
 
     def test_sanity_check_preproc_state(self):
